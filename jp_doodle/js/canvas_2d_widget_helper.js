@@ -20,18 +20,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             translate_scale: {x: 0.0, y:0.0, w:1.0, h:1.0},
             font: "normal 10px Arial",
         }, options);
+
         for (var key in settings) {
             target["canvas_" + key] = settings[key];
         }
-        /*
-        target.canvas_width = settings.width;
-        target.canvas_height = settings.height;
-        target.lineWidth = settings.lineWidth;
-        target.fillColor = settings.fillColor;
-        target.stroke = settings.strokeStyle;
-        target.translate_scale = settings.translate_scale
-        target.
-        */
 
         target.reset_canvas = function () {
             target.empty();
@@ -48,6 +40,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         target.reset_canvas();
+
+        target.clear_canvas = function () {
+            // https://stackoverflow.com/questions/2142535/how-to-clear-the-canvas-for-redrawing
+            var canvas = target.canvas[0];
+            var context = target.canvas_context;
+            context.clearRect(0, 0, canvas.width, canvas.height)
+        };
 
         // Some functions useful for Jupyter/proxy interface:
         target.canvas_call = function(method_name, args) {
