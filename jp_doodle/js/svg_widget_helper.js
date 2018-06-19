@@ -31,7 +31,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.svg_elt = svg_elt;
         target.$svg.reference_point = svg.createSVGPoint();
 
-        target.empty_svg = function() {
+        target.clear = function() {
             $svg.named_elements = {};
             $svg.empty();
             return target;
@@ -167,6 +167,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             event_target.off(event_types_string);
         };
 
+        target.set_rotation = function(atts, x, y, degrees) {
+            if (degrees) {
+                atts.transform = "rotate(" + degrees + "," + x + "," + y + ")";
+            }
+        }
+
         target.circle = function(name, cx, cy, r, fill, atts, style) {
             var combined_atts = $.extend({
                 "cx": cx,
@@ -177,7 +183,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.add_element(name, "circle", combined_atts, style);
         };
 
-        target.line = function(name, x1, y1, x2, y2, color, atts, style) {
+        target.line = function(name, x1, y1, x2, y2, color, atts, style, degrees) {
             var combined_atts = $.extend({
                 x1: x1,
                 y1: y1,
@@ -185,20 +191,22 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 y2: y2,
                 stroke: (color || "black")
             }, atts);
+            target.set_rotation(combined_atts, x1, y1, degrees);
             target.add_element(name, "line", combined_atts, style);
-        }
+        };
 
-        target.text = function (name, x, y, text, fill, atts, style) {
+        target.text = function (name, x, y, text, fill, atts, style, degrees) {
             var combined_atts = $.extend({
                 x: x,
                 y: y,
                 fill: (fill || "black")
             }, atts);
+            target.set_rotation(combined_atts, x, y, degrees);
             target.add_element(name, "text", combined_atts, style,
                 text);
         }
 
-        target.rect = function(name, x, y, w, h, fill, atts, style) {
+        target.rect = function(name, x, y, w, h, fill, atts, style, degrees) {
             var combined_atts = $.extend({
                 x: x,
                 y: y,
@@ -206,6 +214,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 height: h,
                 fill: (fill || "black")
             }, atts);
+            target.set_rotation(combined_atts, x, y, degrees);
             target.add_element(name, "rect", combined_atts, style);
         };
 
@@ -258,10 +267,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         ];
         element.polygon("poly", points, "#dfd")
         element.circle("green circle", 60, -70, 20, "green");
-        element.line("a line", -10, 20, 30, 30, "red",
-            {"stroke-width": 5});
-        element.rect("a rect", -10, -50, 10, 120, "salmon");
-        element.text("some text", -40, -40, "SVG", "#444", {transform: "rotate(30 -40,-40)"});
+        element.line("a line", -10, 20, 30, 30, "red", 0,
+            {"stroke-width": 5}, null, 100);
+        element.rect("a rect", -10, -50, 10, 120, "salmon", null, null, 15);
+        element.text("some text", -40, -40, "SVG", "#444", 
+            //{transform: "rotate(30 -40,-40)"});
+            null, null, 45);
         var status = $("<div>The circle hasn't been clicked</div>").appendTo(element);
         var controls = $("<div/>").appendTo(element);
         var snap_button = $("<button>Snapshot</button>").appendTo(controls);
