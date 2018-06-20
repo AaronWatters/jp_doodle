@@ -126,6 +126,24 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             context.restore();  // matches translate_and_rotate
         }
 
+        target.polygon = function(opt) {
+            var s = $.extend({
+                color: target.canvas_fillColor,
+            }, opt);
+            var context = target.canvas_context;
+            context.fillStyle = s.color;
+            var points = s.points;
+            context.beginPath();
+            var point0 = points[0];
+            context.moveTo(point0[0], point0[1]);
+            for (var i=1; i<points.length; i++) {
+                var point = points[i];
+                context.lineTo(point[0], point[1]);
+            }
+            context.closePath();
+            context.fill();
+        };
+
         target.color_at = function(x, y) {
             var imgData = target.canvas_context.getImageData(x, y, 1, 1);
             return imgData;
@@ -188,6 +206,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         element.rect({name:"a rect", x:10, y:50, w:10, h:120, color:"salmon", degrees:-15});
         element.text({name:"some text", x:40, y:40, text:"Canvas", color:"#f4d", degrees:45});
         element.line({name:"a line", x1:100, y1:100, x2:150, y2:130, color:"brown"});
+        element.polygon({
+            name: "polly", 
+            points: [[250,100], [400,100], [280,180], [375,60], [370,180]],
+            color: "#ffd",
+        });
         var c = element.color_at(160, 70);
         var info = $("<div>a canvas.  color at 160 70: " + c.data + "</div>").appendTo(element);
         element.canvas.mousemove(function (e) {

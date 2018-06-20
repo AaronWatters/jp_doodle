@@ -39,8 +39,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.visible_canvas = $("<div/>").appendTo(target);
             target.invisible_canvas = $("<div/>").appendTo(target);
             target.invisible_canvas.hide();
-            target.canvas_2d_widget_helper(target.visible_canvas);
-            target.canvas_2d_widget_helper(target.invisible_canvas);
+            target.canvas_2d_widget_helper(target.visible_canvas, settings_overrides);
+            target.canvas_2d_widget_helper(target.invisible_canvas, settings_overrides);
             // object list for redraws
             target.object_list = [];
             // lookup structures for named objects
@@ -72,6 +72,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             // keep only the drawn objects
             target.object_list = drawn_objects;
+            target.redraw_pending = false;
+        }
+
+        target.redraw_pending = false;
+
+        // Call this after modifying the object collection to request an eventual redraw.
+        target.request_redraw = function() {
+            if (!target.redraw_pending) {
+                requestAnimationFrame(target.redraw);
+                target.redraw_pending = true;
+            }
         }
 
         target.store_object_info = function(info, draw_on_canvas) {
@@ -189,6 +200,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         assign_shape_factory("line");
         assign_shape_factory("text");
         assign_shape_factory("rect");
+        assign_shape_factory("polygon");
 
         target.watch_event = function(event_type) {
             if (!target.event_types[event_type]) {
@@ -267,9 +279,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         }
         element.dual_canvas_helper(element, config);
         element.visible_canvas.canvas.css("background-color", "#a7a");
+        element.polygon({
+            name: "polly", 
+            points: [[250,100], [400,100], [280,180], [375,60], [370,180]],
+            color: "#ffd",
+        });
         element.circle({name: "green circle", x:160, y:70, r:20, color:"green"});
         element.rect({name:"a rect", x:10, y:50, w:10, h:120, color:"salmon", degrees:-15});
-        element.text({name:"some text", x:40, y:40, text:"Canvas", color:"#f4d", degrees:45});
+        element.text({name:"some text", x:40, y:40, text:"Canvas", color:"#64d", degrees:45,
+            font: "bold 20px Arial",});
         element.line({name:"a line", x1:100, y1:100, x2:150, y2:130, color:"brown", lineWidth: 4});
         var info = $("<div>click the circle to pick it up..</div>").appendTo(element);
         var click_handler = function(e) {
@@ -294,7 +312,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var x = event.pixel_location.x;
             var y = event.pixel_location.y;
             element.change_element("green circle", {"x":x, "y":y});
-            element.redraw();
+            element.request_redraw();
         };
         var drop_circle = function(event) {
             info.html("<div>dropping circle</div>");
