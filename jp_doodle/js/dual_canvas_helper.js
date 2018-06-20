@@ -66,7 +66,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         target.draw_object_info(object_info);
                         var object_index = drawn_objects.length;
                         object_info.index = object_index;
-                        drawn_object[object_index] = object_info;
+                        drawn_objects[object_index] = object_info;
                     }
                 }
             }
@@ -74,24 +74,25 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.object_list = drawn_objects;
         }
 
-        target.store_object_info = function(name, color, draw_with_color_on_canvas_fn) {
+        target.store_object_info = function(info, draw_on_canvas) {
+            var name = info.name;
             var object_list = target.object_list;
             var object_index = object_list.length;
-            object_info = {};
-            object_info.name = name;
-            object_info.draw_fn = draw_with_color_on_canvas_fn;
-            object_info.color = color;
+            var object_info = $.extend({
+                draw_on_canvas: draw_on_canvas,
+            }, info);
             if (name) {
                 var pseudocolor_array = null;
                 var old_object_info = target.name_to_object_info[name];
                 if (old_object_info) {
                     // this prevents saving 2 objects with same name -- xxxx is this what we want?
-                    //object_index = object_info.index;  -- if you want delete, use delete...?
+                    object_index = object_info.index; //  -- if you want delete, use delete...?
                     pseudocolor_array = object_info.pseudocolor_array;
                 }
                 if (!pseudocolor_array) {
                     pseudocolor_array = target.next_pseudocolor();
                 }
+                // bookkeeping for event look ups.
                 object_info.pseudocolor_array = pseudocolor_array;
                 object_info.pseudocolor = target.array_to_color(pseudocolor_array);
                 var color_index = target.color_array_to_index(pseudocolor_array);
@@ -101,6 +102,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             object_info.index = object_index;
             object_list[object_index] = object_info;
             return object_info;
+        };
+
+        target.change_element = function (name, opt) {
+            var object_info = target.name_to_object_info[name];
+            if (object_info) {
+                $.extend(object_info, opt);
+            } else {
+                console.warn("change_element: no such element with name " + name);
+            }
         };
         
         target.forget_objects = function(names) {
@@ -119,10 +129,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         target.draw_object_info = function(object_info) {
-            var draw_fn = object_info.draw_fn;
-            draw_fn(target.visible_canvas, object_info.color);
+            var draw_fn = object_info.draw_on_canvas;
+            draw_fn(target.visible_canvas, object_info);
             if (object_info.name) {
-                draw_fn(target.invisible_canvas, object_info.pseudocolor);
+                // also draw hidden object using psuedocolor for event lookups
+                var info2 = $.extend({}, object_info);
+                info2.color = object_info.pseudocolor;
+                draw_fn(target.invisible_canvas, info2);
             }
         }
 
@@ -158,44 +171,31 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return ((color_array[0] << 16) | (color_array[1] << 8) | (color_array[2]));
         };
 
-        target.circle = function(name, cx, cy, r, fill, atts, style) {
-            var draw = function(canvas, color) {
-                canvas.circle(name, cx, cy, r, color, atts, style);
+        var assign_shape_factory = function(shape_name) {
+            // refactored common logic for drawing shapes
+            target[shape_name] = function(opt, wait) {
+                var draw = function(canvas, s) {
+                    var method = canvas[shape_name];
+                    method(s);
+                };
+                var object_info = target.store_object_info(opt, draw);
+                if (!wait) {
+                    // draw the object now.
+                    target.draw_object_info(object_info);
+                }
             };
-            var object_info = target.store_object_info(name, fill, draw);
-            target.draw_object_info(object_info);
         };
-
-        target.line = function(name, x1, y1, x2, y2, color, atts, style) {
-            var draw = function(canvas, color) {
-                canvas.line(name, x1, y1, x2, y2, color, atts, style);
-            };
-            var object_info = target.store_object_info(name, color, draw);
-            target.draw_object_info(object_info);
-        };
-
-        target.text = function (name, x, y, text, fill, atts, style, degrees) {
-            var draw = function(canvas, color) {
-                canvas.text(name, x, y, text, color, atts, style, degrees);
-            };
-            var object_info = target.store_object_info(name, fill, draw);
-            target.draw_object_info(object_info);
-        };
-
-        target.rect = function(name, x, y, w, h, fill, atts, style, degrees) {
-            var draw = function(canvas, color) {
-                canvas.rect(name, x, y, w, h, color, atts, style, degrees);
-            };
-            var object_info = target.store_object_info(name, fill, draw);
-            target.draw_object_info(object_info);
-        };
+        assign_shape_factory("circle");
+        assign_shape_factory("line");
+        assign_shape_factory("text");
+        assign_shape_factory("rect");
 
         target.watch_event = function(event_type) {
             if (!target.event_types[event_type]) {
                 target.visible_canvas.canvas.on(event_type, target.generic_event_handler);
                 target.event_types[event_type] = true;
             }
-            // ??? no provision for forgetting events?
+            // ??? no provision for forgetting events on the visible canvas?
         };
 
         target.on_canvas_event = function(event_type, callback, for_name) {
@@ -267,11 +267,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         }
         element.dual_canvas_helper(element, config);
         element.visible_canvas.canvas.css("background-color", "#a7a");
-        element.circle("green circle", 160, 70, 20, "green");
-        element.rect("a rect", 10, 50, 10, 120, "salmon", null, null, -15);
-        element.text("some text", 40, 40, "Canvas", "#f4d", null, null, 45);
-        element.line("a line", 100, 100, 150, 130, "brown");
-        var info = $("<div>Information area here.</div>").appendTo(element);
+        element.circle({name: "green circle", x:160, y:70, r:20, color:"green"});
+        element.rect({name:"a rect", x:10, y:50, w:10, h:120, color:"salmon", degrees:-15});
+        element.text({name:"some text", x:40, y:40, text:"Canvas", color:"#f4d", degrees:45});
+        element.line({name:"a line", x1:100, y1:100, x2:150, y2:130, color:"brown", lineWidth: 4});
+        var info = $("<div>click the circle to pick it up..</div>").appendTo(element);
         var click_handler = function(e) {
             info.html(
                 "<div>click at " + e.pixel_location.x +
@@ -290,6 +290,26 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         }
         element.on_canvas_event("mousemove", mouse_over_circle_handler, "a rect");
         element.on_canvas_event("click", click_handler);
+        var put_circle = function(event) {
+            var x = event.pixel_location.x;
+            var y = event.pixel_location.y;
+            element.change_element("green circle", {"x":x, "y":y});
+            element.redraw();
+        };
+        var drop_circle = function(event) {
+            info.html("<div>dropping circle</div>");
+            element.off_canvas_event("click");
+            element.off_canvas_event("mousemove");
+            element.on_canvas_event("click", pick_up_circle, "green circle");
+            element.on_canvas_event("click", click_handler);
+        };
+        var pick_up_circle = function(event) {
+            info.html("<div>picking up circle</div>");
+            element.on_canvas_event("mousemove", put_circle);
+            element.on_canvas_event("click", drop_circle);  // automatically override other handler
+            element.off_canvas_event("click", "green circle");
+        };
+        element.on_canvas_event("click", pick_up_circle, "green circle");
     };
 
 })(jQuery);
