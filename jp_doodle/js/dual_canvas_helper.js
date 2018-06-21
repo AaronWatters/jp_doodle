@@ -30,14 +30,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         }
 
         target.reset_canvas = function () {
-            target.empty();
+            if (target.canvas_container) {
+                target.canvas_container.empty();
+            } else {
+                target.canvas_container = $("<div/>").appendTo(target);
+            }
             var settings_overrides = {};
             for (var key in settings) {
                 settings_overrides[key] = target["canvas_" + key];
             }
             // make visible and invisible dual canvases
-            target.visible_canvas = $("<div/>").appendTo(target);
-            target.invisible_canvas = $("<div/>").appendTo(target);
+            target.visible_canvas = $("<div/>").appendTo(target.canvas_container);
+            target.invisible_canvas = $("<div/>").appendTo(target.canvas_container);
             target.invisible_canvas.hide();
             target.canvas_2d_widget_helper(target.visible_canvas, settings_overrides);
             target.canvas_2d_widget_helper(target.invisible_canvas, settings_overrides);
