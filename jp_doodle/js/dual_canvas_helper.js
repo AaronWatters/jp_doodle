@@ -115,10 +115,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return object_info;
         };
 
-        target.change_element = function (name, opt) {
+        target.change_element = function (name, opt, no_redraw) {
             var object_info = target.name_to_object_info[name];
             if (object_info) {
                 $.extend(object_info, opt);
+                if (!no_redraw) {
+                    // schedule a redraw automatically
+                    target.request_redraw();
+                }
             } else {
                 console.warn("change_element: no such element with name " + name);
             }
@@ -325,7 +329,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 "<div> [" + Math.round(loc.x) + ", " + Math.round(loc.y) + "] :: [" 
                 + Math.round(ploc.x) + ", " + Math.round(ploc.y) 
                 + "] </div>")
-            element.request_redraw();
+            // change_element automatically schedules a redraw
+            //element.request_redraw();
         };
         var drop_circle = function(event) {
             debugger;
