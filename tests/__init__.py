@@ -8,7 +8,7 @@ import pytest
 
 _HERE = os.path.dirname(__file__)
 
-
+"""
 @pytest.fixture
 def chdir_fixture(request):
     d = tempfile.mkdtemp()
@@ -39,3 +39,4 @@ def local_tmp_dir_fixture(request):
     def teardown():
         shutil.rmtree(d)
     return d
+"""
