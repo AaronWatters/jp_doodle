@@ -241,6 +241,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
         };
 
+        target.event_canvas_location = function(e) {
+            return target.visible_canvas.event_canvas_location(e);
+        };
+
         target.generic_event_handler = function(e) {
             var event_type = e.type;
             var default_handler = target.default_event_handlers[event_type];
@@ -269,13 +273,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         return target;
     };
 
-    $.fn.dual_canvas_helper.example = function(element) {
+    $.fn.dual_canvas_helper.example = function(element, x, y, w, h) {
         debugger;
+        if (!x) { x = 0; }
+        if (!y) { y = 0; }
+        if (!w) { w = 1.0; }
+        if (!h) { h = 1.0; }
         element.empty();
         element.css("background-color", "cornsilk").width("520px");
         var config = {
             width: 400,
             height: 200,
+            translate_scale: {x: x, y:y, w:w, h:h},
         }
         element.dual_canvas_helper(element, config);
         element.visible_canvas.canvas.css("background-color", "#a7a");
@@ -309,12 +318,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         element.on_canvas_event("mousemove", mouse_over_circle_handler, "a rect");
         element.on_canvas_event("click", click_handler);
         var put_circle = function(event) {
-            var x = event.pixel_location.x;
-            var y = event.pixel_location.y;
-            element.change_element("green circle", {"x":x, "y":y});
+            var loc = element.event_canvas_location(event);
+            var ploc = event.pixel_location;
+            element.change_element("green circle", {"x":loc.x, "y":loc.y});
+            info.html(
+                "<div> [" + Math.round(loc.x) + ", " + Math.round(loc.y) + "] :: [" 
+                + Math.round(ploc.x) + ", " + Math.round(ploc.y) 
+                + "] </div>")
             element.request_redraw();
         };
         var drop_circle = function(event) {
+            debugger;
             info.html("<div>dropping circle</div>");
             element.off_canvas_event("click");
             element.off_canvas_event("mousemove");

@@ -45,7 +45,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // https://stackoverflow.com/questions/2142535/how-to-clear-the-canvas-for-redrawing
             var canvas = target.canvas[0];
             var context = target.canvas_context;
+            var ts = target.canvas_translate_scale;
+            context.resetTransform();
             context.clearRect(0, 0, canvas.width, canvas.height)
+            context.translate(ts.x, ts.y);
+            context.scale(ts.w, ts.h);
         };
 
         // Some functions useful for Jupyter/proxy interface:
@@ -158,7 +162,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         }
 
         target.event_pixel_location = function(e) {
-            https://stackoverflow.com/questions/55677/how-do-i-get-the-coordinates-of-a-mouse-click-on-a-canvas-element
+            // https://stackoverflow.com/questions/55677/how-do-i-get-the-coordinates-of-a-mouse-click-on-a-canvas-element
             var x, y;
             var canvas = target.canvas;
             if (e.pageX || e.pageY) { 
@@ -179,10 +183,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // https://stackoverflow.com/questions/17130395/real-mouse-position-in-canvas
             var canvas = target.canvas[0];
             var rect = canvas.getBoundingClientRect();
-            var scaleX = canvas.width / rect.width;
-            var scaleY = canvas.height / rect.height;
+            //var scaleX = canvas.width / rect.width;
+            //var scaleY = canvas.height / rect.height;
+            var ts = target.canvas_translate_scale;
             var pixel_position = target.event_pixel_location(e);
-            return {x: scaleX * pixel_position.x, y: scaleY * pixel_position.y};
+            //return {x: scaleX * pixel_position.x, y: scaleY * pixel_position.y};
+            var x = (-ts.x + pixel_position.x) / ts.w;
+            var y = (-ts.y + pixel_position.y) / ts.h;
+            return {x: x, y: y};
         }
 
         target.event_color = function(e) {
@@ -200,6 +208,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         var config = {
             width: 400,
             height: 200,
+            translate_scale: {x: 20, y:30, w:0.8, h:0.7},
         }
         element.canvas_2d_widget_helper(element, config);
         element.circle({name: "green circle", x:160, y:70, r:20, color:"green"});
