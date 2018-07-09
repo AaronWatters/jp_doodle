@@ -253,6 +253,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return target.visible_canvas.event_canvas_location(e);
         };
 
+        target.event_model_location = function(e) {
+            return target.visible_canvas.event_model_location(e);
+        };
+
         target.generic_event_handler = function(e) {
             var event_type = e.type;
             var default_handler = target.default_event_handlers[event_type];
@@ -326,7 +330,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         element.on_canvas_event("mousemove", mouse_over_circle_handler, "a rect");
         element.on_canvas_event("click", click_handler);
         var put_circle = function(event) {
-            var loc = element.event_canvas_location(event);
+            var loc = element.event_model_location(event);
             var ploc = event.pixel_location;
             element.change_element("green circle", {"x":loc.x, "y":loc.y});
             info.html(
