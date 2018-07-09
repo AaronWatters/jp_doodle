@@ -19,6 +19,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             strokeStyle: "black",
             translate_scale: {x: 0.0, y:0.0, w:1.0, h:1.0},
             font: "normal 10px Arial",
+            y_up: true,  // does y go up starting at the lower left corner? (default, yes.)
         }, options);
 
         for (var key in settings) {
@@ -37,6 +38,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var ts = target.canvas_translate_scale;
             ctx.translate(ts.x, ts.y);
             ctx.scale(ts.w, ts.h);
+            ts.model_height = h * ts.h;
+            ts.model_intercept = 2 * ts.y + ts.model_height;
         };
 
         target.reset_canvas();
@@ -72,7 +75,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var context = target.canvas_context;
             context.beginPath();
             context.fillStyle = s.color;
-            context.arc(s.x, s.y, s.r, s.start, s.arc);
+            var center = target.converted_location(s.x, s.y);
+            context.arc(center.x, center.y, s.r, s.start, s.arc);
             context.fill();
             return s;
         };
@@ -85,9 +89,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var context = target.canvas_context;
             context.beginPath();
             context.strokeStyle = s.color;
-            context.lineWidth = s.lineWidth
-            context.moveTo(s.x1, s.y1);
-            context.lineTo(s.x2, s.y2);
+            context.lineWidth = s.lineWidth;
+            var p1 = target.converted_location(s.x1, s.y1);
+            var p2 = target.converted_location(s.x2, s.y2);
+            context.moveTo(p1.x, p1.y);
+            context.lineTo(p2.x, p2.y);
             context.stroke();
             return s;
         };
@@ -111,7 +117,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.translate_and_rotate = function(x, y, degrees) {
             var context = target.canvas_context;
             context.save();   // should be matched by restore elsewhere
-            context.translate(x, y);
+            var cvt = target.converted_location(x, y);
+            if (target.canvas_y_up) {
+                degrees = -degrees;  // standard counter clockwise rotation convention.
+            }
+            context.translate(cvt.x, cvt.y);
             if (degrees) {
                 context.rotate(degrees * Math.PI / 180.0);
             }
@@ -125,7 +135,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var context = target.canvas_context;
             context.beginPath();
             context.fillStyle = s.color;
-            context.rect(0, 0, s.w, s.h)  // translated to (x,y)
+            var height = s.h;
+            if (target.canvas_y_up) {
+                height = -height;
+            }
+            context.rect(0, 0, s.w, height)  // translated to (x,y)
             context.fill();
             context.restore();  // matches translate_and_rotate
         }
@@ -139,17 +153,19 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var points = s.points;
             context.beginPath();
             var point0 = points[0];
-            context.moveTo(point0[0], point0[1]);
+            var p0c = target.converted_location(point0[0], point0[1]);
+            context.moveTo(p0c.x, p0c.y);
             for (var i=1; i<points.length; i++) {
                 var point = points[i];
-                context.lineTo(point[0], point[1]);
+                var pc = target.converted_location(point[0], point[1]);
+                context.lineTo(pc.x, pc.y);
             }
             context.closePath();
             context.fill();
         };
 
-        target.color_at = function(x, y) {
-            var imgData = target.canvas_context.getImageData(x, y, 1, 1);
+        target.color_at = function(pixel_x, pixel_y) {
+            var imgData = target.canvas_context.getImageData(pixel_x, pixel_y, 1, 1);
             return imgData;
         };
 
@@ -182,7 +198,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.event_canvas_location = function(e) {
             // https://stackoverflow.com/questions/17130395/real-mouse-position-in-canvas
             var canvas = target.canvas[0];
-            var rect = canvas.getBoundingClientRect();
+            //var rect = canvas.getBoundingClientRect();
             //var scaleX = canvas.width / rect.width;
             //var scaleY = canvas.height / rect.height;
             var ts = target.canvas_translate_scale;
@@ -191,12 +207,27 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var x = (-ts.x + pixel_position.x) / ts.w;
             var y = (-ts.y + pixel_position.y) / ts.h;
             return {x: x, y: y};
+        };
+
+        target.event_model_location = function(e) {
+            var cl = target.event_canvas_location(e);
+            return target.converted_location(cl.x, cl.y);
         }
 
         target.event_color = function(e) {
             var pixel_position = target.event_pixel_location(e);
             return target.color_at(pixel_position.x, pixel_position.y)
-        }
+        };
+
+        // convert location either from model space to canvas space or the reverse.
+        target.converted_location = function (x, y) {
+            result = {x: x, y: y};
+            if (target.canvas_y_up) {
+                // orient y going up from the lower left
+                result.y = target.canvas_translate_scale.model_intercept - y;
+            }
+            return result;
+        };
 
         return target;
     };
@@ -227,9 +258,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var color = element.event_color(e);
             var ploc = element.event_pixel_location(e);
             var cloc = element.event_canvas_location(e);
+            var mloc = element.event_model_location(e);
             info.html("<div>mouse move over color: " + color.data + 
                 " ploc=" +ploc.x+ "," + ploc.y + 
                 " cloc=" +cloc.x+ "," + cloc.y + 
+                " mloc=" +mloc.x+ "," + mloc.y + 
                 "</div>");
         });
     };
