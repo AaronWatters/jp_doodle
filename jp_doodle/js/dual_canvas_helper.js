@@ -205,7 +205,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     target.object_list[index] = null;
                     delete target.name_to_object_info[name];
                     delete target.color_index_to_name[color_index];
+                    target.request_redraw();
                 }
+                // ignore request to forget unknown object
             }
         };
 

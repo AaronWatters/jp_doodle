@@ -18,7 +18,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             u_label: "horizontal",
             v_label: "depth",
             max_rgb: {r: 255, g: 0, b:0},
-            min_rgb: {r: 0, g:0, b: 255},
+            min_rgb: {r: 0, g:255, b: 255},
             transparency: 0.2,
             name_separator: "|",
         }, options);
@@ -84,6 +84,34 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.minheight = Math.min(...heights);
         target.maxheight = Math.max(...heights);
 
+        target.focus_u_anchor = function(u_anchor) {
+            var bars = target.bars;
+            // make all other bars
+            for (var i=0; i<bars.length; i++) {
+                var bar = bars[i];
+                if (bar.u_anchor == u_anchor) {
+                    // reinstall visible
+                    target.rect(bar);
+                } else {
+                    target.forget_objects([bar.name]);
+                }
+            }
+        };
+
+        target.focus_v_anchor = function(v_anchor) {
+            var bars = target.bars;
+            // make all other bars
+            for (var i=0; i<bars.length; i++) {
+                var bar = bars[i];
+                if (bar.v_anchor == v_anchor) {
+                    // reinstall visible
+                    target.rect(bar);
+                } else {
+                    target.forget_objects([bar.name]);
+                }
+            }
+        };
+
         target.draw_bars = function() {
             if (!target.reset_canvas) {
                 throw new Error("rectangle_collection requires target configured by dual_canvas_helper");
@@ -94,6 +122,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var fraction = target.bar_width_fraction;
             var u = target.bar_u;
             var v = target.bar_v;
+            var x = target.bar_x;
+            var y = target.bar_y;
             var u_offset = target.segment_offset(u, target.bar_u_anchors.length, fraction, target.bar_max_width);
             var du = u_offset.offset;
             var width = u_offset.width;
@@ -105,32 +135,55 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var bar = bars[i];
                 var position = vadd(vscale(bar.u_index, du), vscale(bar.v_index, dv));
                 bar.name = bar.u_anchor + separator + bar.v_anchor;
-                bar.x = position.x + target.bar_x;
-                bar.y = position.y + target.bar_y;
+                bar.x = position.x + x;
+                bar.y = position.y + y;
                 bar.w = width;
                 bar.h = bar.height * height_factor;
                 bar.color = target.interpolate_color(bar.height / interval);
             }
             // sort the larger indices earlier
             bars.sort(function(bar_a, bar_b) {
-                var diff = bar_b.v_index - bar_b.v_index;
+                var diff = (bar_b.v_index - bar_a.v_index);
                 if (diff) {
                     return diff;
                 } else {
-                    return bar_b.u_index - bar_b.u_index;
+                    return bar_b.u_index - bar_a.u_index;
                 }
             })
             // draw the bars
             for (var i=0; i<bars.length; i++) {
-                target.rect(bars[i]);
+                var bar = bars[i];
+                bar.fill = true;
+                target.rect(bar);
+                // outline it
+                outline = $.extend({}, bar)
+                outline.name = null;
+                outline.color = "black"
+                outline.fill = false;
+                target.rect(outline);
             } 
+            // draw anchor texts
+            var u_anchors = target.bar_u_anchors;
+            for (var i=0; i<u_anchors.length; i++) {
+                var u_anchor = u_anchors[i];
+                var position = vscale(i, du);
+                target.text({text: u_anchor, x: position.x + x, y: position.y + y - width, degrees: -90})
+            }
+            // draw anchor texts
+            var v_anchors = target.bar_v_anchors;
+            for (var i=0; i<v_anchors.length; i++) {
+                var v_anchor = v_anchors[i];
+                var position = vscale(i, dv);
+                target.text({text: v_anchor, x: position.x + x + 1.5 * width, y: position.y + y, degrees: 0})
+            }
+            target.fit();
         }; 
     };
 
     $.fn.rectangle_collection.example = function(element) {
         var bar_config = {
-            u: {x:1, y:0},
-            v: {x:1, y:-1},
+            u: {x:-1, y:0},
+            v: {x:0.8, y:0.3},
             x: 20,
             y: 280,
             u_label: "person type",
@@ -146,7 +199,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             u_anchor = bar_config.u_anchors[i];
             for (var j=0; j<bar_config.v_anchors.length; j++) {
                 var v_anchor = bar_config.v_anchors[j];
-                var height = Math.sin(i+j) * 50;
+                var height = (Math.sin(i+j)+1) * 50;
                 var rectangle = {
                     u_anchor: u_anchor,
                     v_anchor: v_anchor,
@@ -164,7 +217,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
         element.dual_canvas_helper(element, canvas_config);
         element.rectangle_collection(element, bar_config);
-        element.draw_bars();
+        element.render = function () {
+            debugger;
+            var seconds = (new Date()).getTime() * 0.001
+            //element.bar_v = {x: Math.sin(seconds), y: Math.cos(seconds)};
+            element.draw_bars();
+            //window.requestAnimationFrame(element.render);
+            //setInterval(element.render, 100);
+        };
+        element.render();
     };
 
 })(jQuery);
