@@ -54,7 +54,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.default_event_handlers = {};
         };
 
-        target.fit = function (stats) {
+        target.fit = function (stats, margin) {
             // stats if defined should provide min_x, max_x, min_y, max_y
             // Adjust the translate and scale so that the visible objects are centered and visible.
             var x_translate = 0.0;
@@ -72,28 +72,27 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var canvas = vc.canvas[0];
             var cwidth = canvas.width;
             var cheight = canvas.height;
-            var width = stats.max_x - stats.min_x;
-            var height = stats.max_y - stats.min_y;
+            if (!margin) {
+                margin = 0.01 * Math.max(stats.max_x - stats.min_x, stats.max_y - stats.min_y);   // xxxx?
+            }
+            var width = stats.max_x - stats.min_x + 2 * margin;
+            var height = stats.max_y - stats.min_y + 2 * margin;
             // DEBUG: draw limits rectangle
             //target.rect({x: stats.min_x-2, y: stats.min_y-2, h:height+4, w:width+4, color:"yellow", fill:false});
             var wscale = cwidth * 1.0 / width;
             var hscale = cheight * 1.0 / height;
             //var scale = Math.min(wscale, hscale);
-            var upper_left = vc.converted_location(stats.min_x, stats.min_y);
             var y_up = vc.canvas_y_up;
-            if (vc.canvas_y_up) {
-                upper_left = vc.converted_location(stats.min_x, stats.max_y);
-            }
             if (hscale < wscale) {
                 // fit y and center x
                 scale = hscale;
-                y_translate = - stats.min_y;
-                x_translate = - stats.min_x + 0.5 * (cwidth / scale - width);
+                y_translate = - stats.min_y + margin;
+                x_translate = - stats.min_x + 0.5 * (cwidth / scale - width) + margin;
             } else {
                 // fit x and center y
                 scale = wscale;
-                x_translate = - stats.min_x;
-                y_translate = - stats.min_y + 0.5 * (cheight / scale - height);
+                x_translate = - stats.min_x + margin;
+                y_translate = - stats.min_y + 0.5 * (cheight / scale - height) + margin;
             }
             var translate_scale = {x: x_translate, y: y_translate, w: scale, h: scale};
             //return;
