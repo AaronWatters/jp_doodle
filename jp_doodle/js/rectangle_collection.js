@@ -162,20 +162,30 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 outline.fill = false;
                 target.rect(outline);
             } 
-            // draw anchor texts
+            // draw anchor texts and markers
+            var put_mark = function(x, y, name, action) {
+                target.circle({name: name, x: x, y: y, r:width/2.0, color:"yellow"});
+                target.circle({x: x, y: y, r:width/2.0, color:"#888", fill:false});
+                target.on_canvas_event("click", action, name);
+            }
             var u_anchors = target.bar_u_anchors;
             for (var i=0; i<u_anchors.length; i++) {
-                var u_anchor = u_anchors[i];
-                var position = vscale(i, du);
-                target.text({text: u_anchor, x: position.x + x, y: position.y + y - width, degrees: -90})
+                let u_anchor = u_anchors[i];
+                let position = vscale(i, du);
+                //target.circle({name: u_anchor + "_u_marker", x: position.x + x, y: position.y + y - width, r:width/2.0, color:"yellow"})
+                put_mark(position.x + x + width/2.0, position.y + y - width, u_anchor + "_u_marker", function() {target.focus_u_anchor(u_anchor)});
+                target.text({text: u_anchor, x: position.x + x, y: position.y + y - 2 * width, degrees: -90, color:"black"})
             }
-            // draw anchor texts
             var v_anchors = target.bar_v_anchors;
             for (var i=0; i<v_anchors.length; i++) {
-                var v_anchor = v_anchors[i];
-                var position = vscale(i, dv);
-                target.text({text: v_anchor, x: position.x + x + 1.5 * width, y: position.y + y, degrees: 0})
+                let v_anchor = v_anchors[i];
+                let position = vscale(i, dv);
+                put_mark(position.x + x + 1.5 * width, position.y + y + width/2, v_anchor + "_v_marker", function() {target.focus_v_anchor(v_anchor)});
+                //target.circle({name: v_anchor + "_v_marker", x: position.x + x + width, y: position.y + y, r:width/2.0, color:"yellow"})
+                target.text({text: v_anchor, x: position.x + x + 2 * width, y: position.y + y, degrees: 0, color:"black"})
             }
+            // click background for a redraw
+            target.on_canvas_event("click", function() {target.draw_bars();});
             target.fit();
         }; 
     };
