@@ -38,8 +38,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var ts = target.canvas_translate_scale;
             //ctx.translate(ts.x, ts.y);
             //ctx.scale(ts.w, ts.h);
-            ts.model_height = h * ts.h;
-            ts.model_intercept = 2 * ts.y + ts.model_height;
+            ts.model_height = h * 1.0 / ts.h;
+            ts.model_intercept = - 2 * ts.y + ts.model_height;
             target.clear_canvas();
         };
 
@@ -50,8 +50,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var ts = target.canvas_translate_scale;
             context.resetTransform();
             context.clearRect(0, 0, canvas.width, canvas.height)
-            context.translate(ts.x, ts.y);
+            // first scale then translate
             context.scale(ts.w, ts.h);
+            context.translate(ts.x, ts.y);
             if (target.canvas_stats) {
                 target.canvas_stats = {};
             }
@@ -156,6 +157,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             if (target.canvas_stats) {
                 var width = context.measureText(s.text).width;
                 var height = width * 1.4 / s.text.length;  // fudge...
+                if (!target.canvas_y_up) {
+                    // text draws in negative y
+                    height = - height;
+                }
                 target.rectangle_stats(s.x, s.y, width, height, s.degrees);
             }
             return s;
@@ -271,6 +276,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         }
 
         target.event_pixel_location = function(e) {
+            // Determine the coordinate in pixel space for an event e.
             // https://stackoverflow.com/questions/55677/how-do-i-get-the-coordinates-of-a-mouse-click-on-a-canvas-element
             var x, y;
             var canvas = target.canvas;
@@ -289,23 +295,32 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         target.event_canvas_location = function(e) {
+            // Determine teh coordinate in canvas space for an event e.
             // https://stackoverflow.com/questions/17130395/real-mouse-position-in-canvas
             var canvas = target.canvas[0];
             //var rect = canvas.getBoundingClientRect();
             //var scaleX = canvas.width / rect.width;
             //var scaleY = canvas.height / rect.height;
-            var ts = target.canvas_translate_scale;
+            //var ts = target.canvas_translate_scale;
             var pixel_position = target.event_pixel_location(e);
-            //return {x: scaleX * pixel_position.x, y: scaleY * pixel_position.y};
-            var x = (-ts.x + pixel_position.x) / ts.w;
-            var y = (-ts.y + pixel_position.y) / ts.h;
+            return target.pixel_to_canvas(pixel_position.x, pixel_position.y);
+        };
+
+        target.pixel_to_canvas = function (px, py) {
+            // convert pixel coordinate to canvas coordinate.
+            var ts = target.canvas_translate_scale;
+            //var x = (-ts.x + px) / ts.w;
+            //var y = (-ts.y + py) / ts.h;
+            // first scale then translate
+            var x = (px / ts.w) - ts.x;
+            var y = (py / ts.h) - ts.y;
             return {x: x, y: y};
         };
 
         target.event_model_location = function(e) {
             var cl = target.event_canvas_location(e);
             return target.converted_location(cl.x, cl.y);
-        }
+        };
 
         target.event_color = function(e) {
             var pixel_position = target.event_pixel_location(e);
@@ -322,10 +337,25 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return result;
         };
 
+        target.canvas_to_pixel = function (cx, cy) {
+            // convert canvas position to pixel position
+            // first untranslate then unscale
+            var ts = target.canvas_translate_scale;
+            var px = (cx + ts.x) * ts.w;
+            var py = (cy + ts.y) * ts.h;
+            return {x: px, y: py};
+        };
+
+        target.model_to_pixel = function (mx, my) {
+            var c = target.converted_location(mx, my);
+            return target.canvas_to_pixel(c.x, c.y);
+        }
+
         return target;
     };
 
     $.fn.canvas_2d_widget_helper.example = function(element) {
+        debugger;
         element.empty();
         element.css("background-color", "cornsilk").width("520px");
         var config = {
@@ -356,8 +386,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             color: "#ffd",
         });
         show_stats("white");
-        var c = element.color_at(160, 70);
-        var info = $("<div>a canvas.  color at 160 70: " + c.data + "</div>").appendTo(element);
+        var p = element.model_to_pixel(160, 70);
+        var c = element.color_at(p.x, p.y);
+        var info = $("<div>At model 160,70 pixel=" + [p.x, p.y] + " color=" + c.data + "</div>").appendTo(element);
         element.canvas.mousemove(function (e) {
             var color = element.event_color(e);
             var ploc = element.event_pixel_location(e);

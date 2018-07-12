@@ -54,6 +54,69 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.default_event_handlers = {};
         };
 
+        target.fit = function (stats) {
+            // stats if defined should provide min_x, max_x, min_y, max_y
+            // Adjust the translate and scale so that the visible objects are centered and visible.
+            var x_translate = 0.0;
+            var y_translate = 0.0;
+            var scale = 1.0;
+            if (!stats) {
+                // get boundaries for visible objects
+                target.set_translate_scale();
+                var vc = target.visible_canvas;
+                // Redraw and collect stats on visible objects
+                vc.canvas_stats = {};
+                target.redraw();
+                stats = vc.canvas_stats;
+            }
+            var canvas = vc.canvas[0];
+            var cwidth = canvas.width;
+            var cheight = canvas.height;
+            var width = stats.max_x - stats.min_x;
+            var height = stats.max_y - stats.min_y;
+            // DEBUG: draw limits rectangle
+            //target.rect({x: stats.min_x-2, y: stats.min_y-2, h:height+4, w:width+4, color:"yellow", fill:false});
+            var wscale = cwidth * 1.0 / width;
+            var hscale = cheight * 1.0 / height;
+            //var scale = Math.min(wscale, hscale);
+            var upper_left = vc.converted_location(stats.min_x, stats.min_y);
+            var y_up = vc.canvas_y_up;
+            if (vc.canvas_y_up) {
+                upper_left = vc.converted_location(stats.min_x, stats.max_y);
+            }
+            if (hscale < wscale) {
+                // fit y and center x
+                scale = hscale;
+                y_translate = - stats.min_y;
+                x_translate = - stats.min_x + 0.5 * (cwidth / scale - width);
+            } else {
+                // fit x and center y
+                scale = wscale;
+                x_translate = - stats.min_x;
+                y_translate = - stats.min_y + 0.5 * (cheight / scale - height);
+            }
+            var translate_scale = {x: x_translate, y: y_translate, w: scale, h: scale};
+            //return;
+            target.set_translate_scale(translate_scale);
+            // reset the event callbacks
+            for (var event_type in target.event_types) {
+                target.visible_canvas.canvas.on(event_type, target.generic_event_handler);
+                target.event_types[event_type] = true;
+            }
+            target.request_redraw();
+        }
+
+        target.set_translate_scale = function (translate_scale) {
+            if (!translate_scale) {
+                translate_scale = {x: 0.0, y:0.0, w:1.0, h:1.0};
+            }
+            target.canvas_translate_scale = translate_scale;
+            target.visible_canvas.canvas_translate_scale = translate_scale;
+            target.invisible_canvas.canvas_translate_scale = translate_scale;
+            target.visible_canvas.reset_canvas();
+            target.invisible_canvas.reset_canvas();
+        }
+
         target.redraw = function () {
             target.visible_canvas.clear_canvas();
             target.invisible_canvas.clear_canvas();
@@ -295,11 +358,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         element.css("background-color", "cornsilk").width("520px");
         var config = {
             width: 400,
-            height: 200,
+            height: 400,
             translate_scale: {x: x, y:y, w:w, h:h},
+            y_up: false,
         }
         element.dual_canvas_helper(element, config);
-        element.visible_canvas.canvas.css("background-color", "#a7a");
         element.polygon({
             name: "polly", 
             points: [[250,100], [400,100], [280,180], [375,60], [370,180]],
@@ -355,6 +418,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             element.off_canvas_event("click", "green circle");
         };
         element.on_canvas_event("click", pick_up_circle, "green circle");
+        element.fit()
+        element.visible_canvas.canvas.css("background-color", "#a7a");
     };
 
 })(jQuery);
