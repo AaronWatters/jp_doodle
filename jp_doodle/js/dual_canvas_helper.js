@@ -211,7 +211,22 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
         };
 
+        target.set_visibilities = function (names, visibility) {
+            for (var i=0; i<names.length; i++) {
+                var name = names[i];
+                var object_info = target.name_to_object_info[name];
+                if (object_info) {
+                    object_info.hide = (!visibility);
+                }
+                target.request_redraw();
+            }
+        };
+
         target.draw_object_info = function(object_info) {
+            if (object_info.hide) {
+                // do not draw hidden objects
+                return;
+            }
             var draw_fn = object_info.draw_on_canvas;
             draw_fn(target.visible_canvas, object_info);
             if (object_info.name) {

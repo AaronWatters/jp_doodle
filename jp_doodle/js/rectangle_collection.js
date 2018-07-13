@@ -85,15 +85,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.maxheight = Math.max(...heights);
 
         target.focus_anchors = function(u_anchor, v_anchor) {
+            // focus on anchors or defocus if both null.
             var bars = target.bars;
             for (var i=0; i<bars.length; i++) {
                 var bar = bars[i];
-                if ((bar.u_anchor == u_anchor) || (bar.v_anchor == v_anchor)) {
-                    // reinstall visible
-                    target.rect(bar);
+                if ((bar.u_anchor == u_anchor) || (bar.v_anchor == v_anchor)
+                     || ((!u_anchor) && (!v_anchor))) {
+                    // make it visible
+                    target.set_visibilities([bar.name], true);
                 } else {
-                    // forget it
-                    target.forget_objects([bar.name]);
+                    // hide it
+                    target.set_visibilities([bar.name], false);
                 }
             }
         };
@@ -176,8 +178,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 //target.circle({name: v_anchor + "_v_marker", x: position.x + x + width, y: position.y + y, r:width/2.0, color:"yellow"})
                 target.text({text: v_anchor, x: position.x + x + 2 * width, y: position.y + y, degrees: 0, color:"black"})
             }
-            // click background for a redraw
-            target.on_canvas_event("click", function() {target.draw_bars();});
+            // click background for a defocus
+            target.on_canvas_event("click", function() {target.focus_anchors();});
             target.fit();
         }; 
     };
