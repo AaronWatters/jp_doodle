@@ -152,17 +152,21 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             context.fillStyle = s.color;
             // XXX text align?
             context.fillText(s.text, 0, 0); // translated to (x,y)
-            context.restore();  // matches translate_and_rotate
+            var width = context.measureText(s.text).width;
+            var height = width * 1.4 / s.text.length;  // fudge...
+            if (!target.canvas_y_up) {
+                // text draws in negative y
+                height = - height;
+            }
+            // use a rectangle for masking operations
+            s.draw_mask = function (to_canvas, info) {
+                to_canvas.rect({x: info.x, y: info.y, w:width, h:height, degrees:info.degrees, color:info.color})
+            }
             // update stats
             if (target.canvas_stats) {
-                var width = context.measureText(s.text).width;
-                var height = width * 1.4 / s.text.length;  // fudge...
-                if (!target.canvas_y_up) {
-                    // text draws in negative y
-                    height = - height;
-                }
                 target.rectangle_stats(s.x, s.y, width, height, s.degrees);
             }
+            context.restore();  // matches translate_and_rotate
             return s;
         };
 
@@ -376,7 +380,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         show_stats("red");
         element.rect({name:"a rect", x:10, y:50, w:10, h:120, color:"salmon", degrees:-15});
         show_stats("green");
-        element.text({name:"some text", x:40, y:40, text:"Canvas", color:"#f4d", degrees:45});
+        element.text({name:"some text", x:40, y:40, text:"Canvas", color:"#f4d", degrees:45,
+            font: "bold 20px Arial"});
         show_stats("blue");
         element.line({name:"a line", x1:100, y1:100, x2:150, y2:130, color:"brown"});
         show_stats("black");

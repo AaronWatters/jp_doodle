@@ -228,10 +228,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 return;
             }
             var draw_fn = object_info.draw_on_canvas;
-            draw_fn(target.visible_canvas, object_info);
+            var draw_info = draw_fn(target.visible_canvas, object_info);
+            // store additional information attached during the draw operation
+            $.extend(object_info, draw_info);
             if (object_info.name) {
-                // also draw hidden object using psuedocolor for event lookups
+                // also draw invisible object using psuedocolor for event lookups
                 var info2 = $.extend({}, object_info);
+                if (object_info.draw_mask) {
+                    // convert visible object invisible mask object (text becomes rectangle, eg)
+                    draw_fn = object_info.draw_mask;
+                }
                 info2.color = object_info.pseudocolor;
                 draw_fn(target.invisible_canvas, info2);
             }
@@ -274,7 +280,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target[shape_name] = function(opt, wait) {
                 var draw = function(canvas, s) {
                     var method = canvas[shape_name];
-                    method(s);
+                    var info = method(s);
+                    // store additional information added during draw operation
+                    $.extend(s, info);
                 };
                 var object_info = target.store_object_info(opt, draw);
                 if (!wait) {
