@@ -138,15 +138,31 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     return bar_b.u_index - bar_a.u_index;
                 }
             })
+            var mouseenter_handler = function (e) {
+                debugger;
+                var u_anchor = null;
+                var v_anchor = null;
+                var info = e.object_info;
+                if (info) {
+                    u_anchor = info.u_anchor;
+                    v_anchor = info.v_anchor;
+                }
+                target.focus_anchors(u_anchor, v_anchor);
+            }
+            var mouseleave_handler = function (e) {
+                target.focus_anchors(null, null);
+            }
             // draw the bars
             for (var i=0; i<bars.length; i++) {
                 let bar = bars[i];
                 bar.fill = true;
                 target.rect(bar);
-                var bar_click = function () {
-                    target.focus_anchors(bar.u_anchor, bar.v_anchor);
-                };
-                target.on_canvas_event("click", bar_click, bar.name)
+                //var bar_click = function () {
+                //    target.focus_anchors(bar.u_anchor, bar.v_anchor);
+                //};
+                target.on_canvas_event("mouseover", mouseenter_handler, bar.name);
+                target.on_canvas_event("mouseout", mouseleave_handler, bar.name);
+                //target.on_canvas_event("click", bar_click, bar.name)
                 // outline it
                 let outline = $.extend({}, bar)
                 outline.name = null;
@@ -155,26 +171,27 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 target.rect(outline);
             } 
             // draw anchor texts and markers
-            var put_mark = function(x, y, name, action) {
-                target.circle({name: name, x: x, y: y, r:width/2.0, color:"yellow"});
+            var put_mark = function(x, y, name, u_anchor, v_anchor) {
+                var info = {name: name, x: x, y: y, r:width/2.0, color:"yellow", u_anchor: u_anchor, v_anchor: v_anchor};
+                target.circle(info);
                 target.circle({x: x, y: y, r:width/2.0, color:"#888", fill:false});
-                target.on_canvas_event("click", action, name);
+                target.on_canvas_event("mouseover", mouseenter_handler, name);
+                target.on_canvas_event("mouseout", mouseleave_handler, name);
+                return info;
             }
             var u_anchors = target.bar_u_anchors;
             for (var i=0; i<u_anchors.length; i++) {
                 let u_anchor = u_anchors[i];
                 let position = vscale(i, du);
                 //target.circle({name: u_anchor + "_u_marker", x: position.x + x, y: position.y + y - width, r:width/2.0, color:"yellow"})
-                put_mark(position.x + x + width/2.0, position.y + y - width, u_anchor + "_u_marker", 
-                    function() {target.focus_anchors(u_anchor)});
+                put_mark(position.x + x + width/2.0, position.y + y - width, u_anchor + "_u_marker", u_anchor, null);
                 target.text({text: u_anchor, x: position.x + x, y: position.y + y - 2 * width, degrees: -90, color:"black"})
             }
             var v_anchors = target.bar_v_anchors;
             for (var i=0; i<v_anchors.length; i++) {
                 let v_anchor = v_anchors[i];
                 let position = vscale(i, dv);
-                put_mark(position.x + x + 1.5 * width, position.y + y + width/2, v_anchor + "_v_marker", 
-                    function() {target.focus_anchors(null, v_anchor)});
+                put_mark(position.x + x + 1.5 * width, position.y + y + width/2, v_anchor + "_v_marker", null, v_anchor);
                 //target.circle({name: v_anchor + "_v_marker", x: position.x + x + width, y: position.y + y, r:width/2.0, color:"yellow"})
                 target.text({text: v_anchor, x: position.x + x + 2 * width, y: position.y + y, degrees: 0, color:"black"})
             }

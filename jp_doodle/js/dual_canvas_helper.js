@@ -294,6 +294,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 target.visible_canvas.canvas.on(event_type, target.generic_event_handler);
                 target.event_types[event_type] = true;
             }
+            // mouseover and mouseout events are emulated using mousemove
+            if ((event_type == "mouseover") || (event_type == "mouseout")) {
+                target.watch_event("mousemove");
+            }
             // ??? no provision for forgetting events on the visible canvas?
         };
 
@@ -337,8 +341,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         target.generic_event_handler = function(e) {
-            var event_type = e.type;
-            var default_handler = target.default_event_handlers[event_type];
+            //var event_type = e.type;
+            //var default_handler = target.default_event_handlers[event_type];
             var object_handler = null;
             var invisible = target.invisible_canvas;
             var visible = target.visible_canvas;
@@ -346,19 +350,47 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             e.invisible_color = invisible.color_at(e.pixel_location.x, e.pixel_location.y).data;
             e.color_index = target.color_array_to_index(e.invisible_color);
             e.canvas_name = target.color_index_to_name[e.color_index];
-            if (e.canvas_name) {
-                e.object_info = target.name_to_object_info[e.canvas_name];
-                if (e.object_info) {
-                    var key = "on_" + event_type;
-                    object_handler = e.object_info[key];
+            var process_event = function(e, no_default) {
+                var event_type = e.type;
+                var default_handler = null;
+                if (!no_default) {
+                    default_handler = target.default_event_handlers[event_type];
+                }
+                if (e.canvas_name) {
+                    e.object_info = target.name_to_object_info[e.canvas_name];
+                    if (e.object_info) {
+                        var key = "on_" + event_type;
+                        object_handler = e.object_info[key];
+                    }
+                }
+                // No "event bubbling"?
+                if (object_handler) {
+                    object_handler(e);
+                } else if (default_handler) {
+                    default_handler(e);
+                }
+            };
+            // "normal" event handling
+            process_event(e);
+            // mouseover and mouseout simulation:
+            var last_event = target.last_canvas_event;
+            if ((last_event) && (e.type == "mousemove") && (last_event.canvas_name != e.canvas_name)) {
+                if (last_event.canvas_name) {
+                    var mouseout_event = $.extend({}, e);
+                    mouseout_event.type = "mouseout";
+                    mouseout_event.canvas_name = last_event.canvas_name;
+                    // attempt a mouseout with no default
+                    process_event(mouseout_event);
+                }
+                if (e.canvas_name) {
+                    var mouseover_event = $.extend({}, e);
+                    mouseover_event.type = "mouseover"
+                    // attempt a mouseover with no default
+                    process_event(mouseover_event, true);
                 }
             }
-            // No "event bubbling"?
-            if (object_handler) {
-                object_handler(e);
-            } else if (default_handler) {
-                default_handler(e);
-            }
+            var last_event = target.last_canvas_event;
+            target.last_canvas_event = e;
         }
 
         return target;
