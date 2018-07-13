@@ -83,6 +83,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.bars = bars;
         target.minheight = Math.min(...heights);
         target.maxheight = Math.max(...heights);
+        target.u_selected = null;
+        target.v_selected = null;
 
         target.focus_anchors = function(u_anchor, v_anchor) {
             // focus on anchors or defocus if both null.
@@ -98,6 +100,20 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     target.set_visibilities([bar.name], false);
                 }
             }
+            if (target.u_selected) {
+                target.change_element(target.u_selected + "_u_label", {color: "black"});
+            }
+            if (target.v_selected) {
+                target.change_element(target.v_selected + "_v_label", {color: "black"});
+            }
+            if (u_anchor) {
+                target.change_element(u_anchor + "_u_label", {color: "red"});
+            }
+            if (v_anchor) {
+                target.change_element(v_anchor + "_v_label", {color: "red"});
+            }
+            target.u_selected = u_anchor;
+            target.v_selected = v_anchor;
         };
 
         target.draw_bars = function() {
@@ -137,7 +153,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 } else {
                     return bar_b.u_index - bar_a.u_index;
                 }
-            })
+            });
             var mouseenter_handler = function (e) {
                 debugger;
                 var u_anchor = null;
@@ -184,16 +200,30 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 let u_anchor = u_anchors[i];
                 let position = vscale(i, du);
                 //target.circle({name: u_anchor + "_u_marker", x: position.x + x, y: position.y + y - width, r:width/2.0, color:"yellow"})
-                put_mark(position.x + x + width/2.0, position.y + y - width, u_anchor + "_u_marker", u_anchor, null);
-                target.text({text: u_anchor, x: position.x + x, y: position.y + y - 2 * width, degrees: -90, color:"black"})
+                //put_mark(position.x + x + width/2.0, position.y + y - width, u_anchor + "_u_marker", u_anchor, null);
+                var name = u_anchor + "_u_label";
+                var text_info = {
+                    name: name, 
+                    text: u_anchor, u_anchor: u_anchor,
+                    x: position.x + x, y: position.y + y - 0.5 * width, degrees: -90, color:"black"}
+                target.text(text_info);
+                target.on_canvas_event("mouseover", mouseenter_handler, name);
+                target.on_canvas_event("mouseout", mouseleave_handler, name);
             }
             var v_anchors = target.bar_v_anchors;
             for (var i=0; i<v_anchors.length; i++) {
                 let v_anchor = v_anchors[i];
                 let position = vscale(i, dv);
-                put_mark(position.x + x + 1.5 * width, position.y + y + width/2, v_anchor + "_v_marker", null, v_anchor);
+                //put_mark(position.x + x + 1.5 * width, position.y + y + width/2, v_anchor + "_v_marker", null, v_anchor);
                 //target.circle({name: v_anchor + "_v_marker", x: position.x + x + width, y: position.y + y, r:width/2.0, color:"yellow"})
-                target.text({text: v_anchor, x: position.x + x + 2 * width, y: position.y + y, degrees: 0, color:"black"})
+                var name = v_anchor + "_v_label";
+                var text_info = {
+                    name: name,
+                    text: v_anchor, v_anchor: v_anchor,
+                    x: position.x + x + 1.5 * width, y: position.y + y, degrees: 0, color:"black"}
+                target.text(text_info)
+                target.on_canvas_event("mouseover", mouseenter_handler, name);
+                target.on_canvas_event("mouseout", mouseleave_handler, name);
             }
             // click background for a defocus
             target.on_canvas_event("click", function() {target.focus_anchors();});
