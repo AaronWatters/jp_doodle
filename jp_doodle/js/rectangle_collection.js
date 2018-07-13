@@ -19,7 +19,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             v_label: "depth",
             max_rgb: {r: 255, g: 0, b:0},
             min_rgb: {r: 0, g:255, b: 255},
-            transparency: 0.2,
+            transparency: 0.7,
             name_separator: "|",
         }, options);
         for (var key in settings) {
@@ -61,7 +61,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.interpolate_color = function(lmbda) {
             lmbda = lmbda % 1.0;
             vcolor = vint(vadd(vscale(lmbda, target.bar_max_rgb), vscale(1.0-lmbda, target.bar_min_rgb)));
-            return "rgb(" + vcolor.r + "," + vcolor.g + "," + vcolor.b +")";
+            return "rgba(" + vcolor.r + "," + vcolor.g + "," + vcolor.b + "," + target.bar_transparency + ")";
         }
         target.segment_offset = function(direction, count, fraction, maximum) {
             var factor = maximum * 1.0 / count;
@@ -84,29 +84,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.minheight = Math.min(...heights);
         target.maxheight = Math.max(...heights);
 
-        target.focus_u_anchor = function(u_anchor) {
+        target.focus_anchors = function(u_anchor, v_anchor) {
             var bars = target.bars;
-            // make all other bars
             for (var i=0; i<bars.length; i++) {
                 var bar = bars[i];
-                if (bar.u_anchor == u_anchor) {
+                if ((bar.u_anchor == u_anchor) || (bar.v_anchor == v_anchor)) {
                     // reinstall visible
                     target.rect(bar);
                 } else {
-                    target.forget_objects([bar.name]);
-                }
-            }
-        };
-
-        target.focus_v_anchor = function(v_anchor) {
-            var bars = target.bars;
-            // make all other bars
-            for (var i=0; i<bars.length; i++) {
-                var bar = bars[i];
-                if (bar.v_anchor == v_anchor) {
-                    // reinstall visible
-                    target.rect(bar);
-                } else {
+                    // forget it
                     target.forget_objects([bar.name]);
                 }
             }
@@ -152,11 +138,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             })
             // draw the bars
             for (var i=0; i<bars.length; i++) {
-                var bar = bars[i];
+                let bar = bars[i];
                 bar.fill = true;
                 target.rect(bar);
+                var bar_click = function () {
+                    target.focus_anchors(bar.u_anchor, bar.v_anchor);
+                };
+                target.on_canvas_event("click", bar_click, bar.name)
                 // outline it
-                outline = $.extend({}, bar)
+                let outline = $.extend({}, bar)
                 outline.name = null;
                 outline.color = "black"
                 outline.fill = false;
@@ -173,14 +163,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 let u_anchor = u_anchors[i];
                 let position = vscale(i, du);
                 //target.circle({name: u_anchor + "_u_marker", x: position.x + x, y: position.y + y - width, r:width/2.0, color:"yellow"})
-                put_mark(position.x + x + width/2.0, position.y + y - width, u_anchor + "_u_marker", function() {target.focus_u_anchor(u_anchor)});
+                put_mark(position.x + x + width/2.0, position.y + y - width, u_anchor + "_u_marker", 
+                    function() {target.focus_anchors(u_anchor)});
                 target.text({text: u_anchor, x: position.x + x, y: position.y + y - 2 * width, degrees: -90, color:"black"})
             }
             var v_anchors = target.bar_v_anchors;
             for (var i=0; i<v_anchors.length; i++) {
                 let v_anchor = v_anchors[i];
                 let position = vscale(i, dv);
-                put_mark(position.x + x + 1.5 * width, position.y + y + width/2, v_anchor + "_v_marker", function() {target.focus_v_anchor(v_anchor)});
+                put_mark(position.x + x + 1.5 * width, position.y + y + width/2, v_anchor + "_v_marker", 
+                    function() {target.focus_anchors(null, v_anchor)});
                 //target.circle({name: v_anchor + "_v_marker", x: position.x + x + width, y: position.y + y, r:width/2.0, color:"yellow"})
                 target.text({text: v_anchor, x: position.x + x + 2 * width, y: position.y + y, degrees: 0, color:"black"})
             }
