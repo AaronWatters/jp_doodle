@@ -210,20 +210,27 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     x2: position_end.x + x, y2: position_end.y + y,
                     color: "#999"
                 })
+                // debug mark
+                //target.circle({x: position.x+x, y:position.y+y, r: width*0.2, color:"red"});
                 var name = v_anchor + "_v_label";
                 var align = "right";
-                var text_x = position.x + x + 1.5 * width;
+                var text_x = position.x + x;
+                var x_shift = 1.5 * width
                 var text_y = position.y + y;
                 // flip orientation if needed
                 if (v.x < 0) {
                     align = "left";
-                    text_x = position_end.x + x - 1.5 * width;
+                    x_shift = -x_shift;
+                }
+                if (v.x * u.x > 0) {
+                    // text at end
+                    text_x = position_end.x + x;
                     text_y = position_end.y + y;
                 }
                 var text_info = {
                     name: name,
                     text: v_anchor, v_anchor: v_anchor,
-                    x: text_x, y: text_y, align: align, color:"black"}
+                    x: text_x + x_shift, y: text_y, align: align, color:"black"}
                 target.text(text_info)
                 target.on_canvas_event("mouseover", mouseenter_handler, name);
                 target.on_canvas_event("mouseout", mouseleave_handler, name);
@@ -379,9 +386,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             v: {x:0.8, y:0.3},
             x: 20,
             y: 280,
-            u_label: "person type",
+            u_label: "u: person type",
             u_anchors: "men women children".split(" "),
-            v_label: "State",
+            v_label: "v: State",
             v_anchors: "Pennsylvania New_Jersey New_York Delaware".split(" "),
             max_vertical: 200,
             max_depth: 200,
