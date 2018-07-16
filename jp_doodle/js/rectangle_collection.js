@@ -34,8 +34,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             return result;
         };
-        target.u_index = make_index(settings.u_anchors);
-        target.v_index = make_index(settings.v_anchors);
+
         // utility calculations
         var vscale = function(scalar, vector) {
             result = {};
@@ -69,22 +68,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var width = fraction * factor;
             return {factor: factor, width: width, offset: offset};
         }
-
-        // copy and extend the bars
-        var bars = [];
-        var heights = [];
-        for (var i=0; i<settings.bars.length; i++) {
-            var bar = $.extend({}, settings.bars[i]);
-            heights.push(bar.height);
-            bar.u_index = target.u_index[bar.u_anchor];
-            bar.v_index = target.v_index[bar.v_anchor];
-            bars.push(bar);
-        }
-        target.bars = bars;
-        target.minheight = Math.min(...heights);
-        target.maxheight = Math.max(...heights);
-        target.u_selected = null;
-        target.v_selected = null;
 
         target.focus_anchors = function(u_anchor, v_anchor) {
             // focus on anchors or defocus if both null.
@@ -121,7 +104,26 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 throw new Error("rectangle_collection requires target configured by dual_canvas_helper");
             }
             target.reset_canvas();
-            var bars = target.bars;
+            target.u_index = make_index(target.bar_u_anchors);
+            target.v_index = make_index(target.bar_v_anchors);
+
+            // copy and extend the bars
+            var bars = [];
+            var original_bars = target.bar_bars;
+            var heights = [];
+            for (var i=0; i<original_bars.length; i++) {
+                var bar = $.extend({}, original_bars[i]);
+                heights.push(bar.height);
+                bar.u_index = target.u_index[bar.u_anchor];
+                bar.v_index = target.v_index[bar.v_anchor];
+                bars.push(bar);
+            }
+            target.bars = bars;
+            target.minheight = Math.min(...heights);
+            target.maxheight = Math.max(...heights);
+            target.u_selected = null;
+            target.v_selected = null;
+            //var bars = target.bars;
             var separator = target.bar_name_separator;
             var fraction = target.bar_width_fraction;
             var u = target.bar_u;
