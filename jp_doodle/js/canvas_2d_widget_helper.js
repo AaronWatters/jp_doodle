@@ -150,9 +150,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // XXX maybe configure font using atts/style?
             context.font = s.font;
             context.fillStyle = s.color;
-            // XXX text align?
-            context.fillText(s.text, 0, 0); // translated to (x,y)
             var width = context.measureText(s.text).width;
+            var dx = 0;
+            var rwidth = width;
+            if ((s.align) && (s.align == "left")) {
+                dx = - width;
+                rwidth = - width;
+            }
+            context.fillText(s.text, dx, 0); // translated to (x,y)
             var height = width * 1.4 / s.text.length;  // fudge...
             if (!target.canvas_y_up) {
                 // text draws in negative y
@@ -160,11 +165,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             // use a rectangle for masking operations
             s.draw_mask = function (to_canvas, info) {
-                to_canvas.rect({x: info.x, y: info.y, w:width, h:height, degrees:info.degrees, color:info.color})
+                to_canvas.rect({x: info.x, y: info.y, w:rwidth, h:height, degrees:info.degrees, color:info.color})
             }
             // update stats
             if (target.canvas_stats) {
-                target.rectangle_stats(s.x, s.y, width, height, s.degrees);
+                target.rectangle_stats(s.x, s.y, rwidth, height, s.degrees);
             }
             context.restore();  // matches translate_and_rotate
             return s;
