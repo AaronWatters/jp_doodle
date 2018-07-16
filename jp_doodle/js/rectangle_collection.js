@@ -262,8 +262,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         bar_config.bars = rectangles;
         element.empty();
         var canvas_config = {
-            width: 300,
-            height: 300,
+            width: 600,
+            height: 400,
             //translate_scale: {x: x, y:y, w:w, h:h},
         };
         element.dual_canvas_helper(element, canvas_config);
