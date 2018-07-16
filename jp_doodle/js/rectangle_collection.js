@@ -12,8 +12,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
     $.fn.rectangle_collection = function (target, options) {
         var settings = $.extend({
-            u: {x:1, y:0},
-            v: {x:0.33, y:0.33},
+            u: {x:-1, y:0},
+            v: {x:0.8, y:0.3},
             width_fraction: 0.75,
             u_label: "horizontal",
             v_label: "depth",
@@ -21,6 +21,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             min_rgb: {r: 0, g:255, b: 255},
             transparency: 0.7,
             name_separator: "|",
+            labels_scale: 30,
+            fit: true,
         }, options);
         for (var key in settings) {
             target["bar_" + key] = settings[key];
@@ -175,12 +177,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 let bar = bars[i];
                 bar.fill = true;
                 target.rect(bar);
-                //var bar_click = function () {
-                //    target.focus_anchors(bar.u_anchor, bar.v_anchor);
-                //};
                 target.on_canvas_event("mouseover", mouseenter_handler, bar.name);
                 target.on_canvas_event("mouseout", mouseleave_handler, bar.name);
-                //target.on_canvas_event("click", bar_click, bar.name)
                 // outline it
                 let outline = $.extend({}, bar)
                 outline.name = null;
@@ -188,22 +186,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 outline.fill = false;
                 target.rect(outline);
             } 
-            // draw anchor texts and markers
-            var put_mark = function(x, y, name, u_anchor, v_anchor) {
-                var info = {name: name, x: x, y: y, r:width/2.0, color:"yellow", u_anchor: u_anchor, v_anchor: v_anchor};
-                target.circle(info);
-                target.circle({x: x, y: y, r:width/2.0, color:"#888", fill:false});
-                target.on_canvas_event("mouseover", mouseenter_handler, name);
-                target.on_canvas_event("mouseout", mouseleave_handler, name);
-                return info;
-            }
             var u_anchors = target.bar_u_anchors;
             for (var i=0; i<u_anchors.length; i++) {
                 let u_anchor = u_anchors[i];
                 let position = vscale(i, du);
-                //target.circle({name: u_anchor + "_u_marker", x: position.x + x, y: position.y + y - width, r:width/2.0, color:"yellow"})
-                //put_mark(position.x + x + width/2.0, position.y + y - width, u_anchor + "_u_marker", u_anchor, null);
                 var name = u_anchor + "_u_label";
+                var align = "right";
                 var text_info = {
                     name: name, 
                     text: u_anchor, u_anchor: u_anchor,
@@ -216,8 +204,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             for (var i=0; i<v_anchors.length; i++) {
                 let v_anchor = v_anchors[i];
                 let position = vscale(i, dv);
-                //put_mark(position.x + x + 1.5 * width, position.y + y + width/2, v_anchor + "_v_marker", null, v_anchor);
-                //target.circle({name: v_anchor + "_v_marker", x: position.x + x + width, y: position.y + y, r:width/2.0, color:"yellow"})
                 var name = v_anchor + "_v_label";
                 var text_info = {
                     name: name,
@@ -227,9 +213,69 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 target.on_canvas_event("mouseover", mouseenter_handler, name);
                 target.on_canvas_event("mouseout", mouseleave_handler, name);
             }
+            // add labelling if labels_position is provided
+            var labels_position = target.bar_labels_position;
+            if (labels_position) {
+                var labels_scale = target.bar_labels_scale;
+                var set_label = function (vec, name, text) {
+                    label_xy = vadd(vscale(labels_scale, vec), labels_position);
+                    target.line({
+                        x1: labels_position.x, y1: labels_position.y,
+                        x2: label_xy.x, y2: label_xy.y,
+                        color: "black",
+                    });
+                    var align = "right";
+                    if (vec.x < 0) { align = "left"; }
+                    target.text({
+                        name: name,
+                        text: text,
+                        x: label_xy.x,
+                        y: label_xy.y,
+                        color: "black",
+                        align: align,
+                    })
+                    var move_label = function(event) {
+                        var loc = target.event_model_location(event);
+                        target.change_element(name, {"x":loc.x, "y":loc.y});
+                        var new_vec = vscale(
+                            1.0 / labels_scale,
+                            vadd(
+                                {x: loc.x, y: loc.y},
+                                vscale(-1, labels_position)
+                            )
+                        );
+                        // modify vec in place
+                        $.extend(vec, new_vec);
+                        // redraw
+                        target.draw_bars();
+                        add_label_moving_events();
+                    };
+                    var drop_label = function(event) {
+                        target.bar_fit = true;
+                        target.off_canvas_event("mousemove");
+                        target.off_canvas_event("click");
+                        target.on_canvas_event("click", pick_up_label, name);
+                        target.draw_bars();
+                    };
+                    var pick_up_label = function(event) {
+                        target.bar_fit = false;
+                        add_label_moving_events();
+                    };
+                    var add_label_moving_events = function() {
+                        target.off_canvas_event("click", name);
+                        target.on_canvas_event("mousemove", move_label)
+                        target.on_canvas_event("click", drop_label)
+                    };
+                    target.on_canvas_event("click", pick_up_label, name);
+                };
+                set_label(u, "u_label", target.bar_u_label);
+                set_label(v, "v_label", target.bar_v_label);
+            }
             // click background for a defocus
             target.on_canvas_event("click", function() {target.focus_anchors();});
-            target.fit();
+            if (target.bar_fit) {
+                target.fit(null, target.bar_max_vertical/10.0);
+            }
         }; 
     };
 
@@ -246,6 +292,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             max_vertical: 200,
             max_depth: 200,
             max_width: 50,
+            labels_position: {x: 150, y: 250},
         };
         var rectangles = [];
         for (var i=0; i<bar_config.u_anchors.length; i++) {
