@@ -23,6 +23,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             name_separator: "|",
             labels_scale: 30,
             fit: true,
+            dialog_dw: 0.4,
+            dialog_dh: 0.2,
         }, options);
         for (var key in settings) {
             target["bar_" + key] = settings[key];
@@ -159,7 +161,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
             });
             var mouseenter_handler = function (e) {
-                debugger;
                 var u_anchor = null;
                 var v_anchor = null;
                 var info = e.object_info;
@@ -168,10 +169,66 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     v_anchor = info.v_anchor;
                 }
                 target.focus_anchors(u_anchor, v_anchor);
+                if (u_anchor && v_anchor) {
+                    put_dialog(e);
+                }
             }
             var mouseleave_handler = function (e) {
                 target.focus_anchors(null, null);
+                hide_dialog(e);
+            };
+            var u_anchors = target.bar_u_anchors;
+            var v_anchors = target.bar_v_anchors;
+            // position the u labels rotated
+            var v_offset = vscale(v_anchors.length-1, dv);
+            for (var i=0; i<u_anchors.length; i++) {
+                let u_anchor = u_anchors[i];
+                let position = vscale(i, du);
+                let position_end = vadd(v_offset, position);
+                target.line({
+                    x1: position.x + x, y1: position.y + y,
+                    x2: position_end.x + x, y2: position_end.y + y,
+                    color: "#999"
+                })
+                var name = u_anchor + "_u_label";
+                var text_info = {
+                    name: name, 
+                    text: u_anchor, u_anchor: u_anchor,
+                    x: position.x + x, y: position.y + y - 0.5 * width, degrees: -90, color:"black"}
+                target.text(text_info);
+                target.on_canvas_event("mouseover", mouseenter_handler, name);
+                target.on_canvas_event("mouseout", mouseleave_handler, name);
             }
+            // position the v labels unrotated
+            var u_offset = vscale(u_anchors.length-1, du);
+            for (var i=0; i<v_anchors.length; i++) {
+                let v_anchor = v_anchors[i];
+                let position = vscale(i, dv);
+                let position_end = vadd(u_offset, position);
+                target.line({
+                    x1: position.x + x, y1: position.y + y,
+                    x2: position_end.x + x, y2: position_end.y + y,
+                    color: "#999"
+                })
+                var name = v_anchor + "_v_label";
+                var align = "right";
+                var text_x = position.x + x + 1.5 * width;
+                var text_y = position.y + y;
+                // flip orientation if needed
+                if (v.x < 0) {
+                    align = "left";
+                    text_x = position_end.x + x - 1.5 * width;
+                    text_y = position_end.y + y;
+                }
+                var text_info = {
+                    name: name,
+                    text: v_anchor, v_anchor: v_anchor,
+                    x: text_x, y: text_y, align: align, color:"black"}
+                target.text(text_info)
+                target.on_canvas_event("mouseover", mouseenter_handler, name);
+                target.on_canvas_event("mouseout", mouseleave_handler, name);
+            }
+
             // draw the bars
             for (var i=0; i<bars.length; i++) {
                 let bar = bars[i];
@@ -186,33 +243,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 outline.fill = false;
                 target.rect(outline);
             } 
-            var u_anchors = target.bar_u_anchors;
-            for (var i=0; i<u_anchors.length; i++) {
-                let u_anchor = u_anchors[i];
-                let position = vscale(i, du);
-                var name = u_anchor + "_u_label";
-                var align = "right";
-                var text_info = {
-                    name: name, 
-                    text: u_anchor, u_anchor: u_anchor,
-                    x: position.x + x, y: position.y + y - 0.5 * width, degrees: -90, color:"black"}
-                target.text(text_info);
-                target.on_canvas_event("mouseover", mouseenter_handler, name);
-                target.on_canvas_event("mouseout", mouseleave_handler, name);
-            }
-            var v_anchors = target.bar_v_anchors;
-            for (var i=0; i<v_anchors.length; i++) {
-                let v_anchor = v_anchors[i];
-                let position = vscale(i, dv);
-                var name = v_anchor + "_v_label";
-                var text_info = {
-                    name: name,
-                    text: v_anchor, v_anchor: v_anchor,
-                    x: position.x + x + 1.5 * width, y: position.y + y, degrees: 0, color:"black"}
-                target.text(text_info)
-                target.on_canvas_event("mouseover", mouseenter_handler, name);
-                target.on_canvas_event("mouseout", mouseleave_handler, name);
-            }
             // add labelling if labels_position is provided
             var labels_position = target.bar_labels_position;
             if (labels_position) {
@@ -276,6 +306,70 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             if (target.bar_fit) {
                 target.fit(null, target.bar_max_vertical/10.0);
             }
+
+            // mouse over dialog
+            var mouse_over_info = {
+                name: "dialog",
+                x: 0, y: 0, hide: true,
+                w: target.bar_dialog_dw * target.bar_max_vertical,
+                h: target.bar_dialog_dh * target.bar_max_vertical,
+                color: "rgba(200, 200, 200, 1.0)"
+            };
+            target.rect(mouse_over_info);
+            target.text({
+                name: "dialog_u",
+                x: 0, y: 0, hide: true,
+                color: "black"
+            });
+            target.text({
+                name: "dialog_v",
+                x: 0, y: 0, hide: true,
+                color: "black"
+            });
+            target.text({
+                name: "dialog_h",
+                x: 0, y: 0, hide: true,
+                color: "black"
+            });
+            var put_dialog = function(event) {
+                target.bar_fit = false;
+                var bar_info = event.object_info;
+                var loc = target.event_model_location(event);
+                var shift = target.bar_max_vertical * 0.05
+                target.change_element("dialog", {
+                    hide: false,
+                    x: loc.x + shift,
+                    y: loc.y
+                });
+                target.change_element("dialog_u", {
+                    hide: false,
+                    x: loc.x + 2 * shift,
+                    y: loc.y + 0.63 * mouse_over_info.h,
+                    text: bar_info.u_anchor,
+                    color: "black"
+                });
+                target.change_element("dialog_v", {
+                    hide: false,
+                    x: loc.x + 2 * shift,
+                    y: loc.y + 0.38 * mouse_over_info.h,
+                    text: bar_info.v_anchor,
+                    color: "black"
+                });
+                target.change_element("dialog_h", {
+                    hide: false,
+                    x: loc.x + 2 * shift,
+                    y: loc.y + 0.13 * mouse_over_info.h,
+                    text: bar_info.height.toFixed(3),
+                    color: "black"
+                });
+            };
+            var hide_dialog = function(event) {
+                target.bar_fit = true;
+                target.change_element("dialog", {hide: true});
+                target.change_element("dialog_u", {hide: true});
+                target.change_element("dialog_v", {hide: true});
+                target.change_element("dialog_h", {hide: true});
+            };
         }; 
     };
 
