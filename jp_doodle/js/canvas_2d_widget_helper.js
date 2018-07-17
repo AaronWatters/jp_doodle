@@ -145,20 +145,21 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 font: target.canvas_font,
                 color: target.canvas_fillColor,
             }, opt);
+            var text = "" + s.text;  // coerce to string
             target.translate_and_rotate(s.x, s.y, s.degrees);
             var context = target.canvas_context;
             // XXX maybe configure font using atts/style?
             context.font = s.font;
             context.fillStyle = s.color;
-            var width = context.measureText(s.text).width;
+            var width = context.measureText(text).width;
             var dx = 0;
             var rwidth = width;
             if ((s.align) && (s.align == "left")) {
                 dx = - width;
                 rwidth = - width;
             }
-            context.fillText(s.text, dx, 0); // translated to (x,y)
-            var height = width * 1.4 / s.text.length;  // fudge...
+            context.fillText(text, dx, 0); // translated to (x,y)
+            var height = width * 1.4 / text.length;  // fudge...
             if (!target.canvas_y_up) {
                 // text draws in negative y
                 height = - height;

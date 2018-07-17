@@ -14,6 +14,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         var settings = $.extend({
             u: {x:-1, y:0},
             v: {x:0.8, y:0.3},
+            x: 0,
+            y: 0,
             width_fraction: 0.75,
             u_label: "horizontal",
             v_label: "depth",
@@ -25,6 +27,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             fit: true,
             dialog_dw: 0.4,
             dialog_dh: 0.2,
+            max_width: 50,
+            max_depth: 200,
+            max_vertical: 200,
         }, options);
         for (var key in settings) {
             target["bar_" + key] = settings[key];
@@ -246,7 +251,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // outline it
                 let outline = $.extend({}, bar)
                 outline.name = null;
-                outline.color = "black"
+                outline.color = "rgba(0,0,0,0.2)"; // "black"
                 outline.fill = false;
                 target.rect(outline);
             } 
@@ -320,7 +325,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 x: 0, y: 0, hide: true,
                 w: target.bar_dialog_dw * target.bar_max_vertical,
                 h: target.bar_dialog_dh * target.bar_max_vertical,
-                color: "rgba(200, 200, 200, 1.0)"
+                color: "rgba(200, 200, 200, 0.7)"
             };
             target.rect(mouse_over_info);
             target.text({
@@ -352,21 +357,25 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     hide: false,
                     x: loc.x + 2 * shift,
                     y: loc.y + 0.63 * mouse_over_info.h,
-                    text: bar_info.u_anchor,
+                    text: target.bar_u_label+": "+bar_info.u_anchor,
                     color: "black"
                 });
                 target.change_element("dialog_v", {
                     hide: false,
                     x: loc.x + 2 * shift,
                     y: loc.y + 0.38 * mouse_over_info.h,
-                    text: bar_info.v_anchor,
+                    text: target.bar_v_label+": "+bar_info.v_anchor,
                     color: "black"
                 });
+                var h_text = bar_info.height.toFixed(2)
+                if (h_text.length > 7) {
+                    h_text = bar_info.toExponential(2);
+                }
                 target.change_element("dialog_h", {
                     hide: false,
                     x: loc.x + 2 * shift,
                     y: loc.y + 0.13 * mouse_over_info.h,
-                    text: bar_info.height.toFixed(3),
+                    text: h_text,
                     color: "black"
                 });
             };
@@ -386,9 +395,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             v: {x:0.8, y:0.3},
             x: 20,
             y: 280,
-            u_label: "u: person type",
+            u_label: "person type",
             u_anchors: "men women children".split(" "),
-            v_label: "v: State",
+            v_label: "State",
             v_anchors: "Pennsylvania New_Jersey New_York Delaware".split(" "),
             max_vertical: 200,
             max_depth: 200,
