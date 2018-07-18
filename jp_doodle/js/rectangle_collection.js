@@ -27,6 +27,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             fit: true,
             dialog_dw: 0.4,
             dialog_dh: 0.2,
+            dtext: 0.03,
             max_width: 50,
             max_depth: 200,
             max_vertical: 200,
@@ -108,13 +109,24 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.v_selected = v_anchor;
         };
 
-        target.draw_bars = function() {
+        target.draw_bars = function(no_redraw) {
             if (!target.reset_canvas) {
                 throw new Error("rectangle_collection requires target configured by dual_canvas_helper");
             }
-            target.reset_canvas();
+            // get canvas stats before resetting the canvas and clearing the stats
+            var stats = target.visible_canvas.canvas_stats;
+            // reset the canvas and keep statistics.
+            target.reset_canvas(true);
             target.u_index = make_index(target.bar_u_anchors);
             target.v_index = make_index(target.bar_v_anchors);
+            var extent = target.bar_max_vertical;
+            var redraw;
+            if (stats) {
+                no_redraw = true;
+                var extent = Math.max((stats.max_y - stats.min_y), (stats.max_x - stats.min_x));
+            }
+            target.text_size = Math.ceil(extent/40.0);
+            target.font = "normal " + target.text_size + "px Arial";
 
             // copy and extend the bars
             var bars = [];
@@ -198,6 +210,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var name = u_anchor + "_u_label";
                 var text_info = {
                     name: name, 
+                    font: target.font,
                     text: u_anchor, u_anchor: u_anchor,
                     x: position.x + x, y: position.y + y - 0.5 * width, degrees: -90, color:"black"}
                 target.text(text_info);
@@ -235,6 +248,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var text_info = {
                     name: name,
                     text: v_anchor, v_anchor: v_anchor,
+                    font: target.font,
                     x: text_x + x_shift, y: text_y, align: align, color:"black"}
                 target.text(text_info)
                 target.on_canvas_event("mouseover", mouseenter_handler, name);
@@ -271,6 +285,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     target.text({
                         name: name,
                         text: text,
+                        font: target.font,
                         x: label_xy.x,
                         y: label_xy.y,
                         color: "black",
@@ -308,7 +323,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         target.on_canvas_event("mousemove", move_label)
                         target.on_canvas_event("click", drop_label)
                     };
+                    var redden = function(event) {
+                        target.change_element(name, {color: "red"});
+                    };
+                    var blacken = function(event) {
+                        target.change_element(name, {color: "black"});
+                    };
                     target.on_canvas_event("click", pick_up_label, name);
+                    target.on_canvas_event("mouseover", redden, name);
+                    target.on_canvas_event("mouseout", blacken, name);
                 };
                 set_label(u, "u_label", target.bar_u_label);
                 set_label(v, "v_label", target.bar_v_label);
@@ -323,23 +346,26 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var mouse_over_info = {
                 name: "dialog",
                 x: 0, y: 0, hide: true,
-                w: target.bar_dialog_dw * target.bar_max_vertical,
-                h: target.bar_dialog_dh * target.bar_max_vertical,
+                w: target.bar_dialog_dw * extent,
+                h: target.bar_dialog_dh * extent,
                 color: "rgba(200, 200, 200, 0.7)"
             };
             target.rect(mouse_over_info);
             target.text({
                 name: "dialog_u",
+                font: target.font,
                 x: 0, y: 0, hide: true,
                 color: "black"
             });
             target.text({
                 name: "dialog_v",
+                font: target.font,
                 x: 0, y: 0, hide: true,
                 color: "black"
             });
             target.text({
                 name: "dialog_h",
+                font: target.font,
                 x: 0, y: 0, hide: true,
                 color: "black"
             });
@@ -347,7 +373,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 target.bar_fit = false;
                 var bar_info = event.object_info;
                 var loc = target.event_model_location(event);
-                var shift = target.bar_max_vertical * 0.05
+                var shift = extent * target.bar_dialog_dh * 0.25;
                 target.change_element("dialog", {
                     hide: false,
                     x: loc.x + shift,
@@ -386,6 +412,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 target.change_element("dialog_v", {hide: true});
                 target.change_element("dialog_h", {hide: true});
             };
+            // redraw if needed to get proper proportions
+            if (!no_redraw) {
+                target.draw_bars(true);  // don't redraw again
+            }
         }; 
     };
 
