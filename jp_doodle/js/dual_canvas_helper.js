@@ -29,7 +29,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target["canvas_" + key] = settings[key];
         }
 
-        target.reset_canvas = function () {
+        target.reset_canvas = function (keep_stats) {
             if (target.canvas_container) {
                 target.canvas_container.empty();
             } else {
@@ -44,6 +44,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.invisible_canvas = $("<div/>").appendTo(target.canvas_container);
             target.invisible_canvas.hide();
             target.canvas_2d_widget_helper(target.visible_canvas, settings_overrides);
+            if (keep_stats) {
+                target.visible_canvas.canvas_stats = {};
+            }
             target.canvas_2d_widget_helper(target.invisible_canvas, settings_overrides);
             // object list for redraws
             target.object_list = [];
