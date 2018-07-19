@@ -103,11 +103,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 start: 0,
                 arc: 2 * Math.PI,
                 fill: true,  // if false then do a outline
+                converted_location: target.converted_location,
             }, opt);
             var context = target.canvas_context;
             context.beginPath();
             //context.fillStyle = s.color;
-            var center = target.converted_location(s.x, s.y);
+            var center = s.converted_location(s.x, s.y);
+            // XXXX should also convert s.r?
             context.arc(center.x, center.y, s.r, s.start, s.arc);
             fill_or_stroke(context, s);
             // update stats
@@ -122,13 +124,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var s = $.extend({
                 color: target.canvas_strokeStyle,
                 lineWidth: target.canvas_lineWidth,
+                converted_location: target.converted_location,
             }, opt);
             var context = target.canvas_context;
             context.beginPath();
             context.strokeStyle = s.color;
             context.lineWidth = s.lineWidth;
-            var p1 = target.converted_location(s.x1, s.y1);
-            var p2 = target.converted_location(s.x2, s.y2);
+            var p1 = s.converted_location(s.x1, s.y1);
+            var p2 = s.converted_location(s.x2, s.y2);
             context.moveTo(p1.x, p1.y);
             context.lineTo(p2.x, p2.y);
             context.stroke();
@@ -144,9 +147,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var s = $.extend({
                 font: target.canvas_font,
                 color: target.canvas_fillColor,
+                converted_location: target.converted_location,
             }, opt);
             var text = "" + s.text;  // coerce to string
-            target.translate_and_rotate(s.x, s.y, s.degrees);
+            target.translate_and_rotate(s.x, s.y, s.degrees, s.converted_location);
             var context = target.canvas_context;
             // XXX maybe configure font using atts/style?
             context.font = s.font;
@@ -194,10 +198,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             add_offset(w, h);
         }
 
-        target.translate_and_rotate = function(x, y, degrees) {
+        target.translate_and_rotate = function(x, y, degrees, converted_location) {
             var context = target.canvas_context;
             context.save();   // should be matched by restore elsewhere
-            var cvt = target.converted_location(x, y);
+            var cvt = converted_location(x, y);
             if (target.canvas_y_up) {
                 degrees = -degrees;  // standard counter clockwise rotation convention.
             }
@@ -211,8 +215,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var s = $.extend({
                 color: target.canvas_fillColor,
                 fill: true,  // if false then do a outline
+                converted_location: target.converted_location,
             }, opt);
-            target.translate_and_rotate(s.x, s.y, s.degrees);
+            // xxxx should also convert s.w and s.h?
+            target.translate_and_rotate(s.x, s.y, s.degrees, s.converted_location);
             var context = target.canvas_context;
             context.beginPath();
             //context.fillStyle = s.color;
@@ -245,17 +251,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 color: target.canvas_fillColor,
                 fill: true,  // if false then do a outline
                 close: true,
+                converted_location: target.converted_location,
             }, opt);
             var context = target.canvas_context;
             //context.fillStyle = s.color;
             var points = s.points;
             context.beginPath();
             var point0 = points[0];
-            var p0c = target.converted_location(point0[0], point0[1]);
+            var p0c = s.converted_location(point0[0], point0[1]);
             context.moveTo(p0c.x, p0c.y);
             for (var i=1; i<points.length; i++) {
                 var point = points[i];
-                var pc = target.converted_location(point[0], point[1]);
+                var pc = s.converted_location(point[0], point[1]);
                 context.lineTo(pc.x, pc.y);
             }
             if (s.close) {
@@ -305,7 +312,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         target.event_canvas_location = function(e) {
-            // Determine teh coordinate in canvas space for an event e.
+            // Determine the coordinate in canvas space for an event e.
             // https://stackoverflow.com/questions/17130395/real-mouse-position-in-canvas
             var canvas = target.canvas[0];
             //var rect = canvas.getBoundingClientRect();
@@ -327,9 +334,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return {x: x, y: y};
         };
 
-        target.event_model_location = function(e) {
+        target.event_model_location = function(e, converted_location) {
+            if (!converted_location) {
+                converted_location = target.converted_location;
+            }
             var cl = target.event_canvas_location(e);
-            return target.converted_location(cl.x, cl.y);
+            return converted_location(cl.x, cl.y);
         };
 
         target.event_color = function(e) {
@@ -356,8 +366,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return {x: px, y: py};
         };
 
-        target.model_to_pixel = function (mx, my) {
-            var c = target.converted_location(mx, my);
+        target.model_to_pixel = function (mx, my, converted_location) {
+            if (!converted_location) {
+                converted_location = target.converted_location;
+            }
+            var c = converted_location(mx, my);
             return target.canvas_to_pixel(c.x, c.y);
         }
 
