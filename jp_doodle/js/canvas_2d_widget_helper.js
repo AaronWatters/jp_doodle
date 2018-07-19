@@ -374,6 +374,29 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return target.canvas_to_pixel(c.x, c.y);
         }
 
+        // generally useful vector calculations (xxxx here?)
+        target.vscale = function(scalar, vector) {
+            result = {};
+            for (slot in vector){
+                result[slot] = vector[slot] * scalar;
+            }
+            return result;
+        };
+        target.vadd = function(v1, v2) {
+            result = {};
+            for (slot in v1){
+                result[slot] = v1[slot] + v2[slot];
+            }
+            return result;
+        };
+        target.vint = function(vector) {
+            result = {};
+            for (slot in vector){
+                result[slot] = Math.floor(vector[slot]);
+            }
+            return result;
+        };
+
         return target;
     };
 
