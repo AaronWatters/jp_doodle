@@ -104,6 +104,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 arc: 2 * Math.PI,
                 fill: true,  // if false then do a outline
                 converted_location: target.converted_location,
+                frame: target,
             }, opt);
             var context = target.canvas_context;
             context.beginPath();
@@ -125,6 +126,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 color: target.canvas_strokeStyle,
                 lineWidth: target.canvas_lineWidth,
                 converted_location: target.converted_location,
+                frame: target,
             }, opt);
             var context = target.canvas_context;
             context.beginPath();
@@ -148,6 +150,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 font: target.canvas_font,
                 color: target.canvas_fillColor,
                 converted_location: target.converted_location,
+                frame: target,
             }, opt);
             var text = "" + s.text;  // coerce to string
             target.translate_and_rotate(s.x, s.y, s.degrees, s.converted_location);
@@ -158,7 +161,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var width = context.measureText(text).width;
             var dx = 0;
             var rwidth = width;
-            if ((s.align) && (s.align == "left")) {
+            if ((s.align) && (s.align == "right")) {
                 dx = - width;
                 rwidth = - width;
             }
@@ -216,6 +219,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 color: target.canvas_fillColor,
                 fill: true,  // if false then do a outline
                 converted_location: target.converted_location,
+                frame: target,
             }, opt);
             // xxxx should also convert s.w and s.h?
             target.translate_and_rotate(s.x, s.y, s.degrees, s.converted_location);
@@ -252,6 +256,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 fill: true,  // if false then do a outline
                 close: true,
                 converted_location: target.converted_location,
+                frame: target,
             }, opt);
             var context = target.canvas_context;
             //context.fillStyle = s.color;
@@ -334,9 +339,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return {x: x, y: y};
         };
 
-        target.event_model_location = function(e, converted_location) {
-            if (!converted_location) {
-                converted_location = target.converted_location;
+        target.event_model_location = function(e) {
+            var converted_location = target.converted_location;
+            var object_info = e.object_info;
+            if (object_info) {
+                converted_location = object_info.converted_location;
             }
             var cl = target.event_canvas_location(e);
             return converted_location(cl.x, cl.y);

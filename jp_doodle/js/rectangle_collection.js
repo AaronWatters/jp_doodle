@@ -231,13 +231,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // debug mark
                 //target.circle({x: position.x+x, y:position.y+y, r: width*0.2, color:"red"});
                 var name = v_anchor + "_v_label";
-                var align = "right";
+                var align = "left";
                 var text_x = position.x + x;
                 var x_shift = 1.5 * width
                 var text_y = position.y + y;
                 // flip orientation if needed
                 if (v.x < 0) {
-                    align = "left";
+                    align = "right";
                     x_shift = -x_shift;
                 }
                 if (v.x * u.x > 0) {
@@ -280,8 +280,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         x2: label_xy.x, y2: label_xy.y,
                         color: "black",
                     });
-                    var align = "right";
-                    if (vec.x < 0) { align = "left"; }
+                    var align = "left";
+                    if (vec.x < 0) { align = "right"; }
                     target.text({
                         name: name,
                         text: text,
