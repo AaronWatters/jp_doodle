@@ -71,6 +71,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.canvas_stats = null;
 
         target.add_point_stats = function (x, y) {
+            if (isNaN(x) || isNaN(y)) {
+                throw new Error("cannot add point with NaN " + x + "," + y)
+            }
             var stats = target.canvas_stats;
             if (stats) {
                 if (stats.count) {
@@ -93,9 +96,35 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
         }
 
+        target.show_debug_bbox = function (save, color) {
+            // show the current bounding box and reset stats
+            if (!color) { color = "black"; }
+            var stats = target.canvas_stats;
+            if ((stats) && (stats.count)) {
+                var mins = target.converted_location(stats.min_x, stats.min_y);
+                var maxes = target.converted_location(stats.max_x, stats.max_y);
+                var height = maxes.y - mins.y;
+                var width = maxes.x - mins.x;
+                var context = target.canvas_context;
+                context.beginPath();
+                context.rect(mins.x, mins.y, width, height);
+                context.strokeStyle = color;
+                context.stroke();
+            }
+            if ((!stats) || (!save)) {
+                // reset the bbox stats
+                target.canvas_stats = {};
+            }
+        }
+
         target.canvas_assign = function(slot_name, value) {
             target.canvas_context[slot_name] = value;
         };
+
+        var no_change_conversion = function (x, y) {
+            // default frame conversion: no change
+            return {x: x, y: y};
+        }
 
         target.circle = function(opt) {
             var s = $.extend({
@@ -103,20 +132,21 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 start: 0,
                 arc: 2 * Math.PI,
                 fill: true,  // if false then do a outline
-                converted_location: target.converted_location,
+                coordinate_conversion: no_change_conversion,
                 frame: target,
             }, opt);
             var context = target.canvas_context;
             context.beginPath();
             //context.fillStyle = s.color;
-            var center = s.converted_location(s.x, s.y);
+            var fcenter = s.coordinate_conversion(s.x, s.y);
+            var center = target.converted_location(fcenter.x, fcenter.y);
             // XXXX should also convert s.r?
             context.arc(center.x, center.y, s.r, s.start, s.arc);
             fill_or_stroke(context, s);
             // update stats
             if (target.canvas_stats) {
-                target.add_point_stats(s.x + s.r, s.y + s.r);
-                target.add_point_stats(s.x - s.r, s.y - s.r);
+                target.add_point_stats(fcenter.x + s.r, fcenter.y + s.r);
+                target.add_point_stats(fcenter.x - s.r, fcenter.y - s.r);
             }
             return s;
         };
@@ -125,22 +155,24 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var s = $.extend({
                 color: target.canvas_strokeStyle,
                 lineWidth: target.canvas_lineWidth,
-                converted_location: target.converted_location,
+                coordinate_conversion: no_change_conversion,
                 frame: target,
             }, opt);
             var context = target.canvas_context;
             context.beginPath();
             context.strokeStyle = s.color;
             context.lineWidth = s.lineWidth;
-            var p1 = s.converted_location(s.x1, s.y1);
-            var p2 = s.converted_location(s.x2, s.y2);
+            var fp1 = s.coordinate_conversion(s.x1, s.y1);
+            var fp2 = s.coordinate_conversion(s.x2, s.y2);
+            var p1 = target.converted_location(fp1.x, fp1.y);
+            var p2 = target.converted_location(fp2.x, fp2.y);
             context.moveTo(p1.x, p1.y);
             context.lineTo(p2.x, p2.y);
             context.stroke();
             // update stats
             if (target.canvas_stats) {
-                target.add_point_stats(s.x1, s.y1);
-                target.add_point_stats(s.x2, s.y2);
+                target.add_point_stats(fp1.x, fp1.y);
+                target.add_point_stats(fp2.x, fp2.y);
             }
             return s;
         };
@@ -149,11 +181,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var s = $.extend({
                 font: target.canvas_font,
                 color: target.canvas_fillColor,
-                converted_location: target.converted_location,
+                coordinate_conversion: no_change_conversion,
                 frame: target,
             }, opt);
             var text = "" + s.text;  // coerce to string
-            target.translate_and_rotate(s.x, s.y, s.degrees, s.converted_location);
+            target.translate_and_rotate(s.x, s.y, s.degrees, s.coordinate_conversion);
             var context = target.canvas_context;
             // XXX maybe configure font using atts/style?
             context.font = s.font;
@@ -177,35 +209,37 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             // update stats
             if (target.canvas_stats) {
-                target.rectangle_stats(s.x, s.y, rwidth, height, s.degrees);
+                target.rectangle_stats(s.x, s.y, rwidth, height, s.degrees, s.coordinate_conversion);
             }
             context.restore();  // matches translate_and_rotate
             return s;
         };
 
-        target.rectangle_stats = function(x, y, w, h, degrees) {
+        target.rectangle_stats = function(x, y, w, h, degrees, coordinate_conversion) {
             var radians = 0.0;
             if (degrees) {
                 radians = degrees * Math.PI / 180.0;
             }
+            var cvt = coordinate_conversion(x, y);
             var c = Math.cos(radians);
             var s = Math.sin(radians);
             var add_offset = function (dx, dy) {
-                var x1 = x + (dx * c - dy * s);
-                var y1 = y + (dx * s + dy * c);
+                var x1 = cvt.x + (dx * c - dy * s);
+                var y1 = cvt.y + (dx * s + dy * c);
                 target.add_point_stats(x1, y1);
             };
-            target.add_point_stats(x, y);
+            target.add_point_stats(cvt.x, cvt.y);
             add_offset(w, 0);
             add_offset(0, h);
             add_offset(w, h);
         }
 
-        target.translate_and_rotate = function(x, y, degrees, converted_location) {
+        target.translate_and_rotate = function(x, y, degrees, coordinate_conversion) {
             var context = target.canvas_context;
             context.save();   // should be matched by restore elsewhere
-            var cvt = converted_location(x, y);
-            if (target.canvas_y_up) {
+            var coords = coordinate_conversion(x, y);
+            var cvt = target.converted_location(coords.x, coords.y);
+            if ((degrees) && (target.canvas_y_up)) {
                 degrees = -degrees;  // standard counter clockwise rotation convention.
             }
             context.translate(cvt.x, cvt.y);
@@ -218,11 +252,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var s = $.extend({
                 color: target.canvas_fillColor,
                 fill: true,  // if false then do a outline
-                converted_location: target.converted_location,
+                coordinate_conversion: no_change_conversion,
                 frame: target,
             }, opt);
             // xxxx should also convert s.w and s.h?
-            target.translate_and_rotate(s.x, s.y, s.degrees, s.converted_location);
+            target.translate_and_rotate(s.x, s.y, s.degrees, s.coordinate_conversion);
             var context = target.canvas_context;
             context.beginPath();
             //context.fillStyle = s.color;
@@ -235,7 +269,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             context.restore();  // matches translate_and_rotate
             // update stats
             if (target.canvas_stats) {
-                target.rectangle_stats(s.x, s.y, s.w, s.h, s.degrees);
+                target.rectangle_stats(s.x, s.y, s.w, s.h, s.degrees, s.coordinate_conversion);
             }
             return s;
         }
@@ -255,7 +289,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 color: target.canvas_fillColor,
                 fill: true,  // if false then do a outline
                 close: true,
-                converted_location: target.converted_location,
+                coordinate_conversion: no_change_conversion,
                 frame: target,
             }, opt);
             var context = target.canvas_context;
@@ -263,24 +297,25 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var points = s.points;
             context.beginPath();
             var point0 = points[0];
-            var p0c = s.converted_location(point0[0], point0[1]);
+            var p0f = s.coordinate_conversion(point0[0], point0[1]);
+            var p0c = target.converted_location(p0f.x, p0f.y);
+            if (target.canvas_stats) {
+                target.add_point_stats(p0f.x, p0f.y);
+            }
             context.moveTo(p0c.x, p0c.y);
             for (var i=1; i<points.length; i++) {
                 var point = points[i];
-                var pc = s.converted_location(point[0], point[1]);
+                var pf = s.coordinate_conversion(point[0], point[1]);
+                var pc = target.converted_location(pf.x, pf.y);
                 context.lineTo(pc.x, pc.y);
+                if (target.canvas_stats) {
+                    target.add_point_stats(pf.x, pf.y);
+                }
             }
             if (s.close) {
                 context.closePath();
             }
             fill_or_stroke(context, s);
-            // update stats
-            if (target.canvas_stats) {
-                for (var i=0; i<points.length; i++) {
-                    var point = points[i];
-                    target.add_point_stats(point[0], point[1]);
-                } 
-            }
             return s;
         };
 
@@ -340,13 +375,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         target.event_model_location = function(e) {
-            var converted_location = target.converted_location;
-            var object_info = e.object_info;
-            if (object_info) {
-                converted_location = object_info.converted_location;
-            }
+            // gives the model location of the event, not the frame location of objects in the model.
             var cl = target.event_canvas_location(e);
-            return converted_location(cl.x, cl.y);
+            return target.converted_location(cl.x, cl.y);
         };
 
         target.event_color = function(e) {
@@ -373,31 +404,35 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return {x: px, y: py};
         };
 
-        target.model_to_pixel = function (mx, my, converted_location) {
-            if (!converted_location) {
-                converted_location = target.converted_location;
-            }
-            var c = converted_location(mx, my);
+        target.model_to_pixel = function (mx, my) {
+            var c = target.converted_location(mx, my);
             return target.canvas_to_pixel(c.x, c.y);
         }
 
+        target.canvas_2d_widget_helper.add_vector_ops(target);
+
+        return target;
+    };
+
+    $.fn.canvas_2d_widget_helper.add_vector_ops = function(target) {
+
         // generally useful vector calculations (xxxx here?)
         target.vscale = function(scalar, vector) {
-            result = {};
+            var result = {};
             for (slot in vector){
                 result[slot] = vector[slot] * scalar;
             }
             return result;
         };
         target.vadd = function(v1, v2) {
-            result = {};
+            var result = {};
             for (slot in v1){
                 result[slot] = v1[slot] + v2[slot];
             }
             return result;
         };
         target.vint = function(vector) {
-            result = {};
+            var result = {};
             for (slot in vector){
                 result[slot] = Math.floor(vector[slot]);
             }
@@ -405,7 +440,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         return target;
-    };
+    }
 
     $.fn.canvas_2d_widget_helper.example = function(element) {
         debugger;

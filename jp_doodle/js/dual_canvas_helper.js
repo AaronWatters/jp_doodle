@@ -300,6 +300,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         assign_shape_factory("rect");
         assign_shape_factory("polygon");
 
+        target.converted_location = function (x, y) {
+            return target.visible_canvas.converted_location(x, y);
+        }
+
         target.watch_event = function(event_type) {
             if (!target.event_types[event_type]) {
                 target.visible_canvas.canvas.on(event_type, target.generic_event_handler);
@@ -402,10 +406,93 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             var last_event = target.last_canvas_event;
             target.last_canvas_event = e;
-        }
+        };
+
+        target.vector_frame = function(
+            x_vector,
+            y_vector,
+            xy_offset) {
+            return target.dual_canvas_helper.reference_frame(
+                target,
+                x_vector,
+                y_vector,
+                xy_offset
+            );
+        };
+
+        target.rframe = function(scale_x, scale_y, translate_x, translate_y) {
+            return target.vector_frame(
+                {x: scale_x, y:0},
+                {x:0, y: scale_y},
+                {x: translate_x, y: translate_y}
+            );
+            // xxxx could add special methods like model_to_pixel.
+        };
+
+        target.canvas_2d_widget_helper.add_vector_ops(target);
 
         return target;
     };
+
+    $.fn.dual_canvas_helper.reference_frame = function(
+        parent_canvas, 
+        x_vector, 
+        y_vector, 
+        xy_offset) 
+    {
+        // View into canvas with shifted and scaled positions.
+        // Do not adjust rectangle w/h or orientation, text parameters, or circle radius.
+        if (!x_vector) {
+            x_vector = {x: 1, y: 0};
+        }
+        if (!y_vector) {
+            y_vector = {x: 0, y: 1};
+        }
+        if (!xy_offset) {
+            xy_offset = {x: 0, y: 0};
+        }
+        var frame = $.extend({
+            parent_canvas: parent_canvas,
+            x_vector: x_vector,
+            y_vector: y_vector,
+            xy_offset: xy_offset,
+        }, parent_canvas);
+
+        frame.converted_location = function (x, y) {
+            // "scale" then translate (?)
+            var x_scale = frame.vscale(x, frame.x_vector);
+            var y_scale = frame.vscale(y, frame.y_vector);
+            var xy = frame.vadd(x_scale, y_scale);
+            var cvt = frame.vadd(frame.xy_offset, xy);
+            // now DON't convert wrt parent
+            //return frame.parent_canvas.converted_location(cvt.x, cvt.y);
+            return cvt;
+        }
+
+        var override_positions = function(shape_name) {
+            // replace the shape factory:
+            // override the location conversion parameter
+            frame[shape_name] = function(opt, wait) {
+                var s = $.extend({
+                    coordinate_conversion: frame.converted_location,
+                    frame: frame,
+                }, opt)
+                var method = frame.parent_canvas[shape_name];
+                return method(s, wait);
+            }
+        };
+        override_positions("circle");
+        override_positions("line");
+        override_positions("text");
+        override_positions("rect");
+        override_positions("polygon");
+
+        frame.model_to_pixel = function(mx, my) {
+            throw new Error("General frame position inversion is not implemented yet.")
+        };
+
+        return frame;
+    }
 
     $.fn.dual_canvas_helper.example = function(element, x, y, w, h) {
         debugger;
@@ -480,5 +567,99 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         element.fit()
         element.visible_canvas.canvas.css("background-color", "#a7a");
     };
+
+    $.fn.dual_canvas_helper.frame_example = function(element) {
+        element.empty();
+        element.css("background-color", "cornsilk").width("520px");
+        var config = {
+            width: 400,
+            height: 400,
+            y_up: true,
+        }
+        element.dual_canvas_helper(element, config);
+        element.text({x:70, y:10, text:"Frame Test", color:"#64d", degrees:45, font: "bold 20px Arial",});
+        var backward = element.rframe(-2, 2, 200, 200);
+        backward.text({
+            text: "Backward",
+            align: "right",
+            x: 20,
+            y: 20,
+            color: "red"
+        });
+        var down = element.rframe(-1, -1, 200, 200);
+        down.text({
+            text: "Down",
+            align: "right",
+            x: 20,
+            y: 20,
+            color: "red"
+        });
+        var forward = element.rframe(1, 1, 200, 200);
+        forward.text({
+            text: "Forward",
+            align: "left",
+            x: 20,
+            y: 20,
+            color: "red"
+        });
+        var rotate = element.vector_frame(
+            {x:1, y:2},
+            {x:1, y:-1},
+            {x:240, y:160}
+        )
+        rotate.text({
+            text: "Rotate/skew",
+            align: "right",
+            x: 20,
+            y: 20,
+            color: "red"
+        });
+        var frames = [element, backward, forward, down, rotate];
+        for (var i=0; i<frames.length; i++) {
+            //element.visible_canvas.show_debug_bbox();
+            var frame = frames[i];
+            for (var x=0; x<101; x+=10) {
+                frame.line({
+                    x1: x,
+                    y1: 0,
+                    x2: x,
+                    y2: 100,
+                    color: "#aa9"
+                });
+                frame.line({
+                    x1: 0,
+                    y1: x,
+                    x2: 100,
+                    y2: x,
+                    color: "#aa9"
+                });
+            }
+            var points = [
+                [20, 20],
+                [40, 20],
+                [20, 40],
+                [40, 40],
+                [40, 60]
+            ];
+            element.visible_canvas.show_debug_bbox();
+            frame.polygon({
+                points: points,
+                fill: false,
+                close: false,
+                color: "blue"
+            });
+            element.visible_canvas.show_debug_bbox();
+            frame.circle({
+                x: 40, y: 60, r: 10, color: "green"
+            });
+            frame.rect({
+                x: 60, y:80, w:10, h:10, color: "purple"
+            })
+            //element.visible_canvas.show_debug_bbox();
+        }
+        element.fit();
+        element.visible_canvas.show_debug_bbox(true);
+        element.visible_canvas.canvas.css("background-color", "#a7a");
+    }
 
 })(jQuery);
