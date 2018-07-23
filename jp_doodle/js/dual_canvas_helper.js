@@ -11,11 +11,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
 */
 
+// xxxx add image primatives,
+// eg https://stackoverflow.com/questions/21300921/how-to-convert-byte-array-to-image-in-javascript/21301006#21301006
+
 (function($) {
 
     $.fn.dual_canvas_helper = function (target, options) {
         var settings = $.extend({
-            // need to add stuff for coordinate conversion!
             width: 500,
             height: 500,
             lineWidth: 1,
@@ -495,7 +497,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
     }
 
     $.fn.dual_canvas_helper.example = function(element, x, y, w, h) {
-        debugger;
         if (!x) { x = 0; }
         if (!y) { y = 0; }
         if (!w) { w = 1.0; }
@@ -550,7 +551,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             //element.request_redraw();
         };
         var drop_circle = function(event) {
-            debugger;
             info.html("<div>dropping circle</div>");
             element.off_canvas_event("click");
             element.off_canvas_event("mousemove");

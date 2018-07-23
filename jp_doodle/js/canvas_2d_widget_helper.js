@@ -443,7 +443,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
     }
 
     $.fn.canvas_2d_widget_helper.example = function(element) {
-        debugger;
         element.empty();
         element.css("background-color", "cornsilk").width("520px");
         var config = {

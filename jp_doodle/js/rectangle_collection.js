@@ -457,15 +457,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
         element.dual_canvas_helper(element, canvas_config);
         element.rectangle_collection(element, bar_config);
-        element.render = function () {
-            debugger;
-            var seconds = (new Date()).getTime() * 0.001
-            //element.bar_v = {x: Math.sin(seconds), y: Math.cos(seconds)};
-            element.draw_bars();
-            //window.requestAnimationFrame(element.render);
-            //setInterval(element.render, 100);
-        };
-        element.render();
+        element.draw_bars();
     };
 
 })(jQuery);
