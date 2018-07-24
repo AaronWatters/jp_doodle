@@ -20,6 +20,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             translate_scale: {x: 0.0, y:0.0, w:1.0, h:1.0},
             font: "normal 10px Arial",
             y_up: true,  // does y go up starting at the lower left corner? (default, yes.)
+            style: "border:1px solid #d3d3d3;",
         }, options);
 
         for (var key in settings) {
@@ -30,7 +31,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.empty();
             var w = target.canvas_width;
             var h = target.canvas_height;
-            target.canvas = $(`<canvas width="${w}px" height="${h}px" style="border:1px solid #d3d3d3;"/>`);
+            var st = target.canvas_style;
+            target.canvas = $(`<canvas width="${w}px" height="${h}px" style="${st}"/>`);
             //target.canvas.width(target.canvas_width).height(target.canvas_height);
             target.canvas.appendTo(target);
             target.canvas_context = target.canvas[0].getContext("2d");
@@ -134,8 +136,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 fill: true,  // if false then do a outline
                 coordinate_conversion: no_change_conversion,
                 frame: target,
+                // lineWidth: 3,
             }, opt);
             var context = target.canvas_context;
+            context.save(); 
             context.beginPath();
             //context.fillStyle = s.color;
             var fcenter = s.coordinate_conversion(s.x, s.y);
@@ -143,6 +147,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // XXXX should also convert s.r?
             context.arc(center.x, center.y, s.r, s.start, s.arc);
             fill_or_stroke(context, s);
+            context.restore(); 
             // update stats
             if (target.canvas_stats) {
                 target.add_point_stats(fcenter.x + s.r, fcenter.y + s.r);
@@ -196,6 +201,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             if ((s.align) && (s.align == "right")) {
                 dx = - width;
                 rwidth = - width;
+            }
+            if ((s.align) && (s.align == "center")) {
+                dx = - width * 0.5;
+                // XXXX this is wrong -- only half the text will respond to events.  Needs rework.
+                rwidth = - width * 0.5;
             }
             context.fillText(text, dx, 0); // translated to (x,y)
             var height = width * 1.4 / text.length;  // fudge...
@@ -280,6 +290,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 context.fill();
             } else {
                 context.strokeStyle = s.color;
+                if (s.lineWidth) {
+                    context.lineWidth = s.lineWidth;
+                }
                 context.stroke();
             }
         };
