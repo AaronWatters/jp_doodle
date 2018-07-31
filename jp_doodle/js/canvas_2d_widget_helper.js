@@ -63,11 +63,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.reset_canvas();
 
         // Some functions useful for Jupyter/proxy interface:
+        /*
         target.canvas_call = function(method_name, args) {
             var context = target.canvas_context;
             var method = context[method_name];
             method.apply(context, context, args);
         };
+        */
 
         // Set to mapping to collect stats
         target.canvas_stats = null;
@@ -119,9 +121,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
         }
 
+        /*
         target.canvas_assign = function(slot_name, value) {
             target.canvas_context[slot_name] = value;
         };
+        */
 
         var no_change_conversion = function (x, y) {
             // default frame conversion: no change
@@ -129,6 +133,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         }
 
         target.circle = function(opt) {
+            // eg: element.circle({x: 140, y: 100, r: 10, color: "green"});
             var s = $.extend({
                 color: target.canvas_fillColor,
                 start: 0,
@@ -157,6 +162,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         target.line = function(opt) {
+            // eg: element.line({name:"a line", x1:100, y1:100, x2:150, y2:130, color:"brown"});
             var s = $.extend({
                 color: target.canvas_strokeStyle,
                 lineWidth: target.canvas_lineWidth,
@@ -183,6 +189,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         target.text = function(opt) {
+            // eg: element.text({name:"some text", x:40, y:40, text:"text content"})
             var s = $.extend({
                 font: target.canvas_font,
                 color: target.canvas_fillColor,
@@ -259,6 +266,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         target.rect = function(opt) {
+            // eg: element.rect({name:"a rect", x:10, y:50, w:10, h:120, color:"salmon", degrees:-15});
             var s = $.extend({
                 color: target.canvas_fillColor,
                 fill: true,  // if false then do a outline
@@ -298,6 +306,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         target.polygon = function(opt) {
+            // eg: element.polygon({points: [[210, 10], [210, 110], [290, 60]], color: "brown"});
             var s = $.extend({
                 color: target.canvas_fillColor,
                 fill: true,  // if false then do a outline
