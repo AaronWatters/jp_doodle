@@ -86,7 +86,7 @@ class DualCanvasWidget(jp_proxy_widget.JSProxyWidget, CanvasOperationsMixin):
         # Standard initialization
         self.js_init("""
             element.empty();
-            element.dual_canvas_helper(element, config);
+            element.dual_canvas_helper(config);
             """, config=config)
 
     def reset_canvas(self):

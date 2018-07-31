@@ -9,7 +9,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
 (function($) {
 
-    $.fn.canvas_2d_widget_helper = function (target, options) {
+    $.fn.canvas_2d_widget_helper = function (options) {
+        var target = this;
         var settings = $.extend({
             // need to add stuff for coordinate conversion!
             width: 500,
@@ -472,7 +473,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             height: 200,
             translate_scale: {x: 20, y:30, w:0.8, h:0.7},
         }
-        element.canvas_2d_widget_helper(element, config);
+        element.canvas_2d_widget_helper(config);
         element.canvas_stats = {};
         var show_stats = function (color) {
             var stats = element.canvas_stats;

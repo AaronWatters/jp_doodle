@@ -16,7 +16,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
 (function($) {
 
-    $.fn.dual_canvas_helper = function (target, options) {
+    $.fn.dual_canvas_helper = function (options) {
+        var target = this;
         var settings = $.extend({
             width: 500,
             height: 500,
@@ -45,8 +46,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.visible_canvas = $("<div/>").appendTo(target.canvas_container);
             target.invisible_canvas = $("<div/>").appendTo(target.canvas_container);
             target.invisible_canvas.hide();
-            target.canvas_2d_widget_helper(target.visible_canvas, settings_overrides);
-            target.canvas_2d_widget_helper(target.invisible_canvas, settings_overrides);
+            target.visible_canvas.canvas_2d_widget_helper(settings_overrides);
+            target.invisible_canvas.canvas_2d_widget_helper(settings_overrides);
             target.clear_canvas(keep_stats);
         }
 
@@ -536,7 +537,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             translate_scale: {x: x, y:y, w:w, h:h},
             y_up: false,
         }
-        element.dual_canvas_helper(element, config);
+        element.dual_canvas_helper(config);
         element.polygon({
             name: "polly", 
             points: [[250,100], [400,100], [280,180], [375,60], [370,180]],
@@ -603,7 +604,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             height: 400,
             y_up: true,
         }
-        element.dual_canvas_helper(element, config);
+        element.dual_canvas_helper(config);
         element.text({x:70, y:10, text:"Frame Test", color:"#64d", degrees:45, font: "bold 20px Arial",});
         var backward = element.rframe(-2, 2, 200, 200);
         backward.text({

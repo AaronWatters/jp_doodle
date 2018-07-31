@@ -10,7 +10,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
 (function($) {
 
-    $.fn.rectangle_collection = function (target, options) {
+    $.fn.rectangle_collection = function (options) {
+        var target = this;
         var settings = $.extend({
             u: {x:-1, y:0},
             v: {x:0.8, y:0.3},
@@ -455,8 +456,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             height: 400,
             //translate_scale: {x: x, y:y, w:w, h:h},
         };
-        element.dual_canvas_helper(element, canvas_config);
-        element.rectangle_collection(element, bar_config);
+        element.dual_canvas_helper(canvas_config);
+        element.rectangle_collection(bar_config);
         element.draw_bars();
     };
 
