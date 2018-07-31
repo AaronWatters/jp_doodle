@@ -46,10 +46,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.invisible_canvas = $("<div/>").appendTo(target.canvas_container);
             target.invisible_canvas.hide();
             target.canvas_2d_widget_helper(target.visible_canvas, settings_overrides);
+            target.canvas_2d_widget_helper(target.invisible_canvas, settings_overrides);
+            target.clear_canvas(keep_stats);
+        }
+
+        target.clear_canvas = function (keep_stats) {
             if (keep_stats) {
                 target.visible_canvas.canvas_stats = {};
             }
-            target.canvas_2d_widget_helper(target.invisible_canvas, settings_overrides);
             // object list for redraws
             target.object_list = [];
             // lookup structures for named objects
@@ -57,6 +61,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.color_index_to_name = {};
             target.event_types = {};
             target.default_event_handlers = {};
+            target.visible_canvas.clear_canvas();
+            target.invisible_canvas.clear_canvas();
         };
 
         target.fit = function (stats, margin) {
@@ -65,6 +71,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var x_translate = 0.0;
             var y_translate = 0.0;
             var scale = 1.0;
+            // try to use existing stats
+            if (!stats) {
+                stats = target.visible_canvas.stats;
+            }
             if (!stats) {
                 // get boundaries for visible objects
                 target.set_translate_scale();
@@ -396,6 +406,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     var mouseout_event = $.extend({}, e);
                     mouseout_event.type = "mouseout";
                     mouseout_event.canvas_name = last_event.canvas_name;
+                    mouseout_event.object_info = last_event.object_info;
                     // attempt a mouseout with no default
                     process_event(mouseout_event);
                 }
@@ -406,7 +417,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     process_event(mouseover_event, true);
                 }
             }
-            var last_event = target.last_canvas_event;
+            //var last_event = target.last_canvas_event;
             target.last_canvas_event = e;
         };
 
@@ -429,6 +440,22 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 {x: translate_x, y: translate_y}
             );
             // xxxx could add special methods like model_to_pixel.
+        };
+
+        target.callback_with_pixel_color = function(pixel_x, pixel_y, callback, delay) {
+            // For testing.  Delay finish to allow widget initialization to stabilize before testing.
+            if (!delay) {
+                delay = 1000;  // delay for 1 second.
+            }
+            var finish = function() {
+                var color_data = target.visible_canvas.color_at(pixel_x, pixel_y).data;
+                var result = [];
+                for (var i=0; i<color_data.length; i++) { 
+                    result.push(color_data[i]);
+                }
+                callback(result);
+            };
+            setTimeout(finish, delay);
         };
 
         target.canvas_2d_widget_helper.add_vector_ops(target);
