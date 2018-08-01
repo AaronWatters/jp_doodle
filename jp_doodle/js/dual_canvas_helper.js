@@ -489,6 +489,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         }, parent_canvas);
 
         frame.converted_location = function (x, y) {
+            // Convert shared "model" location to "frame" location.
             // "scale" then translate (?)
             var x_scale = frame.vscale(x, frame.x_vector);
             var y_scale = frame.vscale(y, frame.y_vector);
@@ -497,6 +498,24 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // now DON't convert wrt parent
             //return frame.parent_canvas.converted_location(cvt.x, cvt.y);
             return cvt;
+        };
+
+        frame.unconverted_location = function(mx, my) {
+            // Convert "frame" location to shared "model" location.
+            // untranslate
+            var untranslated = {x: mx - frame.xy_offset.x, y: my - frame.xy_offset.y};
+            // then "unscale"
+            // http://www.mathcentre.ac.uk/resources/uploaded/sigma-matrices7-2009-1.pdf
+            var a = frame.x_vector.x;
+            var b = frame.y_vector.x;
+            var c = frame.x_vector.y;
+            var d = frame.y_vector.y;
+            var det = a * d - b * c;
+            var x_inv = {x: d / det, y: -c / det};
+            var y_inv = {x: -b / det, y: a /det};
+            var x_unscale = frame.vscale(untranslated.x, x_inv);
+            var y_unscale = frame.vscale(untranslated.y, y_inv);
+            return frame.vadd(x_unscale, y_unscale);
         }
 
         var override_positions = function(shape_name) {
@@ -517,9 +536,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         override_positions("rect");
         override_positions("polygon");
 
-        frame.model_to_pixel = function(mx, my) {
-            throw new Error("General frame position inversion is not implemented yet.")
-        };
+        //frame.model_to_pixel = function(mx, my) {
+        //    throw new Error("General frame position inversion is not implemented yet.")
+        //};
 
         return frame;
     }
@@ -607,6 +626,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         element.dual_canvas_helper(config);
         element.text({x:70, y:10, text:"Frame Test", color:"#64d", degrees:45, font: "bold 20px Arial",});
         var backward = element.rframe(-2, 2, 200, 200);
+        // exercise coordinate conversion
+        var x = 11;
+        var y = -77;
+        var c = backward.converted_location(x, y);
+        var ic = backward.unconverted_location(c.x, c.y);
+        $("<div>" + x + "," + y + " :: " + c.x + "," + c.y + " :: " + ic.x + "," + ic.y + "</div>").appendTo(element);
         backward.text({
             text: "Backward",
             align: "right",
@@ -683,7 +708,21 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             frame.rect({
                 x: 60, y:80, w:10, h:10, color: "purple"
             })
-            //element.visible_canvas.show_debug_bbox();
+            if (frame!=element) {
+                var x = 30;
+                var y = 65;
+                var c = frame.converted_location(x, y);
+                var ic = frame.unconverted_location(c.x, c.y);
+                c = frame.vint(c);
+                ic = frame.vint(ic);
+                element.circle({
+                    x: c.x, y: c.y, r: 7, color: "#449"
+                })
+                frame.text({
+                    text: "" + c.x + "," + c.y + " :: " + ic.x + "," + ic.y,
+                    x: x, y: y, color: "#FFD"
+                });
+            }
         }
         element.fit();
         element.visible_canvas.show_debug_bbox(true);
