@@ -461,6 +461,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             return result;
         };
+        // print convenience too
+        target.print = function (...items) {
+            var text = items.join(" ");
+            return $("<div>" + text + "</div>").appendTo(target);
+        };
 
         return target;
     }
@@ -491,6 +496,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         show_stats("blue");
         element.line({name:"a line", x1:100, y1:100, x2:150, y2:130, color:"brown"});
         show_stats("black");
+        var pts = [[250,100], [400,100], [280,180], [375,60], [370,180]];
+        element.print("polygon points", ...pts);
         element.polygon({
             name: "polly", 
             points: [[250,100], [400,100], [280,180], [375,60], [370,180]],
