@@ -205,6 +205,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             context.fillStyle = s.color;
             var width = context.measureText(text).width;
             var dx = 0;
+            var dy = 0;
             var rwidth = width;
             if ((s.align) && (s.align == "right")) {
                 dx = - width;
@@ -215,18 +216,28 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // XXXX this is wrong -- only half the text will respond to events.  Needs rework.
                 rwidth = - width * 0.5;
             }
-            context.fillText(text, dx, 0); // translated to (x,y)
             var height = width * 1.4 / text.length;  // fudge...
             if (!target.canvas_y_up) {
                 // text draws in negative y
                 height = - height;
             }
+            if ((s.valign) && (s.valign == "center")) {
+                dy = - 0.5 * height;
+                // XXXX event mask will not be positioned correctly at present
+            }
+            // draw the text
+            if (target.canvas_y_up) {
+                dy = - dy;
+            }
+            context.fillText(text, dx, dy); // translated to (x,y)
             // use a rectangle for masking operations
             s.draw_mask = function (to_canvas, info) {
+                // XXXX need to add optional dx, dy to masking for alignments
                 to_canvas.rect({x: info.x, y: info.y, w:rwidth, h:height, degrees:info.degrees, color:info.color})
             }
             // update stats
             if (target.canvas_stats) {
+                // XXXX rectange stats may not currently correctly reflect alignments.
                 target.rectangle_stats(s.x, s.y, rwidth, height, s.degrees, s.coordinate_conversion);
             }
             context.restore();  // matches translate_and_rotate
@@ -497,7 +508,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         element.line({name:"a line", x1:100, y1:100, x2:150, y2:130, color:"brown"});
         show_stats("black");
         var pts = [[250,100], [400,100], [280,180], [375,60], [370,180]];
-        element.print("polygon points", ...pts);
+        element.print("polygon points", ...pts).css("color", "green");
         element.polygon({
             name: "polly", 
             points: [[250,100], [400,100], [280,180], [375,60], [370,180]],
