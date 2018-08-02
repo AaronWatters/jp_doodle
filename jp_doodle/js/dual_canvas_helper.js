@@ -460,9 +460,91 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         target.canvas_2d_widget_helper.add_vector_ops(target);
+        target.dual_canvas_helper.add_axis_logic(target);
 
         return target;
     };
+
+    $.fn.dual_canvas_helper.add_axis_logic = function (target) {
+        target.axis = function(config) {
+            // Draw an axis
+            var params = $.extend({
+                name_prefix: null,
+                tick_format: function (x) { return "" + x.offset; },
+                tick_length: 10,
+                label_offset: 15,
+                tick_line_config: {},
+                tick_text_config: {},
+                tick_direction: {x: 1, y: 0},
+                offset_vector: {x: 0, y: 1},
+                axis_origin: {x: 0, y: 0},
+                connecting_line_config: null,  // connecting line omitted if no config
+                // for example purposes only
+                ticks: [
+                    {offset: 0, text: "0.0", name: "Zero"},
+                    {offset: 10, text: "ten", name: "Ten"},
+                    {offset: 15, text: "15.0", name: "fifteen"},
+                ]
+            }, config);
+            var ticks = params.ticks;
+            var max_tick = null;
+            var min_tick = null;
+            // draw the tick marks and text.
+            for (var i=0; i<ticks.length; i++) {
+                var line = $.extend({}, params.tick_line_config);
+                var tick = $.extend({}, ticks[i]);
+                tick.start = target.vadd(
+                    params.axis_origin,
+                    target.vscale(tick.offset, params.offset_vector)
+                );
+                tick.end = target.vadd(
+                    tick.start,
+                    target.vscale(params.tick_length, params.tick_direction)
+                );
+                line.x1 = tick.start.x; line.y1 = tick.start.y;
+                line.x2 = tick.end.x; line.y2 = tick.end.y;
+                // draw the line mark
+                target.line(line);
+                // set up text values
+                var label = $.extend({}, params.tick_text_config);
+                label = $.extend(label, tick);
+                if (!label.text) {
+                    label.text = params.tick_format(label);
+                }
+                if (!label.name) {
+                    if (params.name_prefix) {
+                        label.name = params.name_prefix + label.text;
+                    }
+                }
+                label.valign = "center";
+                label.offset = target.vadd(
+                    tick.start,
+                    target.vscale(params.label_offset, params.tick_direction)
+                )
+                label.x = label.offset.x;
+                label.y = label.offset.y;
+                label.valign = "center";
+                // draw the text label.
+                target.text(label);
+                // bookkeeping
+                if ((!max_tick) || (max_tick.offset < tick.offset)) {
+                    max_tick = tick;
+                }
+                if ((!min_tick) || (min_tick.offset > tick.offset)) {
+                    min_tick = tick;
+                }
+            }
+            // draw the connector if configured
+            if ((min_tick) && (params.connecting_line_config)) {
+                var connecting_line = $.extend({}, params.connecting_line_config);
+                connecting_line.x1 = min_tick.start.x;
+                connecting_line.y1 = min_tick.start.y;
+                connecting_line.x2 = max_tick.start.x;
+                connecting_line.y2 = max_tick.start.y;
+                target.line(connecting_line);
+            }
+        };
+    }
 
     $.fn.dual_canvas_helper.reference_frame = function(
         parent_canvas, 
@@ -561,6 +643,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             name: "polly", 
             points: [[250,100], [400,100], [280,180], [375,60], [370,180]],
             color: "#ffd",
+        });
+        element.axis({
+            name_prefix: "axis",
+            axis_origin: {x: 100, y:50},
+            tick_line_config: {lineWidth: 2, color: "green"},
+            connecting_line_config: {linewidth: 5, color: "blue"},
+            tick_text_config: {color: "red"},
+            ticks: [
+                {offset: 10},
+                {offset: 20},
+                {offset: 30}
+            ]
         });
         element.circle({name: "green circle", x:160, y:70, r:20, color:"green"});
         element.rect({name:"a rect", x:10, y:50, w:10, h:120, color:"salmon", degrees:-15});
