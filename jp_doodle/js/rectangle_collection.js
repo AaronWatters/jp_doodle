@@ -121,8 +121,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.u_index = make_index(target.bar_u_anchors);
             target.v_index = make_index(target.bar_v_anchors);
             var extent = target.bar_max_vertical;
-            var redraw;
-            if (stats) {
+            //var no_redraw;
+            if ((stats) && (stats.count)) {
                 no_redraw = true;
                 var extent = Math.max((stats.max_y - stats.min_y), (stats.max_x - stats.min_x));
             }
