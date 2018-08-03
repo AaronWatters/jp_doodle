@@ -209,12 +209,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var rwidth = width;
             if ((s.align) && (s.align == "right")) {
                 dx = - width;
-                rwidth = - width;
+                //rwidth = - width;
             }
             if ((s.align) && (s.align == "center")) {
                 dx = - width * 0.5;
                 // XXXX this is wrong -- only half the text will respond to events.  Needs rework.
-                rwidth = - width * 0.5;
+                //rwidth = - width * 0.5;
             }
             var height = width * 1.4 / text.length;  // fudge...
             if (!target.canvas_y_up) {
@@ -222,9 +222,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 height = - height;
             }
             if ((s.valign) && (s.valign == "center")) {
-                dy = - 0.5 * height;
-                // XXXX event mask will not be positioned correctly at present
+                dy = -0.5 * height;
             }
+            var rdy = dy;
             // draw the text
             if (target.canvas_y_up) {
                 dy = - dy;
@@ -232,13 +232,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             context.fillText(text, dx, dy); // translated to (x,y)
             // use a rectangle for masking operations
             s.draw_mask = function (to_canvas, info) {
-                // XXXX need to add optional dx, dy to masking for alignments
-                to_canvas.rect({x: info.x, y: info.y, w:rwidth, h:height, degrees:info.degrees, color:info.color})
+                to_canvas.rect({x: info.x, y: info.y, w:rwidth, h:height, degrees:info.degrees, color:info.color, dx:dx, dy:dy})
             }
             // update stats
             if (target.canvas_stats) {
-                // XXXX rectange stats may not currently correctly reflect alignments.
-                target.rectangle_stats(s.x, s.y, rwidth, height, s.degrees, s.coordinate_conversion);
+                target.rectangle_stats(s.x, s.y, rwidth, height, s.degrees, s.coordinate_conversion, dx, rdy);
             }
             context.restore();  // matches translate_and_rotate
             return s;
