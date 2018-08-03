@@ -492,7 +492,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // draw the tick marks and text.
             for (var i=0; i<ticks.length; i++) {
                 var line = $.extend({}, params.tick_line_config);
-                var tick = $.extend({}, ticks[i]);
+                var tick = ticks[i];
+                // automatically convert numbers to default mapping
+                if ((typeof tick) == "number") {
+                    tick = {offset: tick};
+                } else {
+                    var tick = $.extend({}, tick);  // fresh copy
+                }
                 tick.start = target.vadd(
                     params.axis_origin,
                     target.vscale(tick.offset, params.offset_vector)
@@ -636,7 +642,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             width: 400,
             height: 400,
             translate_scale: {x: x, y:y, w:w, h:h},
-            y_up: false,
+            y_up: true,
         }
         element.dual_canvas_helper(config);
         element.polygon({
@@ -646,14 +652,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         });
         element.axis({
             name_prefix: "axis",
-            axis_origin: {x: 100, y:50},
+            axis_origin: {x: 100, y:30},
             tick_line_config: {lineWidth: 2, color: "green"},
-            connecting_line_config: {linewidth: 5, color: "blue"},
+            connecting_line_config: {lineWidth: 5, color: "blue"},
             tick_text_config: {color: "red"},
             ticks: [
-                {offset: 10},
-                {offset: 20},
-                {offset: 30}
+                5,  //{offset: 5},
+                25.5, // {offset: 25.5},
+                58, // {offset: 58}
             ]
         });
         element.circle({name: "green circle", x:160, y:70, r:20, color:"green"});
