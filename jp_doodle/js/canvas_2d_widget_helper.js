@@ -244,7 +244,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return s;
         };
 
-        target.rectangle_stats = function(x, y, w, h, degrees, coordinate_conversion) {
+        target.rectangle_stats = function(x, y, w, h, degrees, coordinate_conversion, dx, dy) {
+            dx = dx || 0;
+            dy = dy || 0;
             var radians = 0.0;
             if (degrees) {
                 radians = degrees * Math.PI / 180.0;
@@ -257,10 +259,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var y1 = cvt.y + (dx * s + dy * c);
                 target.add_point_stats(x1, y1);
             };
-            target.add_point_stats(cvt.x, cvt.y);
-            add_offset(w, 0);
-            add_offset(0, h);
-            add_offset(w, h);
+            //target.add_point_stats(cvt.x, cvt.y);
+            add_offset(dx, dy);
+            add_offset(w+dx, dy);
+            add_offset(dx, h+dy);
+            add_offset(w+dx, h+dy);
         }
 
         target.translate_and_rotate = function(x, y, degrees, coordinate_conversion) {
@@ -291,15 +294,19 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             context.beginPath();
             //context.fillStyle = s.color;
             var height = s.h;
+            var dx = s.dx || 0;
+            var dy = s.dy || 0;
+            var dy0 = dy;
             if (target.canvas_y_up) {
                 height = -height;
+                dy = -dy;
             }
-            context.rect(0, 0, s.w, height)  // translated to (x,y)
+            context.rect(dx, dy, s.w, height)  // translated to (x,y)
             fill_or_stroke(context, s);
             context.restore();  // matches translate_and_rotate
             // update stats
             if (target.canvas_stats) {
-                target.rectangle_stats(s.x, s.y, s.w, s.h, s.degrees, s.coordinate_conversion);
+                target.rectangle_stats(s.x, s.y, s.w, s.h, s.degrees, s.coordinate_conversion, dx, dy0);
             }
             return s;
         }
