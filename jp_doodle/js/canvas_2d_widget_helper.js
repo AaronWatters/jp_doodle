@@ -232,7 +232,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             context.fillText(text, dx, dy); // translated to (x,y)
             // use a rectangle for masking operations
             s.draw_mask = function (to_canvas, info) {
-                to_canvas.rect({x: info.x, y: info.y, w:rwidth, h:height, degrees:info.degrees, color:info.color, dx:dx, dy:dy})
+                to_canvas.rect({x: info.x, y: info.y, w:rwidth, h:height, degrees:info.degrees, color:info.color, dx:dx, dy:rdy})
             }
             // update stats
             if (target.canvas_stats) {
