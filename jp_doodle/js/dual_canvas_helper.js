@@ -66,6 +66,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.invisible_canvas.clear_canvas();
         };
 
+        target.active_region = function (default_to_view_box) {
+            // This is only defined if stats have been previously computed
+            var result = target.visible_canvas.stats;
+            if ((default_to_view_box) && (!result)) {
+                result = target.model_view_box();
+            }
+            return result;
+        }
+
         target.fit = function (stats, margin) {
             // stats if defined should provide min_x, max_x, min_y, max_y
             // Adjust the translate and scale so that the visible objects are centered and visible.
@@ -74,7 +83,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var scale = 1.0;
             // try to use existing stats
             if (!stats) {
-                stats = target.visible_canvas.stats;
+                stats = target.active_region();
             }
             if (!stats) {
                 // get boundaries for visible objects
@@ -459,6 +468,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             setTimeout(finish, delay);
         };
 
+        target.model_view_box = function () {
+            return target.visible_canvas.model_view_box();
+        }
+
         target.canvas_2d_widget_helper.add_vector_ops(target);
         target.dual_canvas_helper.add_axis_logic(target);
 
@@ -466,11 +479,75 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
     };
 
     $.fn.dual_canvas_helper.add_axis_logic = function (target) {
+
+        target.right_axis = function(config) {
+            return target.bottom_axis(config, {x: 1, y: 0}, {x: 0, y: 1}, 0, "y")
+        };
+
+        target.left_axis = function(config) {
+            return target.bottom_axis(config, {x: -1, y: 0}, {x: 0, y: 1}, 0, "y", "right")
+        };
+
+        target.top_axis = function(config) {
+            return target.bottom_axis(config, {x: 0, y: 1}, {x: 1, y: 0}, 90, "x")
+        };
+
+        target.bottom_axis = function(config, tick_direction, offset_direction, degrees, coordinate, align) {
+            // simplified interface
+            var params = $.extend({
+                min_value: null,
+                max_value: null,
+                max_tick_count: 10,
+                anchor: null,
+            }, config);
+            coordinate = coordinate || "x";
+            var other_coord = "y";
+            if (coordinate == "y") {
+                other_coord = "x";
+            }
+            params.tick_direction = tick_direction || {x: 0, y: -1};
+            params.offset_vector = offset_direction || {x: 1, y: 0};
+            //degrees = degrees || -90;
+            if ((typeof degrees) != "number") {
+                degrees = -90;
+            }
+            params.tick_text_config = $.extend({
+                degrees: degrees,
+                align: align
+            }, params.tick_text_config)
+            var stats = target.active_region(true);   // drawn region or model view box
+            if (!params.ticks) {
+                // infer ticks from limits
+                var min_value = params.min_value || stats["min_" + coordinate];
+                var max_value = params.max_value || stats["max_" + coordinate]
+                params.ticks = target.axis_ticklist(min_value, max_value, params.max_tick_count, params.anchor);
+            }
+            if (!params.axis_origin) {
+                params.axis_origin = {x: 0, y: 0};
+                var other_min = stats["min_" + other_coord];
+                var other_max = stats["max_" + other_coord];
+                if ((other_min > 0) || (other_max < 0)) {
+                    params[other_coord] = 0.5 * (other_min + other_max);
+                }
+            }
+            return target.axis(params);
+        };
+
         target.axis = function(config) {
             // Draw an axis
+            var default_tick_format = function(tick) {
+                var offset = tick.offset;
+                var result = "" + offset;
+                if (offset != parseInt(offset, 10)) {
+                    if (result.length > 6) {
+                        result = offset.toPrecision(4);
+                    }
+                }
+                return result;
+            }
             var params = $.extend({
                 name_prefix: null,
-                tick_format: function (x) { return "" + x.offset; },
+                tick_format: default_tick_format,
                 tick_length: 10,
                 label_offset: 15,
                 tick_line_config: {},
@@ -478,7 +555,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 tick_direction: {x: 1, y: 0},
                 offset_vector: {x: 0, y: 1},
                 axis_origin: {x: 0, y: 0},
-                connecting_line_config: null,  // connecting line omitted if no config
+                connecting_line_config: {},  // connecting line omitted if null config
                 // for example purposes only
                 ticks: [
                     {offset: 0, text: "0.0", name: "Zero"},
@@ -550,6 +627,82 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 target.line(connecting_line);
             }
         };
+        target.axis_ticklist = function(min_offset, max_offset, maxlen, anchor) {
+            maxlen = maxlen || 10;
+            if (min_offset >= max_offset) {
+                throw new Error("bad offsets");
+            }
+            if ((anchor < min_offset) || (anchor > max_offset)) {
+                throw new Error("bad anchor");
+            }
+            var diff = max_offset - min_offset;
+            var tick_length = 1.0;
+            var scale = 1.0;
+            // adjust tick length down
+            while ((diff / tick_length) < maxlen) {
+                tick_length = tick_length * 0.1;
+                scale = scale * 10;
+            }
+            // scale tick length up
+            while ((diff / tick_length) >= maxlen) {
+                tick_length = tick_length * 10;
+                scale = scale * 0.1;
+            }
+            // fix numerical drift
+            if (scale >= 1) {
+                scale = Math.round(scale);
+                tick_length = 1.0/scale;
+            } else {
+                tick_length = Math.round(tick_length);
+                scale = 1.0/tick_length;
+            }
+            // pick an anchor if not provided
+            var smin = min_offset * scale;
+            var smax = max_offset * scale;
+            if (!anchor) {
+                var M = Math.floor((smin + smax) * 0.5);
+                anchor = M / scale;
+            }
+            // increase the number of ticks if possible 5x, 4x, or 2x
+            var tick5 = tick_length / 5.0;
+            if (diff / tick5 <= maxlen) {
+                tick_length = tick5;
+                scale = scale * 5;
+            } else {
+                var tick4 = tick_length / 4.0;
+                if (diff / tick4 <= maxlen) {
+                    tick_length = tick4;
+                    scale = scale * 4;
+                } else {
+                    var tick2 = tick_length / 2.0;
+                    if (diff / tick2 <= maxlen) {
+                        tick_length = tick2;
+                        scale = scale * 2;
+                    }
+                }
+            }
+            // generate the list
+            var result = [anchor];
+            while ((result[0] - tick_length) >= min_offset) {
+                result.unshift((result[0] - tick_length))
+            }
+            var last = anchor;
+            while ((last + tick_length) <= max_offset) {
+                last = last + tick_length;
+                result.push(last);
+            }
+            // clean the list -- try to eliminate float drift
+            for (var i=0; i < result.length; i++) {
+                var r = result[i];
+                var rs = r * scale;
+                var rrs = Math.round(rs);
+                if (Math.abs(rrs - rs) < 0.01) {
+                    r = rrs / scale;
+                }
+                result[i] = r
+            }
+            return result;
+        }
     }
 
     $.fn.dual_canvas_helper.reference_frame = function(
@@ -652,7 +805,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         });
         element.axis({
             name_prefix: "axis",
-            axis_origin: {x: 100, y:30},
+            axis_origin: {x: 155, y:30},
             tick_line_config: {lineWidth: 2, color: "green"},
             connecting_line_config: {lineWidth: 5, color: "blue"},
             tick_text_config: {color: "red"},
@@ -662,6 +815,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 58, // {offset: 58}
             ]
         });
+        element.bottom_axis({axis_origin: {x: 0, y: 220},});
+        element.top_axis({axis_origin: {x: 0, y: 120},});
+        element.right_axis({axis_origin: {x: 220, y: 0},});
+        element.left_axis({axis_origin: {x: 120, y: 0},});
         element.circle({name: "green circle", x:160, y:70, r:20, color:"green"});
         element.rect({name:"a rect", x:10, y:50, w:10, h:120, color:"salmon", degrees:-15});
         element.text({name:"some text", x:40, y:40, text:"Canvas", color:"#64d", degrees:45,
