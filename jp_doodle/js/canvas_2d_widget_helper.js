@@ -393,7 +393,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.event_canvas_location = function(e) {
             // Determine the coordinate in canvas space for an event e.
             // https://stackoverflow.com/questions/17130395/real-mouse-position-in-canvas
-            var canvas = target.canvas[0];
+            //var canvas = target.canvas[0];
             //var rect = canvas.getBoundingClientRect();
             //var scaleX = canvas.width / rect.width;
             //var scaleY = canvas.height / rect.height;
@@ -412,6 +412,23 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var y = (py / ts.h) - ts.y;
             return {x: x, y: y};
         };
+
+        target.model_view_box = function () {
+            // return the viewable dimensions in model coordinates
+            var upper_left_model = target.pixel_to_canvas(0, 0);
+            var canvas = target.canvas[0];
+            var lower_right_model = target.pixel_to_canvas(canvas.width, canvas.height);
+            //var upper_left_model = target.converted_location(upper_left_canvas.x, upper_left_canvas.y);
+            //var lower_right_model = target.converted_location(lower_right_canvas.x, lower_right_canvas.y);
+            //var upper_left_model = upper_left_canvas;
+            //var lower_right_model = lower_right_canvas;
+            return {
+                min_x: Math.min(upper_left_model.x, lower_right_model.x),
+                min_y: Math.min(upper_left_model.y, lower_right_model.y),
+                max_x: Math.max(upper_left_model.x, lower_right_model.x),
+                max_y: Math.max(upper_left_model.y, lower_right_model.y),
+            };
+        }
 
         target.event_model_location = function(e) {
             // gives the model location of the event, not the frame location of objects in the model.
