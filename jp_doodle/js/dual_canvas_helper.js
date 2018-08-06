@@ -492,6 +492,45 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return target.bottom_axis(config, {x: 0, y: 1}, {x: 1, y: 0}, 90, "x")
         };
 
+        target.lower_left_axes = function(config) {
+            var stats = target.active_region(true); 
+            var params = $.extend(stats, config);
+            // choose anchors
+            var choose_anchor = function (min_value, max_value, anchor_parameter) {
+                // use the parameter if it is given as a number
+                if ((typeof anchor_parameter) == "number") {
+                    return anchor_parameter;
+                }
+                // prefer 0 if possible
+                var result = 0;
+                if ((min_value > result) || (max_value < result)) {
+                    // choose an anchor in the center of appropriate tick choices
+                    var choices = params.axis_ticklist(min_value, max_value, 10);
+                    var index = Math.floor(0.5 * choices.length);
+                    result = choices[index];
+                }
+                return result;
+            };
+            var x_anchor = choose_anchor(params.min_x, params.max_x, params.x_anchor);
+            var y_anchor = choose_anchor(params.min_y, params.max_y, params.y_anchor);
+            var bottom_config = $.extend({
+                anchor: x_anchor,
+                axis_origin: {x: 0, y: y_anchor},
+                skip_anchor: true,
+                min_value: params.min_x,
+                max_value: params.max_x
+            }, params);
+            target.bottom_axis(bottom_config);
+            var left_config = $.extend({
+                anchor: y_anchor,
+                axis_origin: {x: x_anchor, y:0},
+                skip_anchor: true,
+                min_value: params.min_y,
+                max_value: params.max_y,
+            }, params);
+            target.left_axis(left_config);
+        }
+
         target.bottom_axis = function(config, tick_direction, offset_direction, degrees, coordinate, align) {
             // simplified interface
             var params = $.extend({
@@ -499,6 +538,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 max_value: null,
                 max_tick_count: 10,
                 anchor: null,
+                skip_anchor: false,
             }, config);
             coordinate = coordinate || "x";
             var other_coord = "y";
@@ -528,6 +568,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var other_max = stats["max_" + other_coord];
                 if ((other_min > 0) || (other_max < 0)) {
                     params[other_coord] = 0.5 * (other_min + other_max);
+                }
+            }
+            if ((params.skip_anchor) && (!params.tick_transform) && (params.anchor!=null)) {
+                // For double axes skip the label at the origin crossing point.
+                params.tick_transform = function(tick) {
+                    if (tick == params.anchor) {
+                        //return null;  // skip the anchor label and tick mark.
+                        return {offset: tick, text: " "}
+                    }
+                    return tick;
                 }
             }
             return target.axis(params);
@@ -561,7 +611,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     {offset: 0, text: "0.0", name: "Zero"},
                     {offset: 10, text: "ten", name: "Ten"},
                     {offset: 15, text: "15.0", name: "fifteen"},
-                ]
+                ],
+                tick_transform: function(x) { return x; },
             }, config);
             var ticks = params.ticks;
             var max_tick = null;
@@ -569,7 +620,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // draw the tick marks and text.
             for (var i=0; i<ticks.length; i++) {
                 var line = $.extend({}, params.tick_line_config);
-                var tick = ticks[i];
+                var tick = params.tick_transform(ticks[i]);
+                if (tick == null) {
+                    // transformed to "ignore"
+                    continue;
+                }
                 // automatically convert numbers to default mapping
                 if ((typeof tick) == "number") {
                     tick = {offset: tick};
@@ -619,7 +674,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             // draw the connector if configured
             if ((min_tick) && (params.connecting_line_config)) {
-                var connecting_line = $.extend({}, params.connecting_line_config);
+                var connecting_line = $.extend({}, params.tick_line_config, params.connecting_line_config);
                 connecting_line.x1 = min_tick.start.x;
                 connecting_line.y1 = min_tick.start.y;
                 connecting_line.x2 = max_tick.start.x;
@@ -819,6 +874,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         element.top_axis({axis_origin: {x: 0, y: 120},});
         element.right_axis({axis_origin: {x: 220, y: 0},});
         element.left_axis({axis_origin: {x: 120, y: 0},});
+        element.lower_left_axes({
+            x_anchor: 300,
+            y_anchor: 320,
+            tick_line_config: {color: "green"},
+            tick_text_config: {color: "blue"},
+        });
         element.circle({name: "green circle", x:160, y:70, r:20, color:"green"});
         element.rect({name:"a rect", x:10, y:50, w:10, h:120, color:"salmon", degrees:-15});
         element.text({name:"some text", x:40, y:40, text:"Canvas", color:"#64d", degrees:45,
