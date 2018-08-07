@@ -334,6 +334,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var context = target.canvas_context;
             //context.fillStyle = s.color;
             var points = s.points;
+            // If no points do nothing.
+            if ((!points) || (points.length < 1)) {
+                return s;
+            }
             context.beginPath();
             var point0 = points[0];
             var p0f = s.coordinate_conversion(point0[0], point0[1]);
