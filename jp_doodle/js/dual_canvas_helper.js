@@ -32,6 +32,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target["canvas_" + key] = settings[key];
         }
 
+        // Use this flag to temporarily turn off element events
+        target.disable_element_events = false;
+
         target.reset_canvas = function (keep_stats) {
             if (target.canvas_container) {
                 target.canvas_container.empty();
@@ -387,13 +390,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             e.invisible_color = invisible.color_at(e.pixel_location.x, e.pixel_location.y).data;
             e.color_index = target.color_array_to_index(e.invisible_color);
             e.canvas_name = target.color_index_to_name[e.color_index];
+            var last_event = target.last_canvas_event;
             var process_event = function(e, no_default) {
                 var event_type = e.type;
                 var default_handler = null;
                 if (!no_default) {
                     default_handler = target.default_event_handlers[event_type];
                 }
-                if (e.canvas_name) {
+                if ((e.canvas_name) && (!target.disable_element_events)) {
                     e.object_info = target.name_to_object_info[e.canvas_name];
                     if (e.object_info) {
                         var key = "on_" + event_type;
@@ -406,13 +410,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 } else if (default_handler) {
                     default_handler(e);
                 }
+                target.last_canvas_event = e;
             };
             // "normal" event handling
             process_event(e);
             // mouseover and mouseout simulation:
-            var last_event = target.last_canvas_event;
+            //if (last_event) {
+            //    console.log("event=" + e.type + " name=" + e.canvas_name + " last=" + last_event.canvas_name);
+            //}
             if ((last_event) && (e.type == "mousemove") && (last_event.canvas_name != e.canvas_name)) {
+                //console.log("doing transition emulations " + last_event.canvas_name)
                 if (last_event.canvas_name) {
+                    //console.log("emulating mouseout");
                     var mouseout_event = $.extend({}, e);
                     mouseout_event.type = "mouseout";
                     mouseout_event.canvas_name = last_event.canvas_name;
@@ -428,8 +437,74 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
             }
             //var last_event = target.last_canvas_event;
-            target.last_canvas_event = e;
+            //target.last_canvas_event = e;
         };
+
+        target.suspend_events = function() {
+            // turn off object events and defaults
+            var event_handlers = target.default_event_handlers;
+            target.default_event_handlers = {};
+            target.disable_element_events = true;
+            // return event handlers for later possible restoration
+            return event_handlers;
+        }
+
+        target.restore_events = function(event_handlers) {
+            // turn events back on
+            target.disable_element_events = false;
+            target.default_event_handlers = event_handlers || {};
+        };
+
+        target.do_lasso = function(names_callback, config, delete_after) {
+            // Use a lasso to surround elements.  Return names of elements under lassoed rectangle
+            var options = $.extend({
+                name: "polygon_lasso",
+                color: "red",
+                lineWidth: 1,
+                fill: false,
+                close: false,
+                points: [],
+            }, config);
+            var saved_event_handlers = target.suspend_events();
+            var points = [];
+            var lassoing = false;
+            var mouse_down_handler = function(event) {
+                lassoing = true;
+                var loc = target.event_model_location(event)
+                points = [[loc.x, loc.y]];
+                options.points = points;
+                target.polygon(options);
+            };
+            target.on_canvas_event("mousedown", mouse_down_handler);
+            var mouse_move_handler = function(event) {
+                if (!lassoing) {
+                    return;
+                }
+                var loc = target.event_model_location(event);
+                points.push([loc.x, loc.y]);
+                target.change_element(options.name, {points: points});
+            };
+            target.on_canvas_event("mousemove", mouse_move_handler);
+            var mouse_up_handler = function(event) {
+                lassoing = false;
+                // determine the names lassoed
+                target.change_element(options.name, {fill: true, close: true});
+                var name_to_object = target.shaded_objects(options.name);
+                // clean up:
+                // delete the lasso polygon if requested
+                if (delete_after) {
+                    target.forget_objects([config.name]);
+                } else {
+                    // otherwise unfill it
+                    target.change_element(options.name, {fill: false});
+                }
+                target.restore_events(saved_event_handlers);
+                // callback with the names found mapped to descriptions
+                names_callback(name_to_object);
+            }
+            target.on_canvas_event("mouseup", mouse_up_handler);
+            return options.name;
+        }
 
         target.vector_frame = function(
             x_vector,
@@ -467,6 +542,49 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             setTimeout(finish, delay);
         };
+
+        target.shaded_objects = function(shading_name) {
+            // determine the names of named objects underneith the shading object "paint".
+            // Used for example to implement "lasso" selected objects under a polygon.
+            // xxx This could be optimized: it is a brute force scan of the whole canvas 2x right now.
+            // xxx This method will not find shaded objects that are obscured by other objects.
+            var object_info = target.name_to_object_info[shading_name];
+            if (!object_info) {
+                throw new Error("can't find object with name " + shading_name);
+            }
+            var pseudocolor = object_info.pseudocolor;
+            var shader_hidden_before = object_info.hide
+            // get a hidden canvas pixel snapshot with the object hidden
+            object_info.hide = true;
+            target.redraw();
+            var shaded_pixels = target.invisible_canvas.pixels().data;
+            // get a hidden canvas pixel snapshot with the object visible
+            object_info.hide = false;
+            target.redraw();
+            var shading_pixels = target.invisible_canvas.pixels().data;
+            // scan pixels to find named objects
+            var name_to_shaded_objects = {};
+            for (var i=0; i<shaded_pixels.length; i += 4) {
+                var shading_color_array = shading_pixels.slice(i, i+3);
+                // var shading_color_index = target.color_array_to_index(shading_color_array);
+                var shading_color = target.array_to_color(shading_color_array);
+                if (shading_color == pseudocolor) {
+                    // record any named object "under" this shading pixel
+                    var shaded_color_array = shaded_pixels.slice(i, i+3);
+                    var shaded_color_index = target.color_array_to_index(shaded_color_array);
+                    var shaded_object_name = target.color_index_to_name[shaded_color_index];
+                    if (shaded_object_name) {
+                        var shaded_object_info = target.name_to_object_info[shaded_object_name];
+                        if (shaded_object_info) {
+                            name_to_shaded_objects[shaded_object_name] = shaded_object_info;
+                        }
+                    }
+                }
+            }
+            // Restore previous visibility state for shading object and implicitly request a redraw.
+            target.set_visibilities([shading_name], !shader_hidden_before)
+            return name_to_shaded_objects;
+        }
 
         target.model_view_box = function () {
             return target.visible_canvas.model_view_box();
