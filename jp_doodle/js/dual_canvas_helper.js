@@ -493,7 +493,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // clean up:
                 // delete the lasso polygon if requested
                 if (delete_after) {
-                    target.forget_objects([config.name]);
+                    target.forget_objects([options.name]);
                 } else {
                     // otherwise unfill it
                     target.change_element(options.name, {fill: false});
