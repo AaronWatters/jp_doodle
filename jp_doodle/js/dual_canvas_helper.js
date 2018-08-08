@@ -1051,6 +1051,33 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         element.visible_canvas.canvas.css("background-color", "#a7a");
     };
 
+    $.fn.dual_canvas_helper.lasso_example = function(element) {
+
+        element.empty();
+        element.css("background-color", "cornsilk").width("520px");
+        var config = {
+            width: 400,
+            height: 400,
+            y_up: true,
+        }
+        element.dual_canvas_helper(config);
+        for (var i=20; i<400; i+=20) {
+            for (var j=20; j<400; j+=20) {
+                element.circle({name: ""+i+":"+j, x:i, y:j, r:4, color:"green"});
+            }
+        }
+        //element.rect({name: "binky", x:-10, y:-10, h:500, w:500, color: "blue"})
+        var lasso_callback = function(names_mapping) {
+            for (var name in names_mapping) {
+                element.change_element(name, {color: "pink"});
+            }
+        };
+        // lasso and delete the lasso polygon afterward
+        var delete_it=true;
+        element.do_lasso(lasso_callback, {}, delete_it);
+        $("<div>Please lasso some circles once to turn them pink.</div>").appendTo(element);
+    };
+
     $.fn.dual_canvas_helper.frame_example = function(element) {
         element.empty();
         element.css("background-color", "cornsilk").width("520px");
