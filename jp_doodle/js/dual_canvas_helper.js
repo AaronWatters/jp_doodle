@@ -617,7 +617,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         target.lower_left_axes = function(config) {
             var stats = target.active_region(true); 
-            var params = $.extend(stats, config);
+            var params = $.extend({
+                add_end_points: true,
+                skip_anchor: true,
+            }, stats, config);
             // choose anchors
             var choose_anchor = function (min_value, max_value, anchor_parameter) {
                 // use the parameter if it is given as a number
@@ -629,8 +632,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 if ((min_value > result) || (max_value < result)) {
                     // choose an anchor in the center of appropriate tick choices
                     var choices = target.axis_ticklist(min_value, max_value, 10);
-                    var index = Math.floor(0.5 * choices.length);
-                    result = choices[index];
+                    //var index = Math.floor(0.5 * choices.length);
+                    //result = choices[index];
+                    result = choices[0];
                 }
                 return result;
             };
@@ -638,16 +642,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var y_anchor = choose_anchor(params.min_y, params.max_y, params.y_anchor);
             var bottom_config = $.extend({
                 anchor: x_anchor,
-                axis_origin: {x: 0, y: y_anchor},
-                skip_anchor: true,
+                // axis_origin: {x: 0, y: y_anchor},
+                axis_origin: {x: 0, y: params.min_y},
+                //skip_anchor: true,
                 min_value: params.min_x,
                 max_value: params.max_x
             }, params);
             target.bottom_axis(bottom_config);
             var left_config = $.extend({
                 anchor: y_anchor,
-                axis_origin: {x: x_anchor, y:0},
-                skip_anchor: true,
+                //axis_origin: {x: x_anchor, y:0},
+                axis_origin: {x: params.min_x, y:0},
+                //skip_anchor: true,
                 min_value: params.min_y,
                 max_value: params.max_y,
             }, params);
