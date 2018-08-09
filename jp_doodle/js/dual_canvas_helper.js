@@ -584,10 +584,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // Restore previous visibility state for shading object and implicitly request a redraw.
             target.set_visibilities([shading_name], !shader_hidden_before)
             return name_to_shaded_objects;
-        }
+        };
 
         target.model_view_box = function () {
             return target.visible_canvas.model_view_box();
+        };
+
+        target.model_location = function(mx, my) {
+            // for consistency with reference frames -- model location is unchanged
+            return {x: mx, y: my};
         }
 
         target.canvas_2d_widget_helper.add_vector_ops(target);
@@ -623,7 +628,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var result = 0;
                 if ((min_value > result) || (max_value < result)) {
                     // choose an anchor in the center of appropriate tick choices
-                    var choices = params.axis_ticklist(min_value, max_value, 10);
+                    var choices = target.axis_ticklist(min_value, max_value, 10);
                     var index = Math.floor(0.5 * choices.length);
                     result = choices[index];
                 }
@@ -716,8 +721,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var params = $.extend({
                 name_prefix: null,
                 tick_format: default_tick_format,
-                tick_length: 10,
-                label_offset: 15,
+                tick_length: 10, // intended in pixels
+                label_offset: 15, // intended in pixels
                 tick_line_config: {},
                 tick_text_config: {},
                 tick_direction: {x: 1, y: 0},
@@ -735,6 +740,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var ticks = params.ticks;
             var max_tick = null;
             var min_tick = null;
+            // find the scale factor for convering tick direction vector to pixels
+            var tick_direction_length = target.vlength(
+                target.vadd(
+                    target.converted_location(params.tick_direction.x, params.tick_direction.y),
+                    target.vscale(-1, target.converted_location(0, 0))
+                )
+            );
+            var tick_model_conversion = 1.0 / tick_direction_length;
+            var tick_shift = target.vscale(params.tick_length * tick_model_conversion, params.tick_direction);
+            var label_shift = target.vscale(params.label_offset * tick_model_conversion, params.tick_direction);
             // draw the tick marks and text.
             for (var i=0; i<ticks.length; i++) {
                 var line = $.extend({}, params.tick_line_config);
@@ -755,7 +770,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 );
                 tick.end = target.vadd(
                     tick.start,
-                    target.vscale(params.tick_length, params.tick_direction)
+                    tick_shift
                 );
                 line.x1 = tick.start.x; line.y1 = tick.start.y;
                 line.x2 = tick.end.x; line.y2 = tick.end.y;
@@ -775,7 +790,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 label.valign = "center";
                 label.offset = target.vadd(
                     tick.start,
-                    target.vscale(params.label_offset, params.tick_direction)
+                    label_shift
                 )
                 label.x = label.offset.x;
                 label.y = label.offset.y;
@@ -805,7 +820,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             if (min_offset >= max_offset) {
                 throw new Error("bad offsets");
             }
-            if ((anchor < min_offset) || (anchor > max_offset)) {
+            var anchor_provided = ((typeof anchor) == "number")
+            if ((anchor_provided) && ((anchor < min_offset) || (anchor > max_offset))) {
                 throw new Error("bad anchor");
             }
             var diff = max_offset - min_offset;
@@ -829,13 +845,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 tick_length = Math.round(tick_length);
                 scale = 1.0/tick_length;
             }
-            // pick an anchor if not provided
-            var smin = min_offset * scale;
-            var smax = max_offset * scale;
-            if (!anchor) {
-                var M = Math.floor((smin + smax) * 0.5);
-                anchor = M / scale;
-            }
             // increase the number of ticks if possible 5x, 4x, or 2x
             var tick5 = tick_length / 5.0;
             if (diff / tick5 <= maxlen) {
@@ -853,6 +862,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         scale = scale * 2;
                     }
                 }
+            }
+            // pick an anchor if not provided
+            var smin = min_offset * scale;
+            var smax = max_offset * scale;
+            if (!anchor_provided) {
+                var M = Math.floor((smin + smax) * 0.5);
+                anchor = M / scale;
             }
             // generate the list
             var result = [anchor];
@@ -914,8 +930,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return cvt;
         };
 
-        frame.unconverted_location = function(mx, my) {
-            // Convert "frame" location to shared "model" location.
+        frame.model_location = function(mx, my) {
+            // Convert "model" location to "frame" location.
             // untranslate
             var untranslated = {x: mx - frame.xy_offset.x, y: my - frame.xy_offset.y};
             // then "unscale"
@@ -949,6 +965,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         override_positions("text");
         override_positions("rect");
         override_positions("polygon");
+
+        // define axes w.r.t the frame
+        parent_canvas.dual_canvas_helper.add_axis_logic(frame);
 
         //frame.model_to_pixel = function(mx, my) {
         //    throw new Error("General frame position inversion is not implemented yet.")
@@ -1093,7 +1112,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         var x = 11;
         var y = -77;
         var c = backward.converted_location(x, y);
-        var ic = backward.unconverted_location(c.x, c.y);
+        var ic = backward.model_location(c.x, c.y);
         $("<div>" + x + "," + y + " :: " + c.x + "," + c.y + " :: " + ic.x + "," + ic.y + "</div>").appendTo(element);
         backward.text({
             text: "Backward",
@@ -1175,7 +1194,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var x = 30;
                 var y = 65;
                 var c = frame.converted_location(x, y);
-                var ic = frame.unconverted_location(c.x, c.y);
+                var ic = frame.model_location(c.x, c.y);
                 c = frame.vint(c);
                 ic = frame.vint(ic);
                 element.circle({
