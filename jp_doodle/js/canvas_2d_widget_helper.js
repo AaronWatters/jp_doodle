@@ -491,6 +491,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             return result;
         };
+        target.vdot = function(v1, v2) {
+            var result = 0.0;
+            for (slot in v1) {
+                result += v1[slot] * v2[slot];
+            }
+            return result;
+        };
+        target.vlength = function(vector) {
+            return Math.sqrt(target.vdot(vector, vector));
+        };
         target.vint = function(vector) {
             var result = {};
             for (slot in vector){
