@@ -662,6 +662,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 max_tick_count: 10,
                 anchor: null,
                 skip_anchor: false,
+                add_end_points: false,
             }, config);
             coordinate = coordinate || "x";
             var other_coord = "y";
@@ -684,6 +685,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var min_value = params.min_value || stats["min_" + coordinate];
                 var max_value = params.max_value || stats["max_" + coordinate]
                 params.ticks = target.axis_ticklist(min_value, max_value, params.max_tick_count, params.anchor);
+                // if add_end_points is specified then include unlabelled end markers if absent
+                if (params.add_end_points) {
+                    if (min_value < params.ticks[0]) {
+                        var min_tick = {offset: min_value, text: " "};
+                        params.ticks.unshift(min_tick);
+                    }
+                    if (max_value > params.ticks[params.ticks.length-1]) {
+                        var max_tick = {offset: max_value, text: " "};
+                        params.ticks.push(max_tick);
+                    }
+                }
             }
             if (!params.axis_origin) {
                 params.axis_origin = {x: 0, y: 0};
