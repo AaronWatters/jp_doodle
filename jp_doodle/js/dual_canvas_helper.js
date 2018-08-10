@@ -527,6 +527,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // xxxx could add special methods like model_to_pixel.
         };
 
+        target.frame_region = function(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy) {
+            // Convenience: map frame region into the canvas region
+            var scale_x = (maxx - minx) * 1.0 / (frame_maxx - frame_minx);
+            var scale_y = (maxy - miny) * 1.0 / (frame_maxy - frame_miny);
+            var translate_x = minx - frame_minx * scale_x;
+            var translate_y = miny - frame_miny * scale_y;
+            return target.rframe(scale_x, scale_y, translate_x, translate_y)
+        }
+
         target.callback_with_pixel_color = function(pixel_x, pixel_y, callback, delay) {
             // For testing.  Delay finish to allow widget initialization to stabilize before testing.
             if (!delay) {
