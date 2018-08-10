@@ -599,6 +599,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return target.visible_canvas.model_view_box();
         };
 
+        target.pixels = function(x, y, h, w) {
+            return  target.visible_canvas.pixels(x, y, h, w);
+        };
+
         target.model_location = function(mx, my) {
             // for consistency with reference frames -- model location is unchanged
             return {x: mx, y: my};
@@ -628,7 +632,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var stats = target.active_region(true); 
             var params = $.extend({
                 add_end_points: true,
-                skip_anchor: true,
+                skip_anchor: false,
             }, stats, config);
             // choose anchors
             var choose_anchor = function (min_value, max_value, anchor_parameter) {
