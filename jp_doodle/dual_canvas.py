@@ -152,6 +152,7 @@ class CanvasOperationsMixin(object):
         #self.call_method("lower_left_axes", s)
         self.element.lower_left_axes(s)
 
+
 class DualCanvasWidget(jp_proxy_widget.JSProxyWidget, CanvasOperationsMixin):
     
     "Wrapper for dual_canvas jQuery extension object."
@@ -174,6 +175,33 @@ class DualCanvasWidget(jp_proxy_widget.JSProxyWidget, CanvasOperationsMixin):
             element.dual_canvas_helper(config);
             """, config=config)
 
+    def pixels_array_async(self, callback, x=None, y=None, w=None, h=None):
+        """
+        Get all pixels in the canvas as an array, or pixels in rectangular region if specified.
+        Deliver the result to the callback(a) as a numpy array.
+        All parameters are in pixel offsets, not canvas transformed coordinates.
+        """
+        from jp_proxy_widget.hex_codec import hex_to_bytearray
+        import numpy as np
+        def converter_callback(imgData):
+            width = imgData["width"]
+            height = imgData["height"]
+            data = imgData["data"]
+            data_bytes = hex_to_bytearray(data)
+            array1d = np.array(data_bytes, dtype=np.ubyte)
+            bytes_per_pixel = 4
+            image_array = array1d.reshape((height, width, bytes_per_pixel))
+            callback(image_array)
+        self.js_init("""
+            var pixels = element.pixels(x, y, w, h);
+            callback(pixels);
+        """, callback=converter_callback, x=x, y=y, w=w, h=h)
+
+    def save_pixels_to_png_async(self, file_path, x=None, y=None, w=None, h=None):
+        import scipy.misc as sm
+        def save_callback(image_array):
+            sm.imsave(file_path, image_array)
+        self.pixels_array_async(save_callback, x, y, w, h)
 
 class FrameInterface(CanvasOperationsMixin):
 
