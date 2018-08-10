@@ -367,11 +367,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return imgData;
         };
 
-        target.pixels = function () {
+        target.pixels = function (x, y, h, w) {
             var canvas = target.canvas[0];
-            var h = canvas.height;
-            var w = canvas.width;
-            var imgData = target.canvas_context.getImageData(0, 0, w, h);
+            x = x || 0;
+            y = y || 0;
+            var h = h || canvas.height;
+            var w = w || canvas.width;
+            var imgData = target.canvas_context.getImageData(x, y, w, h);
             return {"data": imgData.data, "height": imgData.height, "width": imgData.width};
         }
 
