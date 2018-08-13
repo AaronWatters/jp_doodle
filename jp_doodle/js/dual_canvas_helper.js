@@ -450,6 +450,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     process_event(mouseover_event, true);
                 }
             }
+            // do not allow event to propagate
+            event.stopPropagation();
             //var last_event = target.last_canvas_event;
             //target.last_canvas_event = e;
         };
