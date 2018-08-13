@@ -232,8 +232,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             context.fillText(text, dx, dy); // translated to (x,y)
             // use a rectangle for masking operations
             s.draw_mask = function (to_canvas, info) {
-                to_canvas.rect({x: info.x, y: info.y, w:rwidth, h:height, degrees:info.degrees, color:info.color, dx:dx, dy:rdy})
-            }
+                to_canvas.rect({x: info.x, y: info.y, w:rwidth, h:height, degrees:info.degrees, color:info.color, dx:dx, dy:rdy});
+            };
             // update stats
             if (target.canvas_stats) {
                 target.rectangle_stats(s.x, s.y, rwidth, height, s.degrees, s.coordinate_conversion, dx, rdy);
@@ -307,7 +307,61 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 target.rectangle_stats(s.x, s.y, s.w, s.h, s.degrees, s.coordinate_conversion, dx, dy0);
             }
             return s;
-        }
+        };
+
+        // attached image sources by name
+        // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+        target.named_images = {};
+
+        target.add_image = function(name, image_source) {
+            target.named_images[name] = image_source;
+        };
+
+        target.named_image = function(opt) {
+            // eg: element.rect({name:"a rect", x:10, y:50, w:10, h:120, color:"salmon", degrees:-15});
+            var s = $.extend({
+                image_name: null,
+                fill: true,  // if false then do a outline
+                coordinate_conversion: no_change_conversion,
+                frame: target,
+            }, opt);
+            var image_source = target.named_images[s.image_name];
+            if (!image_source) {
+                throw new Error("No image loaded with name: " + s.image_name);
+            }
+            // xxxx this is copy/pasted from rect -- should refactor.
+            // xxxx should also convert s.w and s.h?
+            target.translate_and_rotate(s.x, s.y, s.degrees, s.coordinate_conversion);
+            var context = target.canvas_context;
+            context.beginPath();
+            //context.fillStyle = s.color;
+            var height = s.h;
+            var dx = s.dx || 0;
+            var dy = s.dy || 0;
+            var dy0 = dy;
+            if (target.canvas_y_up) {
+                height = -height;
+                dy = -dy;
+            }
+            //context.rect(dx, dy, s.w, height)  // translated to (x,y)
+            //fill_or_stroke(context, s);
+            var isnum = function(x) { return ((typeof x) == 'number'); };
+            if (isnum(s.sx) && isnum(s.sy) && isnum(s.sWidth) && isnum(s.sHeight) ) {
+                context.drawImage(image_source, s.sx, s.sy, s.sWidth, s.sHeight, dx, dy, s.w, height);
+            } else {
+                context.drawImage(image_source, dx, dy, s.w, height);
+            }
+            context.restore();  // matches translate_and_rotate
+            // update stats
+            if (target.canvas_stats) {
+                target.rectangle_stats(s.x, s.y, s.w, s.h, s.degrees, s.coordinate_conversion, dx, dy0);
+            }
+            // use a rectangle for masking operations
+            s.draw_mask = function (to_canvas, info) {
+                to_canvas.rect({x: info.x, y: info.y, w:info.w, h:info.h, degrees:info.degrees, color:info.color});
+            };
+            return s;
+        };
 
         var fill_or_stroke = function(context, s) {
             if (s.fill) {
@@ -536,6 +590,20 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             element.rect({x: stats.min_x, y: stats.min_y, w: width, h:height, color:color, fill: false})
             element.canvas_stats = {};
         }
+        // image example: load the mandrill image from USC
+        var mandrill_url = "http://sipi.usc.edu/database/preview/misc/4.2.03.png";
+        var mandrill_image = new Image();
+        element.add_image("mandrill", mandrill_image);
+        mandrill_image.onload = function () {
+            // show the image after it loads
+            element.named_image({
+                image_name: "mandrill", x:220, y:20, w:100, h:40,
+                sx: 30, sy:15, sWidth:140, sHeight:20
+            });
+            show_stats("#ff8");
+        };
+        mandrill_image.src = mandrill_url;
+        // other shape examples
         element.circle({name: "green circle", x:160, y:70, r:20, color:"green"});
         show_stats("red");
         element.rect({name:"a rect", x:10, y:50, w:10, h:120, color:"salmon", degrees:-15});
@@ -553,6 +621,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             color: "#ffd",
         });
         show_stats("white");
+        // element.event_color does not work with cross-origin mandrill image.  Commented for now.
+        /*
         var p = element.model_to_pixel(160, 70);
         var c = element.color_at(p.x, p.y);
         var info = $("<div>At model 160,70 pixel=" + [p.x, p.y] + " color=" + c.data + "</div>").appendTo(element);
@@ -567,6 +637,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 " mloc=" +mloc.x+ "," + mloc.y + 
                 "</div>");
         });
+        */
     };
 
 })(jQuery);

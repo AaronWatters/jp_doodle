@@ -324,6 +324,20 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         assign_shape_factory("text");
         assign_shape_factory("rect");
         assign_shape_factory("polygon");
+        assign_shape_factory("named_image");
+
+        target.name_image_url = function(image_name, url, no_redraw) {
+            // load an image url
+            var the_image = new Image();
+            the_image.src = url;
+            target.visible_canvas.add_image(image_name, the_image);
+            if (!no_redraw) {
+                // request a reload when the image arrives
+                the_image.onload = function () {
+                    target.request_redraw();
+                };
+            }
+        };
 
         target.converted_location = function (x, y) {
             return target.visible_canvas.converted_location(x, y);
@@ -457,6 +471,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         target.do_lasso = function(names_callback, config, delete_after) {
             // Use a lasso to surround elements.  Return names of elements under lassoed rectangle
+            // XXXX Need to change this to choose a color that is not in the original canvas for lasso tool.
             var options = $.extend({
                 name: "polygon_lasso",
                 color: "red",
