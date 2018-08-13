@@ -34,13 +34,13 @@ class CanvasOperationsMixin(object):
 
     # xxxx Not all methods may make sense for all subclasses.
 
-    def circle(self, x, y, radius, color, fill=True, **other_args):
+    def circle(self, x, y, radius, color="black", fill=True, **other_args):
         "Draw a circle or arc on the canvas frame."
         s = dict(x=x, y=y, r=radius, color=color, fill=fill)
         s.update(other_args)
         self.call_method("circle", s)
 
-    def line(self, x1, y1, x2, y2, color, lineWidth=None, **other_args):
+    def line(self, x1, y1, x2, y2, color="black", lineWidth=None, **other_args):
         "Draw a line segment on the canvas frame."
         s = dict(x1=x1, y1=y1, x2=x2, y2=y2, color=color)
         if lineWidth:
@@ -48,7 +48,7 @@ class CanvasOperationsMixin(object):
         s.update(other_args)
         self.call_method("line", s)
 
-    def text(self, x, y, text, color, degrees=0, align="left", font=None, **other_args):
+    def text(self, x, y, text, color="black", degrees=0, align="left", font=None, **other_args):
         "Draw some text on the canvas frame."
         s = dict(x=x, y=y, text=text, color=color, degrees=degrees, align=align)
         if font:
@@ -56,17 +56,22 @@ class CanvasOperationsMixin(object):
         s.update(other_args)
         self.call_method("text", s)
 
-    def rect(self, x, y, width, height, color, degrees=0, fill=True, **other_args):
+    def rect(self, x, y, width, height, color="black", degrees=0, fill=True, **other_args):
         "Draw a rectangle on the canvas frame."
         s = dict(x=x, y=y, w=width, h=height, color=color, degrees=degrees, fill=fill)
         s.update(other_args)
         self.call_method("rect", s)
 
-    def polygon(self, points, color, close=True, fill=True, **other_args):
+    def polygon(self, points, color="black", close=True, fill=True, **other_args):
         "Draw a polygon or polyline on the canvas frame"
         s = dict(points=points, color=color, close=close, fill=fill)
         s.update(other_args)
         self.call_method("polygon", s)
+
+    def named_image(self, image_name, x, y, width, height, degrees=0, sx=None, sy=None, sWidth=None, sHeight=None, **other_args):
+        s = dict(x=x, y=y, w=w, h=h, image_name=image_name, sx=sx, sy=sy, sHeight=sHeight, sWidth=sWidth)
+        s.update(other_args)
+        self.call_method("named_image", s)
 
     def reset_canvas(self):
         "Re-initialize the canvas drawing area."
@@ -99,6 +104,10 @@ class CanvasOperationsMixin(object):
     def off_canvas_event(self, event_type, for_name=None):
         "Unregister the event handler for the canvas or for a named element."
         self.element.off_canvas_event(event_type, for_name)
+
+    def name_image_url(self, image_name, url, no_redraw=False):
+        "Load an image by URL and give it a name for reference.  Redraw canvas when load completes, unless disabled."
+        self.element.name_image_url(image_name, url, no_redraw)
 
     def callback_with_pixel_color(self, pixel_x, pixel_y, callback):
         "For testing.  Deliver the color at pixel as a list of four integers to the callback(list_of_integers)."
