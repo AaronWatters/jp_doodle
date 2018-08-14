@@ -68,8 +68,10 @@ class CanvasOperationsMixin(object):
         s.update(other_args)
         self.call_method("polygon", s)
 
-    def named_image(self, image_name, x, y, width, height, degrees=0, sx=None, sy=None, sWidth=None, sHeight=None, **other_args):
-        s = dict(x=x, y=y, w=w, h=h, image_name=image_name, sx=sx, sy=sy, sHeight=sHeight, sWidth=sWidth)
+    def named_image(self, image_name, x, y, w, h, degrees=0, sx=None, sy=None, sWidth=None, sHeight=None, **other_args):
+        s = dict(
+            x=x, y=y, w=w, h=h, image_name=image_name, 
+            sx=sx, sy=sy, sHeight=sHeight, sWidth=sWidth, degrees=degrees)
         s.update(other_args)
         self.call_method("named_image", s)
 
