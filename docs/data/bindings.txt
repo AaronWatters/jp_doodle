@@ -1,0 +1,94 @@
+***TITLE
+Bindings
+***SCREENSHOT
+images/bindings.png
+***PROLOGUE
+
+<p>
+Canvases can respond to mouse events.  The mouse events can be associated to the
+whole canvas or to named elements in the canvas.
+</p>
+<p>
+In the illustration below a different click event handler attaches
+to each text area to change the text areas in different ways for 5 seconds.
+</p>
+***CODE
+
+// Attach an information div to the element to display event feedback.
+var info_area = $("<div>Please click on text areas below.</div>").appendTo(element);
+
+// Attach a dual canvas associated with the element as a child of the element
+// configured with width 400 and height 200.
+var config = {
+            width: 400,
+            height: 200,
+        };
+element.dual_canvas_helper(config);
+
+element.text({
+    name: "bigger", text: "Click to enlarge", 
+    font: "20px Arial", x: 20, y:20, degrees: 5, color:"magenta"
+});
+var enlarge = function(event) {
+    element.change_element("bigger", {font: "40px Arial"});
+    // change it back 5 seconds later
+    setTimeout(function () { element.change_element("bigger", {font: "20px Arial"}); }, 5000)
+};
+element.on_canvas_event("click", enlarge, "bigger");
+
+element.text({
+    name: "redden", text: "Click to redden", 
+    font: "20px Arial", x: 20, y:50, degrees: 5, color:"green"
+});
+var redden = function(event) {
+    element.change_element("redden", {color: "red"});
+    // change it back 5 seconds later
+    setTimeout(function () { element.change_element("redden", {color: "green"}); }, 5000)
+};
+element.on_canvas_event("click", redden, "redden");
+
+element.text({
+    name: "font", text: "Click to change font", 
+    font: "20px Arial", x: 20, y:80, degrees: 5, color:"magenta"
+});
+var change_font = function(event) {
+    element.change_element("font", {font: "20px Courier"});
+    // change it back 5 seconds later
+    setTimeout(function () { element.change_element("font", {font: "20px Arial"}); }, 5000)
+};
+element.on_canvas_event("click", change_font, "font");
+
+element.text({
+    name: "rotate", text: "Click to rotate", 
+    font: "20px Arial", x: 20, y:120, degrees: 5, color:"magenta"
+});
+var rotate = function(event) {
+    element.change_element("rotate", {degrees: -15});
+    // change it back 5 seconds later
+    setTimeout(function () { element.change_element("rotate", {degrees: 5}); }, 5000)
+};
+element.on_canvas_event("click", rotate, "rotate");
+
+element.text({
+    name: "vanish", text: "Click to disappear", 
+    font: "20px Arial", x: 20, y:150, degrees: 5, color:"magenta"
+});
+var disappear = function(event) {
+    element.change_element("vanish", {hide: true});
+    // change it back 5 seconds later
+    setTimeout(function () { element.change_element("vanish", {hide: false}); }, 5000)
+};
+element.on_canvas_event("click", disappear, "vanish");
+***DISCUSSION
+<p>
+The example above uses associates an event handler to a named object for
+a given event type using
+</p>
+
+<pre>
+element.on_canvas_event(event_type, disappear, object name);
+</pre>
+
+<p>
+Objects with no assigned unique name cannot bind events individually.
+</p>

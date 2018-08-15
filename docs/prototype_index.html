@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel=stylesheet href="static/style.css">
+
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="/resources/demos/style.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="codemirrorjs/codemirror.css">
+    <script src="codemirrorjs/codemirror.js"></script>
+    <script src="codemirrorjs/matchbrackets.js"></script>
+    <script src="codemirrorjs/continuecomment.js"></script>
+    <script src="codemirrorjs/comment.js"></script>
+    <script src="codemirrorjs/javascript.js"></script>
+    <style type="text/css">.CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black;}</style>
+
+    <script src="jp_doodle_js/canvas_2d_widget_helper.js"></script>
+    <script src="jp_doodle_js/dual_canvas_helper.js"></script>
+    <script src="jp_doodle_js/rectangle_collection.js"></script>
+    <script>
+        $( function() {
+          $( "#discussion" ).accordion({collapsible : true, active : 'none'});
+          $( "#code_text" ).accordion({collapsible : true, active : 'none'});
+        } );
+    </script>
+</head>
+
+<body>
+<div class="top_menu">
+<ul>
+  <li><a class="active" href="#home">Home<br>
+  <img width="50px" src="http://sipi.usc.edu/database/preview/misc/4.2.03.png"></a></li>
+  <li><a href="#news">News</a></li>
+  <li><a href="#contact">Contact</a></li>
+  <li><a href="#about">About</a></li>
+</ul>
+</div>
+
+<h1>jp_doodle drawing tools.</h1>
+<p>
+    The <code>jp_doodle</code> package includes a number of jquery plugins for drawing figures using HTML 5 features.
+</p>
+
+<center>
+    <div id="target_div"/>
+</center>
+
+<script>
+    var element = $('#target_div');
+    
+    var config = {
+            width: 400,
+            height: 400,
+        }
+        element.dual_canvas_helper(config);
+        element.polygon({
+            name: "polly", 
+            points: [[250,100], [400,100], [280,180], [375,60], [370,180]],
+            color: "#ffd",
+        });
+        element.axis({
+            name_prefix: "axis",
+            axis_origin: {x: 155, y:30},
+            tick_line_config: {lineWidth: 2, color: "green"},
+            connecting_line_config: {lineWidth: 5, color: "blue"},
+            tick_text_config: {color: "red"},
+            ticks: [
+                5,  //{offset: 5},
+                25.5, // {offset: 25.5},
+                58, // {offset: 58}
+            ]
+        });
+        element.bottom_axis({axis_origin: {x: 0, y: 220},});
+        element.top_axis({axis_origin: {x: 0, y: 120},});
+        element.right_axis({axis_origin: {x: 220, y: 0},});
+        element.left_axis({axis_origin: {x: 120, y: 0},});
+        element.lower_left_axes({
+            x_anchor: 300,
+            y_anchor: 320,
+            tick_line_config: {color: "green"},
+            tick_text_config: {color: "blue"},
+        });
+        element.circle({name: "green circle", x:160, y:70, r:20, color:"green"});
+        element.rect({name:"a rect", x:10, y:50, w:10, h:120, color:"salmon", degrees:-15});
+        element.text({name:"some text", x:40, y:40, text:"Canvas", color:"#64d", degrees:45,
+            font: "bold 20px Arial",});
+        element.line({name:"a line", x1:100, y1:100, x2:150, y2:130, color:"brown", lineWidth: 4});
+        var info = $("<div>click the circle to pick it up..</div>").appendTo(element);
+        var click_handler = function(e) {
+            info.html(
+                "<div>click at " + e.pixel_location.x +
+                " "+e.pixel_location.y +
+                " "+e.canvas_name +
+                " "+e.invisible_color +
+                "</div>");
+        }
+        var mouse_over_circle_handler = function(e) {
+            info.html(
+                "<div>rect mouse over at " + e.pixel_location.x +
+                " "+e.pixel_location.y +
+                " "+e.canvas_name +
+                " "+e.invisible_color +
+                "</div>");
+        }
+        element.on_canvas_event("mousemove", mouse_over_circle_handler, "a rect");
+        element.on_canvas_event("click", click_handler);
+        var put_circle = function(event) {
+            var loc = element.event_model_location(event);
+            var ploc = event.pixel_location;
+            element.change_element("green circle", {"x":loc.x, "y":loc.y});
+            info.html(
+                "<div> [" + Math.round(loc.x) + ", " + Math.round(loc.y) + "] :: [" 
+                + Math.round(ploc.x) + ", " + Math.round(ploc.y) 
+                + "] </div>")
+            // change_element automatically schedules a redraw
+            //element.request_redraw();
+        };
+        var drop_circle = function(event) {
+            info.html("<div>dropping circle</div>");
+            element.off_canvas_event("click");
+            element.off_canvas_event("mousemove");
+            element.on_canvas_event("click", pick_up_circle, "green circle");
+            element.on_canvas_event("click", click_handler);
+        };
+        var pick_up_circle = function(event) {
+            info.html("<div>picking up circle</div>");
+            element.on_canvas_event("mousemove", put_circle);
+            element.on_canvas_event("click", drop_circle);  // automatically override other handler
+            element.off_canvas_event("click", "green circle");
+        };
+        element.on_canvas_event("click", pick_up_circle, "green circle");
+        element.fit()
+</script>
+
+<div id="code_text">
+        <h3>Code</h3>
+    
+        <div><textarea id="code" name="code">
+var element = $('#target_div');
+$('<img src="http://sipi.usc.edu/database/preview/misc/4.2.03.png">').appendTo(element);
+
+var config = {
+    width: 400,
+    height: 400,
+}
+element.dual_canvas_helper(config);
+element.polygon({
+    name: "polly", 
+    points: [[250,100], [400,100], [280,180], [375,60], [370,180]],
+    color: "#ffd",
+});
+element.axis({
+    name_prefix: "axis",
+    axis_origin: {x: 155, y:30},
+    tick_line_config: {lineWidth: 2, color: "green"},
+    connecting_line_config: {lineWidth: 5, color: "blue"},
+    tick_text_config: {color: "red"},
+    ticks: [
+        5,  //{offset: 5},
+        25.5, // {offset: 25.5},
+        58, // {offset: 58}
+    ]
+});
+element.bottom_axis({axis_origin: {x: 0, y: 220},});
+element.top_axis({axis_origin: {x: 0, y: 120},});
+element.right_axis({axis_origin: {x: 220, y: 0},});
+element.left_axis({axis_origin: {x: 120, y: 0},});
+element.lower_left_axes({
+    x_anchor: 300,
+    y_anchor: 320,
+    tick_line_config: {color: "green"},
+    tick_text_config: {color: "blue"},
+});
+element.circle({name: "green circle", x:160, y:70, r:20, color:"green"});
+element.rect({name:"a rect", x:10, y:50, w:10, h:120, color:"salmon", degrees:-15});
+element.text({name:"some text", x:40, y:40, text:"Canvas", color:"#64d", degrees:45,
+    font: "bold 20px Arial",});
+element.line({name:"a line", x1:100, y1:100, x2:150, y2:130, color:"brown", lineWidth: 4});
+var info = $("<div>click the circle to pick it up..</div>").appendTo(element);
+var click_handler = function(e) {
+    info.html(
+        "<div>click at " + e.pixel_location.x +
+        " "+e.pixel_location.y +
+        " "+e.canvas_name +
+        " "+e.invisible_color +
+        "</div>");
+}
+var mouse_over_circle_handler = function(e) {
+    info.html(
+        "<div>rect mouse over at " + e.pixel_location.x +
+        " "+e.pixel_location.y +
+        " "+e.canvas_name +
+        " "+e.invisible_color +
+        "</div>");
+}
+element.on_canvas_event("mousemove", mouse_over_circle_handler, "a rect");
+element.on_canvas_event("click", click_handler);
+var put_circle = function(event) {
+    var loc = element.event_model_location(event);
+    var ploc = event.pixel_location;
+    element.change_element("green circle", {"x":loc.x, "y":loc.y});
+    info.html(
+        "<div> [" + Math.round(loc.x) + ", " + Math.round(loc.y) + "] :: [" 
+        + Math.round(ploc.x) + ", " + Math.round(ploc.y) 
+        + "] </div>")
+    // change_element automatically schedules a redraw
+    //element.request_redraw();
+};
+var drop_circle = function(event) {
+    info.html("<div>dropping circle</div>");
+    element.off_canvas_event("click");
+    element.off_canvas_event("mousemove");
+    element.on_canvas_event("click", pick_up_circle, "green circle");
+    element.on_canvas_event("click", click_handler);
+};
+var pick_up_circle = function(event) {
+    info.html("<div>picking up circle</div>");
+    element.on_canvas_event("mousemove", put_circle);
+    element.on_canvas_event("click", drop_circle);  // automatically override other handler
+    element.off_canvas_event("click", "green circle");
+};
+element.on_canvas_event("click", pick_up_circle, "green circle");
+element.fit()
+        </textarea></div>
+    
+    </div>
+
+<div id="discussion">
+        <h3>Discussion</h3>
+    
+        <div>
+            DISCUSSION_HERE
+        </div>
+    
+    </div>
+    
+    <script>
+            var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+              lineNumbers: true,
+              matchBrackets: true,
+              continueComments: "Enter",
+              extraKeys: {"Ctrl-Q": "toggleComment"}
+            });
+     </script>
+            
+</body>
+</html>

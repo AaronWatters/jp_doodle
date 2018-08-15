@@ -1,0 +1,102 @@
+***TITLE
+Events
+***SCREENSHOT
+images/events.png
+***PROLOGUE
+<p>
+Canvases can respond to mouse events.  The mouse events can be associated to the
+whole canvas or to named elements in the canvas.
+</p>
+<p>
+In the illustration below you may move the named objects (everything colorful)
+by mousing down on the object and dragging it to a new location and then mousing up.
+</p>
+***CODE
+
+// Attach an information div to the element to display event feedback.
+var info_area = $("<div>Please mouse-down and drag objects below.</div>").appendTo(element);
+
+// Attach a dual canvas associated with the element as a child of the element
+// configured with width 400 and height 200.
+var config = {
+            width: 400,
+            height: 200,
+        };
+element.dual_canvas_helper(config);
+
+// Draw some elements on the canvas.
+// A filled yellow circle (disk) named "Colonel Mustard"
+element.circle({name: "Colonel Mustard", x:100, y:150, r:120, color:"#990"});
+// A filled red rectangle named "Miss Scarlett"
+element.rect({name: "Miss Scarlett", x:100, y:130, w:100, h:20, color: "red"});
+// A magenta text named Pluto
+element.text({
+    name: "Pluto", text: "The Republic", font: "20px Arial",
+    x: 20, y:20, degrees: 5, color:"magenta"
+});
+
+// Mandrill eyes from a remote image
+var mandrill_url = "http://sipi.usc.edu/database/preview/misc/4.2.03.png";
+
+element.name_image_url("mandrill", mandrill_url);
+// just the eyes, not the whole image
+element.named_image({
+    name: "mandrill eyes",
+    image_name: "mandrill", x:220, y:170, w:80, h:30,
+    sx:30, sy:15, sWidth:140, sHeight:20
+    })
+
+// Cover part of the canvas with a semi-transparent rectangle with NO NAME
+element.rect({x:20, y:20, w:200, h:200, color: "rgba(100,100,100,0.5)"});
+
+element.fit(null, 10);
+
+// Define a variable for the picked-up object
+var picked_up_object = null;
+
+// Attach a mousedown event which picks up any named object under the mouse.
+var on_mouse_down = function(event) {
+    if (event.canvas_name) {
+        info_area.html("<div>Picking up the object named " + event.canvas_name + "</div>");
+        picked_up_object = event.canvas_name;
+    } else {
+        info_area.html("<div>No object to pick up.</div>");
+    }
+};
+element.on_canvas_event("mousedown", on_mouse_down);
+
+// Attach a mousemove event which moves any picked up object.
+var on_mouse_move = function(event) {
+    if (picked_up_object) {
+        var loc = element.event_model_location(event);
+        info_area.html("<div>"+picked_up_object+":"+loc.x+","+loc.y+"</div>");
+        element.change_element(picked_up_object, {"x":loc.x, "y":loc.y});
+    } else if (event.canvas_name) {
+        info_area.html("<div>Click to drag the object named " + event.canvas_name + "</div>");
+    } else {
+        info_area.html("<div>You are not over anybody.</div>");
+    }
+};
+element.on_canvas_event("mousemove", on_mouse_move);
+
+// Attach a mouseup event which "drops" the current picked up object and re-fits the canvas.
+var on_mouse_up = function(event) {
+    info_area.html("<div>Dropping " + picked_up_object + ".</div>");
+    picked_up_object = null;
+    // refit the canvas to the new object configuration.
+    element.fit(null, 10)
+};
+element.on_canvas_event("mouseup", on_mouse_up);
+
+$("<div>Please mouse down and drag over the colorful objects to move them.</div>")
+.appendTo(element);
+***DISCUSSION
+<p>
+In this case the events are associated with the whole canvas (even though they sometimes
+use the name of the object under the mouse event).
+</p>
+<p>
+Note that it is not possible to modify the semi-transparent grey square
+without clearing the whole canvas
+because the square was not given a name.
+</p>

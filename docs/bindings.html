@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="icon" type="image/png" href="images/clock.png">
+    <link rel=stylesheet href="static/style.css">
+
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="/resources/demos/style.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="codemirrorjs/codemirror.css">
+    <script src="codemirrorjs/codemirror.js"></script>
+    <script src="codemirrorjs/matchbrackets.js"></script>
+    <script src="codemirrorjs/continuecomment.js"></script>
+    <script src="codemirrorjs/comment.js"></script>
+    <script src="codemirrorjs/javascript.js"></script>
+    <style type="text/css">.CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black;}</style>
+    <script src="jp_doodle_js/canvas_2d_widget_helper.js"></script>
+    <script src="jp_doodle_js/dual_canvas_helper.js"></script>
+    <script src="jp_doodle_js/rectangle_collection.js"></script>
+
+    <script>
+        $( function() {
+          $( "#discussion" ).accordion({collapsible : true, active : 'none'});
+          $( "#code_text" ).accordion({collapsible : true, active : 'none'});
+        } );
+    </script>
+</head>
+
+<body>
+<div class="top_menu">
+<ul>
+<li><a href="animation.html">Animation <br><img src="images/clock.png" width="50px"></a></li>
+<li><a href="bindings.html">Bindings <br><img src="images/bindings.png" width="50px"></a></li>
+<li><a href="events.html">Events <br><img src="images/events.png" width="50px"></a></li>
+<li><a href="index.html">Drawing <br><img src="images/drawing.png" width="50px"></a></li>
+</ul>
+</div>
+
+<p><em>
+    These are example pages for the 
+    <a href="https://github.com/AaronWatters/jp_doodle">jp_doodle</a>
+    package. <br>
+    Please see the Jupyter notebooks in the package for additional
+    discussion and documentation. <br>
+    Please use 
+    <a href="https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/AaronWatters/jp_doodle/master">Binder</a>
+    to easily run the Jupyter notebooks of the package.
+</em></p>
+
+<h1>Bindings</h1>
+<div>
+    <p>
+Canvases can respond to mouse events.  The mouse events can be associated to the
+whole canvas or to named elements in the canvas.
+</p>
+<p>
+In the illustration below a different click event handler attaches
+to each text area to change the text areas in different ways for 5 seconds.
+</p>
+</div>
+
+<center>
+    <div id="target_div"/>
+</center>
+
+<script>
+    var element = $('#target_div');
+    //$('<img src="http://sipi.usc.edu/database/preview/misc/4.2.03.png">').appendTo(element);
+    // Attach an information div to the element to display event feedback.
+var info_area = $("<div>Please click on text areas below.</div>").appendTo(element);
+
+// Attach a dual canvas associated with the element as a child of the element
+// configured with width 400 and height 200.
+var config = {
+            width: 400,
+            height: 200,
+        };
+element.dual_canvas_helper(config);
+
+element.text({
+    name: "bigger", text: "Click to enlarge", 
+    font: "20px Arial", x: 20, y:20, degrees: 5, color:"magenta"
+});
+var enlarge = function(event) {
+    element.change_element("bigger", {font: "40px Arial"});
+    // change it back 5 seconds later
+    setTimeout(function () { element.change_element("bigger", {font: "20px Arial"}); }, 5000)
+};
+element.on_canvas_event("click", enlarge, "bigger");
+
+element.text({
+    name: "redden", text: "Click to redden", 
+    font: "20px Arial", x: 20, y:50, degrees: 5, color:"green"
+});
+var redden = function(event) {
+    element.change_element("redden", {color: "red"});
+    // change it back 5 seconds later
+    setTimeout(function () { element.change_element("redden", {color: "green"}); }, 5000)
+};
+element.on_canvas_event("click", redden, "redden");
+
+element.text({
+    name: "font", text: "Click to change font", 
+    font: "20px Arial", x: 20, y:80, degrees: 5, color:"magenta"
+});
+var change_font = function(event) {
+    element.change_element("font", {font: "20px Courier"});
+    // change it back 5 seconds later
+    setTimeout(function () { element.change_element("font", {font: "20px Arial"}); }, 5000)
+};
+element.on_canvas_event("click", change_font, "font");
+
+element.text({
+    name: "rotate", text: "Click to rotate", 
+    font: "20px Arial", x: 20, y:120, degrees: 5, color:"magenta"
+});
+var rotate = function(event) {
+    element.change_element("rotate", {degrees: -15});
+    // change it back 5 seconds later
+    setTimeout(function () { element.change_element("rotate", {degrees: 5}); }, 5000)
+};
+element.on_canvas_event("click", rotate, "rotate");
+
+element.text({
+    name: "vanish", text: "Click to disappear", 
+    font: "20px Arial", x: 20, y:150, degrees: 5, color:"magenta"
+});
+var disappear = function(event) {
+    element.change_element("vanish", {hide: true});
+    // change it back 5 seconds later
+    setTimeout(function () { element.change_element("vanish", {hide: false}); }, 5000)
+};
+element.on_canvas_event("click", disappear, "vanish");
+</script>
+
+<div id="code_text">
+        <h3>Code</h3>
+    
+        <div><textarea id="code" name="code">
+var element = $('#target_div');
+// Attach an information div to the element to display event feedback.
+var info_area = $("<div>Please click on text areas below.</div>").appendTo(element);
+
+// Attach a dual canvas associated with the element as a child of the element
+// configured with width 400 and height 200.
+var config = {
+            width: 400,
+            height: 200,
+        };
+element.dual_canvas_helper(config);
+
+element.text({
+    name: "bigger", text: "Click to enlarge", 
+    font: "20px Arial", x: 20, y:20, degrees: 5, color:"magenta"
+});
+var enlarge = function(event) {
+    element.change_element("bigger", {font: "40px Arial"});
+    // change it back 5 seconds later
+    setTimeout(function () { element.change_element("bigger", {font: "20px Arial"}); }, 5000)
+};
+element.on_canvas_event("click", enlarge, "bigger");
+
+element.text({
+    name: "redden", text: "Click to redden", 
+    font: "20px Arial", x: 20, y:50, degrees: 5, color:"green"
+});
+var redden = function(event) {
+    element.change_element("redden", {color: "red"});
+    // change it back 5 seconds later
+    setTimeout(function () { element.change_element("redden", {color: "green"}); }, 5000)
+};
+element.on_canvas_event("click", redden, "redden");
+
+element.text({
+    name: "font", text: "Click to change font", 
+    font: "20px Arial", x: 20, y:80, degrees: 5, color:"magenta"
+});
+var change_font = function(event) {
+    element.change_element("font", {font: "20px Courier"});
+    // change it back 5 seconds later
+    setTimeout(function () { element.change_element("font", {font: "20px Arial"}); }, 5000)
+};
+element.on_canvas_event("click", change_font, "font");
+
+element.text({
+    name: "rotate", text: "Click to rotate", 
+    font: "20px Arial", x: 20, y:120, degrees: 5, color:"magenta"
+});
+var rotate = function(event) {
+    element.change_element("rotate", {degrees: -15});
+    // change it back 5 seconds later
+    setTimeout(function () { element.change_element("rotate", {degrees: 5}); }, 5000)
+};
+element.on_canvas_event("click", rotate, "rotate");
+
+element.text({
+    name: "vanish", text: "Click to disappear", 
+    font: "20px Arial", x: 20, y:150, degrees: 5, color:"magenta"
+});
+var disappear = function(event) {
+    element.change_element("vanish", {hide: true});
+    // change it back 5 seconds later
+    setTimeout(function () { element.change_element("vanish", {hide: false}); }, 5000)
+};
+element.on_canvas_event("click", disappear, "vanish");
+        </textarea></div>
+    
+    </div>
+
+<div id="discussion">
+        <h3>Discussion</h3>
+    
+        <div>
+            <p>
+The example above uses associates an event handler to a named object for
+a given event type using
+</p>
+
+<pre>
+element.on_canvas_event(event_type, disappear, object name);
+</pre>
+
+<p>
+Objects with no assigned unique name cannot bind events individually.
+</p>
+        </div>
+    
+    </div>
+    
+    <script>
+            var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+              lineNumbers: true,
+              matchBrackets: true,
+              continueComments: "Enter",
+              extraKeys: {"Ctrl-Q": "toggleComment"}
+            });
+     </script>
+            
+</body>
+</html>

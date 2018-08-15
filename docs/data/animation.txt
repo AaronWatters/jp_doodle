@@ -1,0 +1,75 @@
+***TITLE
+Animation
+***SCREENSHOT
+images/clock.png
+***PROLOGUE
+Dual canvases can be animated.  The figure below includes a clock with an animated
+seconds hand and a blinking light.
+***CODE
+
+// Attach a dual canvas associated with the element as a child of the element
+// configured with width 400 and height 400.
+var config = {
+            width: 400,
+            height: 400,
+        };
+element.dual_canvas_helper(config);
+
+// Some math...
+five_seconds = Math.PI / 6.0;
+twelve_oclock = Math.PI / 2.0;
+outer_radius = 100;
+inner_radius = 80;
+
+// Draw the clock face.
+element.circle({x:0, y:0, r:100, color:"#dcf"});
+element.circle({x:0, y:0, r:100, color:"#449", fill:false, lineWidth:10});
+
+// Draw the numbers on the clock.
+for (var i=1; i<=12; i++) {
+    var angle = twelve_oclock - i * five_seconds;
+    element.text({
+        text: ""+i, font: "20px Arial", color: "#937", align: "center",
+        x: Math.cos(angle)*inner_radius, y: Math.sin(angle)*inner_radius - 7})
+}
+
+// Draw a "seconds hand" and name it so we can change it later.
+element.rect({
+    name: "seconds hand",
+    x:0, y:0, w: inner_radius-15, h:5,
+    color: "#937", degrees: 90});
+    
+// Add a background yellow dot. Note that there is no blinking dot yet.
+var dot_visible = false;
+element.circle({name: "background dot", x:100, y:100, r:12, color:"yellow"});
+
+// Every animation frame, adjust the seconds hand using the time.
+// Also add or delete a blinking dot every other second.
+var animate = function () {
+    var seconds = ((new Date()).getTime() * 0.001) % 60;
+    var degrees = - 6 * seconds;
+    // Adjust the seconds hand.
+    element.change_element("seconds hand", {degrees: degrees});
+    // every other second create or delete the blinking dot
+    if ((seconds % 2) < 1) {
+        if (!dot_visible) {
+            // Add the blinking dot.
+            element.circle({name: "blinking dot", x:100, y:100, r:10, color:"red"});
+            dot_visible = true;
+        }
+    } else if (dot_visible) {
+        // Remove the blinking dot.
+        element.forget_objects(["blinking dot"]);
+        dot_visible = false;
+    }
+    // Repeat the animation again on the next animation iteration.
+    requestAnimationFrame(animate);
+}
+// Adjust the canvas coordinate transform to center the drawn objects on the canvas.
+element.fit(null, 10);  // 10 pixel margin
+// Start the animation
+animate();
+***DISCUSSION
+Objects drawn on a dual canvas can be modified or deleted if they have been given a unique name.
+The illustration above modifies the object named "seconds hand" to animate the clock hand and
+it deletes and recreates the object named "blinking dot" periodically.

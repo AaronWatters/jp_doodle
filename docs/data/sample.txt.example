@@ -1,0 +1,13 @@
+***TITLE
+image
+***SCREENSHOT
+http://sipi.usc.edu/database/preview/misc/4.2.03.png
+***PROLOGUE
+This example is for testing --
+it adds an image to an element.
+***CODE
+$('<img src="http://sipi.usc.edu/database/preview/misc/4.2.03.png">').appendTo(element);
+***DISCUSSION
+This ia an example to exercise the page generator.
+It just shows how to add an image to a jquery element.
+Nothing interesting to see here
