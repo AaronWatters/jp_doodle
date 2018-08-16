@@ -1,0 +1,63 @@
+***TITLE
+Rectangles
+***SCREENSHOT
+/images/rectangle.png
+***PROLOGUE
+<p>
+The <code>rectangle_collection.js</code> plugin provides
+an experimental implementation of a two category bar chart.
+This proof of concept is useful as an example of a complex
+component built using <code>jp_doodle</code>.
+</p>
+<p>
+Click "person type" or "State" to start and stop adjusting the
+layout of the barchart.  Mouse over the rectangles and other labels
+for detail information.
+</p>
+***CODE
+var bar_config = {
+    u: {x:-1, y:0},
+    v: {x:0.8, y:0.3},
+    x: 20,
+    y: 280,
+    u_label: "person type",
+    u_anchors: "men women children".split(" "),
+    v_label: "State",
+    v_anchors: "Pennsylvania New_Jersey New_York Delaware".split(" "),
+    max_vertical: 200,
+    max_depth: 200,
+    max_width: 50,
+    labels_position: {x: 150, y: 250},
+};
+var rectangles = [];
+for (var i=0; i<bar_config.u_anchors.length; i++) {
+    u_anchor = bar_config.u_anchors[i];
+    for (var j=0; j<bar_config.v_anchors.length; j++) {
+        var v_anchor = bar_config.v_anchors[j];
+        var height = (Math.sin(i+j)+1) * 50;
+        var rectangle = {
+            u_anchor: u_anchor,
+            v_anchor: v_anchor,
+            height: height,
+        }
+        rectangles.push(rectangle);
+    }
+}
+bar_config.bars = rectangles;
+element.empty();
+var canvas_config = {
+    width: 800,
+    height: 600,
+    //translate_scale: {x: x, y:y, w:w, h:h},
+};
+element.dual_canvas_helper(canvas_config);
+element.rectangle_collection(bar_config);
+element.draw_bars();
+***DISCUSSION
+
+<p>
+The `rectangles_collection` proof of concept implementation provides
+an extended example of how to use dual canvases to build
+more complex visualizations.  It includes mouse event handling,
+object hiding, dynamic layout adjustment, and a floating dialog.
+<p>

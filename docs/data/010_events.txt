@@ -4,11 +4,11 @@ Events
 images/events.png
 ***PROLOGUE
 <p>
-Canvases can respond to mouse events.  The mouse events can be associated to the
-whole canvas or to named elements in the canvas.
+This illustration uses mouse events associated to the whole
+canvas to allow the user to drag elements using the mouse.
 </p>
 <p>
-In the illustration below you may move the named objects (everything colorful)
+In this illustration you may move the named objects (everything colorful)
 by mousing down on the object and dragging it to a new location and then mousing up.
 </p>
 ***CODE

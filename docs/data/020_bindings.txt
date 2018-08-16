@@ -9,7 +9,7 @@ Canvases can respond to mouse events.  The mouse events can be associated to the
 whole canvas or to named elements in the canvas.
 </p>
 <p>
-In the illustration below a different click event handler attaches
+In this illustration a different click event handler attaches
 to each text area to change the text areas in different ways for 5 seconds.
 </p>
 ***CODE
@@ -81,7 +81,7 @@ var disappear = function(event) {
 element.on_canvas_event("click", disappear, "vanish");
 ***DISCUSSION
 <p>
-The example above uses associates an event handler to a named object for
+The example above associates an event handler to a named object for
 a given event type using
 </p>
 

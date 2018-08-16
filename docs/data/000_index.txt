@@ -8,8 +8,8 @@ The <code>jp_doodle</code> package includes <code>jQuery</code> plugins to
 make figures that can interact with mouse events and may be animated.
 </p>
 <p>
-Below we draw a number of objects on a figure to illustrate
-basic shapes.  The figure also responds to mouse over events.
+In this figure we draw a number of objects on a canvas to illustrate
+basic shapes.  The figure also responds to mouse-over events.
 Move the mouse over the objects to see the "name" of the object undeneith
 the mouse.
 </p>

@@ -3,7 +3,7 @@ Animation
 ***SCREENSHOT
 images/clock.png
 ***PROLOGUE
-Dual canvases can be animated.  The figure below includes a clock with an animated
+Dual canvases can be animated.  This figure includes a clock with an animated
 seconds hand and a blinking light.
 ***CODE
 
