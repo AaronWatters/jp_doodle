@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lasso -- jp_doodle demo</title>
+    <link rel="icon" type="image/png" href="images/clock.png">
+    <link rel=stylesheet href="static/style.css">
+
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="/resources/demos/style.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="codemirrorjs/codemirror.css">
+    <script src="codemirrorjs/codemirror.js"></script>
+    <script src="codemirrorjs/matchbrackets.js"></script>
+    <script src="codemirrorjs/continuecomment.js"></script>
+    <script src="codemirrorjs/comment.js"></script>
+    <script src="codemirrorjs/javascript.js"></script>
+    <style type="text/css">.CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black;}</style>
+    <script src="jp_doodle_js/canvas_2d_widget_helper.js"></script>
+    <script src="jp_doodle_js/dual_canvas_helper.js"></script>
+    <script src="jp_doodle_js/rectangle_collection.js"></script>
+
+    <script>
+        $( function() {
+          $( "#discussion" ).accordion({collapsible : true, active : 'none'});
+          $( "#code_text" ).accordion({collapsible : true, active : 'none'});
+        } );
+    </script>
+</head>
+
+<body>
+<div class="top_menu">
+<ul>
+<li><a href="index.html">Drawing <br><img src="images/drawing.png" width="50px"></a></li>
+<li><a href="010_events.html">Events <br><img src="images/events.png" width="50px"></a></li>
+<li><a href="020_bindings.html">Bindings <br><img src="images/bindings.png" width="50px"></a></li>
+<li><a href="030_animation.html">Animation <br><img src="images/clock.png" width="50px"></a></li>
+<li><a href="040_lasso.html">Lasso <br><img src="images/lasso.png" width="50px"></a></li>
+<li><a href="050_rectangles.html">Rectangles <br><img src="/images/rectangle.png" width="50px"></a></li>
+</ul>
+</div>
+
+<p><em>
+    These are example pages for the 
+    <a href="https://github.com/AaronWatters/jp_doodle">jp_doodle</a>
+    package. <br>
+    Please see the Jupyter notebooks in the package for additional
+    discussion and documentation. <br>
+    Please use 
+    <a href="https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/AaronWatters/jp_doodle/master">Binder</a>
+    to easily run the Jupyter notebooks of the package.
+</em></p>
+
+<h1>Lasso</h1>
+<div>
+    <p>
+Dual canvasses provide a lasso feature which
+allows the user to select a group of named elements
+by encircling them with a polygonal "lasso".
+</p>
+<p>
+In this figure the user may mouse down to draw a
+polygon and mouse up to close the polygon.
+Selected circles in the lassoed area will turn
+from green to pink.
+</p>
+</div>
+
+<center>
+    <div id="target_div"/>
+</center>
+
+<script>
+    var element = $('#target_div');
+    //$('<img src="http://sipi.usc.edu/database/preview/misc/4.2.03.png">').appendTo(element);
+    // configure the canvas
+var config = {
+    width: 400,
+    height: 400,
+    y_up: true,
+}
+element.dual_canvas_helper(config);
+
+var make_circles = function() {
+    for (var i=20; i<400; i+=20) {
+        for (var j=20; j<400; j+=20) {
+            element.circle({name: ""+i+":"+j, x:i, y:j, r:4, color:"green"});
+        }
+    }
+};
+
+var lasso_callback = function(names_mapping) {
+    // change lassoed elements to pink
+    for (var name in names_mapping) {
+        element.change_element(name, {color: "pink"});
+    }
+};
+
+// Provide a name for the lasso polygon for reference.
+var lasso_name = "my_lasso_polygon"
+
+var reset_lasso = function () {
+    // delete the lasso polygon if it exists
+    element.forget_objects([lasso_name]);
+    // make or replace the circles.
+    make_circles();
+    // Don't delete the lasso polygon automatically so we can admire it for a while.
+    var delete_it=false;
+    element.do_lasso(lasso_callback, {name: lasso_name}, delete_it);
+};
+
+// set up the lasso the first time.
+reset_lasso();
+
+$("<div>Please lasso some circles once to turn them pink.</div>").appendTo(element);
+
+var reset_button = $("<button>Reset</button>").appendTo(element);
+
+reset_button.click(reset_lasso);
+</script>
+
+<div id="code_text">
+        <h3>Code</h3>
+    
+        <div><textarea id="code" name="code">
+var element = $('#target_div');
+// configure the canvas
+var config = {
+    width: 400,
+    height: 400,
+    y_up: true,
+}
+element.dual_canvas_helper(config);
+
+var make_circles = function() {
+    for (var i=20; i<400; i+=20) {
+        for (var j=20; j<400; j+=20) {
+            element.circle({name: ""+i+":"+j, x:i, y:j, r:4, color:"green"});
+        }
+    }
+};
+
+var lasso_callback = function(names_mapping) {
+    // change lassoed elements to pink
+    for (var name in names_mapping) {
+        element.change_element(name, {color: "pink"});
+    }
+};
+
+// Provide a name for the lasso polygon for reference.
+var lasso_name = "my_lasso_polygon"
+
+var reset_lasso = function () {
+    // delete the lasso polygon if it exists
+    element.forget_objects([lasso_name]);
+    // make or replace the circles.
+    make_circles();
+    // Don't delete the lasso polygon automatically so we can admire it for a while.
+    var delete_it=false;
+    element.do_lasso(lasso_callback, {name: lasso_name}, delete_it);
+};
+
+// set up the lasso the first time.
+reset_lasso();
+
+$("<div>Please lasso some circles once to turn them pink.</div>").appendTo(element);
+
+var reset_button = $("<button>Reset</button>").appendTo(element);
+
+reset_button.click(reset_lasso);
+        </textarea></div>
+    
+    </div>
+
+<div id="discussion">
+        <h3>Discussion</h3>
+    
+        <div>
+            <P>
+To surround some of the circles with a lasso selection polygon
+hold the mouse down in the figure and move the mouse around the
+circles of the selection.  Release the mouse to close the polygon
+and trigger the lasso selection action.
+</P>
+<p>
+When the lasso selection fires the callback function receives a
+mapping of selected object names to object properties.  Objects that
+have not been named will not be selected by the lasso.
+</p>
+<p>
+Click the reset button to change all the circles back to green and
+set up another lasso interaction.
+</p>
+        </div>
+    
+    </div>
+    
+    <script>
+            var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+              lineNumbers: true,
+              matchBrackets: true,
+              continueComments: "Enter",
+              extraKeys: {"Ctrl-Q": "toggleComment"}
+            });
+     </script>
+            
+</body>
+</html>

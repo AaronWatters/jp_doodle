@@ -15,72 +15,6 @@ Tools for drawing 2d and 3d interactive visualizations using Jupyter proxy widge
 
 <tr>
     <td>
-        <a href="https://aaronwatters.github.io/jp_doodle/animation.html">
-        <img width="200px" src="docs/images/clock.png">
-        </a>
-    </td>
-    <td>
-        <h4><a href="https://aaronwatters.github.io/jp_doodle/animation.html">
-        Animation
-        </a></h4>
-        <div>
-        Dual canvases can be animated.  This figure includes a clock with an animated
-seconds hand and a blinking light.
-        </div>
-    </td>
-</tr>
-
-
-<tr>
-    <td>
-        <a href="https://aaronwatters.github.io/jp_doodle/bindings.html">
-        <img width="200px" src="docs/images/bindings.png">
-        </a>
-    </td>
-    <td>
-        <h4><a href="https://aaronwatters.github.io/jp_doodle/bindings.html">
-        Bindings
-        </a></h4>
-        <div>
-        <p>
-Canvases can respond to mouse events.  The mouse events can be associated to the
-whole canvas or to named elements in the canvas.
-</p>
-<p>
-In this illustration a different click event handler attaches
-to each text area to change the text areas in different ways for 5 seconds.
-</p>
-        </div>
-    </td>
-</tr>
-
-
-<tr>
-    <td>
-        <a href="https://aaronwatters.github.io/jp_doodle/events.html">
-        <img width="200px" src="docs/images/events.png">
-        </a>
-    </td>
-    <td>
-        <h4><a href="https://aaronwatters.github.io/jp_doodle/events.html">
-        Events
-        </a></h4>
-        <div>
-        <p>
-Canvases can respond to mouse events.  The mouse events can be associated to the
-whole canvas or to named elements in the canvas.
-</p>
-<p>
-In this illustration you may move the named objects (everything colorful)
-by mousing down on the object and dragging it to a new location and then mousing up.
-</p>
-        </div>
-    </td>
-</tr>
-
-
-<tr>
-    <td>
         <a href="https://aaronwatters.github.io/jp_doodle/index.html">
         <img width="200px" src="docs/images/drawing.png">
         </a>
@@ -107,12 +41,78 @@ the mouse.
 
 <tr>
     <td>
-        <a href="https://aaronwatters.github.io/jp_doodle/lasso.html">
+        <a href="https://aaronwatters.github.io/jp_doodle/010_events.html">
+        <img width="200px" src="docs/images/events.png">
+        </a>
+    </td>
+    <td>
+        <h4><a href="https://aaronwatters.github.io/jp_doodle/010_events.html">
+        Events
+        </a></h4>
+        <div>
+        <p>
+This illustration uses mouse events associated to the whole
+canvas to allow the user to drag elements using the mouse.
+</p>
+<p>
+In this illustration you may move the named objects (everything colorful)
+by mousing down on the object and dragging it to a new location and then mousing up.
+</p>
+        </div>
+    </td>
+</tr>
+
+
+<tr>
+    <td>
+        <a href="https://aaronwatters.github.io/jp_doodle/020_bindings.html">
+        <img width="200px" src="docs/images/bindings.png">
+        </a>
+    </td>
+    <td>
+        <h4><a href="https://aaronwatters.github.io/jp_doodle/020_bindings.html">
+        Bindings
+        </a></h4>
+        <div>
+        <p>
+Canvases can respond to mouse events.  The mouse events can be associated to the
+whole canvas or to named elements in the canvas.
+</p>
+<p>
+In this illustration a different click event handler attaches
+to each text area to change the text areas in different ways for 5 seconds.
+</p>
+        </div>
+    </td>
+</tr>
+
+
+<tr>
+    <td>
+        <a href="https://aaronwatters.github.io/jp_doodle/030_animation.html">
+        <img width="200px" src="docs/images/clock.png">
+        </a>
+    </td>
+    <td>
+        <h4><a href="https://aaronwatters.github.io/jp_doodle/030_animation.html">
+        Animation
+        </a></h4>
+        <div>
+        Dual canvases can be animated.  This figure includes a clock with an animated
+seconds hand and a blinking light.
+        </div>
+    </td>
+</tr>
+
+
+<tr>
+    <td>
+        <a href="https://aaronwatters.github.io/jp_doodle/040_lasso.html">
         <img width="200px" src="docs/images/lasso.png">
         </a>
     </td>
     <td>
-        <h4><a href="https://aaronwatters.github.io/jp_doodle/lasso.html">
+        <h4><a href="https://aaronwatters.github.io/jp_doodle/040_lasso.html">
         Lasso
         </a></h4>
         <div>
@@ -134,12 +134,12 @@ from green to pink.
 
 <tr>
     <td>
-        <a href="https://aaronwatters.github.io/jp_doodle/rectangles.html">
+        <a href="https://aaronwatters.github.io/jp_doodle/050_rectangles.html">
         <img width="200px" src="docs//images/rectangle.png">
         </a>
     </td>
     <td>
-        <h4><a href="https://aaronwatters.github.io/jp_doodle/rectangles.html">
+        <h4><a href="https://aaronwatters.github.io/jp_doodle/050_rectangles.html">
         Rectangles
         </a></h4>
         <div>

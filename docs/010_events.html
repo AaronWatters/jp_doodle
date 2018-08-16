@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Drawing -- jp_doodle demo</title>
+    <title>Events -- jp_doodle demo</title>
     <link rel="icon" type="image/png" href="images/clock.png">
     <link rel=stylesheet href="static/style.css">
 
@@ -51,17 +51,15 @@
     to easily run the Jupyter notebooks of the package.
 </em></p>
 
-<h1>Drawing</h1>
+<h1>Events</h1>
 <div>
     <p>
-The <code>jp_doodle</code> package includes <code>jQuery</code> plugins to
-make figures that can interact with mouse events and may be animated.
+This illustration uses mouse events associated to the whole
+canvas to allow the user to drag elements using the mouse.
 </p>
 <p>
-In this figure we draw a number of objects on a canvas to illustrate
-basic shapes.  The figure also responds to mouse-over events.
-Move the mouse over the objects to see the "name" of the object undeneith
-the mouse.
+In this illustration you may move the named objects (everything colorful)
+by mousing down on the object and dragging it to a new location and then mousing up.
 </p>
 </div>
 
@@ -73,7 +71,7 @@ the mouse.
     var element = $('#target_div');
     //$('<img src="http://sipi.usc.edu/database/preview/misc/4.2.03.png">').appendTo(element);
     // Attach an information div to the element to display event feedback.
-var info_area = $("<div>Dual canvas feedback will show here.</div>").appendTo(element);
+var info_area = $("<div>Please mouse-down and drag objects below.</div>").appendTo(element);
 
 // Attach a dual canvas associated with the element as a child of the element
 // configured with width 400 and height 200.
@@ -83,50 +81,20 @@ var config = {
         };
 element.dual_canvas_helper(config);
 
-// Draw some named elements on the canvas.
-// A filled yellow circle (disk) named "Colonel Mustard
-element.circle({name: "Colonel Mustard", x:100, y:150, r:90, color:"yellow"});
-
+// Draw some elements on the canvas.
+// A filled yellow circle (disk) named "Colonel Mustard"
+element.circle({name: "Colonel Mustard", x:100, y:150, r:120, color:"#990"});
 // A filled red rectangle named "Miss Scarlett"
 element.rect({name: "Miss Scarlett", x:100, y:130, w:100, h:20, color: "red"});
-
-// An unfilled white circle named "Mrs. White"
-element.circle({
-    name: "Mrs. White", x:100, y:150, r:58, fill:false, 
-    color:"white", lineWidth: 14});
-    
-// An unfilled blue rectangle named Mrs. Peacock
-element.rect({
-    name: "Mrs. Peacock", x:40, y:110, w:100, h:20,
-    color: "blue", lineWidth: 10, degrees:70, fill:false});
-
-// A line segment named "Professor Plum".
-element.line({
-    name: "Professor Plum", x1:190, y1:100, x2:10, y2:200,
-    color:"purple", lineWidth: 20})
-    
-// A brown filled polygon (triangle) named Micky
-element.polygon({
-    name: "Micky",
-    points: [[210, 10], [210, 110], [290, 60]],
-    color: "brown",
-})
-
-// A green polyline named Mr. Green
-element.polygon({
-    name: "Mr. Green", fill:false, close:false, color: "green",
-    lineWidth: 14, points: [[210, 10], [210, 110], [290, 60]]
-})
-
-// A magenta text string display named Pluto
+// A magenta text named Pluto
 element.text({
     name: "Pluto", text: "The Republic", font: "20px Arial",
     x: 20, y:20, degrees: 5, color:"magenta"
-})
+});
 
 // Mandrill eyes from a remote image
 var mandrill_url = "http://sipi.usc.edu/database/preview/misc/4.2.03.png";
-//var mandrill_url = "mandrill.png"
+
 element.name_image_url("mandrill", mandrill_url);
 // just the eyes, not the whole image
 element.named_image({
@@ -135,24 +103,50 @@ element.named_image({
     sx:30, sy:15, sWidth:140, sHeight:20
     })
 
-// Center and scale the figure to fit in the available area.
-element.fit()
+// Cover part of the canvas with a semi-transparent rectangle with NO NAME
+element.rect({x:20, y:20, w:200, h:200, color: "rgba(100,100,100,0.5)"});
 
-// Add axes and refit so the axes appear in the frame.
-element.lower_left_axes();
-element.fit()
+element.fit(null, 10);
 
-// Attach a mouse move event which indicates what object the mouse is over.
-var on_mouse_move = function(event) {
+// Define a variable for the picked-up object
+var picked_up_object = null;
+
+// Attach a mousedown event which picks up any named object under the mouse.
+var on_mouse_down = function(event) {
     if (event.canvas_name) {
-        info_area.html("<div>You are over the object named " + event.canvas_name + "</div>");
+        info_area.html("<div>Picking up the object named " + event.canvas_name + "</div>");
+        picked_up_object = event.canvas_name;
+    } else {
+        info_area.html("<div>No object to pick up.</div>");
+    }
+};
+element.on_canvas_event("mousedown", on_mouse_down);
+
+// Attach a mousemove event which moves any picked up object.
+var on_mouse_move = function(event) {
+    if (picked_up_object) {
+        var loc = element.event_model_location(event);
+        info_area.html("<div>"+picked_up_object+":"+loc.x+","+loc.y+"</div>");
+        element.change_element(picked_up_object, {"x":loc.x, "y":loc.y});
+    } else if (event.canvas_name) {
+        info_area.html("<div>Click to drag the object named " + event.canvas_name + "</div>");
     } else {
         info_area.html("<div>You are not over anybody.</div>");
     }
 };
 element.on_canvas_event("mousemove", on_mouse_move);
 
-$("<div>Please mouse over the canvas area to see event feedback.</div>").appendTo(element)
+// Attach a mouseup event which "drops" the current picked up object and re-fits the canvas.
+var on_mouse_up = function(event) {
+    info_area.html("<div>Dropping " + picked_up_object + ".</div>");
+    picked_up_object = null;
+    // refit the canvas to the new object configuration.
+    element.fit(null, 10)
+};
+element.on_canvas_event("mouseup", on_mouse_up);
+
+$("<div>Please mouse down and drag over the colorful objects to move them.</div>")
+.appendTo(element);
 </script>
 
 <div id="code_text">
@@ -161,7 +155,7 @@ $("<div>Please mouse over the canvas area to see event feedback.</div>").appendT
         <div><textarea id="code" name="code">
 var element = $('#target_div');
 // Attach an information div to the element to display event feedback.
-var info_area = $("<div>Dual canvas feedback will show here.</div>").appendTo(element);
+var info_area = $("<div>Please mouse-down and drag objects below.</div>").appendTo(element);
 
 // Attach a dual canvas associated with the element as a child of the element
 // configured with width 400 and height 200.
@@ -171,50 +165,20 @@ var config = {
         };
 element.dual_canvas_helper(config);
 
-// Draw some named elements on the canvas.
-// A filled yellow circle (disk) named "Colonel Mustard
-element.circle({name: "Colonel Mustard", x:100, y:150, r:90, color:"yellow"});
-
+// Draw some elements on the canvas.
+// A filled yellow circle (disk) named "Colonel Mustard"
+element.circle({name: "Colonel Mustard", x:100, y:150, r:120, color:"#990"});
 // A filled red rectangle named "Miss Scarlett"
 element.rect({name: "Miss Scarlett", x:100, y:130, w:100, h:20, color: "red"});
-
-// An unfilled white circle named "Mrs. White"
-element.circle({
-    name: "Mrs. White", x:100, y:150, r:58, fill:false, 
-    color:"white", lineWidth: 14});
-    
-// An unfilled blue rectangle named Mrs. Peacock
-element.rect({
-    name: "Mrs. Peacock", x:40, y:110, w:100, h:20,
-    color: "blue", lineWidth: 10, degrees:70, fill:false});
-
-// A line segment named "Professor Plum".
-element.line({
-    name: "Professor Plum", x1:190, y1:100, x2:10, y2:200,
-    color:"purple", lineWidth: 20})
-    
-// A brown filled polygon (triangle) named Micky
-element.polygon({
-    name: "Micky",
-    points: [[210, 10], [210, 110], [290, 60]],
-    color: "brown",
-})
-
-// A green polyline named Mr. Green
-element.polygon({
-    name: "Mr. Green", fill:false, close:false, color: "green",
-    lineWidth: 14, points: [[210, 10], [210, 110], [290, 60]]
-})
-
-// A magenta text string display named Pluto
+// A magenta text named Pluto
 element.text({
     name: "Pluto", text: "The Republic", font: "20px Arial",
     x: 20, y:20, degrees: 5, color:"magenta"
-})
+});
 
 // Mandrill eyes from a remote image
 var mandrill_url = "http://sipi.usc.edu/database/preview/misc/4.2.03.png";
-//var mandrill_url = "mandrill.png"
+
 element.name_image_url("mandrill", mandrill_url);
 // just the eyes, not the whole image
 element.named_image({
@@ -223,24 +187,50 @@ element.named_image({
     sx:30, sy:15, sWidth:140, sHeight:20
     })
 
-// Center and scale the figure to fit in the available area.
-element.fit()
+// Cover part of the canvas with a semi-transparent rectangle with NO NAME
+element.rect({x:20, y:20, w:200, h:200, color: "rgba(100,100,100,0.5)"});
 
-// Add axes and refit so the axes appear in the frame.
-element.lower_left_axes();
-element.fit()
+element.fit(null, 10);
 
-// Attach a mouse move event which indicates what object the mouse is over.
-var on_mouse_move = function(event) {
+// Define a variable for the picked-up object
+var picked_up_object = null;
+
+// Attach a mousedown event which picks up any named object under the mouse.
+var on_mouse_down = function(event) {
     if (event.canvas_name) {
-        info_area.html("<div>You are over the object named " + event.canvas_name + "</div>");
+        info_area.html("<div>Picking up the object named " + event.canvas_name + "</div>");
+        picked_up_object = event.canvas_name;
+    } else {
+        info_area.html("<div>No object to pick up.</div>");
+    }
+};
+element.on_canvas_event("mousedown", on_mouse_down);
+
+// Attach a mousemove event which moves any picked up object.
+var on_mouse_move = function(event) {
+    if (picked_up_object) {
+        var loc = element.event_model_location(event);
+        info_area.html("<div>"+picked_up_object+":"+loc.x+","+loc.y+"</div>");
+        element.change_element(picked_up_object, {"x":loc.x, "y":loc.y});
+    } else if (event.canvas_name) {
+        info_area.html("<div>Click to drag the object named " + event.canvas_name + "</div>");
     } else {
         info_area.html("<div>You are not over anybody.</div>");
     }
 };
 element.on_canvas_event("mousemove", on_mouse_move);
 
-$("<div>Please mouse over the canvas area to see event feedback.</div>").appendTo(element)
+// Attach a mouseup event which "drops" the current picked up object and re-fits the canvas.
+var on_mouse_up = function(event) {
+    info_area.html("<div>Dropping " + picked_up_object + ".</div>");
+    picked_up_object = null;
+    // refit the canvas to the new object configuration.
+    element.fit(null, 10)
+};
+element.on_canvas_event("mouseup", on_mouse_up);
+
+$("<div>Please mouse down and drag over the colorful objects to move them.</div>")
+.appendTo(element);
         </textarea></div>
     
     </div>
@@ -250,30 +240,13 @@ $("<div>Please mouse over the canvas area to see event feedback.</div>").appendT
     
         <div>
             <p>
-The above figure illustrates the dual canvas component provided by the package
-The illustration attaches a dual canvas to a jQuery element and configures the canvas.
-It then draws a number of objects on the canvas and attaches a global event handler
-to the canvas.
+In this case the events are associated with the whole canvas (even though they sometimes
+use the name of the object under the mouse event).
 </p>
 <p>
-The dual canvas is implemented using a JQuery plugin which has dependencies --
-it requires JQuery to be available and the basic 2d canvas plugin from the package.
-</p>
-
-<center>
-<blockquote>
-<pre>
-https://code.jquery.com/jquery-1.12.4.js
-jp_doodle_js/canvas_2d_widget_helper.js
-</pre>
-</blockquote>
-</center>
-
-<p>
-The dual canvas is implemented in <code>jp_doodle_js/dual_canvas_helper.js</code>
-</p>
-
-<p>
+Note that it is not possible to modify the semi-transparent grey square
+without clearing the whole canvas
+because the square was not given a name.
 </p>
         </div>
     
