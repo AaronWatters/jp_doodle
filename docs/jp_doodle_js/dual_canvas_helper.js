@@ -191,8 +191,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var old_object_info = target.name_to_object_info[name];
                 if (old_object_info) {
                     // this prevents saving 2 objects with same name -- xxxx is this what we want?
-                    object_index = object_info.index; //  -- if you want delete, use delete...?
-                    pseudocolor_array = object_info.pseudocolor_array;
+                    object_index = old_object_info.index; //  -- if you want delete, use delete...?
+                    pseudocolor_array = old_object_info.pseudocolor_array;
+                    // request a redraw because the object changed
+                    target.request_redraw();
                 }
                 if (!pseudocolor_array) {
                     pseudocolor_array = target.next_pseudocolor();
@@ -451,7 +453,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
             }
             // do not allow event to propagate
-            event.stopPropagation();
+            e.stopPropagation();
             //var last_event = target.last_canvas_event;
             //target.last_canvas_event = e;
         };
