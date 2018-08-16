@@ -23,9 +23,10 @@ Tools for drawing 2d and 3d interactive visualizations using Jupyter proxy widge
         <h4><a href="https://aaronwatters.github.io/jp_doodle/animation.html">
         Animation
         </a></h4>
-
+        <div>
         Dual canvases can be animated.  This figure includes a clock with an animated
 seconds hand and a blinking light.
+        </div>
     </td>
 </tr>
 
@@ -40,7 +41,7 @@ seconds hand and a blinking light.
         <h4><a href="https://aaronwatters.github.io/jp_doodle/bindings.html">
         Bindings
         </a></h4>
-
+        <div>
         <p>
 Canvases can respond to mouse events.  The mouse events can be associated to the
 whole canvas or to named elements in the canvas.
@@ -49,6 +50,7 @@ whole canvas or to named elements in the canvas.
 In this illustration a different click event handler attaches
 to each text area to change the text areas in different ways for 5 seconds.
 </p>
+        </div>
     </td>
 </tr>
 
@@ -63,7 +65,7 @@ to each text area to change the text areas in different ways for 5 seconds.
         <h4><a href="https://aaronwatters.github.io/jp_doodle/events.html">
         Events
         </a></h4>
-
+        <div>
         <p>
 Canvases can respond to mouse events.  The mouse events can be associated to the
 whole canvas or to named elements in the canvas.
@@ -72,6 +74,7 @@ whole canvas or to named elements in the canvas.
 In this illustration you may move the named objects (everything colorful)
 by mousing down on the object and dragging it to a new location and then mousing up.
 </p>
+        </div>
     </td>
 </tr>
 
@@ -86,7 +89,7 @@ by mousing down on the object and dragging it to a new location and then mousing
         <h4><a href="https://aaronwatters.github.io/jp_doodle/index.html">
         Drawing
         </a></h4>
-
+        <div>
         <p>
 The <code>jp_doodle</code> package includes <code>jQuery</code> plugins to
 make figures that can interact with mouse events and may be animated.
@@ -97,6 +100,7 @@ basic shapes.  The figure also responds to mouse-over events.
 Move the mouse over the objects to see the "name" of the object undeneith
 the mouse.
 </p>
+        </div>
     </td>
 </tr>
 
@@ -111,7 +115,7 @@ the mouse.
         <h4><a href="https://aaronwatters.github.io/jp_doodle/lasso.html">
         Lasso
         </a></h4>
-
+        <div>
         <p>
 Dual canvasses provide a lasso feature which
 allows the user to select a group of named elements
@@ -123,6 +127,7 @@ polygon and mouse up to close the polygon.
 Selected circles in the lassoed area will turn
 from green to pink.
 </p>
+        </div>
     </td>
 </tr>
 
@@ -137,7 +142,7 @@ from green to pink.
         <h4><a href="https://aaronwatters.github.io/jp_doodle/rectangles.html">
         Rectangles
         </a></h4>
-
+        <div>
         <p>
 The <code>rectangle_collection.js</code> plugin provides
 an experimental implementation of a two category bar chart.
@@ -149,6 +154,7 @@ Click "person type" or "State" to start and stop adjusting the
 layout of the barchart.  Mouse over the rectangles and other labels
 for detail information.
 </p>
+        </div>
     </td>
 </tr>
 
