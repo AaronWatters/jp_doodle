@@ -11,32 +11,32 @@ Instead, edit the template and rebuild to docs.
 
 Tools for drawing 2d and 3d interactive visualizations using Jupyter proxy widgets.
 
-<center>
+<table>
 
-<div>
-    <span>
+<tr>
+    <td>
         <a href="https://aaronwatters.github.io/jp_doodle/animation.html">
         <img width="200px" src="docs/images/clock.png">
         </a>
-    </span>
-    <span width="200px">
+    </td>
+    <td width="200px">
         <h4><a href="https://aaronwatters.github.io/jp_doodle/animation.html">
         Animation
         </a></h4>
 
         Dual canvases can be animated.  This figure includes a clock with an animated
 seconds hand and a blinking light.
-    </span>
-</div>
+    </td>
+</tr>
 
 
-<div>
-    <span>
+<tr>
+    <td>
         <a href="https://aaronwatters.github.io/jp_doodle/bindings.html">
         <img width="200px" src="docs/images/bindings.png">
         </a>
-    </span>
-    <span width="200px">
+    </td>
+    <td width="200px">
         <h4><a href="https://aaronwatters.github.io/jp_doodle/bindings.html">
         Bindings
         </a></h4>
@@ -49,17 +49,17 @@ whole canvas or to named elements in the canvas.
 In this illustration a different click event handler attaches
 to each text area to change the text areas in different ways for 5 seconds.
 </p>
-    </span>
-</div>
+    </td>
+</tr>
 
 
-<div>
-    <span>
+<tr>
+    <td>
         <a href="https://aaronwatters.github.io/jp_doodle/events.html">
         <img width="200px" src="docs/images/events.png">
         </a>
-    </span>
-    <span width="200px">
+    </td>
+    <td width="200px">
         <h4><a href="https://aaronwatters.github.io/jp_doodle/events.html">
         Events
         </a></h4>
@@ -72,17 +72,17 @@ whole canvas or to named elements in the canvas.
 In this illustration you may move the named objects (everything colorful)
 by mousing down on the object and dragging it to a new location and then mousing up.
 </p>
-    </span>
-</div>
+    </td>
+</tr>
 
 
-<div>
-    <span>
+<tr>
+    <td>
         <a href="https://aaronwatters.github.io/jp_doodle/index.html">
         <img width="200px" src="docs/images/drawing.png">
         </a>
-    </span>
-    <span width="200px">
+    </td>
+    <td width="200px">
         <h4><a href="https://aaronwatters.github.io/jp_doodle/index.html">
         Drawing
         </a></h4>
@@ -97,17 +97,17 @@ basic shapes.  The figure also responds to mouse-over events.
 Move the mouse over the objects to see the "name" of the object undeneith
 the mouse.
 </p>
-    </span>
-</div>
+    </td>
+</tr>
 
 
-<div>
-    <span>
+<tr>
+    <td>
         <a href="https://aaronwatters.github.io/jp_doodle/lasso.html">
         <img width="200px" src="docs/images/lasso.png">
         </a>
-    </span>
-    <span width="200px">
+    </td>
+    <td width="200px">
         <h4><a href="https://aaronwatters.github.io/jp_doodle/lasso.html">
         Lasso
         </a></h4>
@@ -123,17 +123,17 @@ polygon and mouse up to close the polygon.
 Selected circles in the lassoed area will turn
 from green to pink.
 </p>
-    </span>
-</div>
+    </td>
+</tr>
 
 
-<div>
-    <span>
+<tr>
+    <td>
         <a href="https://aaronwatters.github.io/jp_doodle/rectangles.html">
         <img width="200px" src="docs//images/rectangle.png">
         </a>
-    </span>
-    <span width="200px">
+    </td>
+    <td width="200px">
         <h4><a href="https://aaronwatters.github.io/jp_doodle/rectangles.html">
         Rectangles
         </a></h4>
@@ -149,7 +149,8 @@ Click "person type" or "State" to start and stop adjusting the
 layout of the barchart.  Mouse over the rectangles and other labels
 for detail information.
 </p>
-    </span>
-</div>
-]n</center>
+    </td>
+</tr>
+
+</table>
 
