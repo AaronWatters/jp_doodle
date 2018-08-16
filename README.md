@@ -19,7 +19,7 @@ Tools for drawing 2d and 3d interactive visualizations using Jupyter proxy widge
         <img width="200px" src="docs/images/clock.png">
         </a>
     </td>
-    <td width="200px">
+    <td>
         <h4><a href="https://aaronwatters.github.io/jp_doodle/animation.html">
         Animation
         </a></h4>
@@ -37,7 +37,7 @@ seconds hand and a blinking light.
         <img width="200px" src="docs/images/bindings.png">
         </a>
     </td>
-    <td width="200px">
+    <td>
         <h4><a href="https://aaronwatters.github.io/jp_doodle/bindings.html">
         Bindings
         </a></h4>
@@ -61,7 +61,7 @@ to each text area to change the text areas in different ways for 5 seconds.
         <img width="200px" src="docs/images/events.png">
         </a>
     </td>
-    <td width="200px">
+    <td>
         <h4><a href="https://aaronwatters.github.io/jp_doodle/events.html">
         Events
         </a></h4>
@@ -85,7 +85,7 @@ by mousing down on the object and dragging it to a new location and then mousing
         <img width="200px" src="docs/images/drawing.png">
         </a>
     </td>
-    <td width="200px">
+    <td>
         <h4><a href="https://aaronwatters.github.io/jp_doodle/index.html">
         Drawing
         </a></h4>
@@ -111,7 +111,7 @@ the mouse.
         <img width="200px" src="docs/images/lasso.png">
         </a>
     </td>
-    <td width="200px">
+    <td>
         <h4><a href="https://aaronwatters.github.io/jp_doodle/lasso.html">
         Lasso
         </a></h4>
@@ -138,7 +138,7 @@ from green to pink.
         <img width="200px" src="docs//images/rectangle.png">
         </a>
     </td>
-    <td width="200px">
+    <td>
         <h4><a href="https://aaronwatters.github.io/jp_doodle/rectangles.html">
         Rectangles
         </a></h4>
