@@ -1,7 +1,7 @@
 ***TITLE
 Rectangles
 ***SCREENSHOT
-/images/rectangle.png
+images/rectangle.png
 ***PROLOGUE
 <p>
 The <code>rectangle_collection.js</code> plugin provides
