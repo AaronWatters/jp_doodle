@@ -345,6 +345,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return target.visible_canvas.converted_location(x, y);
         }
 
+        target.pixel_offset = function(target_x, target_y) {
+            return target.visible_canvas.model_to_pixel(target_x, target_y);
+        }
+
         target.watch_event = function(event_type) {
             if (!target.event_types[event_type]) {
                 target.visible_canvas.canvas.on(event_type, target.generic_event_handler);
@@ -1010,6 +1014,19 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var x_unscale = frame.vscale(untranslated.x, x_inv);
             var y_unscale = frame.vscale(untranslated.y, y_inv);
             return frame.vadd(x_unscale, y_unscale);
+        };
+
+        frame.pixel_offset = function(frame_x, frame_y) {
+            // return the offset from the canvas upper left corner in pixels
+            // of the frame location.
+            var c = frame.converted_location(frame_x, frame_y);
+            return frame.parent_canvas.pixel_offset(c.x, c.y)
+        };
+
+        frame.event_model_location = function(e) {
+            var parent_location = frame.parent_canvas.event_model_location(e);
+            //return frame.converted_location(parent_location.x, parent_location.y);
+            return frame.model_location(parent_location.x, parent_location.y);
         }
 
         var override_positions = function(shape_name) {
@@ -1032,10 +1049,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         // define axes w.r.t the frame
         parent_canvas.dual_canvas_helper.add_axis_logic(frame);
-
-        //frame.model_to_pixel = function(mx, my) {
-        //    throw new Error("General frame position inversion is not implemented yet.")
-        //};
 
         return frame;
     }

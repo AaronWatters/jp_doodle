@@ -503,7 +503,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         // convert location either from model space to canvas space or the reverse.
         target.converted_location = function (x, y) {
-            result = {x: x, y: y};
+            var result = {x: x, y: y};
             if (target.canvas_y_up) {
                 // orient y going up from the lower left
                 result.y = target.canvas_translate_scale.model_intercept - y;
