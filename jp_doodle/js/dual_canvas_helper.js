@@ -191,8 +191,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var old_object_info = target.name_to_object_info[name];
                 if (old_object_info) {
                     // this prevents saving 2 objects with same name -- xxxx is this what we want?
-                    object_index = object_info.index; //  -- if you want delete, use delete...?
-                    pseudocolor_array = object_info.pseudocolor_array;
+                    object_index = old_object_info.index; //  -- if you want delete, use delete...?
+                    pseudocolor_array = old_object_info.pseudocolor_array;
+                    // request a redraw because the object changed
+                    target.request_redraw();
                 }
                 if (!pseudocolor_array) {
                     pseudocolor_array = target.next_pseudocolor();
@@ -451,7 +453,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
             }
             // do not allow event to propagate
-            event.stopPropagation();
+            e.stopPropagation();
             //var last_event = target.last_canvas_event;
             //target.last_canvas_event = e;
         };
@@ -716,21 +718,32 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 align: align
             }, params.tick_text_config)
             var stats = target.active_region(true);   // drawn region or model view box
+            var min_value = params.min_value || stats["min_" + coordinate];
+            var max_value = params.max_value || stats["max_" + coordinate]
             if (!params.ticks) {
                 // infer ticks from limits
-                var min_value = params.min_value || stats["min_" + coordinate];
-                var max_value = params.max_value || stats["max_" + coordinate]
                 params.ticks = target.axis_ticklist(min_value, max_value, params.max_tick_count, params.anchor);
-                // if add_end_points is specified then include unlabelled end markers if absent
-                if (params.add_end_points) {
-                    if (min_value < params.ticks[0]) {
-                        var min_tick = {offset: min_value, text: " "};
-                        params.ticks.unshift(min_tick);
+                //params.ticks = ticklist.map(x => {offset: x});
+            }
+            // convert numeric ticks to mappings
+            params.ticks = params.ticks.map(
+                function (x) {
+                    if ((typeof x) == "number") {
+                        return {offset: x};
+                    } else {
+                        return x;
                     }
-                    if (max_value > params.ticks[params.ticks.length-1]) {
-                        var max_tick = {offset: max_value, text: " "};
-                        params.ticks.push(max_tick);
-                    }
+                }
+            )
+            // if add_end_points is specified then include unlabelled end markers if absent
+            if (params.add_end_points) {
+                if (min_value < params.ticks[0].offset) {
+                    var min_tick = {offset: min_value, text: " "};
+                    params.ticks.unshift(min_tick);
+                }
+                if (max_value > params.ticks[params.ticks.length-1].offset) {
+                    var max_tick = {offset: max_value, text: " "};
+                    params.ticks.push(max_tick);
                 }
             }
             if (!params.axis_origin) {
@@ -757,6 +770,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.axis = function(config) {
             // Draw an axis
             var default_tick_format = function(tick) {
+                if ((typeof tick.text) != "undefined") {
+                    return "" + tick.text;
+                }
                 var offset = tick.offset;
                 var result = "" + offset;
                 if (offset != parseInt(offset, 10)) {
