@@ -68,8 +68,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // lookup structures for named objects
             target.name_to_object_info = {};
             target.color_index_to_name = {};
-            target.event_types = {};
-            target.default_event_handlers = {};
+            //target.event_types = {};
+            //target.default_event_handlers = {};
+            target.reset_events();
             target.visible_canvas.clear_canvas();
             target.invisible_canvas.clear_canvas();
             // no need to clear the test_canvas now
@@ -132,9 +133,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             //return;
             target.set_translate_scale(translate_scale);
             // reset the event callbacks
-            for (var event_type in target.event_types) {
+            for (var event_type in target.event_info.event_types) {
                 target.visible_canvas.canvas.on(event_type, target.generic_event_handler);
-                target.event_types[event_type] = true;
+                target.event_info.event_types[event_type] = true;
             }
             target.request_redraw();
         }
@@ -288,7 +289,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             draw_fn(invisible_canvas, info2);
         };
 
-        target.reset_canvas();
+        //target.reset_canvas();
 
         target.garish_pseudocolor_array = function(integer) {
             // Try to choose sequence of colors not likely to interpolate into eachother.
@@ -371,45 +372,50 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         }
 
         target.watch_event = function(event_type) {
-            if (!target.event_types[event_type]) {
+            if (!target.event_info.event_types[event_type]) {
                 target.visible_canvas.canvas.on(event_type, target.generic_event_handler);
-                target.event_types[event_type] = true;
+                target.event_info.event_types[event_type] = true;
+                if (!(target.event_info.object_event_handlers[event_type])) {
+                    target.event_info.object_event_handlers[event_type] = {};
+                }
             }
             // mouseover and mouseout events are emulated using mousemove
             if ((event_type == "mouseover") || (event_type == "mouseout")) {
                 target.watch_event("mousemove");
             }
-            // ??? no provision for forgetting events on the visible canvas?
+            // ??? no provision for cancelling events on the visible canvas?
         };
 
         target.on_canvas_event = function(event_type, callback, for_name) {
             if (for_name) {
                 var object_info = target.name_to_object_info[for_name];
                 if (object_info) {
-                    var key = "on_" + event_type;
+                    //var key = "on_" + event_type;
                     target.watch_event(event_type);
-                    object_info[key] = callback;
+                    //object_info[key] = callback;
+                    target.event_info.object_event_handlers[event_type][for_name] = callback;
                 } else {
                     console.warn("in on_canvas_event no object found with name: " + for_name);
                 }
             } else {
                 // no name means handle event for whole canvas.
                 target.watch_event(event_type);
-                target.default_event_handlers[event_type] = callback;
+                target.event_info.default_event_handlers[event_type] = callback;
             }
         };
 
         target.off_canvas_event = function(event_type, for_name) {
             if (for_name) {
                 var object_info = target.name_to_object_info[for_name];
-                if (object_info) {
-                    var key = "on_" + event_type;
-                    object_info[key] = null;
+                if ((object_info) && (target.event_info.object_event_handlers[event_type])) {
+                    //var key = "on_" + event_type;
+                    //object_info[key] = null;
+                    target.event_info.object_event_handlers[event_type][for_name] = null;
                 } else {
                     console.warn("in off_canvas_event no object found with name: " + for_name);
                 }
             } else {
-                target.default_event_handlers[event_type] = null;
+                target.event_info.default_event_handlers[event_type] = null;
             }
         };
 
@@ -452,30 +458,24 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         target.generic_event_handler = function(e) {
-            //var event_type = e.type;
-            //var default_handler = target.default_event_handlers[event_type];
-            var object_handler = null;
-            //var invisible = target.invisible_canvas;
-            //var test_canvas = target.test_canvas;
             var visible = target.visible_canvas;
             e.pixel_location = visible.event_pixel_location(e);
             e.canvas_name = target.object_name_at_position(
                 e, e.pixel_location.x, e.pixel_location.y);
-            //e.invisible_color = invisible.color_at(e.pixel_location.x, e.pixel_location.y).data;
-            //e.color_index = target.color_array_to_index(e.invisible_color);
-            //e.canvas_name = target.color_index_to_name[e.color_index];
             var last_event = target.last_canvas_event;
             var process_event = function(e, no_default) {
                 var event_type = e.type;
                 var default_handler = null;
+                var object_handler = null;
                 if (!no_default) {
-                    default_handler = target.default_event_handlers[event_type];
+                    default_handler = target.event_info.default_event_handlers[event_type];
                 }
                 if ((e.canvas_name) && (!target.disable_element_events)) {
                     e.object_info = target.name_to_object_info[e.canvas_name];
-                    if (e.object_info) {
-                        var key = "on_" + event_type;
-                        object_handler = e.object_info[key];
+                    if ((e.object_info) && (target.event_info.object_event_handlers[event_type])) {
+                        //var key = "on_" + event_type;
+                        //object_handler = e.object_info[key];
+                        object_handler = target.event_info.object_event_handlers[event_type][e.canvas_name];
                     }
                 }
                 // No "event bubbling"?
@@ -489,9 +489,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // "normal" event handling
             process_event(e);
             // mouseover and mouseout simulation:
-            //if (last_event) {
-            //    console.log("event=" + e.type + " name=" + e.canvas_name + " last=" + last_event.canvas_name);
-            //}
             if ((last_event) && (e.type == "mousemove") && (last_event.canvas_name != e.canvas_name)) {
                 //console.log("doing transition emulations " + last_event.canvas_name)
                 if (last_event.canvas_name) {
@@ -512,24 +509,34 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             // do not allow event to propagate
             e.stopPropagation();
-            //var last_event = target.last_canvas_event;
-            //target.last_canvas_event = e;
         };
 
-        target.suspend_events = function() {
+        target.reset_events = function() {
+            var old_event_info = target.event_info;
+            target.event_info = {
+                event_types: {},   // Is event enabled? type --> boolean.
+                default_event_handlers: {},  // type --> global event handler.
+                object_event_handlers: {},  // type --> (name --> handler)
+            };
             // turn off object events and defaults
-            var event_handlers = target.default_event_handlers;
-            target.default_event_handlers = {};
-            target.disable_element_events = true;
+            //target.disable_element_events = true;
             // return event handlers for later possible restoration
-            return event_handlers;
+            return old_event_info;
         }
 
-        target.restore_events = function(event_handlers) {
+        target.restore_events = function(event_info) {
+            var old_event_info = target.event_info;
+            target.event_info = event_info;
             // turn events back on
-            target.disable_element_events = false;
-            target.default_event_handlers = event_handlers || {};
+            //target.disable_element_events = false;
+            return old_event_info;
         };
+
+        target.focus_canvas = function () {
+            // set the focus to the visible canvas so the canvas can receive keyboard events.
+            target.visible_canvas.canvas.attr("tabindex", "0");
+            target.visible_canvas.canvas.focus();
+        }
 
         target.do_lasso = function(names_callback, config, delete_after) {
             // Use a lasso to surround elements.  Return names of elements under lassoed rectangle
@@ -542,7 +549,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 close: false,
                 points: [],
             }, config);
-            var saved_event_handlers = target.suspend_events();
+            var saved_event_handlers = target.reset_events();
             var points = [];
             var lassoing = false;
             var mouse_down_handler = function(event) {
@@ -687,6 +694,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         target.canvas_2d_widget_helper.add_vector_ops(target);
         target.dual_canvas_helper.add_axis_logic(target);
+        target.reset_canvas();
 
         return target;
     };
