@@ -33,7 +33,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var w = target.canvas_width;
             var h = target.canvas_height;
             var st = target.canvas_style;
-            target.canvas = $(`<canvas width="${w}px" height="${h}px" style="${st}"/>`);
+            target.canvas = $(`<canvas width="${w}px" height="${h}px" style="${st}" tabindex="0"/>`);
             //target.canvas.width(target.canvas_width).height(target.canvas_height);
             target.canvas.appendTo(target);
             target.canvas_context = target.canvas[0].getContext("2d");
@@ -417,6 +417,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         target.color_at = function(pixel_x, pixel_y) {
+            pixel_x = pixel_x || 0;
+            pixel_y = pixel_y || 0;
             var imgData = target.canvas_context.getImageData(pixel_x, pixel_y, 1, 1);
             return imgData;
         };

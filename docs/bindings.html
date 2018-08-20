@@ -90,7 +90,7 @@ var enlarge = function(event) {
     // change it back 5 seconds later
     setTimeout(function () { element.change_element("bigger", {font: "20px Arial"}); }, 5000)
 };
-element.on_canvas_event("click", enlarge, "bigger");
+//element.on_canvas_event("click", enlarge, "bigger");
 
 element.text({
     name: "redden", text: "Click to redden", 
@@ -101,7 +101,7 @@ var redden = function(event) {
     // change it back 5 seconds later
     setTimeout(function () { element.change_element("redden", {color: "green"}); }, 5000)
 };
-element.on_canvas_event("click", redden, "redden");
+//element.on_canvas_event("click", redden, "redden");
 
 element.text({
     name: "font", text: "Click to change font", 
@@ -112,7 +112,7 @@ var change_font = function(event) {
     // change it back 5 seconds later
     setTimeout(function () { element.change_element("font", {font: "20px Arial"}); }, 5000)
 };
-element.on_canvas_event("click", change_font, "font");
+//element.on_canvas_event("click", change_font, "font");
 
 element.text({
     name: "rotate", text: "Click to rotate", 
@@ -123,7 +123,7 @@ var rotate = function(event) {
     // change it back 5 seconds later
     setTimeout(function () { element.change_element("rotate", {degrees: 5}); }, 5000)
 };
-element.on_canvas_event("click", rotate, "rotate");
+//element.on_canvas_event("click", rotate, "rotate");
 
 element.text({
     name: "vanish", text: "Click to disappear", 
@@ -134,7 +134,29 @@ var disappear = function(event) {
     // change it back 5 seconds later
     setTimeout(function () { element.change_element("vanish", {hide: false}); }, 5000)
 };
-element.on_canvas_event("click", disappear, "vanish");
+//element.on_canvas_event("click", disappear, "vanish");
+
+var turn_events_on = function {} {
+    element.on_canvas_event("click", enlarge, "bigger");
+    element.on_canvas_event("click", redden, "redden");
+    element.on_canvas_event("click", change_font, "font");
+    element.on_canvas_event("click", rotate, "rotate");
+    element.on_canvas_event("click", disappear, "vanish");
+};
+
+var turn_events_off = function {} {
+    element.off_canvas_event("click", "bigger");
+    element.off_canvas_event("click", "redden");
+    element.off_canvas_event("click", "font");
+    element.off_canvas_event("click", "rotate");
+    element.off_canvas_event("click", "vanish");
+};
+
+$("<button>Turn events off</button>")
+.appendTo(element)
+.click(turn_events_off);
+
+
 </script>
 
 <div id="code_text">
