@@ -302,6 +302,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         target.color_array_to_index = function(color_array) {
             // convert a color to a mapping key for storage and look ups
+            if (color_array.length > 3) {
+                // Do not index any color unless alpha channel is 255 (fully opaque)
+                if (color_array[3] < 255) {
+                    return null;
+                }
+            }
             return ((color_array[0] << 16) | (color_array[1] << 8) | (color_array[2]));
         };
 
@@ -602,7 +608,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var shading_color = target.array_to_color(shading_color_array);
                 if (shading_color == pseudocolor) {
                     // record any named object "under" this shading pixel
-                    var shaded_color_array = shaded_pixels.slice(i, i+3);
+                    var shaded_color_array = shaded_pixels.slice(i, i+4);
                     var shaded_color_index = target.color_array_to_index(shaded_color_array);
                     var shaded_object_name = target.color_index_to_name[shaded_color_index];
                     if (shaded_object_name) {
