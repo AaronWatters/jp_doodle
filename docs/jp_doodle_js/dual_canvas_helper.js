@@ -47,10 +47,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             // make visible and invisible dual canvases
             target.visible_canvas = $("<div/>").appendTo(target.canvas_container);
+            // Invisible canvas for event lookups
             target.invisible_canvas = $("<div/>").appendTo(target.canvas_container);
             target.invisible_canvas.hide();
+            // Test canvas for event hit validation.
+            target.test_canvas = $("<div/>").appendTo(target.canvas_container);
+            target.test_canvas.hide();
             target.visible_canvas.canvas_2d_widget_helper(settings_overrides);
             target.invisible_canvas.canvas_2d_widget_helper(settings_overrides);
+            target.test_canvas.canvas_2d_widget_helper(settings_overrides);
             target.clear_canvas(keep_stats);
         }
 
@@ -67,6 +72,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.default_event_handlers = {};
             target.visible_canvas.clear_canvas();
             target.invisible_canvas.clear_canvas();
+            // no need to clear the test_canvas now
         };
 
         target.active_region = function (default_to_view_box) {
@@ -140,13 +146,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.canvas_translate_scale = translate_scale;
             target.visible_canvas.canvas_translate_scale = translate_scale;
             target.invisible_canvas.canvas_translate_scale = translate_scale;
+            target.test_canvas.canvas_translate_scale = translate_scale;
             target.visible_canvas.reset_canvas();
             target.invisible_canvas.reset_canvas();
+            target.test_canvas.reset_canvas();
         }
 
         target.redraw = function () {
             target.visible_canvas.clear_canvas();
             target.invisible_canvas.clear_canvas();
+            // Don't draw anything on the test canvas now.
             var drawn_objects = [];
             var object_list = target.object_list;
             var name_to_object_info = target.name_to_object_info;
@@ -263,15 +272,21 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             $.extend(object_info, draw_info);
             if (object_info.name) {
                 // also draw invisible object using psuedocolor for event lookups
-                var info2 = $.extend({}, object_info);
-                if (object_info.draw_mask) {
-                    // convert visible object invisible mask object (text becomes rectangle, eg)
-                    draw_fn = object_info.draw_mask;
-                }
-                info2.color = object_info.pseudocolor;
-                draw_fn(target.invisible_canvas, info2);
+                target.draw_mask(object_info, target.invisible_canvas);
+                // Don't draw on the test canvas now.
             }
-        }
+        };
+
+        target.draw_mask = function(object_info, invisible_canvas) {
+            var draw_fn = object_info.draw_on_canvas;
+            var info2 = $.extend({}, object_info);
+            if (object_info.draw_mask) {
+                // convert visible object to invisible mask object (text becomes rectangle, eg)
+                draw_fn = object_info.draw_mask;
+            }
+            info2.color = object_info.pseudocolor;
+            draw_fn(invisible_canvas, info2);
+        };
 
         target.reset_canvas();
 
@@ -302,6 +317,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         target.color_array_to_index = function(color_array) {
             // convert a color to a mapping key for storage and look ups
+            if (color_array.length > 3) {
+                // Do not index any color unless alpha channel is 255 (fully opaque)
+                if (color_array[3] < 255) {
+                    return null;
+                }
+            }
             return ((color_array[0] << 16) | (color_array[1] << 8) | (color_array[2]));
         };
 
@@ -343,6 +364,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         target.converted_location = function (x, y) {
             return target.visible_canvas.converted_location(x, y);
+        }
+
+        target.pixel_offset = function(target_x, target_y) {
+            return target.visible_canvas.model_to_pixel(target_x, target_y);
         }
 
         target.watch_event = function(event_type) {
@@ -396,16 +421,49 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return target.visible_canvas.event_model_location(e);
         };
 
+        target.color_index_at = function(canvas, pixel_x, pixel_y) {
+            var invisible_color = canvas.color_at(pixel_x, pixel_y).data;
+            return target.color_array_to_index(invisible_color);
+        };
+
+        target.object_name_at_position = function (event, pixel_x, pixel_y) {
+            // Find named object at position and validate it using the test canvas.
+            var color_index = target.color_index_at(target.invisible_canvas,
+                pixel_x, pixel_y);
+            var canvas_name = target.color_index_to_name[color_index];
+            var object_info = target.name_to_object_info[canvas_name];
+            if ((canvas_name) && (object_info)) {
+                // Validate the object hit by drawing on the test canvas.
+                var test_canvas = target.test_canvas;
+                test_canvas.clear_canvas();
+                target.draw_mask(object_info, test_canvas);
+                var test_index = target.color_index_at(test_canvas, pixel_x, pixel_y);
+                if (test_index != color_index) {
+                    // Bogus object hit probably caused by anti-aliasing.
+                    canvas_name = null;
+                }
+            }
+            if (canvas_name) {
+                event.canvas_name = canvas_name;
+                event.color_index = color_index;
+                event.object_info = object_info;
+            };
+            return canvas_name;
+        };
+
         target.generic_event_handler = function(e) {
             //var event_type = e.type;
             //var default_handler = target.default_event_handlers[event_type];
             var object_handler = null;
-            var invisible = target.invisible_canvas;
+            //var invisible = target.invisible_canvas;
+            //var test_canvas = target.test_canvas;
             var visible = target.visible_canvas;
             e.pixel_location = visible.event_pixel_location(e);
-            e.invisible_color = invisible.color_at(e.pixel_location.x, e.pixel_location.y).data;
-            e.color_index = target.color_array_to_index(e.invisible_color);
-            e.canvas_name = target.color_index_to_name[e.color_index];
+            e.canvas_name = target.object_name_at_position(
+                e, e.pixel_location.x, e.pixel_location.y);
+            //e.invisible_color = invisible.color_at(e.pixel_location.x, e.pixel_location.y).data;
+            //e.color_index = target.color_array_to_index(e.invisible_color);
+            //e.canvas_name = target.color_index_to_name[e.color_index];
             var last_event = target.last_canvas_event;
             var process_event = function(e, no_default) {
                 var event_type = e.type;
@@ -598,7 +656,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var shading_color = target.array_to_color(shading_color_array);
                 if (shading_color == pseudocolor) {
                     // record any named object "under" this shading pixel
-                    var shaded_color_array = shaded_pixels.slice(i, i+3);
+                    var shaded_color_array = shaded_pixels.slice(i, i+4);
                     var shaded_color_index = target.color_array_to_index(shaded_color_array);
                     var shaded_object_name = target.color_index_to_name[shaded_color_index];
                     if (shaded_object_name) {
@@ -718,21 +776,32 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 align: align
             }, params.tick_text_config)
             var stats = target.active_region(true);   // drawn region or model view box
+            var min_value = params.min_value || stats["min_" + coordinate];
+            var max_value = params.max_value || stats["max_" + coordinate]
             if (!params.ticks) {
                 // infer ticks from limits
-                var min_value = params.min_value || stats["min_" + coordinate];
-                var max_value = params.max_value || stats["max_" + coordinate]
                 params.ticks = target.axis_ticklist(min_value, max_value, params.max_tick_count, params.anchor);
-                // if add_end_points is specified then include unlabelled end markers if absent
-                if (params.add_end_points) {
-                    if (min_value < params.ticks[0]) {
-                        var min_tick = {offset: min_value, text: " "};
-                        params.ticks.unshift(min_tick);
+                //params.ticks = ticklist.map(x => {offset: x});
+            }
+            // convert numeric ticks to mappings
+            params.ticks = params.ticks.map(
+                function (x) {
+                    if ((typeof x) == "number") {
+                        return {offset: x};
+                    } else {
+                        return x;
                     }
-                    if (max_value > params.ticks[params.ticks.length-1]) {
-                        var max_tick = {offset: max_value, text: " "};
-                        params.ticks.push(max_tick);
-                    }
+                }
+            )
+            // if add_end_points is specified then include unlabelled end markers if absent
+            if (params.add_end_points) {
+                if (min_value < params.ticks[0].offset) {
+                    var min_tick = {offset: min_value, text: " "};
+                    params.ticks.unshift(min_tick);
+                }
+                if (max_value > params.ticks[params.ticks.length-1].offset) {
+                    var max_tick = {offset: max_value, text: " "};
+                    params.ticks.push(max_tick);
                 }
             }
             if (!params.axis_origin) {
@@ -759,6 +828,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.axis = function(config) {
             // Draw an axis
             var default_tick_format = function(tick) {
+                if ((typeof tick.text) != "undefined") {
+                    return "" + tick.text;
+                }
                 var offset = tick.offset;
                 var result = "" + offset;
                 if (offset != parseInt(offset, 10)) {
@@ -996,6 +1068,19 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var x_unscale = frame.vscale(untranslated.x, x_inv);
             var y_unscale = frame.vscale(untranslated.y, y_inv);
             return frame.vadd(x_unscale, y_unscale);
+        };
+
+        frame.pixel_offset = function(frame_x, frame_y) {
+            // return the offset from the canvas upper left corner in pixels
+            // of the frame location.
+            var c = frame.converted_location(frame_x, frame_y);
+            return frame.parent_canvas.pixel_offset(c.x, c.y)
+        };
+
+        frame.event_model_location = function(e) {
+            var parent_location = frame.parent_canvas.event_model_location(e);
+            //return frame.converted_location(parent_location.x, parent_location.y);
+            return frame.model_location(parent_location.x, parent_location.y);
         }
 
         var override_positions = function(shape_name) {
@@ -1018,10 +1103,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         // define axes w.r.t the frame
         parent_canvas.dual_canvas_helper.add_axis_logic(frame);
-
-        //frame.model_to_pixel = function(mx, my) {
-        //    throw new Error("General frame position inversion is not implemented yet.")
-        //};
 
         return frame;
     }

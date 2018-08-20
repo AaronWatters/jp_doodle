@@ -27,3 +27,12 @@ body {
 .top_menu li a:hover {
     background-color: #111;
 }
+
+#target_container {
+    width: 100%;
+    text-align: center;
+}
+  
+#target_div {
+    display: inline-block;
+}

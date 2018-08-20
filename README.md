@@ -135,7 +135,7 @@ from green to pink.
 <tr>
     <td>
         <a href="https://aaronwatters.github.io/jp_doodle/050_rectangles.html">
-        <img width="200px" src="docs//images/rectangle.png">
+        <img width="200px" src="docs/images/rectangle.png">
         </a>
     </td>
     <td>
@@ -153,6 +153,27 @@ component built using <code>jp_doodle</code>.
 Click "person type" or "State" to start and stop adjusting the
 layout of the barchart.  Mouse over the rectangles and other labels
 for detail information.
+</p>
+        </div>
+    </td>
+</tr>
+
+
+<tr>
+    <td>
+        <a href="https://aaronwatters.github.io/jp_doodle/060_chart.html">
+        <img width="200px" src="docs/images/chart.png">
+        </a>
+    </td>
+    <td>
+        <h4><a href="https://aaronwatters.github.io/jp_doodle/060_chart.html">
+        Chart
+        </a></h4>
+        <div>
+        <p>
+This chart proof of concept illustrates reference frames, object updates,
+and responses to mouse interactions.  Mouse over the figure for detail
+from the underlying data.
 </p>
         </div>
     </td>
