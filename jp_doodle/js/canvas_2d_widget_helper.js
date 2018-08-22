@@ -568,6 +568,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
         // print convenience too
         target.print = function (...items) {
+            items = items.map(x => "" + x);
             var text = items.join(" ");
             return $("<div>" + text + "</div>").appendTo(target);
         };
