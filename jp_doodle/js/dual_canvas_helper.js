@@ -88,6 +88,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.fit = function (stats, margin) {
             // stats if defined should provide min_x, max_x, min_y, max_y
             // Adjust the translate and scale so that the visible objects are centered and visible.
+            var vc = target.visible_canvas;
             var x_translate = 0.0;
             var y_translate = 0.0;
             var scale = 1.0;
@@ -98,7 +99,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             if (!stats) {
                 // get boundaries for visible objects
                 target.set_translate_scale();
-                var vc = target.visible_canvas;
                 // Redraw and collect stats on visible objects
                 vc.canvas_stats = {};
                 target.redraw();
@@ -138,6 +138,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 target.event_info.event_types[event_type] = true;
             }
             target.request_redraw();
+            return stats;
         }
 
         target.set_translate_scale = function (translate_scale) {
@@ -641,6 +642,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // Used for example to implement "lasso" selected objects under a polygon.
             // xxx This could be optimized: it is a brute force scan of the whole canvas 2x right now.
             // xxx This method will not find shaded objects that are obscured by other objects.
+            // XXXX need to use the test_canvas here!!!
             var object_info = target.name_to_object_info[shading_name];
             if (!object_info) {
                 throw new Error("can't find object with name " + shading_name);
