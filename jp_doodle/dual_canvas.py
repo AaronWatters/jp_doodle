@@ -34,9 +34,9 @@ class CanvasOperationsMixin(object):
 
     # xxxx Not all methods may make sense for all subclasses.
 
-    def circle(self, x, y, radius, color="black", fill=True, **other_args):
+    def circle(self, x, y, r, color="black", fill=True, **other_args):
         "Draw a circle or arc on the canvas frame."
-        s = dict(x=x, y=y, r=radius, color=color, fill=fill)
+        s = dict(x=x, y=y, r=r, color=color, fill=fill)
         s.update(other_args)
         self.call_method("circle", s)
 
@@ -56,9 +56,9 @@ class CanvasOperationsMixin(object):
         s.update(other_args)
         self.call_method("text", s)
 
-    def rect(self, x, y, width, height, color="black", degrees=0, fill=True, **other_args):
+    def rect(self, x, y, w, h, color="black", degrees=0, fill=True, **other_args):
         "Draw a rectangle on the canvas frame."
-        s = dict(x=x, y=y, w=width, h=height, color=color, degrees=degrees, fill=fill)
+        s = dict(x=x, y=y, w=w, h=h, color=color, degrees=degrees, fill=fill)
         s.update(other_args)
         self.call_method("rect", s)
 
@@ -83,9 +83,9 @@ class CanvasOperationsMixin(object):
         """call method for target frame (for subclassing)"""
         self.element[method_name](*arguments)
 
-    def fit(self, margin=0):
+    def fit(self, stats=None, margin=0):
         "Adjust the translate and scale so that the visible objects are centered and visible."
-        self.element.fit(None, margin)
+        self.element.fit(stats, margin)
 
     def change_element(self, name, **changed_options):
         "Change the configuration of a named object and request redraw."
