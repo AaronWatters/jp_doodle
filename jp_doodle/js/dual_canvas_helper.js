@@ -366,11 +366,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         target.converted_location = function (x, y) {
             return target.visible_canvas.converted_location(x, y);
-        }
+        };
+
+        target.event_pixel_location = function (e) {
+            return target.visible_canvas.event_pixel_location(e);
+        };
 
         target.pixel_offset = function(target_x, target_y) {
             return target.visible_canvas.model_to_pixel(target_x, target_y);
-        }
+        };
 
         target.watch_event = function(event_type) {
             if (!target.event_info.event_types[event_type]) {
