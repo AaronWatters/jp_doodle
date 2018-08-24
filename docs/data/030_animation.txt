@@ -22,7 +22,7 @@ outer_radius = 100;
 inner_radius = 80;
 
 // Draw the clock face.
-element.circle({x:0, y:0, r:100, color:"#dcf"});
+element.circle({name: "face", x:0, y:0, r:100, color:"#dcf"});
 element.circle({x:0, y:0, r:100, color:"#449", fill:false, lineWidth:10});
 
 // Draw the numbers on the clock.
@@ -65,6 +65,20 @@ var animate = function () {
     // Repeat the animation again on the next animation iteration.
     requestAnimationFrame(animate);
 }
+
+// Add transitions
+var bigger = false;
+var transition_face = function() {
+    var seconds = 10;
+    if (bigger) {
+        element.transition("face", {r:100, color:"#dcf"}, seconds);
+    } else {
+        element.transition("face", {r:30, color:"#fcd"}, seconds);
+    }
+    bigger = !bigger;
+};
+$("<button>transition face</button>").appendTo(element).click(transition_face);
+
 // Adjust the canvas coordinate transform to center the drawn objects on the canvas.
 element.fit(null, 10);  // 10 pixel margin
 // Start the animation
