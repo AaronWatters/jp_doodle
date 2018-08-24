@@ -155,6 +155,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         }
 
         target.redraw = function () {
+            // perform any transitions
+            target.do_transitions();
             target.visible_canvas.clear_canvas();
             target.invisible_canvas.clear_canvas();
             // Don't draw anything on the test canvas now.
@@ -696,6 +698,97 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.model_location = function(mx, my) {
             // for consistency with reference frames -- model location is unchanged
             return {x: mx, y: my};
+        }
+
+        // transition mechanism
+        target.active_transitions = [];
+
+        target.do_transitions = function () {
+            var active = target.active_transitions;
+            var remaining = [];
+            for (var i=0; i<active.length; i++) {
+                var transition = active[i];
+                transition.interpolate();
+                if (transition.finished()) {
+                    // xxxx any termination actions?
+                } else {
+                    remaining.push(transition);
+                }
+            }
+            if (remaining.length > 0) {
+                target.request_redraw();
+            }
+            target.active_transitions = remaining;
+        };
+
+        target.transition = function(object_name, to_values, seconds_duration, mode) {
+            mode = mode || "linear";
+            seconds_duration = seconds_duration || 1;
+            var start = (new Date()).getTime();
+            var end = start + 1000 * seconds_duration;
+            var from_values = target.name_to_object_info[object_name];
+            var transition = {
+                start: start,
+                end: end,
+                object_name: object_name,
+                from_values: from_values,
+                to_values: to_values,
+                lmd: function () {
+                    var time = (new Date()).getTime();
+                    var result = (time - transition.start) * 1.0 / (transition.end - transition.start);
+                    return Math.max(0, Math.min(1.001, result));
+                },
+                finished: function () {
+                    return transition.lmd() >= 1.0;
+                },
+                interpolator: target.linear_interpolator(object_name, from_values, to_values),
+                interpolate: function () {
+                    transition.interpolator(transition.lmd());
+                },
+            };
+            target.active_transitions.push(transition);
+            return transition;
+        };
+
+        target.linear_interpolator = function(object_name, from_mapping, to_mapping) {
+            var map_interpolators = {};
+            for (var attr in to_mapping) {
+                var to_value = to_mapping[attr];
+                var from_value = from_mapping[attr];
+                if ((typeof to_value) == "number") {
+                    // numeric value
+                    from_value = from_value || 0;
+                    map_interpolators[attr] = target.linear_numeric_interpolator(from_value, to_value);
+                } else {
+                    // non numeric value
+                    map_interpolators[attr] = target.switch_value_interpolator(from_value, to_value);
+                }
+            }
+            var interpolator = function(lmd) {
+                var mapping = {};
+                for (var attr in map_interpolators) {
+                    mapping[attr] = map_interpolators[attr](lmd);
+                    console.log("interpolating ", lmd, " ", attr, " ", mapping[attr]);
+                }
+                target.change_element(object_name, mapping);
+            };
+            return interpolator;
+        };
+
+        target.linear_numeric_interpolator = function(old_value, new_value) {
+            return function(lmd) {
+                return (1 - lmd) * old_value + lmd * new_value;
+            };
+        };
+
+        target.switch_value_interpolator = function(old_value, new_value) {
+            // punting on interpolation
+            return function(lmd) {
+                if (lmd < 0.5) {
+                    return old_value;
+                }
+                return new_value;
+            }
         }
 
         target.canvas_2d_widget_helper.add_vector_ops(target);
