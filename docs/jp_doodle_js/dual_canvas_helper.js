@@ -700,6 +700,21 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return {x: mx, y: my};
         }
 
+        // color utilities
+        target.color_string_to_array = function(color_string) {
+            var bbox = target.model_view_box();
+            // draw a test rectangle of that color
+            target.test_canvas.rect({
+                x: bbox.min_x, y: bbox.min_y,
+                h: bbox.max_x - bbox.min_x, w: bbox.max_y - bbox.min_y,
+                color: color_string
+            });
+            // find the color in the middle
+            var p = target.pixel_offset(0.5 * (bbox.min_x + bbox.max_x), 0.5 * (bbox.max_y + bbox.min_y));
+            var color_info = target.test_canvas.color_at(p.x, p.y);
+            return color_info.data;
+        };
+
         // transition mechanism
         target.active_transitions = [];
 
@@ -761,7 +776,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     map_interpolators[attr] = target.linear_numeric_interpolator(from_value, to_value);
                 } else {
                     // non numeric value
-                    map_interpolators[attr] = target.switch_value_interpolator(from_value, to_value);
+                    if (attr == "color") {
+                        map_interpolators[attr] = target.color_interpolator(from_value, to_value);
+                    } else {
+                        map_interpolators[attr] = target.switch_value_interpolator(from_value, to_value);
+                    }
                 }
             }
             var interpolator = function(lmd) {
@@ -788,6 +807,19 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     return old_value;
                 }
                 return new_value;
+            }
+        }
+
+        target.color_interpolator = function(old_string, new_string) {
+            old_string = old_string || "black";
+            var old_array = target.color_string_to_array(old_string);
+            var new_array = target.color_string_to_array(new_string);
+            return function(lmd) {
+                var mixed = [];
+                for (var i=0; i<new_array.length; i++) {
+                    mixed.push((1 - lmd) * old_array[i] + lmd * new_array[i]);
+                }
+                return "rgba(" + mixed.join(",") + ")";
             }
         }
 
