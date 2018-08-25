@@ -1,7 +1,7 @@
 ***TITLE
 image
 ***SCREENSHOT
-http://sipi.usc.edu/database/preview/misc/4.2.03.png
+images/Images.png
 ***PROLOGUE
 You can draw images on canvases in two steps.
 First you must load the image and identify it with a name,
