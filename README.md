@@ -179,5 +179,26 @@ from the underlying data.
     </td>
 </tr>
 
+
+<tr>
+    <td>
+        <a href="https://aaronwatters.github.io/jp_doodle/070_images.html">
+        <img width="200px" src="docs/images/Images.png">
+        </a>
+    </td>
+    <td>
+        <h4><a href="https://aaronwatters.github.io/jp_doodle/070_images.html">
+        image
+        </a></h4>
+        <div>
+        You can draw images on canvases in two steps.
+First you must load the image and identify it with a name,
+and afterward you can draw the image any number of times
+by providing x, y corner coordinates with width and height.
+You may also specify a rectangle inside the image to draw.
+        </div>
+    </td>
+</tr>
+
 </table>
 
