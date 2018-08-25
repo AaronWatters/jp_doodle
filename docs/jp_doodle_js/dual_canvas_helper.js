@@ -716,18 +716,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         // transition mechanism
-        target.active_transitions = [];
+        target.active_transitions = {};
 
         target.do_transitions = function () {
             var active = target.active_transitions;
-            var remaining = [];
-            for (var i=0; i<active.length; i++) {
-                var transition = active[i];
+            var remaining = {};
+            for (var name in active) {
+                var transition = active[name];
                 transition.interpolate();
                 if (transition.finished()) {
                     // xxxx any termination actions?
                 } else {
-                    remaining.push(transition);
+                    remaining[name] = transition;
                 }
             }
             if (remaining.length > 0) {
@@ -761,7 +761,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     transition.interpolator(transition.lmd());
                 },
             };
-            target.active_transitions.push(transition);
+            //target.active_transitions.push(transition);
+            target.active_transitions[object_name] = transition;
             return transition;
         };
 
@@ -787,7 +788,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var mapping = {};
                 for (var attr in map_interpolators) {
                     mapping[attr] = map_interpolators[attr](lmd);
-                    console.log("interpolating ", lmd, " ", attr, " ", mapping[attr]);
+                    //console.log("interpolating ", lmd, " ", attr, " ", mapping[attr]);
                 }
                 target.change_element(object_name, mapping);
             };
