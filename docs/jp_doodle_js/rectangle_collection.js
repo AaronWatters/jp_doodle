@@ -88,18 +88,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 if ((bar.u_anchor == u_anchor) || (bar.v_anchor == v_anchor)
                      || ((!u_anchor) && (!v_anchor))) {
                     // make it visible
-                    //target.set_visibilities([bar.name], true);
-                    if (bar.hidden) {
-                        target.transition(bar.name, {color: bar.visible_color}, 5);
-                        bar.hidden = false;
-                    }
+                    target.set_visibilities([bar.name], true);
                 } else {
                     // hide it
-                    //target.set_visibilities([bar.name], false);
-                    if (!bar.hidden) {
-                        target.transition(bar.name, {color: "rgba(0,0,0,0)"}, 5);
-                        bar.hidden = true;
-                    }
+                    target.set_visibilities([bar.name], false);
                 }
             }
             if (target.u_selected) {
@@ -176,7 +168,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 bar.w = width;
                 bar.h = bar.height * height_factor;
                 bar.color = target.interpolate_color(bar.height / interval);
-                bar.visible_color = bar.color;
             }
             // sort the larger indices earlier
             bars.sort(function(bar_a, bar_b) {
@@ -384,19 +375,19 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var bar_info = event.object_info;
                 var loc = target.event_model_location(event);
                 var shift = extent * target.bar_dialog_dh * 0.25;
-                target.transition("dialog", {
+                target.change_element("dialog", {
                     hide: false,
                     x: loc.x + shift,
                     y: loc.y
                 });
-                target.transition("dialog_u", {
+                target.change_element("dialog_u", {
                     hide: false,
                     x: loc.x + 2 * shift,
                     y: loc.y + 0.63 * mouse_over_info.h,
                     text: target.bar_u_label+": "+bar_info.u_anchor,
                     color: "black"
                 });
-                target.transition("dialog_v", {
+                target.change_element("dialog_v", {
                     hide: false,
                     x: loc.x + 2 * shift,
                     y: loc.y + 0.38 * mouse_over_info.h,
@@ -407,7 +398,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 if (h_text.length > 7) {
                     h_text = bar_info.toExponential(2);
                 }
-                target.transition("dialog_h", {
+                target.change_element("dialog_h", {
                     hide: false,
                     x: loc.x + 2 * shift,
                     y: loc.y + 0.13 * mouse_over_info.h,
