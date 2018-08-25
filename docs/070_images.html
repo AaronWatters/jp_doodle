@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>image -- jp_doodle demo</title>
+    <link rel="icon" type="image/png" href="images/clock.png">
+    <link rel=stylesheet href="static/style.css">
+
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="codemirrorjs/codemirror.css">
+    <script src="codemirrorjs/codemirror.js"></script>
+    <script src="codemirrorjs/matchbrackets.js"></script>
+    <script src="codemirrorjs/continuecomment.js"></script>
+    <script src="codemirrorjs/comment.js"></script>
+    <script src="codemirrorjs/javascript.js"></script>
+    <style type="text/css">.CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black;}</style>
+    <script src="jp_doodle_js/canvas_2d_widget_helper.js"></script>
+    <script src="jp_doodle_js/dual_canvas_helper.js"></script>
+    <script src="jp_doodle_js/rectangle_collection.js"></script>
+
+    <script>
+        $( function() {
+          $( "#discussion" ).accordion({collapsible : true, active : 'none'});
+          $( "#code_text" ).accordion({collapsible : true, active : 'none'});
+        } );
+    </script>
+</head>
+
+<body>
+<div class="top_menu">
+<ul>
+<li><a href="index.html">Drawing <br><img src="images/drawing.png" width="50px"></a></li>
+<li><a href="010_events.html">Events <br><img src="images/events.png" width="50px"></a></li>
+<li><a href="020_bindings.html">Bindings <br><img src="images/bindings.png" width="50px"></a></li>
+<li><a href="030_animation.html">Animation <br><img src="images/clock.png" width="50px"></a></li>
+<li><a href="040_lasso.html">Lasso <br><img src="images/lasso.png" width="50px"></a></li>
+<li><a href="050_rectangles.html">Rectangles <br><img src="images/rectangle.png" width="50px"></a></li>
+<li><a href="060_chart.html">Chart <br><img src="images/chart.png" width="50px"></a></li>
+<li><a href="070_images.html">image <br><img src="http://sipi.usc.edu/database/preview/misc/4.2.03.png" width="50px"></a></li>
+</ul>
+</div>
+
+<p><em>
+    These are example pages for the 
+    <a href="https://github.com/AaronWatters/jp_doodle">jp_doodle</a>
+    package. <br>
+    Please see the Jupyter notebooks in the package for additional
+    discussion and documentation. <br>
+    Please use 
+    <a href="https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/AaronWatters/jp_doodle/master">Binder</a>
+    to easily run the Jupyter notebooks of the package.
+</em></p>
+
+<h1>image</h1>
+<div>
+    You can draw images on canvases in two steps.
+First you must load the image and identify it with a name,
+and afterward you can draw the image any number of times
+by providing x, y corner coordinates with width and height.
+You may also specify a rectangle inside the image to draw.
+</div>
+
+<div id="target_container">
+    <div id="target_div"/>
+</div>
+
+<script>
+    var element = $('#target_div');
+    //$('<img src="http://sipi.usc.edu/database/preview/misc/4.2.03.png">').appendTo(element);
+    var element = $('#target_div');
+var config = {
+            width: 600,
+            height: 600,
+        };
+element.dual_canvas_helper(config);
+
+// Mandrill from a remote image
+var mandrill_url = "http://sipi.usc.edu/database/preview/misc/4.2.03.png";
+// This local image reference works in "classic" notebook, but not in Jupyter Lab.
+var mandrill_url = "static/mandrill.png"
+element.name_image_url("mandrill", mandrill_url);
+
+// just the eyes, not the whole image
+element.named_image({
+    name: "mandrill eyes",
+    image_name: "mandrill", x:0, y:-40, w:80, h:30,
+    sx:30, sy:15, sWidth:140, sHeight:20
+    });
+    
+element.named_image({
+    name: "whole mandrill",
+    image_name: "mandrill", x:0, y:0, w:200, h:200
+    });
+    
+element.named_image({
+    name: "mandrill square",
+    image_name: "mandrill", x:210, y:0, w:200, h:200,
+    sx:40, sy:14, sWidth:30, sHeight:30
+    });
+    
+element.rect({name:"highlight", x:40, y:200-14, w:30, h:-30,
+    color:"rgba(200,200,100,0.7)"});
+    
+// events to drag the square and adjust the detail.
+// Attach a mousedown event which picks the hightlight.
+var moving = false;
+var on_mouse_down = function(event) {
+    if (event.canvas_name=="highlight") {
+        moving = true;
+    }
+};
+element.on_canvas_event("mousedown", on_mouse_down);
+
+// Attach a mousemove event which moves the highlight.
+var on_mouse_move = function(event) {
+    if (moving) {
+        var loc = element.event_model_location(event);
+        var x = loc.x;
+        var y = loc.y;
+        if ((x > 0) && (y > 30) && (x < 170) && (y < 200)) {
+            element.change_element("highlight", {x:loc.x, y:loc.y});
+            element.change_element("mandrill square", {sx:loc.x, sy:200-loc.y})
+        }
+    } 
+};
+element.on_canvas_event("mousemove", on_mouse_move);
+
+// Attach a mouseup event which "drops" the current picked up object and re-fits the canvas.
+var on_mouse_up = function(event) {
+    moving = false;
+};
+element.on_canvas_event("mouseup", on_mouse_up);
+
+// Fit the figure into the available space
+element.fit(null, 10);
+
+$("<div>Drag the yellow square to adjust the detail view</div>").appendTo(element);
+</script>
+
+<div id="code_text">
+        <h3>Code</h3>
+    
+        <div><textarea id="code" name="code">
+var element = $('#target_div');
+var element = $('#target_div');
+var config = {
+            width: 600,
+            height: 600,
+        };
+element.dual_canvas_helper(config);
+
+// Mandrill from a remote image
+var mandrill_url = "http://sipi.usc.edu/database/preview/misc/4.2.03.png";
+// This local image reference works in "classic" notebook, but not in Jupyter Lab.
+var mandrill_url = "static/mandrill.png"
+element.name_image_url("mandrill", mandrill_url);
+
+// just the eyes, not the whole image
+element.named_image({
+    name: "mandrill eyes",
+    image_name: "mandrill", x:0, y:-40, w:80, h:30,
+    sx:30, sy:15, sWidth:140, sHeight:20
+    });
+    
+element.named_image({
+    name: "whole mandrill",
+    image_name: "mandrill", x:0, y:0, w:200, h:200
+    });
+    
+element.named_image({
+    name: "mandrill square",
+    image_name: "mandrill", x:210, y:0, w:200, h:200,
+    sx:40, sy:14, sWidth:30, sHeight:30
+    });
+    
+element.rect({name:"highlight", x:40, y:200-14, w:30, h:-30,
+    color:"rgba(200,200,100,0.7)"});
+    
+// events to drag the square and adjust the detail.
+// Attach a mousedown event which picks the hightlight.
+var moving = false;
+var on_mouse_down = function(event) {
+    if (event.canvas_name=="highlight") {
+        moving = true;
+    }
+};
+element.on_canvas_event("mousedown", on_mouse_down);
+
+// Attach a mousemove event which moves the highlight.
+var on_mouse_move = function(event) {
+    if (moving) {
+        var loc = element.event_model_location(event);
+        var x = loc.x;
+        var y = loc.y;
+        if ((x > 0) && (y > 30) && (x < 170) && (y < 200)) {
+            element.change_element("highlight", {x:loc.x, y:loc.y});
+            element.change_element("mandrill square", {sx:loc.x, sy:200-loc.y})
+        }
+    } 
+};
+element.on_canvas_event("mousemove", on_mouse_move);
+
+// Attach a mouseup event which "drops" the current picked up object and re-fits the canvas.
+var on_mouse_up = function(event) {
+    moving = false;
+};
+element.on_canvas_event("mouseup", on_mouse_up);
+
+// Fit the figure into the available space
+element.fit(null, 10);
+
+$("<div>Drag the yellow square to adjust the detail view</div>").appendTo(element);
+        </textarea></div>
+    
+    </div>
+
+<div id="discussion">
+        <h3>Discussion</h3>
+    
+        <div>
+            This example demonstrates dynamically adjusting a window within an image.
+        </div>
+    
+    </div>
+    
+    <script>
+            var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+              lineNumbers: true,
+              matchBrackets: true,
+              continueComments: "Enter",
+              extraKeys: {"Ctrl-Q": "toggleComment"}
+            });
+     </script>
+            
+</body>
+</html>

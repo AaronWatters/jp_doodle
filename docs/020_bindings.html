@@ -37,6 +37,7 @@
 <li><a href="040_lasso.html">Lasso <br><img src="images/lasso.png" width="50px"></a></li>
 <li><a href="050_rectangles.html">Rectangles <br><img src="images/rectangle.png" width="50px"></a></li>
 <li><a href="060_chart.html">Chart <br><img src="images/chart.png" width="50px"></a></li>
+<li><a href="070_images.html">image <br><img src="http://sipi.usc.edu/database/preview/misc/4.2.03.png" width="50px"></a></li>
 </ul>
 </div>
 
@@ -302,16 +303,28 @@ turn_events_on();
     
         <div>
             <p>
-The example above associates an event handler to a named object for
+Event handlers may be attached globally to the whole canvas or locally to an object.
+The example above associates a local event handler to a named object for
 a given event type using
 </p>
 
 <pre>
-element.on_canvas_event(event_type, disappear, object name);
+element.on_canvas_event(event_type, handler_function, object_name);
 </pre>
 
 <p>
-Objects with no assigned unique name cannot bind events individually.
+The name for a named object occurring under an event
+is bound to the event as <code>event.canvas_name</code> and 
+the properties of the object are bound to the event as <code>event.object_info</code>
+even if the event is handled by a global event handler.  Only the top object
+under an event is bound to the event -- obscured objects below do not respond
+to the event.
+</p>
+
+<p>
+Objects with no assigned unique name cannot bind events individually
+and the object information for unnamed artifacts under an event are
+not bound to the event.
 </p>
         </div>
     

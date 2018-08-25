@@ -1,0 +1,83 @@
+***TITLE
+image
+***SCREENSHOT
+http://sipi.usc.edu/database/preview/misc/4.2.03.png
+***PROLOGUE
+You can draw images on canvases in two steps.
+First you must load the image and identify it with a name,
+and afterward you can draw the image any number of times
+by providing x, y corner coordinates with width and height.
+You may also specify a rectangle inside the image to draw.
+***CODE
+
+var element = $('#target_div');
+var config = {
+            width: 600,
+            height: 600,
+        };
+element.dual_canvas_helper(config);
+
+// Mandrill from a remote image
+var mandrill_url = "http://sipi.usc.edu/database/preview/misc/4.2.03.png";
+// This local image reference works in "classic" notebook, but not in Jupyter Lab.
+var mandrill_url = "static/mandrill.png"
+element.name_image_url("mandrill", mandrill_url);
+
+// just the eyes, not the whole image
+element.named_image({
+    name: "mandrill eyes",
+    image_name: "mandrill", x:0, y:-40, w:80, h:30,
+    sx:30, sy:15, sWidth:140, sHeight:20
+    });
+    
+element.named_image({
+    name: "whole mandrill",
+    image_name: "mandrill", x:0, y:0, w:200, h:200
+    });
+    
+element.named_image({
+    name: "mandrill square",
+    image_name: "mandrill", x:210, y:0, w:200, h:200,
+    sx:40, sy:14, sWidth:30, sHeight:30
+    });
+    
+element.rect({name:"highlight", x:40, y:200-14, w:30, h:-30,
+    color:"rgba(200,200,100,0.7)"});
+    
+// events to drag the square and adjust the detail.
+// Attach a mousedown event which picks the hightlight.
+var moving = false;
+var on_mouse_down = function(event) {
+    if (event.canvas_name=="highlight") {
+        moving = true;
+    }
+};
+element.on_canvas_event("mousedown", on_mouse_down);
+
+// Attach a mousemove event which moves the highlight.
+var on_mouse_move = function(event) {
+    if (moving) {
+        var loc = element.event_model_location(event);
+        var x = loc.x;
+        var y = loc.y;
+        if ((x > 0) && (y > 30) && (x < 170) && (y < 200)) {
+            element.change_element("highlight", {x:loc.x, y:loc.y});
+            element.change_element("mandrill square", {sx:loc.x, sy:200-loc.y})
+        }
+    } 
+};
+element.on_canvas_event("mousemove", on_mouse_move);
+
+// Attach a mouseup event which "drops" the current picked up object and re-fits the canvas.
+var on_mouse_up = function(event) {
+    moving = false;
+};
+element.on_canvas_event("mouseup", on_mouse_up);
+
+// Fit the figure into the available space
+element.fit(null, 10);
+
+$("<div>Drag the yellow square to adjust the detail view</div>").appendTo(element);
+***DISCUSSION
+
+This example demonstrates dynamically adjusting a window within an image.
