@@ -111,6 +111,39 @@ class CanvasOperationsMixin(object):
         "Load an image by URL and give it a name for reference.  Redraw canvas when load completes, unless disabled."
         self.element.name_image_url(image_name, url, no_redraw)
 
+    def name_image_array(self, image_name, np_array):
+        import numpy as np
+        shape = np_array.shape
+        ndim = len(shape)
+        assert ndim > 1, "image data should have at least 2 dimensions"
+        assert ndim < 4, "image data should have no more than 3 dimensions"
+        # For now KISS: try to convert array to nrows x ncols x 4 for rgba values
+        if ndim == 2:
+            (nrows, ncols) = shape
+            coerced = np.zeros((nrows, ncols, 4), dtype=np.ubyte)
+            for i in range(3):
+                coerced[:, :, i] = np_array
+            coerced[:, :, 3] = 255   # fully opaque
+            np_array = coerced
+        elif ndim == 3:
+            (nrows, ncols, ncolors) = shape
+            assert ncolors >= 3, "only 3 or 4 color channels supported"
+            if ncolors == 3:
+                coerced = np.zeros((nrows, ncols, 4), dtype=np.ubyte)
+                for i in range(3):
+                    coerced[:, :, i] = np_array[:, :, i]
+                coerced[:, :, 3] = 255   # fully opaque
+                np_array = coerced
+            else:
+                assert ncolors == 4, "more than 4 color channels are not supported"
+                coerced = np.zeros(shape, dtype=np.ubyte)
+                coerced[:,:,:] = np_array
+                np_array = coerced
+        image_bytes = bytearray(np_array.tobytes())
+        (nrows, ncols, ncolors) = np_array.shape
+        assert ncolors == 4
+        self.element.name_image_data(image_name, image_bytes, ncols, nrows)
+
     def callback_with_pixel_color(self, pixel_x, pixel_y, callback):
         "For testing.  Deliver the color at pixel as a list of four integers to the callback(list_of_integers)."
         self.element.callback_with_pixel_color(pixel_x, pixel_y, callback)
