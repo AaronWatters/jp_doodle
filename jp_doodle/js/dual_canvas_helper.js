@@ -367,6 +367,29 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
         };
 
+        target.name_image_data = function(image_name, data_array, width, height) {
+            // Create a named image from byte RGBA data.
+            // https://stackoverflow.com/questions/21300921/how-to-convert-byte-array-to-image-in-javascript/21301006#21301006
+            // Data must be linearized rgba values of the right size
+            var size = width * height * 4;
+            var length = data_array.length;
+            if (data_array.length != size) {
+                throw new Error("array length " + length + " doesn't match dimensions 4 X " + width +" X "+height);
+            }
+            var context = target.visible_canvas.canvas_context;
+            var imgdata = context.createImageData(width, height);
+            var data = imgdata.data;
+            for (var i=0; i<size; i++) {
+                data[i] = data_array[i];
+            }
+            // put the image into a canvas
+            var container_canvas = $('<canvas width="'+width+'px" height="'+height+'px"/>');
+            var container_context = container_canvas[0].getContext("2d");
+            container_context.putImageData(imgdata, 0, 0);
+            // store the container canvas as an image source
+            target.visible_canvas.add_image(image_name, container_canvas[0]);
+        };
+
         target.converted_location = function (x, y) {
             return target.visible_canvas.converted_location(x, y);
         };
@@ -705,6 +728,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.color_string_to_array = function(color_string) {
             var bbox = target.model_view_box();
             // draw a test rectangle of that color
+            // XXX probably we need a much smaller rectangle, but KISS for now.
             target.test_canvas.rect({
                 x: bbox.min_x, y: bbox.min_y,
                 h: bbox.max_x - bbox.min_x, w: bbox.max_y - bbox.min_y,
