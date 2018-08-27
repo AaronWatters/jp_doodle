@@ -71,9 +71,7 @@ var do_transition = function (event) {
     selected_position = [event.object_info.x, event.object_info.y];
 };
 
-// attach event handler
-//element.on_canvas_event("click", do_transition);
-draw()
+draw();
 
 // Fit the figure into the available space
 element.fit(null, 20);
