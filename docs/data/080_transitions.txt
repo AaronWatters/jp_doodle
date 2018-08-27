@@ -1,0 +1,82 @@
+***TITLE
+Transitions
+***SCREENSHOT
+images/Transitions.png
+***PROLOGUE
+You can change named objects on canvases using smooth transitions 
+which interpolate between one group of attribute values and another smoothly over a time period.
+***CODE
+
+// Attach a dual canvas associated with the element as a child of the element
+// configured with width 400 and height 400.
+var config = {
+            width: 400,
+            height: 400,
+        };
+element.dual_canvas_helper(config);
+
+var small_radius = 10;
+var big_radius = 20;
+var offset = 50;
+var selected_color = "magenta";
+var normal_color = "cyan";
+var selected_text = "yellow";
+var normal_text = "blue";
+var duration = 3;
+var text_duration = 5;
+var n_circles = 10;
+var theta = 2 * Math.PI / n_circles;
+
+var draw = function() {
+    for (var i=0; i<n_circles; i++) {
+        var name = ""+i;
+        var cx = offset * Math.cos(theta * i);
+        var cy = offset * Math.sin(theta * i);
+        element.circle({name: "circle" + name, 
+            x:cx, y:cy, r:small_radius, color:normal_color,
+            normal_position: [cx, cy]});
+        element.text({name: "text"+name, text: name, 
+            x: cx, y: cy, color:normal_text, align:"center", valign:"center"});
+        // cover the circle and the text with an invisible circle to receive events
+        element.circle({name: name, x:cx, y:cy, r:small_radius, 
+            color: "rgba(0,0,0,0)",         // invisible
+            });
+        // Bind an event to invisible circle
+        element.on_canvas_event("mouseover", do_transition, name);
+    }
+}
+
+var selected_name = null;
+var selected_position = null;
+
+var do_transition = function (event) {
+    var name = event.canvas_name;
+    if ((name) && (name != selected_name)) {
+        // transition the visible object under the event
+        element.transition("circle" + name, {color:selected_color, r:big_radius, x:0, y:0}, duration);
+        element.transition("text" + name, {color:selected_text, x:0, y:0}, text_duration);
+        // undo transition for previous object
+        if (selected_name) {
+            element.transition(
+                "circle" + selected_name, 
+                {color:normal_color, r:small_radius, x:selected_position[0], y:selected_position[1]}, 
+                duration);
+            element.transition(
+                "text" + selected_name,
+                {color:normal_text, x:selected_position[0], y:selected_position[1]},
+                text_duration);
+        }
+    }
+    selected_name = name;
+    selected_position = [event.object_info.x, event.object_info.y];
+};
+
+// attach event handler
+//element.on_canvas_event("click", do_transition);
+draw()
+
+// Fit the figure into the available space
+element.fit(null, 20);
+***DISCUSSION
+Mouse over the circles to see the circle and the text on the circle transition
+in color and move to the center over a period of time.

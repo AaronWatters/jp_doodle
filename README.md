@@ -200,5 +200,23 @@ You may also specify a rectangle inside the image to draw.
     </td>
 </tr>
 
+
+<tr>
+    <td>
+        <a href="https://aaronwatters.github.io/jp_doodle/080_transitions.html">
+        <img width="200px" src="docs/images/Transitions.png">
+        </a>
+    </td>
+    <td>
+        <h4><a href="https://aaronwatters.github.io/jp_doodle/080_transitions.html">
+        Transitions
+        </a></h4>
+        <div>
+        You can change named objects on canvases using smooth transitions 
+which interpolate between one group of attribute values and another smoothly over a time period.
+        </div>
+    </td>
+</tr>
+
 </table>
 

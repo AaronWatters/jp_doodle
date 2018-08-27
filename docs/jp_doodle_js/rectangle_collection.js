@@ -88,10 +88,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 if ((bar.u_anchor == u_anchor) || (bar.v_anchor == v_anchor)
                      || ((!u_anchor) && (!v_anchor))) {
                     // make it visible
-                    target.set_visibilities([bar.name], true);
+                    //target.set_visibilities([bar.name], true);
+                    if (!bar.visible) {
+                        target.transition(bar.name, {color: bar.color, h: bar.h});
+                    }
+                    bar.visible = true;
                 } else {
                     // hide it
-                    target.set_visibilities([bar.name], false);
+                    //target.set_visibilities([bar.name], false);
+                    if (bar.visible) {
+                        target.transition(bar.name, {color: "rgba(0,0,0,0)", h: 0});
+                    }
+                    bar.visible = false;
                 }
             }
             if (target.u_selected) {
@@ -260,6 +268,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             for (var i=0; i<bars.length; i++) {
                 let bar = bars[i];
                 bar.fill = true;
+                bar.visible = true;
                 target.rect(bar);
                 target.on_canvas_event("mouseover", mouseenter_handler, bar.name);
                 target.on_canvas_event("mouseout", mouseleave_handler, bar.name);
@@ -346,7 +355,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // mouse over dialog
             var mouse_over_info = {
                 name: "dialog",
-                x: 0, y: 0, hide: true,
+                x: 0, y: 0,  hide:true,
                 w: target.bar_dialog_dw * extent,
                 h: target.bar_dialog_dh * extent,
                 color: "rgba(200, 200, 200, 0.7)"
@@ -370,25 +379,26 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 x: 0, y: 0, hide: true,
                 color: "black"
             });
+            target.dialog_members = "dialog dialog_u dialog_v dialog_h".split(" ");
+
             var put_dialog = function(event) {
                 target.bar_fit = false;
                 var bar_info = event.object_info;
                 var loc = target.event_model_location(event);
                 var shift = extent * target.bar_dialog_dh * 0.25;
-                target.change_element("dialog", {
-                    hide: false,
+                target.set_visibilities(target.dialog_members, true);
+                target.transition("dialog", {
                     x: loc.x + shift,
-                    y: loc.y
+                    y: loc.y,
+                    color: "rgba(200,200,200,0.7)"
                 });
-                target.change_element("dialog_u", {
-                    hide: false,
+                target.transition("dialog_u", {
                     x: loc.x + 2 * shift,
                     y: loc.y + 0.63 * mouse_over_info.h,
                     text: target.bar_u_label+": "+bar_info.u_anchor,
                     color: "black"
                 });
-                target.change_element("dialog_v", {
-                    hide: false,
+                target.transition("dialog_v", {
                     x: loc.x + 2 * shift,
                     y: loc.y + 0.38 * mouse_over_info.h,
                     text: target.bar_v_label+": "+bar_info.v_anchor,
@@ -398,8 +408,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 if (h_text.length > 7) {
                     h_text = bar_info.toExponential(2);
                 }
-                target.change_element("dialog_h", {
-                    hide: false,
+                target.transition("dialog_h", {
                     x: loc.x + 2 * shift,
                     y: loc.y + 0.13 * mouse_over_info.h,
                     text: h_text,
@@ -408,15 +417,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             var hide_dialog = function(event) {
                 target.bar_fit = true;
-                target.change_element("dialog", {hide: true});
-                target.change_element("dialog_u", {hide: true});
-                target.change_element("dialog_v", {hide: true});
-                target.change_element("dialog_h", {hide: true});
+                target.set_visibilities(target.dialog_members, false);
+                target.change_element("dialog", {color: "rgba(255,255,255,0)"});
+                target.change_element("dialog_u", {color: "rgba(255,255,255,0)"});
+                target.change_element("dialog_v", {color: "rgba(255,255,255,0)"});
+                target.change_element("dialog_h", {color: "rgba(255,255,255,0)"});
             };
             // redraw if needed to get proper proportions
-            if (!no_redraw) {
-                target.draw_bars(true);  // don't redraw again
-            }
+            //if (!no_redraw) {
+             //   target.draw_bars(true);  // don't redraw again
+            //}
         }; 
     };
 

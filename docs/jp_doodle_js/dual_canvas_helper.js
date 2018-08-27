@@ -155,6 +155,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         }
 
         target.redraw = function () {
+            // cancel redraw_pending if set
+            target.redraw_pending = false;
             // perform any transitions
             target.do_transitions();
             target.visible_canvas.clear_canvas();
@@ -179,7 +181,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             // keep only the drawn objects
             target.object_list = drawn_objects;
-            target.redraw_pending = false;
         }
 
         target.redraw_pending = false;
@@ -719,18 +720,24 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.active_transitions = {};
 
         target.do_transitions = function () {
+            //console.log("doing transitions");
             var active = target.active_transitions;
             var remaining = {};
+            var redraw = false;
             for (var name in active) {
                 var transition = active[name];
                 transition.interpolate();
                 if (transition.finished()) {
                     // xxxx any termination actions?
+                    //console.log("done transitioning " + name);
                 } else {
+                    //console.log("continuing transitions for " + name);
                     remaining[name] = transition;
+                    redraw = true;
                 }
             }
-            if (remaining.length > 0) {
+            if (redraw) {
+                //console.log("requesting redraw for continuing transitions");
                 target.request_redraw();
             }
             target.active_transitions = remaining;
@@ -741,7 +748,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             seconds_duration = seconds_duration || 1;
             var start = (new Date()).getTime();
             var end = start + 1000 * seconds_duration;
-            var from_values = target.name_to_object_info[object_name];
+            var from_values = $.extend({}, target.name_to_object_info[object_name]);
             var transition = {
                 start: start,
                 end: end,
@@ -749,6 +756,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 from_values: from_values,
                 to_values: to_values,
                 lmd: function () {
+                    //return 0.5; // DEBUG
                     var time = (new Date()).getTime();
                     var result = (time - transition.start) * 1.0 / (transition.end - transition.start);
                     return Math.max(0, Math.min(1.001, result));
@@ -763,6 +771,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             //target.active_transitions.push(transition);
             target.active_transitions[object_name] = transition;
+            //console.log("requesting redraw for transition " + object_name)
+            target.request_redraw();
             return transition;
         };
 
@@ -796,7 +806,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         target.linear_numeric_interpolator = function(old_value, new_value) {
+            //console.log("interpolating number from ", old_value, " to ", new_value);
             return function(lmd) {
+                if (lmd <= 0) {
+                    return old_value;
+                }
+                if (lmd >= 1) {
+                    return new_value;
+                }
                 return (1 - lmd) * old_value + lmd * new_value;
             };
         };
@@ -812,14 +829,23 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         }
 
         target.color_interpolator = function(old_string, new_string) {
+            //console.log("interpolating color from ", old_string, " to ", new_string)
             old_string = old_string || "black";
             var old_array = target.color_string_to_array(old_string);
             var new_array = target.color_string_to_array(new_string);
             return function(lmd) {
+                if (lmd <= 0) {
+                    return old_string;
+                }
+                if (lmd >= 1) {
+                    return new_string;
+                }
                 var mixed = [];
                 for (var i=0; i<new_array.length; i++) {
                     mixed.push((1 - lmd) * old_array[i] + lmd * new_array[i]);
                 }
+                // last entry should be in [0..1]
+                mixed[3] = mixed[3]/255.0;
                 return "rgba(" + mixed.join(",") + ")";
             }
         }
@@ -1422,7 +1448,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         });
         var frames = [element, backward, forward, down, rotate];
         for (var i=0; i<frames.length; i++) {
-            //element.visible_canvas.show_debug_bbox();
             var frame = frames[i];
             for (var x=0; x<101; x+=10) {
                 frame.line({
