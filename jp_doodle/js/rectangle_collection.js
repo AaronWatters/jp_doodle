@@ -88,10 +88,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 if ((bar.u_anchor == u_anchor) || (bar.v_anchor == v_anchor)
                      || ((!u_anchor) && (!v_anchor))) {
                     // make it visible
-                    target.set_visibilities([bar.name], true);
+                    //target.set_visibilities([bar.name], true);
+                    if (!bar.visible) {
+                        target.transition(bar.name, {color: bar.color, h: bar.h});
+                    }
+                    bar.visible = true;
                 } else {
                     // hide it
-                    target.set_visibilities([bar.name], false);
+                    //target.set_visibilities([bar.name], false);
+                    if (bar.visible) {
+                        target.transition(bar.name, {color: "rgba(0,0,0,0)", h: 0});
+                    }
+                    bar.visible = false;
                 }
             }
             if (target.u_selected) {
@@ -260,6 +268,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             for (var i=0; i<bars.length; i++) {
                 let bar = bars[i];
                 bar.fill = true;
+                bar.visible = true;
                 target.rect(bar);
                 target.on_canvas_event("mouseover", mouseenter_handler, bar.name);
                 target.on_canvas_event("mouseout", mouseleave_handler, bar.name);
