@@ -844,6 +844,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 for (var i=0; i<new_array.length; i++) {
                     mixed.push((1 - lmd) * old_array[i] + lmd * new_array[i]);
                 }
+                // round to integers
+                mixed = mixed.map(x => Math.round(x));
                 // last entry should be in [0..1]
                 mixed[3] = mixed[3]/255.0;
                 return "rgba(" + mixed.join(",") + ")";
