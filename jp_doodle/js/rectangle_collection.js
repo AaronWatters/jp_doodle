@@ -89,16 +89,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                      || ((!u_anchor) && (!v_anchor))) {
                     // make it visible
                     //target.set_visibilities([bar.name], true);
-                    if (!bar.visible) {
+                    //if (!bar.visible) {
                         target.transition(bar.name, {color: bar.color, h: bar.h});
-                    }
+                    //}
                     bar.visible = true;
                 } else {
                     // hide it
                     //target.set_visibilities([bar.name], false);
-                    if (bar.visible) {
+                    //if (bar.visible) {
                         target.transition(bar.name, {color: "rgba(0,0,0,0)", h: 0});
-                    }
+                    //}
                     bar.visible = false;
                 }
             }
@@ -390,19 +390,22 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 target.transition("dialog", {
                     x: loc.x + shift,
                     y: loc.y,
-                    color: "rgba(200,200,200,0.7)"
+                    color: "rgba(200,200,200,0.7)",
+                    degrees: 0
                 });
                 target.transition("dialog_u", {
                     x: loc.x + 2 * shift,
                     y: loc.y + 0.63 * mouse_over_info.h,
                     text: target.bar_u_label+": "+bar_info.u_anchor,
-                    color: "black"
+                    color: "black",
+                    degrees: 0
                 });
                 target.transition("dialog_v", {
                     x: loc.x + 2 * shift,
                     y: loc.y + 0.38 * mouse_over_info.h,
                     text: target.bar_v_label+": "+bar_info.v_anchor,
-                    color: "black"
+                    color: "black",
+                    degrees: 0
                 });
                 var h_text = bar_info.height.toFixed(2)
                 if (h_text.length > 7) {
@@ -412,16 +415,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     x: loc.x + 2 * shift,
                     y: loc.y + 0.13 * mouse_over_info.h,
                     text: h_text,
-                    color: "black"
+                    color: "black",
+                    degrees: 0
                 });
             };
             var hide_dialog = function(event) {
                 target.bar_fit = true;
-                target.set_visibilities(target.dialog_members, false);
-                target.change_element("dialog", {color: "rgba(255,255,255,0)"});
-                target.change_element("dialog_u", {color: "rgba(255,255,255,0)"});
-                target.change_element("dialog_v", {color: "rgba(255,255,255,0)"});
-                target.change_element("dialog_h", {color: "rgba(255,255,255,0)"});
+                //target.set_visibilities(target.dialog_members, false);
+                target.transition("dialog", {color: "rgba(255,255,255,0)", degrees:180, x:-50});
+                target.transition("dialog_u", {color: "rgba(255,255,255,0)", degrees:180, x:-70});
+                target.transition("dialog_v", {color: "rgba(255,255,255,0)", degrees:180, x:-90});
+                target.transition("dialog_h", {color: "rgba(255,255,255,0)", degrees:180, x:-100});
             };
             // redraw if needed to get proper proportions
             //if (!no_redraw) {
