@@ -726,10 +726,39 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         // color utilities
         target.color_string_to_array = function(color_string) {
+            color_string = color_string.trim();
+            if (color_string.startsWith("rgba")) {
+                // try to parse rgba(r,g,b,a)
+                try {
+                    var parenthesized = color_string.substring(4).trim();
+                    var last = parenthesized.length - 1;
+                    if ((parenthesized.substring(0,1)=="(") && (parenthesized.substring(last, last+1)==")")) {
+                        var comma_separated = parenthesized.substring(1,last);
+                        var number_strings = comma_separated.split(",");
+                        var numbers = number_strings.map(x => +x);
+                        var ok = (numbers.length==4);
+                        // for consistency scale alpha to 255
+                        numbers[3] = numbers[3] * 255;
+                        for (var i=0; i<4; i++) {
+                            if ((numbers[i]<0) || (numbers[i]>256)) {
+                                ok = false;
+                            }
+                        }
+                        if (ok) {
+                            return numbers;
+                        }
+                    }
+                } catch (err) {
+                    console.warn("error parsing rgba format " + color_string + " " + err);
+                }
+                console.warn("failed parsing rgba format " + color_string);
+            }
             var bbox = target.model_view_box();
             // draw a test rectangle of that color
             // XXX probably we need a much smaller rectangle, but KISS for now.
-            target.test_canvas.rect({
+            var test_canvas = target.test_canvas;
+            test_canvas.clear_canvas();
+            test_canvas.rect({
                 x: bbox.min_x, y: bbox.min_y,
                 h: bbox.max_x - bbox.min_x, w: bbox.max_y - bbox.min_y,
                 color: color_string
@@ -737,6 +766,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // find the color in the middle
             var p = target.pixel_offset(0.5 * (bbox.min_x + bbox.max_x), 0.5 * (bbox.max_y + bbox.min_y));
             var color_info = target.test_canvas.color_at(p.x, p.y);
+            // rgba as byte values
             return color_info.data;
         };
 
@@ -866,6 +896,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.color_interpolator = function(old_string, new_string) {
             //console.log("interpolating color from ", old_string, " to ", new_string)
             old_string = old_string || "black";
+            // byte values for color strings
             var old_array = target.color_string_to_array(old_string);
             var new_array = target.color_string_to_array(new_string);
             return function(lmd) {
@@ -880,10 +911,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     mixed.push((1 - lmd) * old_array[i] + lmd * new_array[i]);
                 }
                 // round to integers
+                //console.log("interpolating " + old_string + " " + old_array + " " + new_string + " " + new_array, " at " + lmd);
+                //console.log("mixed before " + mixed);
+                var alpha = mixed[3];
                 mixed = mixed.map(x => Math.round(x));
+                //console.log("mixed after " + mixed);
                 // last entry should be in [0..1]
-                mixed[3] = mixed[3]/255.0;
-                return "rgba(" + mixed.join(",") + ")";
+                mixed[3] = alpha/255.0;
+                var result =  "rgba(" + mixed.join(",") + ")";
+                //console.log("result=" + result);
+                return result;
             }
         }
 
