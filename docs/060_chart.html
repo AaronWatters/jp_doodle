@@ -69,13 +69,14 @@ from the underlying data.
 <script>
     var element = $('#target_div');
     //$('<img src="http://sipi.usc.edu/database/preview/misc/4.2.03.png">').appendTo(element);
-    var config = {
+    let config = {
             width: 600,
             height: 600,
         };
+        
 element.dual_canvas_helper(config);
 
-var axistip = $("<div>tooltip here</div>").appendTo(element);
+let axistip = $("<div>tooltip here</div>").appendTo(element);
 axistip.css({
     position: "absolute",
     width: "140px",
@@ -85,30 +86,33 @@ axistip.css({
     //opacity: 0
 })
 
-var draw_chart = function(data, mintemp, maxtemp, cities) {
-    var frame = element.frame_region(0, 0, 400, 200, 
+let draw_chart = function(data, mintemp, maxtemp, cities) {
+    let frame = element.frame_region(0, 0, 400, 200, 
             0, mintemp, data.length, maxtemp);
-    var lines = {};
-    var points = {};
-    for (var city in cities) {
+    let lines = {};
+    let points = {};
+    for (let city in cities) {
         lines[city] = [];
         points[city] = [];
     }
-    for (var i=0; i<data.length; i++) {
-        var datum = data[i];
-        var date = datum[1];
-        for (var city in cities) {
-            var info = cities[city]
-            var j = info[0];
-            var color = info[1];
-            var temperature = datum[j];
+    for (let i=0; i<data.length; i++) {
+        let datum = data[i];
+        let date = datum[1];
+        for (let city in cities) {
+            let info = cities[city]
+            let j = info[0];
+            let color = info[1];
+            let temperature = datum[j];
             lines[city].push([i, temperature]);
-            var pt = {name: "c:" + city+":"+date, city: city, x:i, y:temperature, r:2, color:color, date:date};
+            // big circles for testing...
+            let pt = {name: "c:" + city+":"+date, city: city, x:i, y:temperature, 
+                r:5, color:color, date:date,
+                original_r: 5, original_color:color};
             frame.circle(pt);
         }
     }
 
-    var dx = data.length * 0.02;
+    let dx = data.length * 0.02;
     frame.left_axis({
         min_value: mintemp,
         max_value: maxtemp,
@@ -116,11 +120,11 @@ var draw_chart = function(data, mintemp, maxtemp, cities) {
         axis_origin: {x: -2 * dx, y: 0},
     });
     
-    var date_ticks = [];
-    var date_skip = Math.max(1, Math.floor(data.length / 6));
-    for (var i=date_skip; i<data.length; i+=date_skip) {
-        var date = data[i][1];
-        var tick = {offset: i, text: "" + date};
+    let date_ticks = [];
+    let date_skip = Math.max(1, Math.floor(data.length / 6));
+    for (let i=date_skip; i<data.length; i+=date_skip) {
+        let date = data[i][1];
+        let tick = {offset: i, text: "" + date};
         date_ticks.push(tick);
     }
 
@@ -145,64 +149,68 @@ var draw_chart = function(data, mintemp, maxtemp, cities) {
     
     element.fit(null, 20)
    
-    var axis_pixel_origin = element.pixel_offset(0, 0);
+    let axis_pixel_origin = element.pixel_offset(0, 0);
     
-    var hide_trackers = function(event) {
+    let hide_trackers = function(event) {
         axistip.css({opacity: 0});
-        element.change_element("tracker_line", {hide: true});
+        element.transition("tracker_line", {y2: mintemp, y1:mintemp});
     };
     //element.on_canvas_event("mouseout", hide_trackers);
     
-    var revert_circle = null
+    let revert_circle = null
     
-    var track_mouse = function (event) {
-        debugger;
-        var element_offset = element.visible_canvas.offset();
-        var frame_location = frame.event_model_location(event);
-        var pixel_offset = frame.pixel_offset(frame_location.x, frame_location.y);
+    let track_mouse = function (event) {
+        let element_offset = element.offset();
+        let frame_location = frame.event_model_location(event);
+        let pixel_offset = frame.pixel_offset(frame_location.x, frame_location.y);
         //axistip.html("x:" + pixel_offset.x + "<br> y:" + pixel_offset.y);
-        var x = frame_location.x;
-        var ix = Math.round(x);
-        var y = frame_location.y;
+        let x = frame_location.x;
+        let ix = Math.round(x);
+        let y = frame_location.y;
         // revert previously focused circle if any
         if (revert_circle) {
             revert_circle();
             revert_circle = null;
         }
         if ((y >= mintemp) && (maxtemp >= y) && (ix >= 0) && (data.length > ix)) {
-            var datum = data[ix];
-            var date = datum[1];
-            var focus_city = null;
-            var name = event.canvas_name;
+            let datum = data[ix];
+            let date = datum[1];
+            let focus_city = null;
+            let name = event.canvas_name;
             if (name && (name.startsWith("c:"))) {
                 let info = $.extend({}, event.object_info);  // keep a fresh copy
                 focus_city = info.city;
                 let color = cities[focus_city][2];
                 element.change_element("tracker_line", {hide: true});
-                element.change_element(name, {color: color, r: 5});
+                element.transition(name, {color: color, r: 10});
                 revert_circle = function () {
-                    debugger;
-                    element.change_element(name, {color: info.color, r: info.r, fill: true});
+                    element.transition(name, {color: info.original_color, r: info.original_r, fill: true});
                 };
+                // debugging...
+                if (Math.abs(info.x - x) > 20) {
+                    console.log("wrong circle " + name);
+                    // debugger;
+                }
             }
             element.change_element("tracker_line", {hide: false, x1: x+dx, x2: x+dx})
+            element.transition("tracker_line", {y1: maxtemp, y2:mintemp});
             axislines = [];
-            for (var city in cities) {
+            for (let city in cities) {
                 let info = cities[city];
-                var j = info[0];
-                var color = info[2];
-                var temperature = datum[j];
-                var line = city + ":" + temperature;
+                let j = info[0];
+                let color = info[2];
+                let temperature = datum[j];
+                let line = city + ":" + temperature;
                 if (city == focus_city) {
                     line = "<b>" + line + "</b>"
                 } else {
                     line = "<font color='"+color+"'>"+line+"</font>";
-                    console.log(line)
+                    // console.log(line)
                 }
                 axislines.push(line);
             }
             axistip.html("<div>Date: " + date + "<br>" + axislines.join("<br>"))
-            console.log(axistip.html())
+            // console.log(axistip.html())
             axistip.offset({
                 left: pixel_offset.x + element_offset.left + 10,
                 //left: axis_pixel_origin.x + element_offset.left,
@@ -210,11 +218,13 @@ var draw_chart = function(data, mintemp, maxtemp, cities) {
             })
             axistip.css({opacity: 0.8});
         } else {
+            //console.log("hiding", x, y)
             hide_trackers();
         }
     };
     element.on_canvas_event("mousemove", track_mouse);
 };
+
 
 var data = [
  [0, '20111001', 63.4, 62.7, 72.2],
@@ -601,13 +611,14 @@ draw_chart(data, mintemp, maxtemp, cities);
     
         <div><textarea id="code" name="code">
 var element = $('#target_div');
-var config = {
+let config = {
             width: 600,
             height: 600,
         };
+        
 element.dual_canvas_helper(config);
 
-var axistip = $("<div>tooltip here</div>").appendTo(element);
+let axistip = $("<div>tooltip here</div>").appendTo(element);
 axistip.css({
     position: "absolute",
     width: "140px",
@@ -617,30 +628,33 @@ axistip.css({
     //opacity: 0
 })
 
-var draw_chart = function(data, mintemp, maxtemp, cities) {
-    var frame = element.frame_region(0, 0, 400, 200, 
+let draw_chart = function(data, mintemp, maxtemp, cities) {
+    let frame = element.frame_region(0, 0, 400, 200, 
             0, mintemp, data.length, maxtemp);
-    var lines = {};
-    var points = {};
-    for (var city in cities) {
+    let lines = {};
+    let points = {};
+    for (let city in cities) {
         lines[city] = [];
         points[city] = [];
     }
-    for (var i=0; i<data.length; i++) {
-        var datum = data[i];
-        var date = datum[1];
-        for (var city in cities) {
-            var info = cities[city]
-            var j = info[0];
-            var color = info[1];
-            var temperature = datum[j];
+    for (let i=0; i<data.length; i++) {
+        let datum = data[i];
+        let date = datum[1];
+        for (let city in cities) {
+            let info = cities[city]
+            let j = info[0];
+            let color = info[1];
+            let temperature = datum[j];
             lines[city].push([i, temperature]);
-            var pt = {name: "c:" + city+":"+date, city: city, x:i, y:temperature, r:2, color:color, date:date};
+            // big circles for testing...
+            let pt = {name: "c:" + city+":"+date, city: city, x:i, y:temperature, 
+                r:5, color:color, date:date,
+                original_r: 5, original_color:color};
             frame.circle(pt);
         }
     }
 
-    var dx = data.length * 0.02;
+    let dx = data.length * 0.02;
     frame.left_axis({
         min_value: mintemp,
         max_value: maxtemp,
@@ -648,11 +662,11 @@ var draw_chart = function(data, mintemp, maxtemp, cities) {
         axis_origin: {x: -2 * dx, y: 0},
     });
     
-    var date_ticks = [];
-    var date_skip = Math.max(1, Math.floor(data.length / 6));
-    for (var i=date_skip; i<data.length; i+=date_skip) {
-        var date = data[i][1];
-        var tick = {offset: i, text: "" + date};
+    let date_ticks = [];
+    let date_skip = Math.max(1, Math.floor(data.length / 6));
+    for (let i=date_skip; i<data.length; i+=date_skip) {
+        let date = data[i][1];
+        let tick = {offset: i, text: "" + date};
         date_ticks.push(tick);
     }
 
@@ -677,64 +691,68 @@ var draw_chart = function(data, mintemp, maxtemp, cities) {
     
     element.fit(null, 20)
    
-    var axis_pixel_origin = element.pixel_offset(0, 0);
+    let axis_pixel_origin = element.pixel_offset(0, 0);
     
-    var hide_trackers = function(event) {
+    let hide_trackers = function(event) {
         axistip.css({opacity: 0});
-        element.change_element("tracker_line", {hide: true});
+        element.transition("tracker_line", {y2: mintemp, y1:mintemp});
     };
     //element.on_canvas_event("mouseout", hide_trackers);
     
-    var revert_circle = null
+    let revert_circle = null
     
-    var track_mouse = function (event) {
-        debugger;
-        var element_offset = element.visible_canvas.offset();
-        var frame_location = frame.event_model_location(event);
-        var pixel_offset = frame.pixel_offset(frame_location.x, frame_location.y);
+    let track_mouse = function (event) {
+        let element_offset = element.offset();
+        let frame_location = frame.event_model_location(event);
+        let pixel_offset = frame.pixel_offset(frame_location.x, frame_location.y);
         //axistip.html("x:" + pixel_offset.x + "<br> y:" + pixel_offset.y);
-        var x = frame_location.x;
-        var ix = Math.round(x);
-        var y = frame_location.y;
+        let x = frame_location.x;
+        let ix = Math.round(x);
+        let y = frame_location.y;
         // revert previously focused circle if any
         if (revert_circle) {
             revert_circle();
             revert_circle = null;
         }
         if ((y >= mintemp) && (maxtemp >= y) && (ix >= 0) && (data.length > ix)) {
-            var datum = data[ix];
-            var date = datum[1];
-            var focus_city = null;
-            var name = event.canvas_name;
+            let datum = data[ix];
+            let date = datum[1];
+            let focus_city = null;
+            let name = event.canvas_name;
             if (name && (name.startsWith("c:"))) {
                 let info = $.extend({}, event.object_info);  // keep a fresh copy
                 focus_city = info.city;
                 let color = cities[focus_city][2];
                 element.change_element("tracker_line", {hide: true});
-                element.change_element(name, {color: color, r: 5});
+                element.transition(name, {color: color, r: 10});
                 revert_circle = function () {
-                    debugger;
-                    element.change_element(name, {color: info.color, r: info.r, fill: true});
+                    element.transition(name, {color: info.original_color, r: info.original_r, fill: true});
                 };
+                // debugging...
+                if (Math.abs(info.x - x) > 20) {
+                    console.log("wrong circle " + name);
+                    // debugger;
+                }
             }
             element.change_element("tracker_line", {hide: false, x1: x+dx, x2: x+dx})
+            element.transition("tracker_line", {y1: maxtemp, y2:mintemp});
             axislines = [];
-            for (var city in cities) {
+            for (let city in cities) {
                 let info = cities[city];
-                var j = info[0];
-                var color = info[2];
-                var temperature = datum[j];
-                var line = city + ":" + temperature;
+                let j = info[0];
+                let color = info[2];
+                let temperature = datum[j];
+                let line = city + ":" + temperature;
                 if (city == focus_city) {
                     line = "<b>" + line + "</b>"
                 } else {
                     line = "<font color='"+color+"'>"+line+"</font>";
-                    console.log(line)
+                    // console.log(line)
                 }
                 axislines.push(line);
             }
             axistip.html("<div>Date: " + date + "<br>" + axislines.join("<br>"))
-            console.log(axistip.html())
+            // console.log(axistip.html())
             axistip.offset({
                 left: pixel_offset.x + element_offset.left + 10,
                 //left: axis_pixel_origin.x + element_offset.left,
@@ -742,11 +760,13 @@ var draw_chart = function(data, mintemp, maxtemp, cities) {
             })
             axistip.css({opacity: 0.8});
         } else {
+            //console.log("hiding", x, y)
             hide_trackers();
         }
     };
     element.on_canvas_event("mousemove", track_mouse);
 };
+
 
 var data = [
  [0, '20111001', 63.4, 62.7, 72.2],

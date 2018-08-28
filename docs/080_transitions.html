@@ -113,7 +113,7 @@ var do_transition = function (event) {
     if ((name) && (name != selected_name)) {
         // transition the visible object under the event
         element.transition("circle" + name, {color:selected_color, r:big_radius, x:0, y:0}, duration);
-        element.transition("text" + name, {color:selected_text, x:0, y:0}, text_duration);
+        element.transition("text" + name, {color:selected_text, x:0, y:0, degrees:720}, text_duration);
         // undo transition for previous object
         if (selected_name) {
             element.transition(
@@ -122,7 +122,7 @@ var do_transition = function (event) {
                 duration);
             element.transition(
                 "text" + selected_name,
-                {color:normal_text, x:selected_position[0], y:selected_position[1]},
+                {color:normal_text, x:selected_position[0], y:selected_position[1], degrees:0},
                 text_duration);
         }
     }
@@ -188,7 +188,7 @@ var do_transition = function (event) {
     if ((name) && (name != selected_name)) {
         // transition the visible object under the event
         element.transition("circle" + name, {color:selected_color, r:big_radius, x:0, y:0}, duration);
-        element.transition("text" + name, {color:selected_text, x:0, y:0}, text_duration);
+        element.transition("text" + name, {color:selected_text, x:0, y:0, degrees:720}, text_duration);
         // undo transition for previous object
         if (selected_name) {
             element.transition(
@@ -197,7 +197,7 @@ var do_transition = function (event) {
                 duration);
             element.transition(
                 "text" + selected_name,
-                {color:normal_text, x:selected_position[0], y:selected_position[1]},
+                {color:normal_text, x:selected_position[0], y:selected_position[1], degrees:0},
                 text_duration);
         }
     }
