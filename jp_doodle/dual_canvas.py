@@ -4,7 +4,11 @@ Python convenience wrapper for creating dual canvases within proxy widgets.
 
 import jp_proxy_widget
 from jp_doodle import doodle_files
-from IPython.display import HTML, display
+from IPython.display import HTML, display, Image
+import os
+import shutil
+import time
+import ipywidgets as widgets
 
 required_javascript_modules = [
     doodle_files.vendor_path("js/canvas_2d_widget_helper.js"),
@@ -241,10 +245,12 @@ class DualCanvasWidget(jp_proxy_widget.JSProxyWidget, CanvasOperationsMixin):
             callback(pixels);
         """, callback=converter_callback, x=x, y=y, w=w, h=h)
 
-    def save_pixels_to_png_async(self, file_path, x=None, y=None, w=None, h=None):
+    def save_pixels_to_png_async(self, file_path, x=None, y=None, w=None, h=None, after=None):
         import scipy.misc as sm
         def save_callback(image_array):
             sm.imsave(file_path, image_array)
+            if after:
+                after()
         self.pixels_array_async(save_callback, x, y, w, h)
 
 class FrameInterface(CanvasOperationsMixin):
@@ -255,4 +261,106 @@ class FrameInterface(CanvasOperationsMixin):
         self.from_widget = from_widget
         self.attribute_name = attribute_name
         self.element = self.from_widget.element[self.attribute_name]
+
+
+class SnapshotCanvas(DualCanvasWidget):
+
+    "Canvas with support for making an image snapshot saved to a file and displayed in notebook."
+
+    snapshot_counter = 0
+    snapshot_widget = None
+
+    def __init__(self, filename, width=None, height=None, config=None, *pargs, **kwargs):
+        super(SnapshotCanvas, self).__init__(width, height, config, *pargs, **kwargs)
+        self.snapshot_filename = filename
+        self.check_file()
+        self.snapshot_id = self.fresh_id()
+        self.snapshot_text_id = self.fresh_id()
+        self.snapshot_widget = self._make_snapshot_widget()
+        self.tabs = None
+
+    def snapshot_tabs(self, widget_title="Canvas", button_text="Take Snapshot", snapshotTitle="Snapshot"):
+        "Display self and a snapshot button together with snapshot image after."
+        if self.tabs is not None:
+            raise ValueError, "cannot display_all more than once."
+        button = self.snapshot_button(button_text)
+        assembly = widgets.VBox(children=[self, button])
+        #display(assembly)
+        #display(self.snapshot_widget)
+        self.tabs = widgets.Tab(children=[assembly, self.snapshot_widget])
+        self.tabs.set_title(0, widget_title)
+        self.tabs.set_title(1, snapshotTitle)
+        self.tabs.selected_index = 0
+        return self.tabs
+
+    def set_snapshot_text(self, text):
+        self.js_init("""
+        $("#"+text_id).html("<div>" + text + "</div>");
+        """, text=text, text_id=self.snapshot_text_id)
+
+    def display_all(self, widget_title="Canvas", button_text="Take Snapshot", snapshotTitle="Snapshot"):
+        tabs = self.snapshot_tabs(widget_title, button_text, snapshotTitle)
+        display(tabs)
+
+    def check_file(self):
+        "If snapshot doesn't exist save a placeholder image initially."
+        filename = self.snapshot_filename
+        if not os.path.isfile(filename):
+            placeholder_source = doodle_files.vendor_path("js/NoSnapshot.png")
+            shutil.copyfile(placeholder_source, filename)
+
+    def _make_snapshot_widget(self):
+        if self.snapshot_widget is not None:
+            raise ValueError, "do not make more than one snapshot widget per canvas."
+        html_text = '<img src="%s" id="%s"/>' % (self.snapshot_filename, self.snapshot_id)
+        html_text += '\n <div id="%s">%s</div>' % (self.snapshot_text_id, self.snapshot_filename)
+        snapshot_widget = widgets.HTML(value=html_text)
+        #snapshot_widget = widgets.Accordion(children=[html_widget])
+        #snapshot_widget.set_title(0, title)
+        #snapshot_widget.selected_index = None  # hide initially when widget is active
+        self.snapshot_widget = snapshot_widget
+        self.set_snapshot_text("No snapshot yet taken this session.")
+        return snapshot_widget
+
+    def snapshot_button(self, text=None):
+        fn = self.snapshot_filename
+        if text is None:
+            text = "snapshot to " + repr(fn)
+        result = jp_proxy_widget.JSProxyWidget()
+        result.js_init("""
+        element.empty();
+        var button = $("<button>" + text + "</button>").appendTo(element);
+        element.click(snapshot_callback)
+        """, text=text, snapshot_callback=self.snapshot_callback)
+        return result
+
+    def snapshot_callback(self, *ignored_arguments):
+        filename = self.snapshot_filename
+        try:
+            self.save_pixels_to_png_async(filename, after=self.after_save)
+        except Exception as e:
+            self.element["print"]("Snapshot exception: " + repr(e))
+        else:
+            self.element["print"]("New snapshot: " + repr(filename))
+
+    def after_save(self, *ignored_arguments):
+        """change the snapshot image src to force a reload"""
+        nonce = self.fresh_id()
+        identity = self.snapshot_id
+        filename = self.snapshot_filename
+        self.js_init("""
+        debugger;
+        var img = $("#" + identity);
+        var src = img.attr("src");
+        img.attr("src", src + "?nonce=" + nonce);
+        // element.print("saved " + img.attr("src") + " please save widget state.");
+        """, identity=identity, nonce=nonce, filename=filename)
+        #self.snapshot_widget.selected_index = 0
+        self.set_snapshot_text(filename + " saved.  Save widget state to keep in notebook.")
+        self.tabs.selected_index = 1
+
+    def fresh_id(self):
+        SnapshotCanvas.snapshot_counter += 1
+        ms = int(time.time() * 1000)
+        return "snapshot_id_%s_%s" % (SnapshotCanvas.snapshot_counter, ms)
 
