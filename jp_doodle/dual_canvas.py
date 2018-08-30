@@ -282,7 +282,7 @@ class SnapshotCanvas(DualCanvasWidget):
     def snapshot_tabs(self, widget_title="Canvas", button_text="Take Snapshot", snapshotTitle="Snapshot"):
         "Display self and a snapshot button together with snapshot image after."
         if self.tabs is not None:
-            raise ValueError, "cannot display_all more than once."
+            raise ValueError("cannot display_all more than once.")
         button = self.snapshot_button(button_text)
         assembly = widgets.VBox(children=[self, button])
         #display(assembly)
@@ -311,7 +311,7 @@ class SnapshotCanvas(DualCanvasWidget):
 
     def _make_snapshot_widget(self):
         if self.snapshot_widget is not None:
-            raise ValueError, "do not make more than one snapshot widget per canvas."
+            raise ValueError("do not make more than one snapshot widget per canvas.")
         html_text = '<img src="%s" id="%s"/>' % (self.snapshot_filename, self.snapshot_id)
         html_text += '\n <div id="%s">%s</div>' % (self.snapshot_text_id, self.snapshot_filename)
         snapshot_widget = widgets.HTML(value=html_text)
