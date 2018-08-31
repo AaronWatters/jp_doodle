@@ -349,7 +349,6 @@ class SnapshotCanvas(DualCanvasWidget):
         identity = self.snapshot_id
         filename = self.snapshot_filename
         self.js_init("""
-        debugger;
         var img = $("#" + identity);
         var src = img.attr("src");
         img.attr("src", src + "?nonce=" + nonce);

@@ -760,7 +760,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             test_canvas.clear_canvas();
             test_canvas.rect({
                 x: bbox.min_x, y: bbox.min_y,
-                h: bbox.max_x - bbox.min_x, w: bbox.max_y - bbox.min_y,
+                w: bbox.max_x - bbox.min_x, h: bbox.max_y - bbox.min_y,
                 color: color_string
             });
             // find the color in the middle

@@ -194,11 +194,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var s = $.extend({
                 font: target.canvas_font,
                 color: target.canvas_fillColor,
+                background: null,   // background color if provided.
                 coordinate_conversion: no_change_conversion,
                 frame: target,
             }, opt);
             var text = "" + s.text;  // coerce to string
-            target.translate_and_rotate(s.x, s.y, s.degrees, s.coordinate_conversion);
+            //target.translate_and_rotate(s.x, s.y, s.degrees, s.coordinate_conversion);
             var context = target.canvas_context;
             // XXX maybe configure font using atts/style?
             context.font = s.font;
@@ -216,24 +217,32 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // XXXX this is wrong -- only half the text will respond to events.  Needs rework.
                 //rwidth = - width * 0.5;
             }
-            var height = width * 1.4 / text.length;  // fudge...
+            var height = width * 1.8 / text.length;  // fudge...
             if (!target.canvas_y_up) {
                 // text draws in negative y
                 height = - height;
+                dy = -dy;
             }
             if ((s.valign) && (s.valign == "center")) {
-                dy = -0.5 * height;
+                dy = -0.5 * height + dy;
             }
-            var rdy = dy;
-            // draw the text
-            if (target.canvas_y_up) {
-                dy = - dy;
-            }
-            context.fillText(text, dx, dy); // translated to (x,y)
+            var rdy = dy - height * 0.2;
             // use a rectangle for masking operations
             s.draw_mask = function (to_canvas, info) {
                 to_canvas.rect({x: info.x, y: info.y, w:rwidth, h:height, degrees:info.degrees, color:info.color, dx:dx, dy:rdy});
             };
+            // If background is provided, draw a background rectangle
+            if (s.background) {
+                background_info = $.extend({}, s)
+                background_info.color = s.background;
+                s.draw_mask(target, background_info);
+            }
+            // draw the text
+            if (target.canvas_y_up) {
+                dy = - dy;
+            }
+            target.translate_and_rotate(s.x, s.y, s.degrees, s.coordinate_conversion);
+            context.fillText(text, dx, dy); // translated to (x,y)
             // update stats
             if (target.canvas_stats) {
                 target.rectangle_stats(s.x, s.y, rwidth, height, s.degrees, s.coordinate_conversion, dx, rdy);

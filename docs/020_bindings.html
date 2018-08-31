@@ -99,9 +99,9 @@ element.text({
     font: "20px Arial", x: 20, y:50, degrees: 5, color:"green"
 });
 var redden = function(event) {
-    element.change_element("redden", {color: "red"});
+    element.transition("redden", {color: "red"});
     // change it back 5 seconds later
-    setTimeout(function () { element.change_element("redden", {color: "green"}); }, 5000)
+    setTimeout(function () { element.transition("redden", {color: "green"}); }, 5000)
 };
 //element.on_canvas_event("click", redden, "redden");
 
@@ -121,9 +121,9 @@ element.text({
     font: "20px Arial", x: 20, y:120, degrees: 5, color:"magenta"
 });
 var rotate = function(event) {
-    element.change_element("rotate", {degrees: -15});
+    element.transition("rotate", {degrees: -15});
     // change it back 5 seconds later
-    setTimeout(function () { element.change_element("rotate", {degrees: 5}); }, 5000)
+    setTimeout(function () { element.transition("rotate", {degrees: 5}); }, 5000)
 };
 //element.on_canvas_event("click", rotate, "rotate");
 
@@ -214,9 +214,9 @@ element.text({
     font: "20px Arial", x: 20, y:50, degrees: 5, color:"green"
 });
 var redden = function(event) {
-    element.change_element("redden", {color: "red"});
+    element.transition("redden", {color: "red"});
     // change it back 5 seconds later
-    setTimeout(function () { element.change_element("redden", {color: "green"}); }, 5000)
+    setTimeout(function () { element.transition("redden", {color: "green"}); }, 5000)
 };
 //element.on_canvas_event("click", redden, "redden");
 
@@ -236,9 +236,9 @@ element.text({
     font: "20px Arial", x: 20, y:120, degrees: 5, color:"magenta"
 });
 var rotate = function(event) {
-    element.change_element("rotate", {degrees: -15});
+    element.transition("rotate", {degrees: -15});
     // change it back 5 seconds later
-    setTimeout(function () { element.change_element("rotate", {degrees: 5}); }, 5000)
+    setTimeout(function () { element.transition("rotate", {degrees: 5}); }, 5000)
 };
 //element.on_canvas_event("click", rotate, "rotate");
 
