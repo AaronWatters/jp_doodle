@@ -3,7 +3,9 @@
 
 # jp_doodle
 
-Tools for drawing 2d and 3d interactive visualizations using Jupyter proxy widgets.
+The `jp_doodle` package provides `jQuery` plugins which make it easy to build
+interactive visualizations in Javascript.  The package also provides Jupyter widget
+interfaces to make it easy to build visualizations for Jupyter notebooks.
 
 DEMOS_HERE
 
