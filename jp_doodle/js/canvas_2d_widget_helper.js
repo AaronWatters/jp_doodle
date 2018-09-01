@@ -543,6 +543,28 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
     $.fn.canvas_2d_widget_helper.add_vector_ops = function(target) {
 
+        target.vdirection_radians = function(vector) {
+            var length = target.vlength(vector);
+            var cosine = 0;
+            if (length > 1e-16) {
+                var cosine = vector.x / length;
+            }
+            var arccos = Math.acos(cosine);
+            if (vector.y > 0) {
+                return arccos;
+            } else {
+                return -arccos;
+            }
+        };
+
+        target.vdirection_degrees = function(vector) {
+            return target.radians_to_degrees(target.vdirection_radians(vector));
+        }
+
+        target.radians_to_degrees = function(radians) {
+            return 180.0 * radians / Math.PI;
+        }
+
         // generally useful vector calculations (xxxx here?)
         target.vscale = function(scalar, vector) {
             var result = {};
