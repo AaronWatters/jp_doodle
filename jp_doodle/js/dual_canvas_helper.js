@@ -9,10 +9,9 @@ Uses canvas_2d_widget_helper
 
 Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
-*/
+XXXXX target.shaded_objects -- need to test for false hits!
 
-// xxxx add image primatives,
-// eg https://stackoverflow.com/questions/21300921/how-to-convert-byte-array-to-image-in-javascript/21301006#21301006
+*/
 
 (function($) {
 
@@ -36,6 +35,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.disable_element_events = false;
 
         target.reset_canvas = function (keep_stats) {
+            // Reinitialize the canvas -- hard reboot
             if (target.canvas_container) {
                 target.canvas_container.empty();
             } else {
@@ -56,13 +56,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.visible_canvas.canvas_2d_widget_helper(settings_overrides);
             target.invisible_canvas.canvas_2d_widget_helper(settings_overrides);
             target.test_canvas.canvas_2d_widget_helper(settings_overrides);
+
             target.clear_canvas(keep_stats);
         }
 
         target.clear_canvas = function (keep_stats) {
+            // Remove all visible objects from the canvas
             if (keep_stats) {
                 target.visible_canvas.canvas_stats = {};
             }
+            // mark any connected objects as detached from parent.
+            // and also recursively detach connected frame contents.
+            target.detach_objects();
             // object list for redraws
             target.object_list = [];
             // lookup structures for named objects
@@ -161,27 +166,43 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.do_transitions();
             target.visible_canvas.clear_canvas();
             target.invisible_canvas.clear_canvas();
+            target.object_list = target.objects_drawn(target.object_list);
+        };
+
+        target.objects_drawn = function (object_list) {
             // Don't draw anything on the test canvas now.
             var drawn_objects = [];
-            var object_list = target.object_list;
             var name_to_object_info = target.name_to_object_info;
             for (var i=0; i<object_list.length; i++) {
                 var object_info = object_list[i];
                 if (object_info) {
-                    // only draw objects with no name or with known names
-                    var name = object_info.name;
-                    if ((!name) || (name_to_object_info[name])) {
-                        // draw and save
-                        target.draw_object_info(object_info);
-                        var object_index = drawn_objects.length;
+                    var object_index = drawn_objects.length;
+                    if (object_info.is_frame) {
+                        frame.redraw_frame();
+                        if (frame.is_empty()) {
+                            // forget empty frames
+                            object_index = null;
+                        }
+                    } else {
+                        // only draw objects with no name or with known names
+                        var name = object_info.name;
+                        if ((!name) || (name_to_object_info[name])) {
+                            // draw and save
+                            target.draw_object_info(object_info);
+                        } else {
+                            // forget it
+                            object_index = null;
+                        }
+                    }
+                    if (object_index != null) {
                         object_info.index = object_index;
                         drawn_objects[object_index] = object_info;
                     }
                 }
             }
             // keep only the drawn objects
-            target.object_list = drawn_objects;
-        }
+            return drawn_objects;
+        };
 
         target.redraw_pending = false;
 
@@ -191,16 +212,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 requestAnimationFrame(target.redraw);
                 target.redraw_pending = true;
             }
-        }
+        };
 
         target.store_object_info = function(info, draw_on_canvas) {
             var name = info.name;
-            var object_list = target.object_list;
+            var store_target = info.frame || target;
+            var object_list = store_target.object_list;
             var object_index = object_list.length;
             var object_info = $.extend({
                 draw_on_canvas: draw_on_canvas,
             }, info);
             if (name) {
+                // Set up color indexing
                 var pseudocolor_array = null;
                 var old_object_info = target.name_to_object_info[name];
                 if (old_object_info) {
@@ -246,7 +269,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     var index = object_info.index;
                     var pseudocolor_array = object_info.pseudocolor_array;
                     var color_index = target.color_array_to_index(pseudocolor_array);
-                    target.object_list[index] = null;
+                    var owner = object_info.frame || target;
+                    owner.object_list[index] = null;
                     delete target.name_to_object_info[name];
                     delete target.color_index_to_name[color_index];
                     target.request_redraw();
@@ -292,8 +316,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             info2.color = object_info.pseudocolor;
             draw_fn(invisible_canvas, info2);
         };
-
-        //target.reset_canvas();
 
         target.garish_pseudocolor_array = function(integer) {
             // Try to choose sequence of colors not likely to interpolate into eachother.
@@ -925,13 +947,37 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         }
 
         target.canvas_2d_widget_helper.add_vector_ops(target);
-        target.dual_canvas_helper.add_axis_logic(target);
+        target.dual_canvas_helper.add_geometry_logic(target);
         target.reset_canvas();
 
         return target;
     };
 
-    $.fn.dual_canvas_helper.add_axis_logic = function (target) {
+    $.fn.dual_canvas_helper.add_geometry_logic = function (target) {
+        // shared functionality for frames and dual canvases
+
+        target.has_object = function(object_info) {
+            var index = object_info.index;
+            if ((typeof index) == "number") {
+                if (target.object_list[index] === object_info) {
+                    return true;
+                }
+            }
+            return false;   // default
+        };
+
+        target.detach_objects = function (target) {
+            var object_list = target.object_list;
+            if (object_list) {
+                for (var i=0; i<object_list.length; i++) {
+                    var object_info = object_list[i];
+                    object_info.index = null;
+                    if (object_info.is_frame) {
+                        object_info.detach_objects();
+                    }
+                }
+            }
+        };
 
         target.right_axis = function(config) {
             return target.bottom_axis(config, {x: 1, y: 0}, {x: 0, y: 1}, 0, "y")
@@ -1260,7 +1306,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         parent_canvas, 
         x_vector, 
         y_vector, 
-        xy_offset) 
+        xy_offset,
+        name) 
     {
         // View into canvas with shifted and scaled positions.
         // Do not adjust rectangle w/h or orientation, text parameters, or circle radius.
@@ -1278,7 +1325,28 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             x_vector: x_vector,
             y_vector: y_vector,
             xy_offset: xy_offset,
+            name: name,
+            is_frame: true
         }, parent_canvas);
+
+        frame.reset_frame = function () {
+            frame.detach_objects();
+            frame.object_list = [];
+        };
+
+        frame.redraw_frame = function () {
+            frame.object_list = frame.objects_drawn(frame.object_list);
+        };
+
+        frame.is_empty = function () {
+            return (frame.object_list.length == 0);
+        };
+
+        frame.check_registration = function () {
+            if (!frame.parent_canvas.has_object(frame)) {
+                frame.parent_canvas.store_object_info(frame, null)
+            }
+        };
 
         frame.converted_location = function (x, y) {
             // Convert shared "model" location to "frame" location.
@@ -1327,6 +1395,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // replace the shape factory:
             // override the location conversion parameter
             frame[shape_name] = function(opt, wait) {
+                // Make sure the frame exists in parent.
+                frame.check_registration();
                 var s = $.extend({
                     coordinate_conversion: frame.converted_location,
                     frame: frame,
@@ -1342,8 +1412,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         override_positions("polygon");
 
         // define axes w.r.t the frame
-        parent_canvas.dual_canvas_helper.add_axis_logic(frame);
+        parent_canvas.dual_canvas_helper.add_geometry_logic(frame);
 
+        frame.reset_frame();
         return frame;
     }
 
