@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Spiders -- jp_doodle demo</title>
+    <link rel="icon" type="image/png" href="images/clock.png">
+    <link rel=stylesheet href="static/style.css">
+
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="codemirrorjs/codemirror.css">
+    <script src="codemirrorjs/codemirror.js"></script>
+    <script src="codemirrorjs/matchbrackets.js"></script>
+    <script src="codemirrorjs/continuecomment.js"></script>
+    <script src="codemirrorjs/comment.js"></script>
+    <script src="codemirrorjs/javascript.js"></script>
+    <style type="text/css">.CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black;}</style>
+    <script src="jp_doodle_js/canvas_2d_widget_helper.js"></script>
+    <script src="jp_doodle_js/dual_canvas_helper.js"></script>
+    <script src="jp_doodle_js/rectangle_collection.js"></script>
+
+    <script>
+        $( function() {
+          $( "#discussion" ).accordion({collapsible : true, active : 'none'});
+          $( "#code_text" ).accordion({collapsible : true, active : 'none'});
+        } );
+    </script>
+</head>
+
+<body>
+<div class="top_menu">
+<ul>
+<li><a href="index.html">Drawing <br><img src="images/drawing.png" width="50px"></a></li>
+<li><a href="010_events.html">Events <br><img src="images/events.png" width="50px"></a></li>
+<li><a href="020_bindings.html">Bindings <br><img src="images/bindings.png" width="50px"></a></li>
+<li><a href="030_animation.html">Animation <br><img src="images/clock.png" width="50px"></a></li>
+<li><a href="040_lasso.html">Lasso <br><img src="images/lasso.png" width="50px"></a></li>
+<li><a href="050_rectangles.html">Rectangles <br><img src="images/rectangle.png" width="50px"></a></li>
+<li><a href="060_chart.html">Chart <br><img src="images/chart.png" width="50px"></a></li>
+<li><a href="070_images.html">image <br><img src="images/Images.png" width="50px"></a></li>
+<li><a href="080_transitions.html">Transitions <br><img src="images/Transitions.png" width="50px"></a></li>
+<li><a href="spiders.html">Spiders <br><img src="images/spider_transparent_background.png" width="50px"></a></li>
+</ul>
+</div>
+
+<p><em>
+    These are example pages for the 
+    <a href="https://github.com/AaronWatters/jp_doodle">jp_doodle</a>
+    package. <br>
+    Please see the Jupyter notebooks in the package for additional
+    discussion and documentation. <br>
+    Please use 
+    <a href="https://mybinder.org/v2/gh/AaronWatters/jp_doodle/master">Binder</a>
+    to easily run the Jupyter notebooks of the package.
+</em></p>
+
+<h1>Spiders</h1>
+<div>
+    Seven spiders attack Tulsa:
+a demonstration that illustrates image transparency, rotation, and animation.
+</div>
+
+<div id="target_container">
+    <div id="target_div"/>
+</div>
+
+<script>
+    var element = $('#target_div');
+    //$('<img src="http://sipi.usc.edu/database/preview/misc/4.2.03.png">').appendTo(element);
+    // Attach a dual canvas associated with the element as a child of the element
+// configured with width 400 and height 200.
+var config = {
+            width: 700,
+            height: 350,
+        };
+element.dual_canvas_helper(config);
+
+// This local image reference works in "classic" notebook, but not in Jupyter Lab.
+var tulsa_url = "./images/tulsa2012.jpg?dummy=1"
+element.name_image_url("tulsa", tulsa_url);
+var spider_url = "./images/spider_transparent_background.png?dummy=4"
+element.name_image_url("spider", spider_url);
+
+var w = 700;
+var h = 350;
+var mixer = 0.9;
+duration = 5;
+nspiders = 7;
+
+element.named_image({
+    image_name: "tulsa", x:0, y:0, w:w, h:h,
+    });
+
+var spiders = [];
+var random_location = function(old_location) {
+    old_location = old_location || {x: Math.random() * w, y: Math.random() * h};
+    var perturbation = {x: Math.random() * w, y: Math.random() * h};
+    return element.vadd(
+        element.vscale(1 - mixer, old_location), 
+        element.vscale(mixer, perturbation));
+};
+var target_angle = function(position, target) {
+    var direction = element.vadd(
+        target,
+        element.vscale(-1, position)
+    );
+    return element.vdirection_degrees(direction);
+};
+
+for (var i=0; i<nspiders; i++) {
+    var target = random_location();
+    var position = random_location();
+    var degrees = target_angle(position, target);
+    var info = {name: "spider"+i, target: target, position:position};
+    spiders.push(info);
+    element.named_image({
+        name: info.name, image_name: "spider", x: position.x, y: position.y, w:100, h:100,
+        dx:-50, dy:-50, degrees:degrees
+        });
+    element.transition(info.name, {x: target.x, y: target.y}, duration); 
+}
+element.fit();
+//element.lower_left_axes();
+//element.fit();
+
+var animate = function () {
+    var milliseconds = (new Date()).getTime();
+    // adjust the spider parameters
+    for (var i=0; i<nspiders; i++) {
+        var info = spiders[i];
+        var canvas_parameters = element.name_to_object_info[info.name];
+        var current_position = {x: canvas_parameters.x, y: canvas_parameters.y};
+        var target = random_location(info.target);
+        var degrees = target_angle(current_position, target);
+        element.transition(info.name, {x: target.x, y: target.y, degrees: degrees}, duration)
+    }
+    // Repeat the animation again later.
+    setTimeout(animate, duration*1000);
+};
+animate();
+</script>
+
+<div id="code_text">
+        <h3>Code</h3>
+    
+        <div><textarea id="code" name="code">
+var element = $('#target_div');
+// Attach a dual canvas associated with the element as a child of the element
+// configured with width 400 and height 200.
+var config = {
+            width: 700,
+            height: 350,
+        };
+element.dual_canvas_helper(config);
+
+// This local image reference works in "classic" notebook, but not in Jupyter Lab.
+var tulsa_url = "./images/tulsa2012.jpg?dummy=1"
+element.name_image_url("tulsa", tulsa_url);
+var spider_url = "./images/spider_transparent_background.png?dummy=4"
+element.name_image_url("spider", spider_url);
+
+var w = 700;
+var h = 350;
+var mixer = 0.9;
+duration = 5;
+nspiders = 7;
+
+element.named_image({
+    image_name: "tulsa", x:0, y:0, w:w, h:h,
+    });
+
+var spiders = [];
+var random_location = function(old_location) {
+    old_location = old_location || {x: Math.random() * w, y: Math.random() * h};
+    var perturbation = {x: Math.random() * w, y: Math.random() * h};
+    return element.vadd(
+        element.vscale(1 - mixer, old_location), 
+        element.vscale(mixer, perturbation));
+};
+var target_angle = function(position, target) {
+    var direction = element.vadd(
+        target,
+        element.vscale(-1, position)
+    );
+    return element.vdirection_degrees(direction);
+};
+
+for (var i=0; i<nspiders; i++) {
+    var target = random_location();
+    var position = random_location();
+    var degrees = target_angle(position, target);
+    var info = {name: "spider"+i, target: target, position:position};
+    spiders.push(info);
+    element.named_image({
+        name: info.name, image_name: "spider", x: position.x, y: position.y, w:100, h:100,
+        dx:-50, dy:-50, degrees:degrees
+        });
+    element.transition(info.name, {x: target.x, y: target.y}, duration); 
+}
+element.fit();
+//element.lower_left_axes();
+//element.fit();
+
+var animate = function () {
+    var milliseconds = (new Date()).getTime();
+    // adjust the spider parameters
+    for (var i=0; i<nspiders; i++) {
+        var info = spiders[i];
+        var canvas_parameters = element.name_to_object_info[info.name];
+        var current_position = {x: canvas_parameters.x, y: canvas_parameters.y};
+        var target = random_location(info.target);
+        var degrees = target_angle(current_position, target);
+        element.transition(info.name, {x: target.x, y: target.y, degrees: degrees}, duration)
+    }
+    // Repeat the animation again later.
+    setTimeout(animate, duration*1000);
+};
+animate();
+        </textarea></div>
+    
+    </div>
+
+<div id="discussion">
+        <h3>Discussion</h3>
+    
+        <div>
+            This demonstration moves and rotates several copies of this image of a spider with a transparent background:
+<br>
+<img src="./images/spider_transparent_background.png?dummy=4" width="300"/>
+<br>
+over this aerial view of the city of Tulsa
+<br>
+<img src="./images/tulsa2012.jpg?dummy=1" width="300"/>
+<br>
+Please see the repository notebook 
+<a href="https://github.com/AaronWatters/jp_doodle/blob/master/notebooks/misc/Spiders%20attack%20Tulsa.ipynb">
+<code>/notebooks/misc/Spiders attack Tulsa.ipynb</code>
+</a>
+        </div>
+    
+    </div>
+    
+    <script>
+            var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+              lineNumbers: true,
+              matchBrackets: true,
+              continueComments: "Enter",
+              extraKeys: {"Ctrl-Q": "toggleComment"}
+            });
+     </script>
+            
+</body>
+</html>

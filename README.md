@@ -224,7 +224,7 @@ which interpolate between one group of attribute values and another smoothly ove
 <tr>
     <td>
         <a href="https://aaronwatters.github.io/jp_doodle/spiders.html">
-        <img width="200px" src="docs/./images/spider_transparent_background.png">
+        <img width="200px" src="docs/images/spider_transparent_background.png">
         </a>
     </td>
     <td>
