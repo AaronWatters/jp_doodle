@@ -14,7 +14,7 @@ setup(
     author="Aaron Watters",
     author_email="awatters@flatironinstitute.org",
     url=url,
-    install_requires=["jp_proxy_widget", "requests"],
+    install_requires=["jp_proxy_widget", "requests", "matplotlib", "numpy", "scipy"],
     download_url="{}/tarball/{}".format(url, version),
     license="MIT"
 )
