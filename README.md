@@ -9,7 +9,9 @@ Instead, edit the template and rebuild to docs.
 
 # jp_doodle
 
-Tools for drawing 2d and 3d interactive visualizations using Jupyter proxy widgets.
+The `jp_doodle` package provides `jQuery` plugins which make it easy to build
+interactive visualizations in Javascript.  The package also provides Jupyter widget
+interfaces to make it easy to build visualizations for Jupyter notebooks.
 
 <table>
 
@@ -214,6 +216,24 @@ You may also specify a rectangle inside the image to draw.
         <div>
         You can change named objects on canvases using smooth transitions 
 which interpolate between one group of attribute values and another smoothly over a time period.
+        </div>
+    </td>
+</tr>
+
+
+<tr>
+    <td>
+        <a href="https://aaronwatters.github.io/jp_doodle/spiders.html">
+        <img width="200px" src="docs/images/spider_transparent_background.png">
+        </a>
+    </td>
+    <td>
+        <h4><a href="https://aaronwatters.github.io/jp_doodle/spiders.html">
+        Spiders
+        </a></h4>
+        <div>
+        Seven spiders attack Tulsa:
+a demonstration that illustrates image transparency, rotation, and animation.
         </div>
     </td>
 </tr>

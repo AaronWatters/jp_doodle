@@ -1,0 +1,97 @@
+***TITLE
+Spiders
+***SCREENSHOT
+images/spider_transparent_background.png
+***PROLOGUE
+Seven spiders attack Tulsa:
+a demonstration that illustrates image transparency, rotation, and animation.
+***CODE
+
+
+// Attach a dual canvas associated with the element as a child of the element
+// configured with width 400 and height 200.
+var config = {
+            width: 700,
+            height: 350,
+        };
+element.dual_canvas_helper(config);
+
+// This local image reference works in "classic" notebook, but not in Jupyter Lab.
+var tulsa_url = "./images/tulsa2012.jpg?dummy=1"
+element.name_image_url("tulsa", tulsa_url);
+var spider_url = "./images/spider_transparent_background.png?dummy=4"
+element.name_image_url("spider", spider_url);
+
+var w = 700;
+var h = 350;
+var mixer = 0.9;
+duration = 5;
+nspiders = 7;
+
+element.named_image({
+    image_name: "tulsa", x:0, y:0, w:w, h:h,
+    });
+
+var spiders = [];
+var random_location = function(old_location) {
+    old_location = old_location || {x: Math.random() * w, y: Math.random() * h};
+    var perturbation = {x: Math.random() * w, y: Math.random() * h};
+    return element.vadd(
+        element.vscale(1 - mixer, old_location), 
+        element.vscale(mixer, perturbation));
+};
+var target_angle = function(position, target) {
+    var direction = element.vadd(
+        target,
+        element.vscale(-1, position)
+    );
+    return element.vdirection_degrees(direction);
+};
+
+for (var i=0; i<nspiders; i++) {
+    var target = random_location();
+    var position = random_location();
+    var degrees = target_angle(position, target);
+    var info = {name: "spider"+i, target: target, position:position};
+    spiders.push(info);
+    element.named_image({
+        name: info.name, image_name: "spider", x: position.x, y: position.y, w:100, h:100,
+        dx:-50, dy:-50, degrees:degrees
+        });
+    element.transition(info.name, {x: target.x, y: target.y}, duration); 
+}
+element.fit();
+//element.lower_left_axes();
+//element.fit();
+
+var animate = function () {
+    var milliseconds = (new Date()).getTime();
+    // adjust the spider parameters
+    for (var i=0; i<nspiders; i++) {
+        var info = spiders[i];
+        var canvas_parameters = element.name_to_object_info[info.name];
+        var current_position = {x: canvas_parameters.x, y: canvas_parameters.y};
+        var target = random_location(info.target);
+        var degrees = target_angle(current_position, target);
+        element.transition(info.name, {x: target.x, y: target.y, degrees: degrees}, duration)
+    }
+    // Repeat the animation again later.
+    setTimeout(animate, duration*1000);
+};
+animate();
+***DISCUSSION
+
+This demonstration moves and rotates several copies of this image of a spider with a transparent background:
+<br>
+<img src="./images/spider_transparent_background.png?dummy=4" width="300"/>
+<br>
+over this aerial view of the city of Tulsa
+<br>
+<img src="./images/tulsa2012.jpg?dummy=1" width="300"/>
+<br>
+Please see the repository notebook 
+<a href="https://github.com/AaronWatters/jp_doodle/blob/master/notebooks/misc/Spiders%20attack%20Tulsa.ipynb">
+<code>/notebooks/misc/Spiders attack Tulsa.ipynb</code>
+for additional discussion and for an explanation of how the spider image was given a transparent background.
+</a>
+
