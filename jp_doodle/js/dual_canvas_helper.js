@@ -893,40 +893,59 @@ XXXXX target.shaded_objects -- need to test for false hits!
         };
 
         target.linear_interpolator = function(object_name, from_mapping, to_mapping) {
+            var map_interp = target.interpolate_mapping(from_mapping, to_mapping);
+            if (!map_interp) {
+                return null;   // nothing to interpolate.
+            }
+            var interpolator = function(lmd) {
+                var mapping = map_interp(lmd);
+                target.change_element(object_name, mapping);
+            };
+            return interpolator;
+        };
+
+        target.interpolate_mapping = function(from_mapping, to_mapping) {
             var map_interpolators = {};
             var trivial = true;  // until proven otherwise
             for (var attr in to_mapping) {
                 var to_value = to_mapping[attr];
+                var to_value_type = (typeof to_value);
                 var from_value = from_mapping[attr];
                 if (from_value != to_value) {
-                    trivial = false;
-                    if ((typeof to_value) == "number") {
+                    //trivial = false;
+                    if (to_value_type == "number") {
                         // numeric value
                         from_value = from_value || 0;
                         map_interpolators[attr] = target.linear_numeric_interpolator(from_value, to_value);
+                        trivial = false;
                     } else {
                         // non numeric value
                         if (attr == "color") {
                             map_interpolators[attr] = target.color_interpolator(from_value, to_value);
+                            trivial = false;
+                        } else if (to_value_type == "object") {
+                            var interp = target.interpolate_mapping(from_value, to_value);
+                            if (interp) {
+                                map_interpolators[attr] = interp;
+                                trivial = false;
+                            }
                         } else {
                             map_interpolators[attr] = target.switch_value_interpolator(from_value, to_value);
+                            trivial = false;
                         }
                     }
                 }
             }
-            // If there is nothing to interpolate return null
             if (trivial) {
-                return null;
+                return null;  // nothing to interpolate
             }
-            var interpolator = function(lmd) {
+            return function(lmd) {
                 var mapping = {};
                 for (var attr in map_interpolators) {
                     mapping[attr] = map_interpolators[attr](lmd);
-                    //console.log("interpolating ", lmd, " ", attr, " ", mapping[attr]);
                 }
-                target.change_element(object_name, mapping);
+                return mapping;
             };
-            return interpolator;
         };
 
         target.linear_numeric_interpolator = function(old_value, new_value) {

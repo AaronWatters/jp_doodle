@@ -115,6 +115,9 @@ class CanvasOperationsMixin(object):
         "Load an image by URL and give it a name for reference.  Redraw canvas when load completes, unless disabled."
         self.element.name_image_url(image_name, url, no_redraw)
 
+    def request_redraw(self):
+        self.element.request_redraw()
+
     def name_image_array(self, image_name, np_array):
         import numpy as np
         shape = np_array.shape
@@ -156,6 +159,10 @@ class CanvasOperationsMixin(object):
         "Use a polygon to select named elements.  Return name --> description mappint to the callback."
         self.element.do_lasso(lasso_callback, config, delete_after)
 
+    def transition(self, object_name, to_values, seconds_duration=1):
+        "transition configuration values of object with name smoothly over duration."
+        self.element.transition(object_name, to_values, seconds_duration)
+
     def named_vector_frame(self, name, x_vector, y_vector, xy_offset):
         """
         Attach a named vector frame to the widget element and return an interface for accessing it.
@@ -164,7 +171,7 @@ class CanvasOperationsMixin(object):
         # xxxx this doesn't make sense as a frame method?
         self.js_init("""
         // Attach the frame by name to the element
-        element[name] = element.vector_frame(x_vector, y_vector, xy_offset);
+        element[name] = element.vector_frame(x_vector, y_vector, xy_offset, name);
         """, name=name, x_vector=x_vector, y_vector=y_vector, xy_offset=xy_offset)
         # return an interface wrapper for the named frame
         return FrameInterface(self, name)
@@ -176,7 +183,7 @@ class CanvasOperationsMixin(object):
         # xxxx this doesn't make sense as a frame method?
         self.js_init("""
         // Attach the frame by name to the element
-        element[name] = element.rframe(scale_x, scale_y, translate_x, translate_y);
+        element[name] = element.rframe(scale_x, scale_y, translate_x, translate_y, name);
         """, name=name, scale_x=scale_x, scale_y=scale_y, translate_x=translate_x, translate_y=translate_y)
         # return an interface wrapper for the named frame
         return FrameInterface(self, name)
@@ -188,7 +195,7 @@ class CanvasOperationsMixin(object):
         # xxxx this doesn't make sense as a frame method?
         self.js_init("""
         // Attach the frame by name to the element
-        element[name] = element.frame_region(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy);
+        element[name] = element.frame_region(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy, name);
         """, name=name, minx=minx, miny=miny, maxx=maxx, maxy=maxy,
         frame_minx=frame_minx, frame_miny=frame_miny, frame_maxx=frame_maxx, frame_maxy=frame_maxy)
         # return an interface wrapper for the named frame
