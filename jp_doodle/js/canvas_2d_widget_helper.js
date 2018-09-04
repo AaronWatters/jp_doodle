@@ -141,7 +141,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 arc: 2 * Math.PI,
                 fill: true,  // if false then do a outline
                 coordinate_conversion: no_change_conversion,
-                frame: target,
+                //frame: target,
                 // lineWidth: 3,
             }, opt);
             var context = target.canvas_context;
@@ -168,7 +168,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 color: target.canvas_strokeStyle,
                 lineWidth: target.canvas_lineWidth,
                 coordinate_conversion: no_change_conversion,
-                frame: target,
+                //frame: target,
             }, opt);
             var context = target.canvas_context;
             context.beginPath();
@@ -196,7 +196,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 color: target.canvas_fillColor,
                 background: null,   // background color if provided.
                 coordinate_conversion: no_change_conversion,
-                frame: target,
+                //frame: target,
             }, opt);
             var text = "" + s.text;  // coerce to string
             //target.translate_and_rotate(s.x, s.y, s.degrees, s.coordinate_conversion);
@@ -293,7 +293,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 color: target.canvas_fillColor,
                 fill: true,  // if false then do a outline
                 coordinate_conversion: no_change_conversion,
-                frame: target,
+                //frame: target,
             }, opt);
             // xxxx should also convert s.w and s.h?
             target.translate_and_rotate(s.x, s.y, s.degrees, s.coordinate_conversion);
@@ -332,7 +332,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 image_name: null,
                 fill: true,  // if false then do a outline
                 coordinate_conversion: no_change_conversion,
-                frame: target,
+                //frame: target,
             }, opt);
             var image_source = target.named_images[s.image_name];
             if (!image_source) {
@@ -392,7 +392,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 fill: true,  // if false then do a outline
                 close: true,
                 coordinate_conversion: no_change_conversion,
-                frame: target,
+                //frame: target,
             }, opt);
             var context = target.canvas_context;
             //context.fillStyle = s.color;
