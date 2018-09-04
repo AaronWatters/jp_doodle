@@ -178,6 +178,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 if (object_info) {
                     var object_index = drawn_objects.length;
                     if (object_info.is_frame) {
+                        var frame = object_info;
                         frame.redraw_frame();
                         if (frame.is_empty()) {
                             // forget empty frames
@@ -195,7 +196,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                         }
                     }
                     if (object_index != null) {
-                        object_info.index = object_index;
+                        object_info.object_index = object_index;
                         drawn_objects[object_index] = object_info;
                     }
                 }
@@ -214,36 +215,45 @@ XXXXX target.shaded_objects -- need to test for false hits!
             }
         };
 
-        target.store_object_info = function(info, draw_on_canvas) {
+        target.store_object_info = function(info, draw_on_canvas, in_place) {
+            // xxxx don't need to assign psuedocolors to frames???
             var name = info.name;
             var store_target = info.frame || target;
             var object_list = store_target.object_list;
+            // By default append the new object.
             var object_index = object_list.length;
-            var object_info = $.extend({
-                draw_on_canvas: draw_on_canvas,
-            }, info);
+            var object_info = info;
+            if (!in_place) {
+                // make a shallow copy of the object
+                object_info = $.extend({}, info);
+            }
+            object_info.draw_on_canvas = object_info.draw_on_canvas || draw_on_canvas;
             if (name) {
                 // Set up color indexing
                 var pseudocolor_array = null;
                 var old_object_info = target.name_to_object_info[name];
                 if (old_object_info) {
+                    // Replace the existing object with the same naem.
                     // this prevents saving 2 objects with same name -- xxxx is this what we want?
-                    object_index = old_object_info.index; //  -- if you want delete, use delete...?
+                    object_index = old_object_info.object_index; //  -- if you want delete, use delete...?
                     pseudocolor_array = old_object_info.pseudocolor_array;
                     // request a redraw because the object changed
                     target.request_redraw();
                 }
-                if (!pseudocolor_array) {
-                    pseudocolor_array = target.next_pseudocolor();
+                // assign pseudocolor unless the object is a frame
+                if (!info.is_frame) {
+                    if (!pseudocolor_array) {
+                        pseudocolor_array = target.next_pseudocolor();
+                    }
+                    // bookkeeping for event look ups.
+                    object_info.pseudocolor_array = pseudocolor_array;
+                    object_info.pseudocolor = target.array_to_color(pseudocolor_array);
+                    var color_index = target.color_array_to_index(pseudocolor_array);
+                    target.color_index_to_name[color_index] = name;
                 }
-                // bookkeeping for event look ups.
-                object_info.pseudocolor_array = pseudocolor_array;
-                object_info.pseudocolor = target.array_to_color(pseudocolor_array);
-                var color_index = target.color_array_to_index(pseudocolor_array);
                 target.name_to_object_info[name] = object_info;
-                target.color_index_to_name[color_index] = name;
             }
-            object_info.index = object_index;
+            object_info.object_index = object_index;
             object_list[object_index] = object_info;
             return object_info;
         };
@@ -251,6 +261,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
         target.change_element = function (name, opt, no_redraw) {
             var object_info = target.name_to_object_info[name];
             if (object_info) {
+                // in place update object description
                 $.extend(object_info, opt);
                 if (!no_redraw) {
                     // schedule a redraw automatically
@@ -262,20 +273,39 @@ XXXXX target.shaded_objects -- need to test for false hits!
         };
         
         target.forget_objects = function(names) {
+            // modify to remove all frame members.... xxxxxx
+            var object_infos = [];
             for (var i=0; i<names.length; i++) {
                 var name = names[i];
                 var object_info = target.name_to_object_info[name];
                 if (object_info) {
-                    var index = object_info.index;
-                    var pseudocolor_array = object_info.pseudocolor_array;
-                    var color_index = target.color_array_to_index(pseudocolor_array);
+                    object_infos.push(object_info);
+                }  // ignore request to forget unknown object
+            }
+            target.forget_object_descriptions(object_infos);
+        };
+
+        target.forget_object_descriptions = function(object_infos) {
+            for (var i=0; i<object_infos.length; i++) {
+                var object_info = object_infos[i];
+                if (object_info) {
+                    var index = object_info.object_index;
                     var owner = object_info.frame || target;
                     owner.object_list[index] = null;
-                    delete target.name_to_object_info[name];
-                    delete target.color_index_to_name[color_index];
+                    var name = object_info.name;
+                    if (name) {
+                        delete target.name_to_object_info[name];
+                        var pseudocolor_array = object_info.pseudocolor_array;
+                        if (pseudocolor_array) {
+                            var color_index = target.color_array_to_index(pseudocolor_array);
+                            delete target.color_index_to_name[color_index];
+                        }
+                    }
+                    if (object_info.is_frame) {
+                        object_info.clear_frame();
+                    }
                     target.request_redraw();
                 }
-                // ignore request to forget unknown object
             }
         };
 
@@ -307,6 +337,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
         };
 
         target.draw_mask = function(object_info, invisible_canvas) {
+            // for now do not draw mask for whole frame objects
+            if (object_info.is_frame) {
+                return;
+            }
             var draw_fn = object_info.draw_on_canvas;
             var info2 = $.extend({}, object_info);
             if (object_info.draw_mask) {
@@ -646,31 +680,34 @@ XXXXX target.shaded_objects -- need to test for false hits!
         target.vector_frame = function(
             x_vector,
             y_vector,
-            xy_offset) {
+            xy_offset,
+            name) {
             return target.dual_canvas_helper.reference_frame(
                 target,
                 x_vector,
                 y_vector,
-                xy_offset
+                xy_offset,
+                name
             );
         };
 
-        target.rframe = function(scale_x, scale_y, translate_x, translate_y) {
+        target.rframe = function(scale_x, scale_y, translate_x, translate_y, name) {
             return target.vector_frame(
                 {x: scale_x, y:0},
                 {x:0, y: scale_y},
-                {x: translate_x, y: translate_y}
+                {x: translate_x, y: translate_y},
+                name
             );
             // xxxx could add special methods like model_to_pixel.
         };
 
-        target.frame_region = function(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy) {
+        target.frame_region = function(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy, name) {
             // Convenience: map frame region into the canvas region
             var scale_x = (maxx - minx) * 1.0 / (frame_maxx - frame_minx);
             var scale_y = (maxy - miny) * 1.0 / (frame_maxy - frame_miny);
             var translate_x = minx - frame_minx * scale_x;
             var translate_y = miny - frame_miny * scale_y;
-            return target.rframe(scale_x, scale_y, translate_x, translate_y)
+            return target.rframe(scale_x, scale_y, translate_x, translate_y, name)
         }
 
         target.callback_with_pixel_color = function(pixel_x, pixel_y, callback, delay) {
@@ -957,7 +994,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
         // shared functionality for frames and dual canvases
 
         target.has_object = function(object_info) {
-            var index = object_info.index;
+            var index = object_info.object_index;
             if ((typeof index) == "number") {
                 if (target.object_list[index] === object_info) {
                     return true;
@@ -966,14 +1003,18 @@ XXXXX target.shaded_objects -- need to test for false hits!
             return false;   // default
         };
 
-        target.detach_objects = function (target) {
-            var object_list = target.object_list;
+        target.detach_objects = function (owner) {
+            // Remove cross references from object descriptions in owner object list to render object descriptions inactive.
+            owner = owner || target;
+            var object_list = owner.object_list;
             if (object_list) {
                 for (var i=0; i<object_list.length; i++) {
                     var object_info = object_list[i];
-                    object_info.index = null;
-                    if (object_info.is_frame) {
-                        object_info.detach_objects();
+                    if (object_info) {
+                        object_info.object_index = null;
+                        if (object_info.is_frame) {
+                            target.detach_objects(object_info);
+                        }
                     }
                 }
             }
@@ -1223,6 +1264,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 target.line(connecting_line);
             }
         };
+
         target.axis_ticklist = function(min_offset, max_offset, maxlen, anchor) {
             maxlen = maxlen || 10;
             if (min_offset >= max_offset) {
@@ -1320,31 +1362,52 @@ XXXXX target.shaded_objects -- need to test for false hits!
         if (!xy_offset) {
             xy_offset = {x: 0, y: 0};
         }
-        var frame = $.extend({
+        var frame = {
             parent_canvas: parent_canvas,
             x_vector: x_vector,
             y_vector: y_vector,
             xy_offset: xy_offset,
             name: name,
             is_frame: true
-        }, parent_canvas);
+        };
+
+        // Delegate appropriate methods to parent
+        var delegate_to_parent = function(name) {
+            frame[name] = frame.parent_canvas[name];
+        };
+
+        delegate_to_parent("change_element");
+        delegate_to_parent("forget_objects");
+        delegate_to_parent("set_visibilities");
+        delegate_to_parent("transition");
+        delegate_to_parent("active_region");
 
         frame.reset_frame = function () {
-            frame.detach_objects();
+            frame.parent_canvas.detach_objects(frame);
             frame.object_list = [];
         };
 
         frame.redraw_frame = function () {
-            frame.object_list = frame.objects_drawn(frame.object_list);
+            if (frame.hide) {
+                // don't redraw hidden frame
+                return;
+            }
+            frame.object_list = frame.parent_canvas.objects_drawn(frame.object_list);
         };
 
         frame.is_empty = function () {
             return (frame.object_list.length == 0);
         };
 
+        frame.clear_frame = function () {
+            frame.parent_canvas.forget_object_descriptions(frame.object_list);
+            frame.object_list = [];
+        };
+
         frame.check_registration = function () {
             if (!frame.parent_canvas.has_object(frame)) {
-                frame.parent_canvas.store_object_info(frame, null)
+                // restore the frame in place
+                frame.parent_canvas.store_object_info(frame, null, true)
             }
         };
 
@@ -1414,7 +1477,13 @@ XXXXX target.shaded_objects -- need to test for false hits!
         // define axes w.r.t the frame
         parent_canvas.dual_canvas_helper.add_geometry_logic(frame);
 
+        // calculation conveniences
+        parent_canvas.canvas_2d_widget_helper.add_vector_ops(frame);
+
         frame.reset_frame();
+        
+        // Add the frame object to the parent canvas in place
+        parent_canvas.store_object_info(frame, null, true);
         return frame;
     }
 
