@@ -223,6 +223,25 @@ which interpolate between one group of attribute values and another smoothly ove
 
 <tr>
     <td>
+        <a href="https://aaronwatters.github.io/jp_doodle/polygon.html">
+        <img width="200px" src="docs/images/edit_poly.png">
+        </a>
+    </td>
+    <td>
+        <h4><a href="https://aaronwatters.github.io/jp_doodle/polygon.html">
+        Edit polygon
+        </a></h4>
+        <div>
+        A polygon editor which illustrates combining mouse event modalities with reference frames.
+Click to start the polygon.  Type "." to drop a new vertex.
+Click again to close the polygon.  Press the reset button to play again.
+        </div>
+    </td>
+</tr>
+
+
+<tr>
+    <td>
         <a href="https://aaronwatters.github.io/jp_doodle/spiders.html">
         <img width="200px" src="docs/images/spider_transparent_background.png">
         </a>

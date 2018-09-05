@@ -9,10 +9,9 @@ Uses canvas_2d_widget_helper
 
 Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
-*/
+XXXXX target.shaded_objects -- need to test for false hits!
 
-// xxxx add image primatives,
-// eg https://stackoverflow.com/questions/21300921/how-to-convert-byte-array-to-image-in-javascript/21301006#21301006
+*/
 
 (function($) {
 
@@ -36,6 +35,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.disable_element_events = false;
 
         target.reset_canvas = function (keep_stats) {
+            // Reinitialize the canvas -- hard reboot
             if (target.canvas_container) {
                 target.canvas_container.empty();
             } else {
@@ -56,13 +56,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.visible_canvas.canvas_2d_widget_helper(settings_overrides);
             target.invisible_canvas.canvas_2d_widget_helper(settings_overrides);
             target.test_canvas.canvas_2d_widget_helper(settings_overrides);
+
             target.clear_canvas(keep_stats);
         }
 
         target.clear_canvas = function (keep_stats) {
+            // Remove all visible objects from the canvas
             if (keep_stats) {
                 target.visible_canvas.canvas_stats = {};
             }
+            // mark any connected objects as detached from parent.
+            // and also recursively detach connected frame contents.
+            target.detach_objects();
             // object list for redraws
             target.object_list = [];
             // lookup structures for named objects
@@ -161,27 +166,44 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.do_transitions();
             target.visible_canvas.clear_canvas();
             target.invisible_canvas.clear_canvas();
+            target.object_list = target.objects_drawn(target.object_list);
+        };
+
+        target.objects_drawn = function (object_list) {
             // Don't draw anything on the test canvas now.
             var drawn_objects = [];
-            var object_list = target.object_list;
             var name_to_object_info = target.name_to_object_info;
             for (var i=0; i<object_list.length; i++) {
                 var object_info = object_list[i];
                 if (object_info) {
-                    // only draw objects with no name or with known names
-                    var name = object_info.name;
-                    if ((!name) || (name_to_object_info[name])) {
-                        // draw and save
-                        target.draw_object_info(object_info);
-                        var object_index = drawn_objects.length;
-                        object_info.index = object_index;
+                    var object_index = drawn_objects.length;
+                    if (object_info.is_frame) {
+                        var frame = object_info;
+                        frame.redraw_frame();
+                        if (frame.is_empty()) {
+                            // forget empty frames
+                            object_index = null;
+                        }
+                    } else {
+                        // only draw objects with no name or with known names
+                        var name = object_info.name;
+                        if ((!name) || (name_to_object_info[name])) {
+                            // draw and save
+                            target.draw_object_info(object_info);
+                        } else {
+                            // forget it
+                            object_index = null;
+                        }
+                    }
+                    if (object_index != null) {
+                        object_info.object_index = object_index;
                         drawn_objects[object_index] = object_info;
                     }
                 }
             }
             // keep only the drawn objects
-            target.object_list = drawn_objects;
-        }
+            return drawn_objects;
+        };
 
         target.redraw_pending = false;
 
@@ -191,36 +213,47 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 requestAnimationFrame(target.redraw);
                 target.redraw_pending = true;
             }
-        }
+        };
 
-        target.store_object_info = function(info, draw_on_canvas) {
+        target.store_object_info = function(info, draw_on_canvas, in_place) {
+            // xxxx don't need to assign psuedocolors to frames???
             var name = info.name;
-            var object_list = target.object_list;
+            var store_target = info.frame || target;
+            var object_list = store_target.object_list;
+            // By default append the new object.
             var object_index = object_list.length;
-            var object_info = $.extend({
-                draw_on_canvas: draw_on_canvas,
-            }, info);
+            var object_info = info;
+            if (!in_place) {
+                // make a shallow copy of the object
+                object_info = $.extend({}, info);
+            }
+            object_info.draw_on_canvas = object_info.draw_on_canvas || draw_on_canvas;
             if (name) {
+                // Set up color indexing
                 var pseudocolor_array = null;
                 var old_object_info = target.name_to_object_info[name];
                 if (old_object_info) {
+                    // Replace the existing object with the same naem.
                     // this prevents saving 2 objects with same name -- xxxx is this what we want?
-                    object_index = old_object_info.index; //  -- if you want delete, use delete...?
+                    object_index = old_object_info.object_index; //  -- if you want delete, use delete...?
                     pseudocolor_array = old_object_info.pseudocolor_array;
                     // request a redraw because the object changed
                     target.request_redraw();
                 }
-                if (!pseudocolor_array) {
-                    pseudocolor_array = target.next_pseudocolor();
+                // assign pseudocolor unless the object is a frame
+                if (!info.is_frame) {
+                    if (!pseudocolor_array) {
+                        pseudocolor_array = target.next_pseudocolor();
+                    }
+                    // bookkeeping for event look ups.
+                    object_info.pseudocolor_array = pseudocolor_array;
+                    object_info.pseudocolor = target.array_to_color(pseudocolor_array);
+                    var color_index = target.color_array_to_index(pseudocolor_array);
+                    target.color_index_to_name[color_index] = name;
                 }
-                // bookkeeping for event look ups.
-                object_info.pseudocolor_array = pseudocolor_array;
-                object_info.pseudocolor = target.array_to_color(pseudocolor_array);
-                var color_index = target.color_array_to_index(pseudocolor_array);
                 target.name_to_object_info[name] = object_info;
-                target.color_index_to_name[color_index] = name;
             }
-            object_info.index = object_index;
+            object_info.object_index = object_index;
             object_list[object_index] = object_info;
             return object_info;
         };
@@ -228,6 +261,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.change_element = function (name, opt, no_redraw) {
             var object_info = target.name_to_object_info[name];
             if (object_info) {
+                // in place update object description
                 $.extend(object_info, opt);
                 if (!no_redraw) {
                     // schedule a redraw automatically
@@ -239,19 +273,39 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
         
         target.forget_objects = function(names) {
+            // modify to remove all frame members.... xxxxxx
+            var object_infos = [];
             for (var i=0; i<names.length; i++) {
                 var name = names[i];
                 var object_info = target.name_to_object_info[name];
                 if (object_info) {
-                    var index = object_info.index;
-                    var pseudocolor_array = object_info.pseudocolor_array;
-                    var color_index = target.color_array_to_index(pseudocolor_array);
-                    target.object_list[index] = null;
-                    delete target.name_to_object_info[name];
-                    delete target.color_index_to_name[color_index];
+                    object_infos.push(object_info);
+                }  // ignore request to forget unknown object
+            }
+            target.forget_object_descriptions(object_infos);
+        };
+
+        target.forget_object_descriptions = function(object_infos) {
+            for (var i=0; i<object_infos.length; i++) {
+                var object_info = object_infos[i];
+                if (object_info) {
+                    var index = object_info.object_index;
+                    var owner = object_info.frame || target;
+                    owner.object_list[index] = null;
+                    var name = object_info.name;
+                    if (name) {
+                        delete target.name_to_object_info[name];
+                        var pseudocolor_array = object_info.pseudocolor_array;
+                        if (pseudocolor_array) {
+                            var color_index = target.color_array_to_index(pseudocolor_array);
+                            delete target.color_index_to_name[color_index];
+                        }
+                    }
+                    if (object_info.is_frame) {
+                        object_info.clear_frame();
+                    }
                     target.request_redraw();
                 }
-                // ignore request to forget unknown object
             }
         };
 
@@ -283,6 +337,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         target.draw_mask = function(object_info, invisible_canvas) {
+            // for now do not draw mask for whole frame objects
+            if (object_info.is_frame) {
+                return;
+            }
             var draw_fn = object_info.draw_on_canvas;
             var info2 = $.extend({}, object_info);
             if (object_info.draw_mask) {
@@ -292,8 +350,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             info2.color = object_info.pseudocolor;
             draw_fn(invisible_canvas, info2);
         };
-
-        //target.reset_canvas();
 
         target.garish_pseudocolor_array = function(integer) {
             // Try to choose sequence of colors not likely to interpolate into eachother.
@@ -624,31 +680,34 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.vector_frame = function(
             x_vector,
             y_vector,
-            xy_offset) {
+            xy_offset,
+            name) {
             return target.dual_canvas_helper.reference_frame(
                 target,
                 x_vector,
                 y_vector,
-                xy_offset
+                xy_offset,
+                name
             );
         };
 
-        target.rframe = function(scale_x, scale_y, translate_x, translate_y) {
+        target.rframe = function(scale_x, scale_y, translate_x, translate_y, name) {
             return target.vector_frame(
                 {x: scale_x, y:0},
                 {x:0, y: scale_y},
-                {x: translate_x, y: translate_y}
+                {x: translate_x, y: translate_y},
+                name
             );
             // xxxx could add special methods like model_to_pixel.
         };
 
-        target.frame_region = function(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy) {
+        target.frame_region = function(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy, name) {
             // Convenience: map frame region into the canvas region
             var scale_x = (maxx - minx) * 1.0 / (frame_maxx - frame_minx);
             var scale_y = (maxy - miny) * 1.0 / (frame_maxy - frame_miny);
             var translate_x = minx - frame_minx * scale_x;
             var translate_y = miny - frame_miny * scale_y;
-            return target.rframe(scale_x, scale_y, translate_x, translate_y)
+            return target.rframe(scale_x, scale_y, translate_x, translate_y, name)
         }
 
         target.callback_with_pixel_color = function(pixel_x, pixel_y, callback, delay) {
@@ -834,40 +893,59 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         target.linear_interpolator = function(object_name, from_mapping, to_mapping) {
+            var map_interp = target.interpolate_mapping(from_mapping, to_mapping);
+            if (!map_interp) {
+                return null;   // nothing to interpolate.
+            }
+            var interpolator = function(lmd) {
+                var mapping = map_interp(lmd);
+                target.change_element(object_name, mapping);
+            };
+            return interpolator;
+        };
+
+        target.interpolate_mapping = function(from_mapping, to_mapping) {
             var map_interpolators = {};
             var trivial = true;  // until proven otherwise
             for (var attr in to_mapping) {
                 var to_value = to_mapping[attr];
+                var to_value_type = (typeof to_value);
                 var from_value = from_mapping[attr];
                 if (from_value != to_value) {
-                    trivial = false;
-                    if ((typeof to_value) == "number") {
+                    //trivial = false;
+                    if (to_value_type == "number") {
                         // numeric value
                         from_value = from_value || 0;
                         map_interpolators[attr] = target.linear_numeric_interpolator(from_value, to_value);
+                        trivial = false;
                     } else {
                         // non numeric value
                         if (attr == "color") {
                             map_interpolators[attr] = target.color_interpolator(from_value, to_value);
+                            trivial = false;
+                        } else if (to_value_type == "object") {
+                            var interp = target.interpolate_mapping(from_value, to_value);
+                            if (interp) {
+                                map_interpolators[attr] = interp;
+                                trivial = false;
+                            }
                         } else {
                             map_interpolators[attr] = target.switch_value_interpolator(from_value, to_value);
+                            trivial = false;
                         }
                     }
                 }
             }
-            // If there is nothing to interpolate return null
             if (trivial) {
-                return null;
+                return null;  // nothing to interpolate
             }
-            var interpolator = function(lmd) {
+            return function(lmd) {
                 var mapping = {};
                 for (var attr in map_interpolators) {
                     mapping[attr] = map_interpolators[attr](lmd);
-                    //console.log("interpolating ", lmd, " ", attr, " ", mapping[attr]);
                 }
-                target.change_element(object_name, mapping);
+                return mapping;
             };
-            return interpolator;
         };
 
         target.linear_numeric_interpolator = function(old_value, new_value) {
@@ -925,13 +1003,41 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         }
 
         target.canvas_2d_widget_helper.add_vector_ops(target);
-        target.dual_canvas_helper.add_axis_logic(target);
+        target.dual_canvas_helper.add_geometry_logic(target);
         target.reset_canvas();
 
         return target;
     };
 
-    $.fn.dual_canvas_helper.add_axis_logic = function (target) {
+    $.fn.dual_canvas_helper.add_geometry_logic = function (target) {
+        // shared functionality for frames and dual canvases
+
+        target.has_object = function(object_info) {
+            var index = object_info.object_index;
+            if ((typeof index) == "number") {
+                if (target.object_list[index] === object_info) {
+                    return true;
+                }
+            }
+            return false;   // default
+        };
+
+        target.detach_objects = function (owner) {
+            // Remove cross references from object descriptions in owner object list to render object descriptions inactive.
+            owner = owner || target;
+            var object_list = owner.object_list;
+            if (object_list) {
+                for (var i=0; i<object_list.length; i++) {
+                    var object_info = object_list[i];
+                    if (object_info) {
+                        object_info.object_index = null;
+                        if (object_info.is_frame) {
+                            target.detach_objects(object_info);
+                        }
+                    }
+                }
+            }
+        };
 
         target.right_axis = function(config) {
             return target.bottom_axis(config, {x: 1, y: 0}, {x: 0, y: 1}, 0, "y")
@@ -949,7 +1055,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var stats = target.active_region(true); 
             var params = $.extend({
                 add_end_points: true,
-                skip_anchor: false,
+                skip_anchor: true,
             }, stats, config);
             // choose anchors
             var choose_anchor = function (min_value, max_value, anchor_parameter) {
@@ -972,18 +1078,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var y_anchor = choose_anchor(params.min_y, params.max_y, params.y_anchor);
             var bottom_config = $.extend({
                 anchor: x_anchor,
-                // axis_origin: {x: 0, y: y_anchor},
-                axis_origin: {x: 0, y: params.min_y},
-                //skip_anchor: true,
+                axis_origin: {x: 0, y: y_anchor},
+                //axis_origin: {x: 0, y: params.min_y},
+                skip_anchor: true,
                 min_value: params.min_x,
                 max_value: params.max_x
             }, params);
             target.bottom_axis(bottom_config);
             var left_config = $.extend({
                 anchor: y_anchor,
-                //axis_origin: {x: x_anchor, y:0},
-                axis_origin: {x: params.min_x, y:0},
-                //skip_anchor: true,
+                axis_origin: {x: x_anchor, y:0},
+                //axis_origin: {x: params.min_x, y:0},
+                skip_anchor: true,
                 min_value: params.min_y,
                 max_value: params.max_y,
             }, params);
@@ -1055,9 +1161,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             if ((params.skip_anchor) && (!params.tick_transform) && (params.anchor!=null)) {
                 // For double axes skip the label at the origin crossing point.
                 params.tick_transform = function(tick) {
-                    if (tick == params.anchor) {
+                    if (tick.offset == params.anchor) {
                         //return null;  // skip the anchor label and tick mark.
-                        return {offset: tick, text: " "}
+                        return {offset: tick.offset, text: " "}
                     }
                     return tick;
                 }
@@ -1177,6 +1283,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 target.line(connecting_line);
             }
         };
+
         target.axis_ticklist = function(min_offset, max_offset, maxlen, anchor) {
             maxlen = maxlen || 10;
             if (min_offset >= max_offset) {
@@ -1260,7 +1367,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         parent_canvas, 
         x_vector, 
         y_vector, 
-        xy_offset) 
+        xy_offset,
+        name) 
     {
         // View into canvas with shifted and scaled positions.
         // Do not adjust rectangle w/h or orientation, text parameters, or circle radius.
@@ -1273,12 +1381,67 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         if (!xy_offset) {
             xy_offset = {x: 0, y: 0};
         }
-        var frame = $.extend({
+        var frame = {
             parent_canvas: parent_canvas,
             x_vector: x_vector,
             y_vector: y_vector,
             xy_offset: xy_offset,
-        }, parent_canvas);
+            name: name,
+            is_frame: true
+        };
+
+        // Delegate appropriate methods to parent
+        var delegate_to_parent = function(name) {
+            frame[name] = frame.parent_canvas[name];
+        };
+
+        delegate_to_parent("change_element");
+        delegate_to_parent("forget_objects");
+        delegate_to_parent("set_visibilities");
+        delegate_to_parent("transition");
+
+        frame.active_region = function (default_to_view_box) {
+            var pa = frame.parent_canvas.active_region(default_to_view_box);
+            var ll = frame.model_location(pa.min_x, pa.min_y);
+            var ul = frame.model_location(pa.min_x, pa.max_y);
+            var lr = frame.model_location(pa.max_x, pa.min_y);
+            var ur = frame.model_location(pa.max_x, pa.max_y);
+            return {
+                min_x: Math.min(ll.x, ul.x, lr.x, ur.x),
+                max_x: Math.max(ll.x, ul.x, lr.x, ur.x),
+                min_y: Math.min(ll.y, ul.y, lr.y, ur.y),
+                max_y: Math.max(ll.y, ul.y, lr.y, ur.y),
+            };
+        }
+
+        frame.reset_frame = function () {
+            frame.parent_canvas.detach_objects(frame);
+            frame.object_list = [];
+        };
+
+        frame.redraw_frame = function () {
+            if (frame.hide) {
+                // don't redraw hidden frame
+                return;
+            }
+            frame.object_list = frame.parent_canvas.objects_drawn(frame.object_list);
+        };
+
+        frame.is_empty = function () {
+            return (frame.object_list.length == 0);
+        };
+
+        frame.clear_frame = function () {
+            frame.parent_canvas.forget_object_descriptions(frame.object_list);
+            frame.object_list = [];
+        };
+
+        frame.check_registration = function () {
+            if (!frame.parent_canvas.has_object(frame)) {
+                // restore the frame in place
+                frame.parent_canvas.store_object_info(frame, null, true)
+            }
+        };
 
         frame.converted_location = function (x, y) {
             // Convert shared "model" location to "frame" location.
@@ -1327,6 +1490,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // replace the shape factory:
             // override the location conversion parameter
             frame[shape_name] = function(opt, wait) {
+                // Make sure the frame exists in parent.
+                frame.check_registration();
                 var s = $.extend({
                     coordinate_conversion: frame.converted_location,
                     frame: frame,
@@ -1342,8 +1507,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         override_positions("polygon");
 
         // define axes w.r.t the frame
-        parent_canvas.dual_canvas_helper.add_axis_logic(frame);
+        parent_canvas.dual_canvas_helper.add_geometry_logic(frame);
 
+        // calculation conveniences
+        parent_canvas.canvas_2d_widget_helper.add_vector_ops(frame);
+
+        frame.reset_frame();
+        
+        // Add the frame object to the parent canvas in place
+        parent_canvas.store_object_info(frame, null, true);
         return frame;
     }
 

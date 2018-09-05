@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit polygon -- jp_doodle demo</title>
+    <link rel="icon" type="image/png" href="images/clock.png">
+    <link rel=stylesheet href="static/style.css">
+
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="codemirrorjs/codemirror.css">
+    <script src="codemirrorjs/codemirror.js"></script>
+    <script src="codemirrorjs/matchbrackets.js"></script>
+    <script src="codemirrorjs/continuecomment.js"></script>
+    <script src="codemirrorjs/comment.js"></script>
+    <script src="codemirrorjs/javascript.js"></script>
+    <style type="text/css">.CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black;}</style>
+    <script src="jp_doodle_js/canvas_2d_widget_helper.js"></script>
+    <script src="jp_doodle_js/dual_canvas_helper.js"></script>
+    <script src="jp_doodle_js/rectangle_collection.js"></script>
+
+    <script>
+        $( function() {
+          $( "#discussion" ).accordion({collapsible : true, active : 'none'});
+          $( "#code_text" ).accordion({collapsible : true, active : 'none'});
+        } );
+    </script>
+</head>
+
+<body>
+<div class="top_menu">
+<ul>
+<li><a href="index.html">Drawing <br><img src="images/drawing.png" width="50px"></a></li>
+<li><a href="010_events.html">Events <br><img src="images/events.png" width="50px"></a></li>
+<li><a href="020_bindings.html">Bindings <br><img src="images/bindings.png" width="50px"></a></li>
+<li><a href="030_animation.html">Animation <br><img src="images/clock.png" width="50px"></a></li>
+<li><a href="040_lasso.html">Lasso <br><img src="images/lasso.png" width="50px"></a></li>
+<li><a href="050_rectangles.html">Rectangles <br><img src="images/rectangle.png" width="50px"></a></li>
+<li><a href="060_chart.html">Chart <br><img src="images/chart.png" width="50px"></a></li>
+<li><a href="070_images.html">image <br><img src="images/Images.png" width="50px"></a></li>
+<li><a href="080_transitions.html">Transitions <br><img src="images/Transitions.png" width="50px"></a></li>
+<li><a href="polygon.html">Edit polygon <br><img src="images/edit_poly.png" width="50px"></a></li>
+<li><a href="spiders.html">Spiders <br><img src="images/spider_transparent_background.png" width="50px"></a></li>
+</ul>
+</div>
+
+<p><em>
+    These are example pages for the 
+    <a href="https://github.com/AaronWatters/jp_doodle">jp_doodle</a>
+    package. <br>
+    Please see the Jupyter notebooks in the package for additional
+    discussion and documentation. <br>
+    Please use 
+    <a href="https://mybinder.org/v2/gh/AaronWatters/jp_doodle/master">Binder</a>
+    to easily run the Jupyter notebooks of the package.
+</em></p>
+
+<h1>Edit polygon</h1>
+<div>
+    A polygon editor which illustrates combining mouse event modalities with reference frames.
+Click to start the polygon.  Type "." to drop a new vertex.
+Click again to close the polygon.  Press the reset button to play again.
+</div>
+
+<div id="target_container">
+    <div id="target_div"/>
+</div>
+
+<script>
+    var element = $('#target_div');
+    //$('<img src="http://sipi.usc.edu/database/preview/misc/4.2.03.png">').appendTo(element);
+    // Attach a dual canvas associated with the element as a child of the element
+// configured with width 400 and height 200.
+var config = {
+            width: 700,
+            height: 350,
+        };
+element.dual_canvas_helper(config);
+
+
+// Edit in cartesian area [-1:1] x [-1:1]
+let frame = element.frame_region(20, 20, 300, 300, 
+            -1, -1, 1, 1);
+            
+// Show axes for reference
+frame.lower_left_axes({
+            x_anchor: 0,
+            y_anchor: 0,
+            tick_line_config: {color: "green"},
+            tick_text_config: {color: "blue"},
+            })
+
+// Helpful informative text.
+var info_div = $("<div>Useful information should show up here eventually.</div>").appendTo(element);
+
+// Store polygon points here.
+var polygon_points = [];
+
+// Convenience to add a point to the polygon
+var push_location = function (location) {
+    polygon_points.push([location.x, location.y]);
+}
+
+var start_polygon = function () {
+    // wait for a mouse click to define the first point of the polygon.
+    frame.forget_objects(["poly", "circ"]);   // forget graphical objects if they exist.
+    element.reset_events();
+    polygon_points = [];
+    
+    // The graphical polygon to edit
+    frame.polygon({name: "poly", points: polygon_points, color:"red", close:false, fill:false});
+    
+    // A circle to track the mouse
+    frame.circle({name: "circ", x:0, y:0, r:5, color:"magenta", hide:true});
+    
+    var track_mouse = function(event) {
+        var frame_location = frame.event_model_location(event);
+        frame.change_element("circ", {x: frame_location.x, y: frame_location.y, hide: false});
+    };
+    element.on_canvas_event("mousemove", track_mouse);
+    
+    var start_click = function(event) {  
+        var frame_location = frame.event_model_location(event);
+        // store the initial point and a mouse tracking point
+        polygon_points = [];
+        push_location(frame_location);  // first vertex
+        push_location(frame_location);  // mouse tracking vertex
+        // switch modes to continue polygon after a short delay in case of duplicate mouse clicks
+        element.reset_events();
+        setTimeout(continue_polygon, 100);
+    };
+    element.on_canvas_event("click", start_click);
+    
+    info_div.html("<div>Click to start polygon.</div>")
+};
+
+var continue_polygon = function () {
+    // space bar drops a point, mouse click completes the polygon
+    element.reset_events();
+    
+    var track_mouse = function(event) {
+        // track the cursor
+        var frame_location = frame.event_model_location(event);
+        frame.change_element("circ", {x: frame_location.x, y: frame_location.y, hide: false});
+        // change the last polygon point to track the cursor
+        polygon_points.pop();
+        push_location(frame_location);  // replace mouse tracking vertex
+        frame.change_element("poly", {points: polygon_points});
+        // set the focus to the canvas so the canvas can recieve keyboard events.
+        element.focus_canvas();
+    };
+    element.on_canvas_event("mousemove", track_mouse);
+    
+    var dot_drops_point = function (event) {
+        // When the user hits "." drop a new vertex on the polygon
+        const dot_key_code = 190;
+        if (event.keyCode == dot_key_code) {
+            // 'keydown' events do not have locations.  Duplicate the tracking vertex.
+            var vertex = polygon_points.pop();
+            polygon_points.push(vertex);  // dropped location
+            polygon_points.push(vertex);  // mouse tracking vertex
+            frame.change_element("poly", {points: polygon_points});
+        }
+    }
+    element.on_canvas_event("keydown", dot_drops_point);
+    
+    var stop_click = function(event) {  
+        // When the user "clicks" in "continue" mode, complete the polygon.
+        var frame_location = frame.event_model_location(event);
+        // switch modes to continue polygon
+        frame.change_element("circ", {hide: true});
+        // change the last polygon point to track the cursor
+        polygon_points.pop();  // remove previous mouse tracking vertex
+        polygon_points.push([frame_location.x, frame_location.y]);
+        frame.change_element("poly", {points: polygon_points, close: true});
+        element.reset_events();
+        info_div.html("<div>Polygon complete.</div>")
+    };
+    element.on_canvas_event("click", stop_click);
+    
+    info_div.html("<div>Type '.' to add a vertex. Click to complete polygon.</div>");
+};
+
+start_polygon();
+
+$("<button>Restart</button>")
+.appendTo(element)
+.click(start_polygon);
+</script>
+
+<div id="code_text">
+        <h3>Code</h3>
+    
+        <div><textarea id="code" name="code">
+var element = $('#target_div');
+// Attach a dual canvas associated with the element as a child of the element
+// configured with width 400 and height 200.
+var config = {
+            width: 700,
+            height: 350,
+        };
+element.dual_canvas_helper(config);
+
+
+// Edit in cartesian area [-1:1] x [-1:1]
+let frame = element.frame_region(20, 20, 300, 300, 
+            -1, -1, 1, 1);
+            
+// Show axes for reference
+frame.lower_left_axes({
+            x_anchor: 0,
+            y_anchor: 0,
+            tick_line_config: {color: "green"},
+            tick_text_config: {color: "blue"},
+            })
+
+// Helpful informative text.
+var info_div = $("<div>Useful information should show up here eventually.</div>").appendTo(element);
+
+// Store polygon points here.
+var polygon_points = [];
+
+// Convenience to add a point to the polygon
+var push_location = function (location) {
+    polygon_points.push([location.x, location.y]);
+}
+
+var start_polygon = function () {
+    // wait for a mouse click to define the first point of the polygon.
+    frame.forget_objects(["poly", "circ"]);   // forget graphical objects if they exist.
+    element.reset_events();
+    polygon_points = [];
+    
+    // The graphical polygon to edit
+    frame.polygon({name: "poly", points: polygon_points, color:"red", close:false, fill:false});
+    
+    // A circle to track the mouse
+    frame.circle({name: "circ", x:0, y:0, r:5, color:"magenta", hide:true});
+    
+    var track_mouse = function(event) {
+        var frame_location = frame.event_model_location(event);
+        frame.change_element("circ", {x: frame_location.x, y: frame_location.y, hide: false});
+    };
+    element.on_canvas_event("mousemove", track_mouse);
+    
+    var start_click = function(event) {  
+        var frame_location = frame.event_model_location(event);
+        // store the initial point and a mouse tracking point
+        polygon_points = [];
+        push_location(frame_location);  // first vertex
+        push_location(frame_location);  // mouse tracking vertex
+        // switch modes to continue polygon after a short delay in case of duplicate mouse clicks
+        element.reset_events();
+        setTimeout(continue_polygon, 100);
+    };
+    element.on_canvas_event("click", start_click);
+    
+    info_div.html("<div>Click to start polygon.</div>")
+};
+
+var continue_polygon = function () {
+    // space bar drops a point, mouse click completes the polygon
+    element.reset_events();
+    
+    var track_mouse = function(event) {
+        // track the cursor
+        var frame_location = frame.event_model_location(event);
+        frame.change_element("circ", {x: frame_location.x, y: frame_location.y, hide: false});
+        // change the last polygon point to track the cursor
+        polygon_points.pop();
+        push_location(frame_location);  // replace mouse tracking vertex
+        frame.change_element("poly", {points: polygon_points});
+        // set the focus to the canvas so the canvas can recieve keyboard events.
+        element.focus_canvas();
+    };
+    element.on_canvas_event("mousemove", track_mouse);
+    
+    var dot_drops_point = function (event) {
+        // When the user hits "." drop a new vertex on the polygon
+        const dot_key_code = 190;
+        if (event.keyCode == dot_key_code) {
+            // 'keydown' events do not have locations.  Duplicate the tracking vertex.
+            var vertex = polygon_points.pop();
+            polygon_points.push(vertex);  // dropped location
+            polygon_points.push(vertex);  // mouse tracking vertex
+            frame.change_element("poly", {points: polygon_points});
+        }
+    }
+    element.on_canvas_event("keydown", dot_drops_point);
+    
+    var stop_click = function(event) {  
+        // When the user "clicks" in "continue" mode, complete the polygon.
+        var frame_location = frame.event_model_location(event);
+        // switch modes to continue polygon
+        frame.change_element("circ", {hide: true});
+        // change the last polygon point to track the cursor
+        polygon_points.pop();  // remove previous mouse tracking vertex
+        polygon_points.push([frame_location.x, frame_location.y]);
+        frame.change_element("poly", {points: polygon_points, close: true});
+        element.reset_events();
+        info_div.html("<div>Polygon complete.</div>")
+    };
+    element.on_canvas_event("click", stop_click);
+    
+    info_div.html("<div>Type '.' to add a vertex. Click to complete polygon.</div>");
+};
+
+start_polygon();
+
+$("<button>Restart</button>")
+.appendTo(element)
+.click(start_polygon);
+        </textarea></div>
+    
+    </div>
+
+<div id="discussion">
+        <h3>Discussion</h3>
+    
+        <div>
+            This demonstration uses the <code>reset_canvas</code> method
+to switch between diffferent interaction modes: beginning the polygon,
+continuing the polygon, or finishing the polygon.
+<p>
+Note that the transition between "start" and "continue" is delayed
+to prevent the new mode from possibly responding to duplicated mouse clicks.
+        </div>
+    
+    </div>
+    
+    <script>
+            var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+              lineNumbers: true,
+              matchBrackets: true,
+              continueComments: "Enter",
+              extraKeys: {"Ctrl-Q": "toggleComment"}
+            });
+     </script>
+            
+</body>
+</html>
