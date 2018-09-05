@@ -1055,7 +1055,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
             var stats = target.active_region(true); 
             var params = $.extend({
                 add_end_points: true,
-                skip_anchor: false,
+                skip_anchor: true,
             }, stats, config);
             // choose anchors
             var choose_anchor = function (min_value, max_value, anchor_parameter) {
@@ -1078,18 +1078,18 @@ XXXXX target.shaded_objects -- need to test for false hits!
             var y_anchor = choose_anchor(params.min_y, params.max_y, params.y_anchor);
             var bottom_config = $.extend({
                 anchor: x_anchor,
-                // axis_origin: {x: 0, y: y_anchor},
-                axis_origin: {x: 0, y: params.min_y},
-                //skip_anchor: true,
+                axis_origin: {x: 0, y: y_anchor},
+                //axis_origin: {x: 0, y: params.min_y},
+                skip_anchor: true,
                 min_value: params.min_x,
                 max_value: params.max_x
             }, params);
             target.bottom_axis(bottom_config);
             var left_config = $.extend({
                 anchor: y_anchor,
-                //axis_origin: {x: x_anchor, y:0},
-                axis_origin: {x: params.min_x, y:0},
-                //skip_anchor: true,
+                axis_origin: {x: x_anchor, y:0},
+                //axis_origin: {x: params.min_x, y:0},
+                skip_anchor: true,
                 min_value: params.min_y,
                 max_value: params.max_y,
             }, params);
@@ -1161,9 +1161,9 @@ XXXXX target.shaded_objects -- need to test for false hits!
             if ((params.skip_anchor) && (!params.tick_transform) && (params.anchor!=null)) {
                 // For double axes skip the label at the origin crossing point.
                 params.tick_transform = function(tick) {
-                    if (tick == params.anchor) {
+                    if (tick.offset == params.anchor) {
                         //return null;  // skip the anchor label and tick mark.
-                        return {offset: tick, text: " "}
+                        return {offset: tick.offset, text: " "}
                     }
                     return tick;
                 }
