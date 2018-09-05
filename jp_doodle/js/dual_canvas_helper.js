@@ -1399,7 +1399,20 @@ XXXXX target.shaded_objects -- need to test for false hits!
         delegate_to_parent("forget_objects");
         delegate_to_parent("set_visibilities");
         delegate_to_parent("transition");
-        delegate_to_parent("active_region");
+
+        frame.active_region = function (default_to_view_box) {
+            var pa = frame.parent_canvas.active_region(default_to_view_box);
+            var ll = frame.model_location(pa.min_x, pa.min_y);
+            var ul = frame.model_location(pa.min_x, pa.max_y);
+            var lr = frame.model_location(pa.max_x, pa.min_y);
+            var ur = frame.model_location(pa.max_x, pa.max_y);
+            return {
+                min_x: Math.min(ll.x, ul.x, lr.x, ur.x),
+                max_x: Math.max(ll.x, ul.x, lr.x, ur.x),
+                min_y: Math.min(ll.y, ul.y, lr.y, ur.y),
+                max_y: Math.max(ll.y, ul.y, lr.y, ur.y),
+            };
+        }
 
         frame.reset_frame = function () {
             frame.parent_canvas.detach_objects(frame);
