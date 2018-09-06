@@ -1,5 +1,5 @@
 ***TITLE
-image
+Images
 ***SCREENSHOT
 images/Images.png
 ***PROLOGUE
