@@ -40,13 +40,13 @@ class CanvasOperationsMixin(object):
 
     def circle(self, x, y, r, color="black", fill=True, **other_args):
         "Draw a circle or arc on the canvas frame."
-        s = dict(x=x, y=y, r=r, color=color, fill=fill)
+        s = clean_dict(x=x, y=y, r=r, color=color, fill=fill)
         s.update(other_args)
         self.call_method("circle", s)
 
     def line(self, x1, y1, x2, y2, color="black", lineWidth=None, **other_args):
         "Draw a line segment on the canvas frame."
-        s = dict(x1=x1, y1=y1, x2=x2, y2=y2, color=color)
+        s = clean_dict(x1=x1, y1=y1, x2=x2, y2=y2, color=color)
         if lineWidth:
             s["lineWidth"] = lineWidth
         s.update(other_args)
@@ -54,7 +54,7 @@ class CanvasOperationsMixin(object):
 
     def text(self, x, y, text, color="black", degrees=0, align="left", font=None, **other_args):
         "Draw some text on the canvas frame."
-        s = dict(x=x, y=y, text=text, color=color, degrees=degrees, align=align)
+        s = clean_dict(x=x, y=y, text=text, color=color, degrees=degrees, align=align)
         if font:
             s["font"] = font
         s.update(other_args)
@@ -62,18 +62,18 @@ class CanvasOperationsMixin(object):
 
     def rect(self, x, y, w, h, color="black", degrees=0, fill=True, **other_args):
         "Draw a rectangle on the canvas frame."
-        s = dict(x=x, y=y, w=w, h=h, color=color, degrees=degrees, fill=fill)
+        s = clean_dict(x=x, y=y, w=w, h=h, color=color, degrees=degrees, fill=fill)
         s.update(other_args)
         self.call_method("rect", s)
 
     def polygon(self, points, color="black", close=True, fill=True, **other_args):
         "Draw a polygon or polyline on the canvas frame"
-        s = dict(points=points, color=color, close=close, fill=fill)
+        s = clean_dict(points=points, color=color, close=close, fill=fill)
         s.update(other_args)
         self.call_method("polygon", s)
 
     def named_image(self, image_name, x, y, w, h, degrees=0, sx=None, sy=None, sWidth=None, sHeight=None, **other_args):
-        s = dict(
+        s = clean_dict(
             x=x, y=y, w=w, h=h, image_name=image_name, 
             sx=sx, sy=sy, sHeight=sHeight, sWidth=sWidth, degrees=degrees)
         s.update(other_args)
@@ -201,11 +201,21 @@ class CanvasOperationsMixin(object):
         # return an interface wrapper for the named frame
         return FrameInterface(self, name)
 
-    def lower_left_axes(self, min_x, min_y, max_x, max_y, **other_args):
-        s = dict(min_x=min_x, min_y=min_y, max_x=max_x, max_y=max_y)
+    def lower_left_axes(self, min_x=None, min_y=None, max_x=None, max_y=None, **other_args):
+        s = clean_dict(min_x=min_x, min_y=min_y, max_x=max_x, max_y=max_y)
         s.update(other_args)
         #self.call_method("lower_left_axes", s)
         self.element.lower_left_axes(s)
+
+
+def clean_dict(**kwargs):
+    "Like dict but with no None values"
+    result = {}
+    for kw in kwargs:
+        v = kwargs[kw]
+        if v is not None:
+            result[kw] = v
+    return result
 
 
 class DualCanvasWidget(jp_proxy_widget.JSProxyWidget, CanvasOperationsMixin):
