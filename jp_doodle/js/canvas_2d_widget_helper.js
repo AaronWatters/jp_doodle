@@ -221,10 +221,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             if (!target.canvas_y_up) {
                 // text draws in negative y
                 height = - height;
-                dy = -dy;
+                //dy = -dy;
             }
             if ((s.valign) && (s.valign == "center")) {
-                dy = -0.5 * height + dy;
+                dy = -0.3 * height + dy;
             }
             var rdy = dy - height * 0.2;
             // use a rectangle for masking operations
