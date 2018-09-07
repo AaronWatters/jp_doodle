@@ -217,7 +217,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // XXXX this is wrong -- only half the text will respond to events.  Needs rework.
                 //rwidth = - width * 0.5;
             }
-            var height = width * 1.8 / text.length;  // fudge...
+            var height = width * 2.4 / text.length;  // fudge...
             if (!target.canvas_y_up) {
                 // text draws in negative y
                 height = - height;
