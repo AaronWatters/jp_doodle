@@ -1030,7 +1030,13 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 for (var i=0; i<object_list.length; i++) {
                     var object_info = object_list[i];
                     if (object_info) {
+                        // remove from named objects
+                        var object_name = object_info.name;
+                        if ((object_name) && (target.name_to_object_info[object_name])) {
+                            target.name_to_object_info[object_name] = null;
+                        }
                         object_info.object_index = null;
+                        object_info.name = null;
                         if (object_info.is_frame) {
                             target.detach_objects(object_info);
                         }
@@ -1399,6 +1405,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
         delegate_to_parent("forget_objects");
         delegate_to_parent("set_visibilities");
         delegate_to_parent("transition");
+        delegate_to_parent("change_element");
 
         frame.active_region = function (default_to_view_box) {
             var pa = frame.parent_canvas.active_region(default_to_view_box);
