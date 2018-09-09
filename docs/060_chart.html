@@ -188,7 +188,7 @@ let draw_chart = function(data, mintemp, maxtemp, cities) {
                 let info = $.extend({}, event.object_info);  // keep a fresh copy
                 focus_city = info.city;
                 let color = cities[focus_city][2];
-                element.change_element("tracker_line", {hide: true});
+                element.change("tracker_line", {hide: true});
                 element.transition(name, {color: color, r: 10});
                 revert_circle = function () {
                     element.transition(name, {color: info.original_color, r: info.original_r, fill: true});
@@ -199,7 +199,7 @@ let draw_chart = function(data, mintemp, maxtemp, cities) {
                     // debugger;
                 }
             }
-            element.change_element("tracker_line", {hide: false, x1: x+dx, x2: x+dx})
+            element.change("tracker_line", {hide: false, x1: x+dx, x2: x+dx})
             element.transition("tracker_line", {y1: maxtemp, y2:mintemp});
             axislines = [];
             for (let city in cities) {
@@ -730,7 +730,7 @@ let draw_chart = function(data, mintemp, maxtemp, cities) {
                 let info = $.extend({}, event.object_info);  // keep a fresh copy
                 focus_city = info.city;
                 let color = cities[focus_city][2];
-                element.change_element("tracker_line", {hide: true});
+                element.change("tracker_line", {hide: true});
                 element.transition(name, {color: color, r: 10});
                 revert_circle = function () {
                     element.transition(name, {color: info.original_color, r: info.original_r, fill: true});
@@ -741,7 +741,7 @@ let draw_chart = function(data, mintemp, maxtemp, cities) {
                     // debugger;
                 }
             }
-            element.change_element("tracker_line", {hide: false, x1: x+dx, x2: x+dx})
+            element.change("tracker_line", {hide: false, x1: x+dx, x2: x+dx})
             element.transition("tracker_line", {y1: maxtemp, y2:mintemp});
             axislines = [];
             for (let city in cities) {

@@ -103,16 +103,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
             }
             if (target.u_selected) {
-                target.change_element(target.u_selected + "_u_label", {color: "black"});
+                target.change(target.u_selected + "_u_label", {color: "black"});
             }
             if (target.v_selected) {
-                target.change_element(target.v_selected + "_v_label", {color: "black"});
+                target.change(target.v_selected + "_v_label", {color: "black"});
             }
             if (u_anchor) {
-                target.change_element(u_anchor + "_u_label", {color: "red"});
+                target.change(u_anchor + "_u_label", {color: "red"});
             }
             if (v_anchor) {
-                target.change_element(v_anchor + "_v_label", {color: "red"});
+                target.change(v_anchor + "_v_label", {color: "red"});
             }
             target.u_selected = u_anchor;
             target.v_selected = v_anchor;
@@ -303,7 +303,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     })
                     var move_label = function(event) {
                         var loc = target.event_model_location(event);
-                        target.change_element(name, {"x":loc.x, "y":loc.y});
+                        target.change(name, {"x":loc.x, "y":loc.y});
                         var new_vec = vscale(
                             1.0 / labels_scale,
                             vadd(
@@ -334,10 +334,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         target.on_canvas_event("click", drop_label)
                     };
                     var redden = function(event) {
-                        target.change_element(name, {color: "red"});
+                        target.change(name, {color: "red"});
                     };
                     var blacken = function(event) {
-                        target.change_element(name, {color: "black"});
+                        target.change(name, {color: "black"});
                     };
                     target.on_canvas_event("click", pick_up_label, name);
                     target.on_canvas_event("mouseover", redden, name);

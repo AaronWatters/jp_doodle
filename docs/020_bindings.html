@@ -95,9 +95,9 @@ element.text({
     font: "20px Arial", x: 20, y:20, degrees: 5, color:"magenta"
 });
 var enlarge = function(event) {
-    element.change_element("bigger", {font: "40px Arial"});
+    element.change("bigger", {font: "40px Arial"});
     // change it back 5 seconds later
-    setTimeout(function () { element.change_element("bigger", {font: "20px Arial"}); }, 5000)
+    setTimeout(function () { element.change("bigger", {font: "20px Arial"}); }, 5000)
 };
 //element.on_canvas_event("click", enlarge, "bigger");
 
@@ -117,9 +117,9 @@ element.text({
     font: "20px Arial", x: 20, y:80, degrees: 5, color:"magenta"
 });
 var change_font = function(event) {
-    element.change_element("font", {font: "20px Courier"});
+    element.change("font", {font: "20px Courier"});
     // change it back 5 seconds later
-    setTimeout(function () { element.change_element("font", {font: "20px Arial"}); }, 5000)
+    setTimeout(function () { element.change("font", {font: "20px Arial"}); }, 5000)
 };
 //element.on_canvas_event("click", change_font, "font");
 
@@ -139,9 +139,9 @@ element.text({
     font: "20px Arial", x: 20, y:150, degrees: 5, color:"magenta"
 });
 var disappear = function(event) {
-    element.change_element("vanish", {hide: true});
+    element.change("vanish", {hide: true});
     // change it back 5 seconds later
-    setTimeout(function () { element.change_element("vanish", {hide: false}); }, 5000)
+    setTimeout(function () { element.change("vanish", {hide: false}); }, 5000)
 };
 //element.on_canvas_event("click", disappear, "vanish");
 
@@ -150,7 +150,7 @@ element.text({name: "key press", text: "no keyboard key press", x: 170, y:70, co
 
 var key_down_handler = function (event) {
     var code = event.keyCode;
-    element.change_element("key press", {color: "blue", text: "key press: " + code});
+    element.change("key press", {color: "blue", text: "key press: " + code});
 };
 
 var turn_events_on = function () {
@@ -164,7 +164,7 @@ var turn_events_on = function () {
     element.on_canvas_event("keydown", key_down_handler);
     // put the focus on the canvas so the canvas can handle keyboard events
     element.on_canvas_event("mousemove", element.focus_canvas);
-    element.change_element("event status", {text: "events enabled", color:"green"});
+    element.change("event status", {text: "events enabled", color:"green"});
 };
 
 var turn_events_off = function () {
@@ -175,7 +175,7 @@ var turn_events_off = function () {
     element.off_canvas_event("click", "vanish");
     element.off_canvas_event("keydown");
     element.off_canvas_event("mousemove");
-    element.change_element("event status", {text: "events disabled", color:"red"});
+    element.change("event status", {text: "events disabled", color:"red"});
 };
 
 $("<button>Turn events OFF</button>")
@@ -210,9 +210,9 @@ element.text({
     font: "20px Arial", x: 20, y:20, degrees: 5, color:"magenta"
 });
 var enlarge = function(event) {
-    element.change_element("bigger", {font: "40px Arial"});
+    element.change("bigger", {font: "40px Arial"});
     // change it back 5 seconds later
-    setTimeout(function () { element.change_element("bigger", {font: "20px Arial"}); }, 5000)
+    setTimeout(function () { element.change("bigger", {font: "20px Arial"}); }, 5000)
 };
 //element.on_canvas_event("click", enlarge, "bigger");
 
@@ -232,9 +232,9 @@ element.text({
     font: "20px Arial", x: 20, y:80, degrees: 5, color:"magenta"
 });
 var change_font = function(event) {
-    element.change_element("font", {font: "20px Courier"});
+    element.change("font", {font: "20px Courier"});
     // change it back 5 seconds later
-    setTimeout(function () { element.change_element("font", {font: "20px Arial"}); }, 5000)
+    setTimeout(function () { element.change("font", {font: "20px Arial"}); }, 5000)
 };
 //element.on_canvas_event("click", change_font, "font");
 
@@ -254,9 +254,9 @@ element.text({
     font: "20px Arial", x: 20, y:150, degrees: 5, color:"magenta"
 });
 var disappear = function(event) {
-    element.change_element("vanish", {hide: true});
+    element.change("vanish", {hide: true});
     // change it back 5 seconds later
-    setTimeout(function () { element.change_element("vanish", {hide: false}); }, 5000)
+    setTimeout(function () { element.change("vanish", {hide: false}); }, 5000)
 };
 //element.on_canvas_event("click", disappear, "vanish");
 
@@ -265,7 +265,7 @@ element.text({name: "key press", text: "no keyboard key press", x: 170, y:70, co
 
 var key_down_handler = function (event) {
     var code = event.keyCode;
-    element.change_element("key press", {color: "blue", text: "key press: " + code});
+    element.change("key press", {color: "blue", text: "key press: " + code});
 };
 
 var turn_events_on = function () {
@@ -279,7 +279,7 @@ var turn_events_on = function () {
     element.on_canvas_event("keydown", key_down_handler);
     // put the focus on the canvas so the canvas can handle keyboard events
     element.on_canvas_event("mousemove", element.focus_canvas);
-    element.change_element("event status", {text: "events enabled", color:"green"});
+    element.change("event status", {text: "events enabled", color:"green"});
 };
 
 var turn_events_off = function () {
@@ -290,7 +290,7 @@ var turn_events_off = function () {
     element.off_canvas_event("click", "vanish");
     element.off_canvas_event("keydown");
     element.off_canvas_event("mousemove");
-    element.change_element("event status", {text: "events disabled", color:"red"});
+    element.change("event status", {text: "events disabled", color:"red"});
 };
 
 $("<button>Turn events OFF</button>")

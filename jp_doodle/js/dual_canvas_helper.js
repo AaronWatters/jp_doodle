@@ -258,7 +258,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
             return object_info;
         };
 
-        target.change_element = function (name, opt, no_redraw) {
+        target.change = function (name, opt, no_redraw) {
             var object_info = target.name_to_object_info[name];
             if (object_info) {
                 // in place update object description
@@ -268,7 +268,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     target.request_redraw();
                 }
             } else {
-                console.warn("change_element: no such element with name " + name);
+                console.warn("change: no such element with name " + name);
             }
         };
         
@@ -653,13 +653,13 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 }
                 var loc = target.event_model_location(event);
                 points.push([loc.x, loc.y]);
-                target.change_element(options.name, {points: points});
+                target.change(options.name, {points: points});
             };
             target.on_canvas_event("mousemove", mouse_move_handler);
             var mouse_up_handler = function(event) {
                 lassoing = false;
                 // determine the names lassoed
-                target.change_element(options.name, {fill: true, close: true});
+                target.change(options.name, {fill: true, close: true});
                 var name_to_object = target.shaded_objects(options.name);
                 // clean up:
                 // delete the lasso polygon if requested
@@ -667,7 +667,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     target.forget_objects([options.name]);
                 } else {
                     // otherwise unfill it
-                    target.change_element(options.name, {fill: false});
+                    target.change(options.name, {fill: false});
                 }
                 target.restore_events(saved_event_handlers);
                 // callback with the names found mapped to descriptions
@@ -899,7 +899,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
             }
             var interpolator = function(lmd) {
                 var mapping = map_interp(lmd);
-                target.change_element(object_name, mapping);
+                target.change(object_name, mapping);
             };
             return interpolator;
         };
@@ -1401,11 +1401,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
             frame[name] = frame.parent_canvas[name];
         };
 
-        delegate_to_parent("change_element");
+        delegate_to_parent("change");
         delegate_to_parent("forget_objects");
         delegate_to_parent("set_visibilities");
         delegate_to_parent("transition");
-        delegate_to_parent("change_element");
 
         frame.active_region = function (default_to_view_box) {
             var pa = frame.parent_canvas.active_region(default_to_view_box);
@@ -1594,12 +1593,12 @@ XXXXX target.shaded_objects -- need to test for false hits!
         var put_circle = function(event) {
             var loc = element.event_model_location(event);
             var ploc = event.pixel_location;
-            element.change_element("green circle", {"x":loc.x, "y":loc.y});
+            element.change("green circle", {"x":loc.x, "y":loc.y});
             info.html(
                 "<div> [" + Math.round(loc.x) + ", " + Math.round(loc.y) + "] :: [" 
                 + Math.round(ploc.x) + ", " + Math.round(ploc.y) 
                 + "] </div>")
-            // change_element automatically schedules a redraw
+            // change automatically schedules a redraw
             //element.request_redraw();
         };
         var drop_circle = function(event) {
@@ -1638,7 +1637,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
         //element.rect({name: "binky", x:-10, y:-10, h:500, w:500, color: "blue"})
         var lasso_callback = function(names_mapping) {
             for (var name in names_mapping) {
-                element.change_element(name, {color: "pink"});
+                element.change(name, {color: "pink"});
             }
         };
         // lasso and delete the lasso polygon afterward

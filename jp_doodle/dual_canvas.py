@@ -91,9 +91,9 @@ class CanvasOperationsMixin(object):
         "Adjust the translate and scale so that the visible objects are centered and visible."
         self.element.fit(stats, margin)
 
-    def change_element(self, name, **changed_options):
+    def change(self, name, **changed_options):
         "Change the configuration of a named object and request redraw."
-        self.element.change_element(name, changed_options)
+        self.element.change(name, changed_options)
 
     def forget_objects(self, names):
         "Remove named objects from the canvas object list and request redraw."

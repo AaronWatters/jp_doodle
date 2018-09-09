@@ -61,8 +61,8 @@ var on_mouse_move = function(event) {
         var x = loc.x;
         var y = loc.y;
         if ((x > 0) && (y > 30) && (x < 170) && (y < 200)) {
-            element.change_element("highlight", {x:loc.x, y:loc.y});
-            element.change_element("mandrill square", {sx:loc.x, sy:200-loc.y})
+            element.change("highlight", {x:loc.x, y:loc.y});
+            element.change("mandrill square", {sx:loc.x, sy:200-loc.y})
         }
     } 
 };

@@ -34,7 +34,7 @@ var make_circles = function() {
 var lasso_callback = function(names_mapping) {
     // change lassoed elements to pink
     for (var name in names_mapping) {
-        element.change_element(name, {color: "pink"});
+        element.change(name, {color: "pink"});
     }
 };
 

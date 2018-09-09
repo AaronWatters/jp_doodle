@@ -136,7 +136,7 @@ var on_mouse_move = function(event) {
     if (picked_up_object) {
         var loc = element.event_model_location(event);
         info_area.html("<div>"+picked_up_object+":"+loc.x+","+loc.y+"</div>");
-        element.change_element(picked_up_object, {"x":loc.x, "y":loc.y});
+        element.change(picked_up_object, {"x":loc.x, "y":loc.y});
     } else if (event.canvas_name) {
         info_area.html("<div>Click to drag the object named " + event.canvas_name + "</div>");
     } else {
@@ -220,7 +220,7 @@ var on_mouse_move = function(event) {
     if (picked_up_object) {
         var loc = element.event_model_location(event);
         info_area.html("<div>"+picked_up_object+":"+loc.x+","+loc.y+"</div>");
-        element.change_element(picked_up_object, {"x":loc.x, "y":loc.y});
+        element.change(picked_up_object, {"x":loc.x, "y":loc.y});
     } else if (event.canvas_name) {
         info_area.html("<div>Click to drag the object named " + event.canvas_name + "</div>");
     } else {

@@ -115,7 +115,7 @@ var animate = function () {
     var seconds = ((new Date()).getTime() * 0.001) % 60;
     var degrees = - 6 * seconds;
     // Adjust the seconds hand.
-    element.change_element("seconds hand", {degrees: degrees});
+    element.change("seconds hand", {degrees: degrees});
     // every other second create or delete the blinking dot
     if ((seconds % 2) < 1) {
         if (!dot_visible) {
@@ -198,7 +198,7 @@ var animate = function () {
     var seconds = ((new Date()).getTime() * 0.001) % 60;
     var degrees = - 6 * seconds;
     // Adjust the seconds hand.
-    element.change_element("seconds hand", {degrees: degrees});
+    element.change("seconds hand", {degrees: degrees});
     // every other second create or delete the blinking dot
     if ((seconds % 2) < 1) {
         if (!dot_visible) {
