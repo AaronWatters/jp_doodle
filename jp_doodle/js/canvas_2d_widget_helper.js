@@ -394,8 +394,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 close: true,
                 coordinate_conversion: no_change_conversion,
                 //frame: target,
-                dx: 0,
-                dy: 0,
+                cx: 0,
+                cy: 0,
                 degrees: 0,
                 get_vertices: function(s) { return s.points; },
             }, opt);
@@ -403,11 +403,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             //context.fillStyle = s.color;
             var input_points = s.get_vertices(s);  // s.points;
             // convert input points using dx, dy, and degrees if provided
-            var dx = s.dx;
-            var dy = s.dy;
+            var cx = s.cx;
+            var cy = s.cy;
             var degrees = s.degrees;
             var points = input_points;
-            if ((dx) || (dy) || (degrees)) {
+            if (degrees) {
                 points = [];
                 // xxxx duplicate code here
                 var radians = degrees * Math.PI / 180.0;
@@ -415,11 +415,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var sn = Math.sin(radians);
                 for (var i=0; i<input_points.length; i++) {
                     var point = input_points[i];
-                    var x0 = point[0] + dx;
-                    var y0 = point[1] + dy;
-                    var x1 = (x0 * cs - y0 * sn);
-                    var y1 = (x0 * sn + y0 * cs);
-                    points.push([x1, y1]);
+                    var vx = point[0] - cx;
+                    var vy = point[1] - cy;
+                    var rx = (vx * cs - vy * sn);
+                    var ry = (vx * sn + vy * cs);
+                    points.push([rx + cx, ry + cy]);
                 }
             }
             // If no points do nothing.
