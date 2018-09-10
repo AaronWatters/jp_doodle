@@ -251,7 +251,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return s;
         };
 
-        target.polygon_stats = function(x, y, degrees, coordinate_conversion, points) {
+        target.rectangle_stats = function(x, y, w, h, degrees, coordinate_conversion, dx, dy) {
+            dx = dx || 0;
+            dy = dy || 0;
             var radians = 0.0;
             if (degrees) {
                 radians = degrees * Math.PI / 180.0;
@@ -259,44 +261,28 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var cvt = coordinate_conversion(x, y);
             var c = Math.cos(radians);
             var s = Math.sin(radians);
-            for (var i=0; i<points.length; i++) {
-                var point = points[i];
-                var dx = point[0];
-                var dy = point[1];
+            var add_offset = function (dx, dy) {
                 var x1 = cvt.x + (dx * c - dy * s);
                 var y1 = cvt.y + (dx * s + dy * c);
                 target.add_point_stats(x1, y1);
-            }
-        }
-
-        target.rectangle_stats = function(x, y, w, h, degrees, coordinate_conversion, dx, dy) {
-            dx = dx || 0;
-            dy = dy || 0;
-            var dx2 = w + dx;
-            var dy2 = h + dy;
-            var points = [
-                [dx, dy],
-                [dx2, dy],
-                [dx2, dy2],
-                [dx, dy2],
-            ];
-            return target.polygon_stats(x, y, degrees, coordinate_conversion, points);
+            };
+            //target.add_point_stats(cvt.x, cvt.y);
+            add_offset(dx, dy);
+            add_offset(w+dx, dy);
+            add_offset(dx, h+dy);
+            add_offset(w+dx, h+dy);
         }
 
         target.translate_and_rotate = function(x, y, degrees, coordinate_conversion) {
             var context = target.canvas_context;
             context.save();   // should be matched by restore elsewhere
-            if ((x) || (y)) {
-                x = x || 0;
-                y = y || 0;
-                var coords = coordinate_conversion(x, y);
-                var cvt = target.converted_location(coords.x, coords.y);
-                context.translate(cvt.x, cvt.y);
+            var coords = coordinate_conversion(x, y);
+            var cvt = target.converted_location(coords.x, coords.y);
+            if ((degrees) && (target.canvas_y_up)) {
+                degrees = -degrees;  // standard counter clockwise rotation convention.
             }
+            context.translate(cvt.x, cvt.y);
             if (degrees) {
-                if (target.canvas_y_up) {
-                    degrees = -degrees;   // std counter clockwise rotation.
-                }
                 context.rotate(degrees * Math.PI / 180.0);
             }
         };
@@ -401,22 +387,41 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         target.polygon = function(opt) {
             // eg: element.polygon({points: [[210, 10], [210, 110], [290, 60]], color: "brown"});
+            debugger;
             var s = $.extend({
-                x: 0,
-                y: 0,   // vertex translation
-                degrees: 0,  // vertex rotation
                 color: target.canvas_fillColor,
                 fill: true,  // if false then do a outline
                 close: true,
                 coordinate_conversion: no_change_conversion,
-                get_vertices: function(s) { return s.points; },
                 //frame: target,
+                dx: 0,
+                dy: 0,
+                degrees: 0,
+                get_vertices: function(s) { return s.points; },
             }, opt);
-            target.translate_and_rotate(s.x, s.y, s.degrees, s.coordinate_conversion);
             var context = target.canvas_context;
             //context.fillStyle = s.color;
-            //var points = s.points;
-            var points = s.get_vertices(s);
+            var input_points = s.get_vertices(s);  // s.points;
+            // convert input points using dx, dy, and degrees if provided
+            var dx = s.dx;
+            var dy = s.dy;
+            var degrees = s.degrees;
+            var points = input_points;
+            if ((dx) || (dy) || (degrees)) {
+                points = [];
+                // xxxx duplicate code here
+                var radians = degrees * Math.PI / 180.0;
+                var cs = Math.cos(radians);
+                var sn = Math.sin(radians);
+                for (var i=0; i<input_points.length; i++) {
+                    var point = input_points[i];
+                    var x0 = point[0] + dx;
+                    var y0 = point[1] + dy;
+                    var x1 = (x0 * cs - y0 * sn);
+                    var y1 = (x0 * sn + y0 * cs);
+                    points.push([x1, y1]);
+                }
+            }
             // If no points do nothing.
             if ((!points) || (points.length < 1)) {
                 return s;
@@ -442,7 +447,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 context.closePath();
             }
             fill_or_stroke(context, s);
-            context.restore();  // matches translate_and_rotate
             return s;
         };
 
