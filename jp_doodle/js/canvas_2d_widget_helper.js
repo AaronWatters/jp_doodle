@@ -251,9 +251,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return s;
         };
 
-        target.rectangle_stats = function(x, y, w, h, degrees, coordinate_conversion, dx, dy) {
-            dx = dx || 0;
-            dy = dy || 0;
+        target.polygon_stats = function(x, y, degrees, coordinate_conversion, points) {
             var radians = 0.0;
             if (degrees) {
                 radians = degrees * Math.PI / 180.0;
@@ -261,16 +259,28 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var cvt = coordinate_conversion(x, y);
             var c = Math.cos(radians);
             var s = Math.sin(radians);
-            var add_offset = function (dx, dy) {
+            for (var i=0; i<points.length; i++) {
+                var point = points[i];
+                var dx = point[0];
+                var dy = point[1];
                 var x1 = cvt.x + (dx * c - dy * s);
                 var y1 = cvt.y + (dx * s + dy * c);
                 target.add_point_stats(x1, y1);
-            };
-            //target.add_point_stats(cvt.x, cvt.y);
-            add_offset(dx, dy);
-            add_offset(w+dx, dy);
-            add_offset(dx, h+dy);
-            add_offset(w+dx, h+dy);
+            }
+        }
+
+        target.rectangle_stats = function(x, y, w, h, degrees, coordinate_conversion, dx, dy) {
+            dx = dx || 0;
+            dy = dy || 0;
+            var dx2 = w + dx;
+            var dy2 = h + dy;
+            var points = [
+                [dx, dy],
+                [dx2, dy],
+                [dx2, dy2],
+                [dx, dy2],
+            ];
+            return target.polygon_stats(x, y, degrees, coordinate_conversion, points);
         }
 
         target.translate_and_rotate = function(x, y, degrees, coordinate_conversion) {
@@ -392,6 +402,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.polygon = function(opt) {
             // eg: element.polygon({points: [[210, 10], [210, 110], [290, 60]], color: "brown"});
             var s = $.extend({
+                x: 0,
+                y: 0,   // vertex translation
+                degrees: 0,  // vertex rotation
                 color: target.canvas_fillColor,
                 fill: true,  // if false then do a outline
                 close: true,
@@ -399,6 +412,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 get_vertices: function(s) { return s.points; },
                 //frame: target,
             }, opt);
+            target.translate_and_rotate(s.x, s.y, s.degrees, s.coordinate_conversion);
             var context = target.canvas_context;
             //context.fillStyle = s.color;
             //var points = s.points;
@@ -428,6 +442,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 context.closePath();
             }
             fill_or_stroke(context, s);
+            context.restore();  // matches translate_and_rotate
             return s;
         };
 
