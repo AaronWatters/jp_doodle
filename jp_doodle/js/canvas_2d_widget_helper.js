@@ -276,13 +276,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.translate_and_rotate = function(x, y, degrees, coordinate_conversion) {
             var context = target.canvas_context;
             context.save();   // should be matched by restore elsewhere
-            var coords = coordinate_conversion(x, y);
-            var cvt = target.converted_location(coords.x, coords.y);
-            if ((degrees) && (target.canvas_y_up)) {
-                degrees = -degrees;  // standard counter clockwise rotation convention.
+            if ((x) || (y)) {
+                x = x || 0;
+                y = y || 0;
+                var coords = coordinate_conversion(x, y);
+                var cvt = target.converted_location(coords.x, coords.y);
+                context.translate(cvt.x, cvt.y);
             }
-            context.translate(cvt.x, cvt.y);
             if (degrees) {
+                if (target.canvas_y_up) {
+                    degrees = -degrees;   // std counter clockwise rotation.
+                }
                 context.rotate(degrees * Math.PI / 180.0);
             }
         };
@@ -392,11 +396,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 fill: true,  // if false then do a outline
                 close: true,
                 coordinate_conversion: no_change_conversion,
+                get_vertices: function(s) { return s.points; },
                 //frame: target,
             }, opt);
             var context = target.canvas_context;
             //context.fillStyle = s.color;
-            var points = s.points;
+            //var points = s.points;
+            var points = s.get_vertices(s);
             // If no points do nothing.
             if ((!points) || (points.length < 1)) {
                 return s;
