@@ -329,7 +329,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
             var draw_info = draw_fn(target.visible_canvas, object_info);
             // store additional information attached during the draw operation
             $.extend(object_info, draw_info);
-            if (object_info.name) {
+            if ((object_info.name) && (!object_info.no_events)) {
                 // also draw invisible object using psuedocolor for event lookups
                 target.draw_mask(object_info, target.invisible_canvas);
                 // Don't draw on the test canvas now.
@@ -374,7 +374,15 @@ XXXXX target.shaded_objects -- need to test for false hits!
             // XXX this wraps after about 16M elements.
             target.color_counter++;
             return target.garish_pseudocolor_array(target.color_counter);
-        }
+        };
+
+        target.name_counter = 0;
+
+        target.fresh_name = function(prefix) {
+            prefix = prefix || "object_name_";
+            target.name_counter++;
+            return prefix + target.name_counter;
+        };
 
         target.color_array_to_index = function(color_array) {
             // convert a color to a mapping key for storage and look ups
@@ -479,6 +487,9 @@ XXXXX target.shaded_objects -- need to test for false hits!
             if (for_name) {
                 var object_info = target.name_to_object_info[for_name];
                 if (object_info) {
+                    if (object_info.no_events) {
+                        throw new Error("object " + name + " has events disabled.");
+                    }
                     //var key = "on_" + event_type;
                     target.watch_event(event_type);
                     //object_info[key] = callback;
@@ -1047,6 +1058,209 @@ XXXXX target.shaded_objects -- need to test for false hits!
             }
         };
 
+        target.color_chooser = function(config, element) {
+            var settings = $.extend({
+                side: 200,
+                x: 0,
+                y: 0,
+                font: "normal 10px Arial",
+                callback: null,
+                background: "cornsilk",
+                outline: "black",
+            }, config);
+            element = element || target;
+
+            const color_max = 255;
+            // intensity is total of all colors
+            const max_intensity = color_max * 3 + 15;
+            var side = settings.side;
+            var current_intensity = max_intensity;
+        
+            var right = side * 0.25;
+            var left = side - right;
+            var top = left;
+            var bottom = right;
+            
+            slider_height = 20;
+            column_width = 0.25;
+
+            // Miscellaneous frame for positioning random elements
+            var misc_frame = element.frame_region(
+                settings.x, settings.y, settings.x + side, settings.y + side,
+                -10, -10, side+20, side+20);
+
+            // backgrounda and outline
+            if (settings.background) {
+                misc_frame.frame_rect({x: -5, y: -5, w: side+10, h: side+10, color:settings.background});
+            }
+            if (settings.outline) {
+                misc_frame.frame_rect({x: -5, y: -5, w: side+10, h: side+10, color:settings.outline, fill:false});
+            }
+            
+            // Intensity Frame: Adjusts the total color intensity level.
+            var intensity_frame = element.frame_region(
+                settings.x + left + 10, settings.y + 10, settings.x + side - 20, settings.y + side - 20, 
+                0, 0, 1.0, max_intensity+slider_height);
+            var gray_scale = function(intensity) {
+                var third = Math.max(0, Math.min(color_max, intensity * 0.333));
+                return element.array_to_color([third, third, third]);
+            };
+            // intensity indicator display
+            for (var intensity=0; intensity<=max_intensity; intensity++) {
+                intensity_frame.line({
+                    x1: column_width,
+                    y1: intensity,
+                    x2: 2 * column_width,
+                    y2: intensity,
+                    color: gray_scale(intensity)
+                })
+            }
+            // sliding intensity selector
+            var islider = target.fresh_name("islider");
+            intensity_frame.frame_rect({
+                name: islider,
+                x: 0,
+                y: current_intensity,
+                w: column_width * 3,
+                h: slider_height,
+                color: gray_scale(current_intensity),
+            });
+            // sliding selector outline
+            var ibox = target.fresh_name("ibox");
+            intensity_frame.frame_rect({
+                name: ibox,
+                x: 0,
+                y: current_intensity,
+                w: column_width * 3,
+                h: slider_height,
+                fill: false,
+                color: "black",
+            });
+            // invisible column receiving events
+            var icolumn = target.fresh_name("icolumn");
+            intensity_frame.frame_rect({
+                name: icolumn,
+                color: "rgba(0,0,0,0)",  // invisible
+                x: 0,
+                y: 0,
+                w: column_width * 3,
+                h: max_intensity,
+            });
+            // When the mouse is over the invisible column, adjust the intensity level.
+            var intensity_mouse_over = function(event) {
+                var frame_location = intensity_frame.event_model_location(event);
+                var intensity = Math.round(frame_location.y);
+                intensity = Math.min(Math.max(0, intensity), max_intensity);
+                element.change(ibox, {y:intensity});
+                element.change(islider, {y:intensity, color:gray_scale(intensity)});
+                current_intensity = intensity;
+                draw_triangle_frame();
+            }
+            element.on_canvas_event("mousemove", intensity_mouse_over, icolumn);
+            
+            // Relative color computed at current intensity level.
+            var color_array_at = function(r, g) {
+                if ((r < 0) || (g < 0) || (r + g > 1.0)) {
+                    return null;  // Out of bounds: no color.
+                }
+                var b = 1 - r - g;
+                var sr = Math.round(Math.min(255, current_intensity * r));
+                var sg = Math.round(Math.min(255, current_intensity * g));
+                var sb = Math.round(Math.min(255, current_intensity * b));
+                //return element.array_to_color([sr, sg, sb]);
+                return [sr, sg, sb];
+            };
+            
+            // Triangle Frame: Adjust current color choice at current intensity level.
+            // X and Y range from [0..1, 0..1] mapping into [0..left, bottom..top]
+            var triangle_frame = element.vector_frame(
+                {x:left, y:0},
+                {x:left*0.5, y:top-20},  // Y axis is slanted to the right.
+                {x:settings.x+10, y:bottom + settings.y+10}
+            );
+            var draw_triangle_frame = function() {
+                triangle_frame.reset_frame();   // remove any existing content.
+                // draw colors as circles
+                var delta = 0.02
+                var radius = top * delta;
+                for (var r=0; r<=1; r+=delta) {
+                    for (var g=0; g<=1 - r; g+=delta) {
+                        var color_array = color_array_at(r, g);
+                        if (color_array) {
+                            var color = element.array_to_color(color_array);
+                            // Draw circle with radius adjusted to the triangle_frame.
+                            triangle_frame.frame_circle({x:r, y:g, color:color, r:delta});
+                        }
+                    }
+                }
+                // mouse tracker circle (initially hidden)
+                var color_track = target.fresh_name("color_track");
+                triangle_frame.circle({
+                    name: color_track, fill: false, r:radius*3,
+                    x:0, y:0, color:"black", hide:true});
+                    
+                // When the mouse is over the color triangle, preview that color.
+                var color_mouse = function(event) {
+                    var frame_location = triangle_frame.event_model_location(event);
+                    var r = frame_location.x;
+                    var g = frame_location.y;
+                    var color_array = color_array_at(r, g);
+                    if (color_array) {
+                        var color = element.array_to_color(color_array);
+                        element.change(color_track, {x:r, y:g, hide:false});
+                        element.change(preview, {color: color})
+                        element.change(rgb, {text: color})
+                        // If the event is a click, then select the color as final.
+                        if (event.type == "click") {
+                            // Color selected!
+                            element.change(color_choice, {hide: false, text: color});
+                            element.change(final_color, {hide: false, color: color});
+                            if (settings.callback) {
+                                settings.callback(color_array, color);
+                            }
+                        }
+                    } else {
+                        element.change(color_track, {hide:true});
+                    }
+                }
+                // invisible triangle covering the color area to receive events
+                var color_choices = target.fresh_name("color_choices");
+                triangle_frame.polygon({
+                    points: [[0,0], [0,1], [1,0]],
+                    name: color_choices,
+                    color: "rgba(0,0,0,0)",
+                });
+                element.on_canvas_event("mousemove", color_mouse, color_choices);
+                element.on_canvas_event("click", color_mouse, color_choices);
+            };
+            draw_triangle_frame();
+            
+            // Preview swatch circle.
+            var swatch_offset = bottom * 0.5;
+            var preview = target.fresh_name("preview");
+            misc_frame.circle({name: preview, x:swatch_offset, y:side-swatch_offset,
+                r: swatch_offset, color: "white"})
+            // Outline for preview swatch.
+            misc_frame.circle({fill:false, x:swatch_offset, y:side-swatch_offset,
+                r: swatch_offset, color: "black"})
+            // Text representation of color over the preview swatch.
+            var rgb = target.fresh_name("rgb");
+            misc_frame.text({name: rgb, x:swatch_offset, y:side-swatch_offset,
+                font:settings.font, text:" ", valign:"center", align:"center",
+                background: "white"});
+                
+            // Final color selection rectangle.
+            var final_color = target.fresh_name("final");
+            misc_frame.rect({name: final_color, hide:true,
+                x:10, y:10, w:left-20, h: bottom*0.6
+            });
+            // Final color selection text representaiton.
+            var color_choice = target.fresh_name("color_choice");
+            misc_frame.text({name: color_choice, x:10+(left-20)*0.5, y:bottom*0.3+10, 
+                text: "click to select color", font: settings.font,
+                align: "center", valign: "center", background: "white"})
+        };
+        
         target.right_axis = function(config) {
             return target.bottom_axis(config, {x: 1, y: 0}, {x: 0, y: 1}, 0, "y")
         };
