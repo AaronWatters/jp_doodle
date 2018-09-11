@@ -162,6 +162,23 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return s;
         };
 
+        target.frame_circle = function(opt) {
+            // circle with radius adjusted w.r.t frame transform.
+            // xxxx somewhat heuristic -- not a distorted circle.
+            var s = $.extend({}, opt);
+            var cc = s.coordinate_conversion;
+            var origin = cc(0, 0);
+            var x1 = cc(1, 0);
+            var y1 = cc(0, 1);
+            var dd = target.vdistance;
+            var factor = Math.max(dd(origin, x1), dd(origin, y1));
+            // keep the original radius
+            s.frame_radius = s.frame_radius || s.r;
+            var r = s.frame_radius;
+            s.r = r * factor;
+            return target.circle(s);
+        }
+
         target.line = function(opt) {
             // eg: element.line({name:"a line", x1:100, y1:100, x2:150, y2:130, color:"brown"});
             var s = $.extend({
@@ -299,7 +316,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var yL = y + dy;
             var xR = xL + w;
             var yU = yL + h;
-            var points = [[xL,yL],[xR,yL],[xR,canvas_y_up],[xL,yU]];
+            var points = [[xL,yL],[xR,yL],[xR,yU],[xL,yU]];
             var s = $.extend({}, opt);
             s.points = points;
             s.cx = x;
@@ -407,7 +424,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         target.polygon = function(opt) {
             // eg: element.polygon({points: [[210, 10], [210, 110], [290, 60]], color: "brown"});
-            debugger;
             var s = $.extend({
                 color: target.canvas_fillColor,
                 fill: true,  // if false then do a outline
