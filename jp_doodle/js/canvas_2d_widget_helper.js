@@ -299,7 +299,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var yL = y + dy;
             var xR = xL + w;
             var yU = yL + h;
-            var points = [[xL,yL],[xR,yL],[xR,yU],[xL,yU]];
+            var points = [[xL,yL],[xR,yL],[xR,canvas_y_up],[xL,yU]];
             var s = $.extend({}, opt);
             s.points = points;
             s.cx = x;
@@ -635,6 +635,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         target.vlength = function(vector) {
             return Math.sqrt(target.vdot(vector, vector));
         };
+        target.vdistance = function(v1, v2) {
+            return target.vlength(
+                target.vadd(
+                    target.vscale(-1, v1),
+                    v2
+                )
+            );
+        }
         target.vint = function(vector) {
             var result = {};
             for (slot in vector){
