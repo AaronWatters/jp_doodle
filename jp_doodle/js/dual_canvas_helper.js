@@ -407,6 +407,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
         assign_shape_factory("line");
         assign_shape_factory("text");
         assign_shape_factory("rect");
+        assign_shape_factory("frame_rect");
         assign_shape_factory("polygon");
         assign_shape_factory("named_image");
 
@@ -1510,6 +1511,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
         override_positions("line");
         override_positions("text");
         override_positions("rect");
+        override_positions("frame_rect");
         override_positions("polygon");
 
         // define axes w.r.t the frame

@@ -287,6 +287,26 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
         };
 
+        target.frame_rect = function(opt) {
+            // rectangle distorted by reference frame transform
+            var x = opt.x || 0;
+            var y = opt.y || 0;
+            var h = opt.h || 0;
+            var w = opt.w || 0;
+            var dx = opt.dx || 0;
+            var dy = opt.dy || 0;
+            var xL = x + dx;
+            var yL = y + dy;
+            var xR = xL + w;
+            var yU = yL + h;
+            var points = [[xL,yL],[xR,yL],[xR,yU],[xL,yU]];
+            var s = $.extend({}, opt);
+            s.points = points;
+            s.cx = x;
+            s.cy = y;
+            return target.polygon(s);
+        }
+
         target.rect = function(opt) {
             // eg: element.rect({name:"a rect", x:10, y:50, w:10, h:120, color:"salmon", degrees:-15});
             var s = $.extend({
