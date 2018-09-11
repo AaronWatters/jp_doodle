@@ -177,7 +177,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var r = s.frame_radius;
             s.r = r * factor;
             return target.circle(s);
-        }
+        };
 
         target.line = function(opt) {
             // eg: element.line({name:"a line", x1:100, y1:100, x2:150, y2:130, color:"brown"});
@@ -188,6 +188,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 //frame: target,
             }, opt);
             var context = target.canvas_context;
+            context.save();
             context.beginPath();
             context.strokeStyle = s.color;
             context.lineWidth = s.lineWidth;
@@ -198,6 +199,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             context.moveTo(p1.x, p1.y);
             context.lineTo(p2.x, p2.y);
             context.stroke();
+            context.restore();
             // update stats
             if (target.canvas_stats) {
                 target.add_point_stats(fp1.x, fp1.y);
@@ -246,7 +248,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var rdy = dy - height * 0.2;
             // use a rectangle for masking operations
             s.draw_mask = function (to_canvas, info) {
-                to_canvas.rect({x: info.x, y: info.y, w:rwidth, h:height, degrees:info.degrees, color:info.color, dx:dx, dy:rdy});
+                //to_canvas.rect({x: info.x, y: info.y, w:rwidth, h:height, degrees:info.degrees, color:info.color, dx:dx, dy:rdy});
+                var config = $.extend({}, info);
+                config.w = rwidth;
+                config.h = height;
+                config.dx = dx;
+                config.dy = rdy;
+                to_canvas.rect(config);
             };
             // If background is provided, draw a background rectangle
             if (s.background) {
@@ -437,6 +445,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }, opt);
             var context = target.canvas_context;
             //context.fillStyle = s.color;
+            context.save();
             var input_points = s.get_vertices(s);  // s.points;
             // convert input points using dx, dy, and degrees if provided
             var cx = s.cx;
@@ -483,6 +492,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 context.closePath();
             }
             fill_or_stroke(context, s);
+            context.restore();
             return s;
         };
 
