@@ -250,6 +250,23 @@ which interpolate between one group of attribute values and another smoothly ove
 
 <tr>
     <td>
+        <a href="https://aaronwatters.github.io/jp_doodle/color_chooser.html">
+        <img width="200px" src="docs/images/color_chooser.png">
+        </a>
+    </td>
+    <td>
+        <h4><a href="https://aaronwatters.github.io/jp_doodle/color_chooser.html">
+        Color chooser
+        </a></h4>
+        <div>
+        A color chooser.  Choose a color and then click an object to apply the color.
+        </div>
+    </td>
+</tr>
+
+
+<tr>
+    <td>
         <a href="https://aaronwatters.github.io/jp_doodle/polygon.html">
         <img width="200px" src="docs/images/edit_poly.png">
         </a>

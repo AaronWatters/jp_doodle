@@ -91,7 +91,7 @@ over this aerial view of the city of Tulsa
 <br>
 Please see the repository notebook 
 <a href="https://github.com/AaronWatters/jp_doodle/blob/master/notebooks/misc/Spiders%20attack%20Tulsa.ipynb">
-<code>/notebooks/misc/Spiders attack Tulsa.ipynb</code>
+<code>/notebooks/misc/Spiders attack Tulsa.ipynb</code></a>
 for additional discussion and for an explanation of how the spider image was given a transparent background.
-</a>
+
 

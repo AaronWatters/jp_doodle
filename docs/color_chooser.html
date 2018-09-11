@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Drawing -- jp_doodle demo</title>
+    <title>Color chooser -- jp_doodle demo</title>
     <link rel="icon" type="image/png" href="images/clock.png">
     <link rel=stylesheet href="static/style.css">
 
@@ -61,18 +61,9 @@
     to easily run the Jupyter notebooks of the package.
 </em></p>
 
-<h1>Drawing</h1>
+<h1>Color chooser</h1>
 <div>
-    <p>
-The <code>jp_doodle</code> package includes <code>jQuery</code> plugins to
-make figures that can interact with mouse events and may be animated.
-</p>
-<p>
-In this figure we draw a number of objects on a canvas to illustrate
-basic shapes.  The figure also responds to mouse-over events.
-Move the mouse over the objects to see the "name" of the object undeneith
-the mouse.
-</p>
+    A color chooser.  Choose a color and then click an object to apply the color.
 </div>
 
 <div id="target_container">
@@ -82,16 +73,14 @@ the mouse.
 <script>
     var element = $('#target_div');
     //$('<img src="http://sipi.usc.edu/database/preview/misc/4.2.03.png">').appendTo(element);
-    // Attach an information div to the element to display event feedback.
-var info_area = $("<div>Dual canvas feedback will show here.</div>").appendTo(element);
-
-// Attach a dual canvas associated with the element as a child of the element
+    // Attach a dual canvas associated with the element as a child of the element
 // configured with width 400 and height 200.
 var config = {
-            width: 400,
-            height: 200,
+            width: 700,
+            height: 350,
         };
 element.dual_canvas_helper(config);
+
 
 // Draw some named elements on the canvas.
 // A filled yellow circle (disk) named "Colonel Mustard
@@ -134,35 +123,45 @@ element.text({
     x: 20, y:20, degrees: 5, color:"magenta"
 })
 
-// Mandrill eyes from a remote image
-var mandrill_url = "http://sipi.usc.edu/database/preview/misc/4.2.03.png";
-//var mandrill_url = "mandrill.png"
-element.name_image_url("mandrill", mandrill_url);
-// just the eyes, not the whole image
-element.named_image({
-    name: "mandrill eyes",
-    image_name: "mandrill", x:220, y:170, w:80, h:30,
-    sx:30, sy:15, sWidth:140, sHeight:20
-    })
+// Position a color chooser on the canvas.
+var chosen_color = null;
+
+element.color_chooser({
+    x: 310, y: 50, side:200, font: "normal 7px Arial",
+    callback: function(color_array, color_string) { chosen_color = color_string; }
+});
+
+
+// mouse tracker circle (initially hidden)
+element.circle({
+    name:"mouse_track", r:5,
+    no_events: true,  // This object is invisible to events.
+    x:0, y:0, color:"black", hide:true});
+    
+element.text({
+    x:10, y:-10, name: "explanation",
+    text: "Choose a color then click an object to change its color",
+})
 
 // Center and scale the figure to fit in the available area.
-element.fit()
+element.fit(null, 20)
 
-// Add axes and refit so the axes appear in the frame.
-element.lower_left_axes();
-element.fit()
-
-// Attach a mouse move event which indicates what object the mouse is over.
 var on_mouse_move = function(event) {
-    if (event.canvas_name) {
-        info_area.html("<div>You are over the object named " + event.canvas_name + "</div>");
+    var name = event.canvas_name;
+    var location = element.event_model_location(event);
+    if ((chosen_color) && (name) && (location.x < 310)) {
+        element.change("mouse_track",
+            {hide:false, x:location.x, y:location.y, color:chosen_color});
+        // on click change the color of the named object
+        if (event.type == "click") {
+            element.transition(name, {color: chosen_color});
+        }
     } else {
-        info_area.html("<div>You are not over anybody.</div>");
+        element.change("mouse_track", {hide: true});
     }
 };
 element.on_canvas_event("mousemove", on_mouse_move);
-
-$("<div>Please mouse over the canvas area to see event feedback.</div>").appendTo(element)
+element.on_canvas_event("click", on_mouse_move);
 </script>
 
 <div id="code_text">
@@ -170,16 +169,14 @@ $("<div>Please mouse over the canvas area to see event feedback.</div>").appendT
     
         <div><textarea id="code" name="code">
 var element = $('#target_div');
-// Attach an information div to the element to display event feedback.
-var info_area = $("<div>Dual canvas feedback will show here.</div>").appendTo(element);
-
 // Attach a dual canvas associated with the element as a child of the element
 // configured with width 400 and height 200.
 var config = {
-            width: 400,
-            height: 200,
+            width: 700,
+            height: 350,
         };
 element.dual_canvas_helper(config);
+
 
 // Draw some named elements on the canvas.
 // A filled yellow circle (disk) named "Colonel Mustard
@@ -222,35 +219,45 @@ element.text({
     x: 20, y:20, degrees: 5, color:"magenta"
 })
 
-// Mandrill eyes from a remote image
-var mandrill_url = "http://sipi.usc.edu/database/preview/misc/4.2.03.png";
-//var mandrill_url = "mandrill.png"
-element.name_image_url("mandrill", mandrill_url);
-// just the eyes, not the whole image
-element.named_image({
-    name: "mandrill eyes",
-    image_name: "mandrill", x:220, y:170, w:80, h:30,
-    sx:30, sy:15, sWidth:140, sHeight:20
-    })
+// Position a color chooser on the canvas.
+var chosen_color = null;
+
+element.color_chooser({
+    x: 310, y: 50, side:200, font: "normal 7px Arial",
+    callback: function(color_array, color_string) { chosen_color = color_string; }
+});
+
+
+// mouse tracker circle (initially hidden)
+element.circle({
+    name:"mouse_track", r:5,
+    no_events: true,  // This object is invisible to events.
+    x:0, y:0, color:"black", hide:true});
+    
+element.text({
+    x:10, y:-10, name: "explanation",
+    text: "Choose a color then click an object to change its color",
+})
 
 // Center and scale the figure to fit in the available area.
-element.fit()
+element.fit(null, 20)
 
-// Add axes and refit so the axes appear in the frame.
-element.lower_left_axes();
-element.fit()
-
-// Attach a mouse move event which indicates what object the mouse is over.
 var on_mouse_move = function(event) {
-    if (event.canvas_name) {
-        info_area.html("<div>You are over the object named " + event.canvas_name + "</div>");
+    var name = event.canvas_name;
+    var location = element.event_model_location(event);
+    if ((chosen_color) && (name) && (location.x < 310)) {
+        element.change("mouse_track",
+            {hide:false, x:location.x, y:location.y, color:chosen_color});
+        // on click change the color of the named object
+        if (event.type == "click") {
+            element.transition(name, {color: chosen_color});
+        }
     } else {
-        info_area.html("<div>You are not over anybody.</div>");
+        element.change("mouse_track", {hide: true});
     }
 };
 element.on_canvas_event("mousemove", on_mouse_move);
-
-$("<div>Please mouse over the canvas area to see event feedback.</div>").appendTo(element)
+element.on_canvas_event("click", on_mouse_move);
         </textarea></div>
     
     </div>
@@ -259,32 +266,10 @@ $("<div>Please mouse over the canvas area to see event feedback.</div>").appendT
         <h3>Discussion</h3>
     
         <div>
-            <p>
-The above figure illustrates the dual canvas component provided by the package
-The illustration attaches a dual canvas to a jQuery element and configures the canvas.
-It then draws a number of objects on the canvas and attaches a global event handler
-to the canvas.
-</p>
-<p>
-The dual canvas is implemented using a JQuery plugin which has dependencies --
-it requires JQuery to be available and the basic 2d canvas plugin from the package.
-</p>
-
-<center>
-<blockquote>
-<pre>
-https://code.jquery.com/jquery-1.12.4.js
-jp_doodle_js/canvas_2d_widget_helper.js
-</pre>
-</blockquote>
-</center>
-
-<p>
-The dual canvas is implemented in <code>jp_doodle_js/dual_canvas_helper.js</code>
-</p>
-
-<p>
-</p>
+            The color chooser is built in to dual canvases
+via the <code>color_chooser</code> method.  The chooser
+implementation illustrates the use of multiple references frames
+in combination with mouse events.
         </div>
     
     </div>
