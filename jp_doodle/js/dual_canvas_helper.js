@@ -1147,9 +1147,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 })
             }
             // sliding intensity selector
-            var islider = target.fresh_name("islider");
-            intensity_frame.frame_rect({
-                name: islider,
+            var islider = intensity_frame.frame_rect({
+                name: true,  // assign an unused name
                 x: 0,
                 y: current_intensity,
                 w: column_width * 3,
@@ -1157,9 +1156,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 color: gray_scale(current_intensity),
             });
             // sliding selector outline
-            var ibox = target.fresh_name("ibox");
-            intensity_frame.frame_rect({
-                name: ibox,
+            var ibox = intensity_frame.frame_rect({
+                name: true,
                 x: 0,
                 y: current_intensity,
                 w: column_width * 3,
@@ -1168,9 +1166,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 color: "black",
             });
             // invisible column receiving events
-            var icolumn = target.fresh_name("icolumn");
-            intensity_frame.frame_rect({
-                name: icolumn,
+            var icolumn = intensity_frame.frame_rect({
+                name: true,
                 color: "rgba(0,0,0,0)",  // invisible
                 x: 0,
                 y: 0,
@@ -1225,9 +1222,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     }
                 }
                 // mouse tracker circle (initially hidden)
-                var color_track = target.fresh_name("color_track");
-                triangle_frame.circle({
-                    name: color_track, fill: false, r:radius*3,
+                var color_track = triangle_frame.circle({
+                    name: true, fill: false, r:radius*3,
                     x:0, y:0, color:"black", hide:true});
                     
                 // When the mouse is over the color triangle, preview that color.
@@ -1255,10 +1251,9 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     }
                 }
                 // invisible triangle covering the color area to receive events
-                var color_choices = target.fresh_name("color_choices");
-                triangle_frame.polygon({
+                var color_choices = triangle_frame.polygon({
                     points: [[0,0], [0,1], [1,0]],
-                    name: color_choices,
+                    name: true,
                     color: "rgba(0,0,0,0)",
                 });
                 element.on_canvas_event("mousemove", color_mouse, color_choices);
@@ -1268,26 +1263,22 @@ XXXXX target.shaded_objects -- need to test for false hits!
             
             // Preview swatch circle.
             var swatch_offset = bottom * 0.5;
-            var preview = target.fresh_name("preview");
-            misc_frame.circle({name: preview, x:swatch_offset, y:side-swatch_offset,
+            var preview = misc_frame.circle({name: true, x:swatch_offset, y:side-swatch_offset,
                 r: swatch_offset, color: "white"})
             // Outline for preview swatch.
             misc_frame.circle({fill:false, x:swatch_offset, y:side-swatch_offset,
                 r: swatch_offset, color: "black"})
             // Text representation of color over the preview swatch.
-            var rgb = target.fresh_name("rgb");
-            misc_frame.text({name: rgb, x:swatch_offset, y:side-swatch_offset,
+            var rgb = misc_frame.text({name: true, x:swatch_offset, y:side-swatch_offset,
                 font:settings.font, text:" ", valign:"center", align:"center",
                 background: "white"});
                 
             // Final color selection rectangle.
-            var final_color = target.fresh_name("final");
-            misc_frame.rect({name: final_color, hide:true,
+            var final_color = misc_frame.rect({name: true, hide:true,
                 x:10, y:10, w:left-20, h: bottom*0.6
             });
             // Final color selection text representaiton.
-            var color_choice = target.fresh_name("color_choice");
-            misc_frame.text({name: color_choice, x:10+(left-20)*0.5, y:bottom*0.3+10, 
+            var color_choice = misc_frame.text({name: true, x:10+(left-20)*0.5, y:bottom*0.3+10, 
                 text: "click to select color", font: settings.font,
                 align: "center", valign: "center", background: "white"})
         };
