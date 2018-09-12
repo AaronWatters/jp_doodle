@@ -218,6 +218,12 @@ XXXXX target.shaded_objects -- need to test for false hits!
         target.store_object_info = function(info, draw_on_canvas, in_place) {
             // xxxx don't need to assign psuedocolors to frames???
             var name = info.name;
+            // automatically assign name if needed
+            if ((name == true) || ((!name) && (info.events))) {
+                prefix = info.shape_name || "anon";
+                name = target.fresh_name(prefix);
+                info.name = name;
+            }
             var store_target = info.frame || target;
             var object_list = store_target.object_list;
             // By default append the new object.
