@@ -272,13 +272,18 @@ XXXXX target.shaded_objects -- need to test for false hits!
             }
         };
         
-        target.forget_objects = function(names) {
+        target.forget_objects = function(names_or_infos) {
             // modify to remove all frame members.... xxxxxx
             var object_infos = [];
-            for (var i=0; i<names.length; i++) {
-                var name = names[i];
-                var object_info = target.name_to_object_info[name];
-                if (object_info) {
+            for (var i=0; i<names_or_infos.length; i++) {
+                var object_info = names_or_infos[i];
+                var name = object_info;
+                if ((typeof name) == "string") {
+                    object_info = target.name_to_object_info[name];
+                } else if (object_info) {
+                    name = object_info.name;
+                }
+                if ((name) && (object_info) && (target.name_to_object_info[name])) {
                     object_infos.push(object_info);
                 }  // ignore request to forget unknown object
             }
