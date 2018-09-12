@@ -598,10 +598,14 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 }
                 if ((e.canvas_name) && (!target.disable_element_events)) {
                     e.object_info = target.name_to_object_info[e.canvas_name];
-                    if ((e.object_info) && (target.event_info.object_event_handlers[event_type])) {
-                        //var key = "on_" + event_type;
-                        //object_handler = e.object_info[key];
-                        object_handler = target.event_info.object_event_handlers[event_type][e.canvas_name];
+                    var object_handlers = target.event_info.object_event_handlers[event_type];
+                    if ((e.object_info) && (object_handlers)) {
+                        // look for a handler specific to this object
+                        object_handler = object_handlers[e.canvas_name];
+                        if ((!object_handler) && (e.object_info.frame)) {
+                            // otherwise, look for a handler specific to this frame
+                            object_handler = object_handlers[e.object_info.frame.name];
+                        }
                     }
                 }
                 // No "event bubbling"?
@@ -733,6 +737,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
         // XXXX move frame parameter config to frame methods to enable frame config transitions
 
         target.rframe = function(scale_x, scale_y, translate_x, translate_y, name) {
+            scale_x = scale_x | 1.0;
+            scale_y = scale_y | 1.0;
+            translate_x = translate_x | 0;
+            translate_y = translate_y | 0;
             return target.vector_frame(
                 {x: scale_x, y:0},
                 {x:0, y: scale_y},
@@ -1631,7 +1639,9 @@ XXXXX target.shaded_objects -- need to test for false hits!
             y_vector: y_vector,
             xy_offset: xy_offset,
             name: name,
-            is_frame: true
+            is_frame: true,
+            events: true,   // by default support events
+            shape_name: "frame",
         };
 
         // Delegate appropriate methods to parent
