@@ -519,13 +519,13 @@ XXXXX target.shaded_objects -- need to test for false hits!
             }
         };
 
-        target.off_canvas_event = function(event_type, for_name) {
-            if (for_name) {
-                var object_info = target.name_to_object_info[for_name];
-                if ((object_info) && (target.event_info.object_event_handlers[event_type])) {
-                    //var key = "on_" + event_type;
-                    //object_info[key] = null;
-                    target.event_info.object_event_handlers[event_type][for_name] = null;
+        target.off_canvas_event = function(event_type, for_name_or_info) {
+            if (for_name_or_info) {
+                var object_info =  target.get_object_info(for_name_or_info);
+                var for_name = object_info.name;
+                if ((object_info) && (target.event_info.object_event_handlers[event_type]) &&
+                        (target.event_info.object_event_handlers[event_type][for_name])) {
+                    delete target.event_info.object_event_handlers[event_type][for_name];
                 } else {
                     console.warn("in off_canvas_event no object found with name: " + for_name);
                 }
