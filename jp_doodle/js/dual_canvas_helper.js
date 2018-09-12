@@ -405,10 +405,12 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     $.extend(s, info);
                 };
                 var object_info = target.store_object_info(opt, draw);
+                object_info.shape_name = shape_name;
                 if (!wait) {
                     // draw the object now.
                     target.draw_object_info(object_info);
                 }
+                return object_info;
             };
         };
         assign_shape_factory("circle");
@@ -703,6 +705,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 name
             );
         };
+
+        // XXXX move frame parameter config to frame methods to enable frame config transitions
 
         target.rframe = function(scale_x, scale_y, translate_x, translate_y, name) {
             return target.vector_frame(
@@ -1046,7 +1050,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                         // remove from named objects
                         var object_name = object_info.name;
                         if ((object_name) && (target.name_to_object_info[object_name])) {
-                            target.name_to_object_info[object_name] = null;
+                            delete target.name_to_object_info[object_name];
                         }
                         object_info.object_index = null;
                         object_info.name = null;
