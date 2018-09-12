@@ -485,9 +485,22 @@ XXXXX target.shaded_objects -- need to test for false hits!
             // ??? no provision for cancelling events on the visible canvas?
         };
 
-        target.on_canvas_event = function(event_type, callback, for_name) {
-            if (for_name) {
-                var object_info = target.name_to_object_info[for_name];
+        target.get_object_info = function(for_name_or_info) {
+            // get the stored object info for a name or a possibly old version of object info.
+            var for_name = for_name_or_info;
+            if ((typeof for_name) != "string") {
+                for_name = for_name_or_info.name;
+                if (!for_name) {
+                    throw new Error("cannot retrieve info for unnamed object.");
+                }
+            }
+            return target.name_to_object_info[for_name];
+        }
+
+        target.on_canvas_event = function(event_type, callback, for_name_or_info) {
+            if (for_name_or_info) {
+                var object_info = target.get_object_info(for_name_or_info);
+                var for_name = object_info.name;
                 if (object_info) {
                     if (object_info.no_events) {
                         throw new Error("object " + name + " has events disabled.");
