@@ -887,12 +887,14 @@ XXXXX target.shaded_objects -- need to test for false hits!
             target.active_transitions = remaining;
         };
 
-        target.transition = function(object_name, to_values, seconds_duration, mode) {
+        target.transition = function(object_name_or_info, to_values, seconds_duration, mode) {
+            var object_info = target.get_object_info(object_name_or_info);
+            var object_name = object_info.name;
             mode = mode || "linear";
             seconds_duration = seconds_duration || 1;
             var start = (new Date()).getTime();
             var end = start + 1000 * seconds_duration;
-            var from_values = $.extend({}, target.name_to_object_info[object_name]);
+            var from_values = $.extend({}, object_info);
             var transition = {
                 start: start,
                 end: end,
