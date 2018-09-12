@@ -258,8 +258,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
             return object_info;
         };
 
-        target.change = function (name, opt, no_redraw) {
-            var object_info = target.name_to_object_info[name];
+        target.change = function (name_or_info, opt, no_redraw) {
+            var object_info = target.get_object_info(name_or_info);
             if (object_info) {
                 // in place update object description
                 $.extend(object_info, opt);
@@ -309,10 +309,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
             }
         };
 
-        target.set_visibilities = function (names, visibility) {
-            for (var i=0; i<names.length; i++) {
-                var name = names[i];
-                var object_info = target.name_to_object_info[name];
+        target.set_visibilities = function (names_or_infos, visibility) {
+            for (var i=0; i<names_or_infos.length; i++) {
+                var name_or_info = names_or_infos[i];
+                var object_info = target.get_object_info(name_or_info);
                 if (object_info) {
                     object_info.hide = (!visibility);
                 }
