@@ -756,13 +756,14 @@ XXXXX target.shaded_objects -- need to test for false hits!
             setTimeout(finish, delay);
         };
 
-        target.shaded_objects = function(shading_name) {
+        target.shaded_objects = function(shading_name_or_info) {
             // determine the names of named objects underneith the shading object "paint".
             // Used for example to implement "lasso" selected objects under a polygon.
             // xxx This could be optimized: it is a brute force scan of the whole canvas 2x right now.
             // xxx This method will not find shaded objects that are obscured by other objects.
             // XXXX need to use the test_canvas here!!!
-            var object_info = target.name_to_object_info[shading_name];
+            var object_info = target.get_object_info(shading_name_or_info);
+            var shading_name = object_info.name;
             if (!object_info) {
                 throw new Error("can't find object with name " + shading_name);
             }
