@@ -737,10 +737,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
         // XXXX move frame parameter config to frame methods to enable frame config transitions
 
         target.rframe = function(scale_x, scale_y, translate_x, translate_y, name) {
-            scale_x = scale_x | 1.0;
-            scale_y = scale_y | 1.0;
-            translate_x = translate_x | 0;
-            translate_y = translate_y | 0;
+            scale_x = scale_x || 1.0;
+            scale_y = scale_y || 1.0;
+            translate_x = translate_x || 0;
+            translate_y = translate_y || 0;
             return target.vector_frame(
                 {x: scale_x, y:0},
                 {x:0, y: scale_y},
@@ -1624,6 +1624,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
     {
         // View into canvas with shifted and scaled positions.
         // Do not adjust rectangle w/h or orientation, text parameters, or circle radius.
+        debugger;
         if (!x_vector) {
             x_vector = {x: 1, y: 0};
         }
@@ -1653,6 +1654,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
         delegate_to_parent("forget_objects");
         delegate_to_parent("set_visibilities");
         delegate_to_parent("transition");
+        delegate_to_parent("name_image_url");
+        delegate_to_parent("name_image_data");
 
         frame.active_region = function (default_to_view_box) {
             var pa = frame.parent_canvas.active_region(default_to_view_box);
@@ -1761,6 +1764,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
         override_positions("frame_rect");
         override_positions("frame_circle");
         override_positions("polygon");
+        override_positions("named_image");
 
         // define axes w.r.t the frame
         parent_canvas.dual_canvas_helper.add_geometry_logic(frame);
