@@ -46,7 +46,7 @@ class CanvasOperationsMixin(object):
 
     def frame_circle(self, x, y, r, color="black", fill=True, **other_args):
         "Draw a circle or arc on the canvas frame with radius adjusted to the frame."
-        return self.frame(x, y, r, color, fill, method_name="frame_circle", **other_args)
+        return self.circle(x, y, r, color, fill, method_name="frame_circle", **other_args)
 
     def line(self, x1, y1, x2, y2, color="black", lineWidth=None, **other_args):
         "Draw a line segment on the canvas frame."
@@ -72,7 +72,7 @@ class CanvasOperationsMixin(object):
 
     def frame_rect(self, x, y, w, h, color="black", degrees=0, fill=True, **other_args):
         "Draw a rectangle on the canvas frame adjusted by frame transform."
-        return self.rect(self, x, y, w, h, color, degrees, fill, method_name="frame_rect", **other_args)
+        return self.rect(x, y, w, h, color, degrees, fill, method_name="frame_rect", **other_args)
 
     def polygon(self, points, color="black", close=True, fill=True, **other_args):
         "Draw a polygon or polyline on the canvas frame"
