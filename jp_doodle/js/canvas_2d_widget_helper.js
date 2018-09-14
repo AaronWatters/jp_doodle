@@ -166,12 +166,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // circle with radius adjusted w.r.t frame transform.
             // xxxx somewhat heuristic -- not a distorted circle.
             var s = $.extend({}, opt);
+            var factor = 1.0;
             var cc = s.coordinate_conversion;
-            var origin = cc(0, 0);
-            var x1 = cc(1, 0);
-            var y1 = cc(0, 1);
-            var dd = target.vdistance;
-            var factor = Math.max(dd(origin, x1), dd(origin, y1));
+            if (cc) {
+                var origin = cc(0, 0);
+                var x1 = cc(1, 0);
+                var y1 = cc(0, 1);
+                var dd = target.vdistance;
+                var factor = Math.max(dd(origin, x1), dd(origin, y1));
+            }
             // keep the original radius
             s.frame_radius = s.frame_radius || s.r;
             var r = s.frame_radius;
