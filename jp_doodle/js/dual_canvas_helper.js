@@ -1624,7 +1624,6 @@ XXXXX target.shaded_objects -- need to test for false hits!
     {
         // View into canvas with shifted and scaled positions.
         // Do not adjust rectangle w/h or orientation, text parameters, or circle radius.
-        debugger;
         if (!x_vector) {
             x_vector = {x: 1, y: 0};
         }

@@ -250,6 +250,30 @@ which interpolate between one group of attribute values and another smoothly ove
 
 <tr>
     <td>
+        <a href="https://aaronwatters.github.io/jp_doodle/090_frames.html">
+        <img width="200px" src="docs/images/Frame.png">
+        </a>
+    </td>
+    <td>
+        <h4><a href="https://aaronwatters.github.io/jp_doodle/090_frames.html">
+        Frames
+        </a></h4>
+        <div>
+        <p>
+Objects can be created in reference frames in 
+order to share the same drawing order priority and the same coordinate system.
+</p>
+<p>
+In this demonstration drag the
+<span style="color:white; background-color:blue">blue controls</span>
+to change the parameters of the frame on the right.
+        </div>
+    </td>
+</tr>
+
+
+<tr>
+    <td>
         <a href="https://aaronwatters.github.io/jp_doodle/color_chooser.html">
         <img width="200px" src="docs/images/color_chooser.png">
         </a>

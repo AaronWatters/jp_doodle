@@ -218,6 +218,12 @@ XXXXX target.shaded_objects -- need to test for false hits!
         target.store_object_info = function(info, draw_on_canvas, in_place) {
             // xxxx don't need to assign psuedocolors to frames???
             var name = info.name;
+            // automatically assign name if needed
+            if ((name == true) || ((!name) && (info.events))) {
+                prefix = info.shape_name || "anon";
+                name = target.fresh_name(prefix);
+                info.name = name;
+            }
             var store_target = info.frame || target;
             var object_list = store_target.object_list;
             // By default append the new object.
@@ -258,8 +264,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
             return object_info;
         };
 
-        target.change = function (name, opt, no_redraw) {
-            var object_info = target.name_to_object_info[name];
+        target.change = function (name_or_info, opt, no_redraw) {
+            var object_info = target.get_object_info(name_or_info);
             if (object_info) {
                 // in place update object description
                 $.extend(object_info, opt);
@@ -272,13 +278,18 @@ XXXXX target.shaded_objects -- need to test for false hits!
             }
         };
         
-        target.forget_objects = function(names) {
+        target.forget_objects = function(names_or_infos) {
             // modify to remove all frame members.... xxxxxx
             var object_infos = [];
-            for (var i=0; i<names.length; i++) {
-                var name = names[i];
-                var object_info = target.name_to_object_info[name];
-                if (object_info) {
+            for (var i=0; i<names_or_infos.length; i++) {
+                var object_info = names_or_infos[i];
+                var name = object_info;
+                if ((typeof name) == "string") {
+                    object_info = target.name_to_object_info[name];
+                } else if (object_info) {
+                    name = object_info.name;
+                }
+                if ((name) && (object_info) && (target.name_to_object_info[name])) {
                     object_infos.push(object_info);
                 }  // ignore request to forget unknown object
             }
@@ -309,10 +320,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
             }
         };
 
-        target.set_visibilities = function (names, visibility) {
-            for (var i=0; i<names.length; i++) {
-                var name = names[i];
-                var object_info = target.name_to_object_info[name];
+        target.set_visibilities = function (names_or_infos, visibility) {
+            for (var i=0; i<names_or_infos.length; i++) {
+                var name_or_info = names_or_infos[i];
+                var object_info = target.get_object_info(name_or_info);
                 if (object_info) {
                     object_info.hide = (!visibility);
                 }
@@ -405,10 +416,12 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     $.extend(s, info);
                 };
                 var object_info = target.store_object_info(opt, draw);
+                object_info.shape_name = shape_name;
                 if (!wait) {
                     // draw the object now.
                     target.draw_object_info(object_info);
                 }
+                return object_info;
             };
         };
         assign_shape_factory("circle");
@@ -483,9 +496,22 @@ XXXXX target.shaded_objects -- need to test for false hits!
             // ??? no provision for cancelling events on the visible canvas?
         };
 
-        target.on_canvas_event = function(event_type, callback, for_name) {
-            if (for_name) {
-                var object_info = target.name_to_object_info[for_name];
+        target.get_object_info = function(for_name_or_info) {
+            // get the stored object info for a name or a possibly old version of object info.
+            var for_name = for_name_or_info;
+            if ((typeof for_name) != "string") {
+                for_name = for_name_or_info.name;
+                if (!for_name) {
+                    throw new Error("cannot retrieve info for unnamed object.");
+                }
+            }
+            return target.name_to_object_info[for_name];
+        }
+
+        target.on_canvas_event = function(event_type, callback, for_name_or_info) {
+            if (for_name_or_info) {
+                var object_info = target.get_object_info(for_name_or_info);
+                var for_name = object_info.name;
                 if (object_info) {
                     if (object_info.no_events) {
                         throw new Error("object " + name + " has events disabled.");
@@ -504,13 +530,13 @@ XXXXX target.shaded_objects -- need to test for false hits!
             }
         };
 
-        target.off_canvas_event = function(event_type, for_name) {
-            if (for_name) {
-                var object_info = target.name_to_object_info[for_name];
-                if ((object_info) && (target.event_info.object_event_handlers[event_type])) {
-                    //var key = "on_" + event_type;
-                    //object_info[key] = null;
-                    target.event_info.object_event_handlers[event_type][for_name] = null;
+        target.off_canvas_event = function(event_type, for_name_or_info) {
+            if (for_name_or_info) {
+                var object_info =  target.get_object_info(for_name_or_info);
+                var for_name = object_info.name;
+                if ((object_info) && (target.event_info.object_event_handlers[event_type]) &&
+                        (target.event_info.object_event_handlers[event_type][for_name])) {
+                    delete target.event_info.object_event_handlers[event_type][for_name];
                 } else {
                     console.warn("in off_canvas_event no object found with name: " + for_name);
                 }
@@ -572,10 +598,14 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 }
                 if ((e.canvas_name) && (!target.disable_element_events)) {
                     e.object_info = target.name_to_object_info[e.canvas_name];
-                    if ((e.object_info) && (target.event_info.object_event_handlers[event_type])) {
-                        //var key = "on_" + event_type;
-                        //object_handler = e.object_info[key];
-                        object_handler = target.event_info.object_event_handlers[event_type][e.canvas_name];
+                    var object_handlers = target.event_info.object_event_handlers[event_type];
+                    if ((e.object_info) && (object_handlers)) {
+                        // look for a handler specific to this object
+                        object_handler = object_handlers[e.canvas_name];
+                        if ((!object_handler) && (e.object_info.frame)) {
+                            // otherwise, look for a handler specific to this frame
+                            object_handler = object_handlers[e.object_info.frame.name];
+                        }
                     }
                 }
                 // No "event bubbling"?
@@ -704,7 +734,13 @@ XXXXX target.shaded_objects -- need to test for false hits!
             );
         };
 
+        // XXXX move frame parameter config to frame methods to enable frame config transitions
+
         target.rframe = function(scale_x, scale_y, translate_x, translate_y, name) {
+            scale_x = scale_x || 1.0;
+            scale_y = scale_y || 1.0;
+            translate_x = translate_x || 0;
+            translate_y = translate_y || 0;
             return target.vector_frame(
                 {x: scale_x, y:0},
                 {x:0, y: scale_y},
@@ -739,13 +775,14 @@ XXXXX target.shaded_objects -- need to test for false hits!
             setTimeout(finish, delay);
         };
 
-        target.shaded_objects = function(shading_name) {
+        target.shaded_objects = function(shading_name_or_info) {
             // determine the names of named objects underneith the shading object "paint".
             // Used for example to implement "lasso" selected objects under a polygon.
             // xxx This could be optimized: it is a brute force scan of the whole canvas 2x right now.
             // xxx This method will not find shaded objects that are obscured by other objects.
             // XXXX need to use the test_canvas here!!!
-            var object_info = target.name_to_object_info[shading_name];
+            var object_info = target.get_object_info(shading_name_or_info);
+            var shading_name = object_info.name;
             if (!object_info) {
                 throw new Error("can't find object with name " + shading_name);
             }
@@ -869,12 +906,14 @@ XXXXX target.shaded_objects -- need to test for false hits!
             target.active_transitions = remaining;
         };
 
-        target.transition = function(object_name, to_values, seconds_duration, mode) {
+        target.transition = function(object_name_or_info, to_values, seconds_duration, mode) {
+            var object_info = target.get_object_info(object_name_or_info);
+            var object_name = object_info.name;
             mode = mode || "linear";
             seconds_duration = seconds_duration || 1;
             var start = (new Date()).getTime();
             var end = start + 1000 * seconds_duration;
-            var from_values = $.extend({}, target.name_to_object_info[object_name]);
+            var from_values = $.extend({}, object_info);
             var transition = {
                 start: start,
                 end: end,
@@ -1046,7 +1085,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                         // remove from named objects
                         var object_name = object_info.name;
                         if ((object_name) && (target.name_to_object_info[object_name])) {
-                            target.name_to_object_info[object_name] = null;
+                            delete target.name_to_object_info[object_name];
                         }
                         object_info.object_index = null;
                         object_info.name = null;
@@ -1116,9 +1155,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 })
             }
             // sliding intensity selector
-            var islider = target.fresh_name("islider");
-            intensity_frame.frame_rect({
-                name: islider,
+            var islider = intensity_frame.frame_rect({
+                name: true,  // assign an unused name
                 x: 0,
                 y: current_intensity,
                 w: column_width * 3,
@@ -1126,9 +1164,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 color: gray_scale(current_intensity),
             });
             // sliding selector outline
-            var ibox = target.fresh_name("ibox");
-            intensity_frame.frame_rect({
-                name: ibox,
+            var ibox = intensity_frame.frame_rect({
+                name: true,
                 x: 0,
                 y: current_intensity,
                 w: column_width * 3,
@@ -1137,9 +1174,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 color: "black",
             });
             // invisible column receiving events
-            var icolumn = target.fresh_name("icolumn");
-            intensity_frame.frame_rect({
-                name: icolumn,
+            var icolumn = intensity_frame.frame_rect({
+                name: true,
                 color: "rgba(0,0,0,0)",  // invisible
                 x: 0,
                 y: 0,
@@ -1194,9 +1230,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     }
                 }
                 // mouse tracker circle (initially hidden)
-                var color_track = target.fresh_name("color_track");
-                triangle_frame.circle({
-                    name: color_track, fill: false, r:radius*3,
+                var color_track = triangle_frame.circle({
+                    name: true, fill: false, r:radius*3,
                     x:0, y:0, color:"black", hide:true});
                     
                 // When the mouse is over the color triangle, preview that color.
@@ -1224,10 +1259,9 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     }
                 }
                 // invisible triangle covering the color area to receive events
-                var color_choices = target.fresh_name("color_choices");
-                triangle_frame.polygon({
+                var color_choices = triangle_frame.polygon({
                     points: [[0,0], [0,1], [1,0]],
-                    name: color_choices,
+                    name: true,
                     color: "rgba(0,0,0,0)",
                 });
                 element.on_canvas_event("mousemove", color_mouse, color_choices);
@@ -1237,26 +1271,22 @@ XXXXX target.shaded_objects -- need to test for false hits!
             
             // Preview swatch circle.
             var swatch_offset = bottom * 0.5;
-            var preview = target.fresh_name("preview");
-            misc_frame.circle({name: preview, x:swatch_offset, y:side-swatch_offset,
+            var preview = misc_frame.circle({name: true, x:swatch_offset, y:side-swatch_offset,
                 r: swatch_offset, color: "white"})
             // Outline for preview swatch.
             misc_frame.circle({fill:false, x:swatch_offset, y:side-swatch_offset,
                 r: swatch_offset, color: "black"})
             // Text representation of color over the preview swatch.
-            var rgb = target.fresh_name("rgb");
-            misc_frame.text({name: rgb, x:swatch_offset, y:side-swatch_offset,
+            var rgb = misc_frame.text({name: true, x:swatch_offset, y:side-swatch_offset,
                 font:settings.font, text:" ", valign:"center", align:"center",
                 background: "white"});
                 
             // Final color selection rectangle.
-            var final_color = target.fresh_name("final");
-            misc_frame.rect({name: final_color, hide:true,
+            var final_color = misc_frame.rect({name: true, hide:true,
                 x:10, y:10, w:left-20, h: bottom*0.6
             });
             // Final color selection text representaiton.
-            var color_choice = target.fresh_name("color_choice");
-            misc_frame.text({name: color_choice, x:10+(left-20)*0.5, y:bottom*0.3+10, 
+            var color_choice = misc_frame.text({name: true, x:10+(left-20)*0.5, y:bottom*0.3+10, 
                 text: "click to select color", font: settings.font,
                 align: "center", valign: "center", background: "white"})
         };
@@ -1609,7 +1639,9 @@ XXXXX target.shaded_objects -- need to test for false hits!
             y_vector: y_vector,
             xy_offset: xy_offset,
             name: name,
-            is_frame: true
+            is_frame: true,
+            events: true,   // by default support events
+            shape_name: "frame",
         };
 
         // Delegate appropriate methods to parent
@@ -1621,6 +1653,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
         delegate_to_parent("forget_objects");
         delegate_to_parent("set_visibilities");
         delegate_to_parent("transition");
+        delegate_to_parent("name_image_url");
+        delegate_to_parent("name_image_data");
 
         frame.active_region = function (default_to_view_box) {
             var pa = frame.parent_canvas.active_region(default_to_view_box);
@@ -1729,6 +1763,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
         override_positions("frame_rect");
         override_positions("frame_circle");
         override_positions("polygon");
+        override_positions("named_image");
 
         // define axes w.r.t the frame
         parent_canvas.dual_canvas_helper.add_geometry_logic(frame);

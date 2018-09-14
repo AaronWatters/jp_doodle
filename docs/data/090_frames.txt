@@ -1,0 +1,184 @@
+***TITLE
+Frames
+***SCREENSHOT
+images/Frame.png
+***PROLOGUE
+<p>
+Objects can be created in reference frames in 
+order to share the same drawing order priority and the same coordinate system.
+</p>
+<p>
+In this demonstration drag the
+<span style="color:white; background-color:blue">blue controls</span>
+to change the parameters of the frame on the right.
+***CODE
+var canvas_config = {
+    width: 800,
+    height: 600,
+    //translate_scale: {x: x, y:y, w:w, h:h},
+};
+element.dual_canvas_helper(canvas_config);
+
+var points = [[50,0], [40,-20], [40,-40], [30,-60],
+              [30,-50], [10,-40], [20,-30], [20,-20], [30,-10], [0,0]];
+
+var adorn = function(frame, frame_name) {
+    var text_at = function(x, y, content) {
+        frame.text({x:x, y:y, text:content, color:"black",
+                   background:"white", align:"center", valign:"center"});
+    };
+    // semi-transparent background rectangle for reference
+    frame.frame_rect({x:-100, y:-100, w:200, h:200, color:"rgba(100,100,200,0.3)"});
+    frame.circle({x:50, y:25, r:25, color:"#339"});
+    frame.frame_circle({x:75, y:75, r:25, color:"#539"});
+    frame.rect({x:-50, y:25, h:30, w:50, color:"#369"})
+    frame.frame_rect({x:-75, y:75, h:30, w:50, color:"#93a"})
+    var mandrill_url = "./images/spider_transparent_background.png";
+    frame.name_image_url("mandrill", mandrill_url);
+    frame.named_image({image_name:"mandrill", x:-90, y:-90, w:79, h:70});
+    frame.polygon({points:points, lineWidth:5, color:"#984", fill:false});
+    //# add some labels for clarity
+    text_at(50, 25, "circle");
+    text_at(75, 75, "frame_circle");
+    text_at(-25, 40, "rect");
+    text_at(-50, 90, "frame_rect");
+    var cfg = {"color":"salmon"}
+    frame.lower_left_axes({min_x:-100, min_y:-100, max_x:100, max_y:100,
+            max_tick_count:4, tick_text_config:cfg, tick_line_config:cfg})
+    text_at(0, -120, frame_name);
+};
+
+// Draw elements outside of any frame
+adorn(element, "no frame");
+
+// Make a slanted frame and draw elements in it.
+var x_vector={"x":1, "y":-0.3};
+var y_vector={"x":1, "y":1};
+var xy_offset={"x":300, "y":-10};
+
+// Make the frame.
+var frame = element.vector_frame(x_vector, y_vector, xy_offset);
+
+// Draw on it.
+adorn(frame, "A frame");
+
+// Add some interactive controls for adjusting the frame
+
+var x_dragger = element.text({
+    name: "x_dragger",
+    text: "X=" + xy_offset.x,
+    x: xy_offset.x,
+    y: -150,
+    color: "cyan",
+    background: "blue",
+    align: "center",
+    valign: "center",
+});
+
+var y_dragger = element.text({
+    name: "y_dragger",
+    text: "Y=" + xy_offset.y,
+    y: xy_offset.y,
+    x: 130,
+    color: "cyan",
+    background: "blue",
+    align: "center",
+    valign: "center",
+});
+
+// special frame for offset vectors
+var vector_frame = element.frame_region(
+    //-90, -220, -10, -140,
+    -100, -340, 100, -140,
+    -2, -2, +2, +2);
+
+vector_frame.frame_rect({x:-2, y:-2, w:4, h:4, color:"#ddd", name:"vector_region"});
+
+var vformat = function(prefix, vector) {
+    return prefix+"="+(vector.x.toFixed(1)+","+(vector.y.toFixed(1)));
+};
+
+var dx_line = vector_frame.line({
+    name: "dx_line",
+    x1: 0, y1:0,
+    x2: x_vector.x, y2: x_vector.y,
+    color: "#396", lineWidth:3,
+});
+
+var dx_dragger = vector_frame.text({
+    name: "dx_dragger",
+    text: vformat("dx", x_vector),
+    x: x_vector.x,
+    y: x_vector.y,
+    color: "cyan",
+    background: "blue",
+    align: "center",
+    valign: "center",
+});
+
+var dy_line = vector_frame.line({
+    name: "dy_line",
+    x1: 0, y1:0,
+    x2: y_vector.x, y2: y_vector.y,
+    color: "#936", lineWidth:3,
+});
+
+var dy_dragger = vector_frame.text({
+    name: "dy_dragger",
+    text: vformat("dy", y_vector),
+    x: y_vector.x,
+    y: y_vector.y,
+    color: "cyan",
+    background: "blue",
+    align: "center",
+    valign: "center",
+});
+
+// mouse events for dragging
+var dragging = null;
+
+element.on_canvas_event("mousedown",
+    function(event) {
+        dragging = event.canvas_name;
+    });
+
+element.on_canvas_event("mouseup",
+    function(event) {
+        dragging = null;
+    });
+
+element.on_canvas_event("mousemove", function(event) {
+    var location = element.event_model_location(event);
+    var vlocation = vector_frame.event_model_location(event);
+    // update locations
+    if (dragging == "x_dragger") {
+        xy_offset.x = Math.round(location.x);
+    }
+    if (dragging == "y_dragger") {
+        xy_offset.y = Math.round(location.y);
+    }
+    if (dragging == "dy_dragger") {
+        y_vector = vlocation;
+    }
+    if (dragging == "dx_dragger") {
+        x_vector = vlocation;
+    }
+    element.change(frame, {x_vector: x_vector, y_vector: y_vector, xy_offset: xy_offset});
+    element.change(x_dragger, {text: "X=" + xy_offset.x, x: xy_offset.x,})
+    element.change(y_dragger, {text: "Y=" + xy_offset.y, y: xy_offset.y,})
+    element.change(dy_dragger, {x: y_vector.x, y: y_vector.y, text: vformat("dy", y_vector)});
+    element.change(dy_line, {x2: y_vector.x, y2: y_vector.y,});
+    element.change(dx_dragger, {x: x_vector.x, y: x_vector.y, text: vformat("dx", x_vector)});
+    element.change(dx_line, {x2: x_vector.x, y2: x_vector.y,});
+});
+
+element.text({
+    x:350, y:-250, color:"#863", background:"#def", align:"center",
+    text:"Drag the blue controls to adjust the frame."
+});
+
+element.fit(null, 20);
+***DISCUSSION
+
+Frames effect the (x,y) positioning
+of objects but do not effect styling for objects.
