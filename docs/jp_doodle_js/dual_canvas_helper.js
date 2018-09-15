@@ -219,7 +219,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
             // xxxx don't need to assign psuedocolors to frames???
             var name = info.name;
             // automatically assign name if needed
-            if ((name == true) || ((!name) && (info.events))) {
+            if ((name === true) || ((!name) && (info.events))) {
                 prefix = info.shape_name || "anon";
                 name = target.fresh_name(prefix);
                 info.name = name;
