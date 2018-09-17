@@ -309,7 +309,9 @@ XXXXX target.shaded_objects -- need to test for false hits!
                         var pseudocolor_array = object_info.pseudocolor_array;
                         if (pseudocolor_array) {
                             var color_index = target.color_array_to_index(pseudocolor_array);
-                            delete target.color_index_to_name[color_index];
+                            if (target.color_index_to_name[color_index]) {
+                                delete target.color_index_to_name[color_index];
+                            }
                         }
                     }
                     if (object_info.is_frame) {
@@ -383,8 +385,20 @@ XXXXX target.shaded_objects -- need to test for false hits!
 
         target.next_pseudocolor = function () {
             // XXX this wraps after about 16M elements.
-            target.color_counter++;
-            return target.garish_pseudocolor_array(target.color_counter);
+            // keep seeking for free color
+            result = null;
+            for (var i=0; i<10; i++) {
+                target.color_counter++;
+                result = target.garish_pseudocolor_array(target.color_counter);
+                var color_index = target.color_array_to_index(result);
+                if (!(target.color_index_to_name[color_index])) {
+                    return result;
+                }
+                // on collision, scramble the counter
+                target.color_counter = result[0] + (result[1] << 8) + (result[2] << 16) + (target.color_counter & 1023);
+            }
+            // punt
+            return result;
         };
 
         target.name_counter = 0;
