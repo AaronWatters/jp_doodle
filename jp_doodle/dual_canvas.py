@@ -326,6 +326,7 @@ class SnapshotCanvas(DualCanvasWidget):
     def display_all(self, widget_title="Canvas", button_text="Take Snapshot", snapshotTitle="Snapshot"):
         tabs = self.snapshot_tabs(widget_title, button_text, snapshotTitle)
         display(tabs)
+        self.element[0].scrollIntoView()
 
     def check_file(self):
         "If snapshot doesn't exist save a placeholder image initially."
