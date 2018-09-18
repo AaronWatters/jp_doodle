@@ -215,6 +215,20 @@ class CanvasOperationsMixin(object):
         #self.call_method("lower_left_axes", s)
         self.element.lower_left_axes(s)
 
+    def left_axis(self, min_value=None, max_value=None, method_name="left_axis", **other_args):
+        s = clean_dict(min_value=min_value, max_value=max_value)
+        s.update(other_args)
+        return self.call_method(method_name, s)
+
+    def bottom_axis(self, min_value=None, max_value=None, **other_args):
+        return self.left_axis(min_value, max_value, method_name="bottom_axis", **other_args)
+
+    def top_axis(self, min_value=None, max_value=None, **other_args):
+        return self.left_axis(min_value, max_value, method_name="top_axis", **other_args)
+
+    def right_axis(self, min_value=None, max_value=None, **other_args):
+        return self.left_axis(min_value, max_value, method_name="right_axis", **other_args)
+
 
 def clean_dict(**kwargs):
     "Like dict but with no None values"

@@ -1350,7 +1350,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 min_value: params.min_x,
                 max_value: params.max_x
             }, params);
-            target.bottom_axis(bottom_config);
+            var bottom_ticks = target.bottom_axis(bottom_config);
             var left_config = $.extend({
                 anchor: y_anchor,
                 axis_origin: {x: x_anchor, y:0},
@@ -1359,7 +1359,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 min_value: params.min_y,
                 max_value: params.max_y,
             }, params);
-            target.left_axis(left_config);
+            var left_ticks = target.left_axis(left_config);
+            return {bottom: bottom_ticks, left: left_ticks};
         }
 
         target.bottom_axis = function(config, tick_direction, offset_direction, degrees, coordinate, align) {
@@ -1485,6 +1486,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
             var tick_shift = target.vscale(params.tick_length * tick_model_conversion, params.tick_direction);
             var label_shift = target.vscale(params.label_offset * tick_model_conversion, params.tick_direction);
             // draw the tick marks and text.
+            var transformed_ticks = [];
             for (var i=0; i<ticks.length; i++) {
                 var line = $.extend({}, params.tick_line_config);
                 var tick = params.tick_transform(ticks[i]);
@@ -1538,6 +1540,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 if ((!min_tick) || (min_tick.offset > tick.offset)) {
                     min_tick = tick;
                 }
+                transformed_ticks[i] = tick;
             }
             // draw the connector if configured
             if ((min_tick) && (params.connecting_line_config)) {
@@ -1548,6 +1551,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 connecting_line.y2 = max_tick.start.y;
                 target.line(connecting_line);
             }
+            return transformed_ticks;
         };
 
         target.axis_ticklist = function(min_offset, max_offset, maxlen, anchor) {
