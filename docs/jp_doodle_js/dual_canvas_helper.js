@@ -258,6 +258,25 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     target.color_index_to_name[color_index] = name;
                 }
                 target.name_to_object_info[name] = object_info;
+                // For named objects also attach api conveniences
+                object_info.change = function(options) {
+                    target.change(object_info.name, options);
+                };
+                object_info.forget = function() {
+                    target.forget_objects([object_info.name]);
+                };
+                object_info.visible = function(visibility) {
+                    target.set_visibilities([object_info.name]);
+                };
+                object_info.on = function(event_type, callback) {
+                    target.on_canvas_event(event_type, callback, object_info.name);
+                };
+                object_info.off = function(event_type) {
+                    target.off_canvas_event(event_type, object_info.name);
+                };
+                object_info.transition = function(to_values, seconds_duration) {
+                    target.transition(object_info.name, to_values, seconds_duration);
+                };
             }
             object_info.object_index = object_index;
             object_list[object_index] = object_info;
@@ -309,7 +328,9 @@ XXXXX target.shaded_objects -- need to test for false hits!
                         var pseudocolor_array = object_info.pseudocolor_array;
                         if (pseudocolor_array) {
                             var color_index = target.color_array_to_index(pseudocolor_array);
-                            delete target.color_index_to_name[color_index];
+                            if (target.color_index_to_name[color_index]) {
+                                delete target.color_index_to_name[color_index];
+                            }
                         }
                     }
                     if (object_info.is_frame) {
@@ -383,8 +404,20 @@ XXXXX target.shaded_objects -- need to test for false hits!
 
         target.next_pseudocolor = function () {
             // XXX this wraps after about 16M elements.
-            target.color_counter++;
-            return target.garish_pseudocolor_array(target.color_counter);
+            // keep seeking for free color
+            result = null;
+            for (var i=0; i<10; i++) {
+                target.color_counter++;
+                result = target.garish_pseudocolor_array(target.color_counter);
+                var color_index = target.color_array_to_index(result);
+                if (!(target.color_index_to_name[color_index])) {
+                    return result;
+                }
+                // on collision, scramble the counter
+                target.color_counter = result[0] + (result[1] << 8) + (result[2] << 16) + (target.color_counter & 1023);
+            }
+            // punt
+            return result;
         };
 
         target.name_counter = 0;
@@ -585,7 +618,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
 
         target.generic_event_handler = function(e) {
             var visible = target.visible_canvas;
-            e.pixel_location = visible.event_pixel_location(e);
+            // for testing allow test case to override pixel location.
+            if (!e.pixel_location) {
+                e.pixel_location = visible.event_pixel_location(e);
+            }
             e.canvas_name = target.object_name_at_position(
                 e, e.pixel_location.x, e.pixel_location.y);
             var last_event = target.last_canvas_event;
@@ -893,6 +929,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 if (transition.finished()) {
                     // xxxx any termination actions?
                     //console.log("done transitioning " + name);
+                    redraw = true;  // redraw for final interpolation
                 } else {
                     //console.log("continuing transitions for " + name);
                     remaining[name] = transition;
@@ -1336,7 +1373,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 min_value: params.min_x,
                 max_value: params.max_x
             }, params);
-            target.bottom_axis(bottom_config);
+            var bottom_ticks = target.bottom_axis(bottom_config);
             var left_config = $.extend({
                 anchor: y_anchor,
                 axis_origin: {x: x_anchor, y:0},
@@ -1345,7 +1382,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 min_value: params.min_y,
                 max_value: params.max_y,
             }, params);
-            target.left_axis(left_config);
+            var left_ticks = target.left_axis(left_config);
+            return {bottom: bottom_ticks, left: left_ticks};
         }
 
         target.bottom_axis = function(config, tick_direction, offset_direction, degrees, coordinate, align) {
@@ -1471,6 +1509,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
             var tick_shift = target.vscale(params.tick_length * tick_model_conversion, params.tick_direction);
             var label_shift = target.vscale(params.label_offset * tick_model_conversion, params.tick_direction);
             // draw the tick marks and text.
+            var transformed_ticks = [];
             for (var i=0; i<ticks.length; i++) {
                 var line = $.extend({}, params.tick_line_config);
                 var tick = params.tick_transform(ticks[i]);
@@ -1524,6 +1563,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 if ((!min_tick) || (min_tick.offset > tick.offset)) {
                     min_tick = tick;
                 }
+                transformed_ticks[i] = tick;
             }
             // draw the connector if configured
             if ((min_tick) && (params.connecting_line_config)) {
@@ -1534,6 +1574,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 connecting_line.y2 = max_tick.start.y;
                 target.line(connecting_line);
             }
+            return transformed_ticks;
         };
 
         target.axis_ticklist = function(min_offset, max_offset, maxlen, anchor) {
