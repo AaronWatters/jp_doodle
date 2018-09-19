@@ -258,6 +258,25 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     target.color_index_to_name[color_index] = name;
                 }
                 target.name_to_object_info[name] = object_info;
+                // For named objects also attach api conveniences
+                object_info.change = function(options) {
+                    target.change(object_info.name, options);
+                };
+                object_info.forget = function() {
+                    target.forget_objects([object_info.name]);
+                };
+                object_info.visible = function(visibility) {
+                    target.set_visibilities([object_info.name]);
+                };
+                object_info.on = function(event_type, callback) {
+                    target.on_canvas_event(event_type, callback, object_info.name);
+                };
+                object_info.off = function(event_type) {
+                    target.off_canvas_event(event_type, object_info.name);
+                };
+                object_info.transition = function(to_values, seconds_duration) {
+                    target.transition(object_info.name, to_values, seconds_duration);
+                };
             }
             object_info.object_index = object_index;
             object_list[object_index] = object_info;
