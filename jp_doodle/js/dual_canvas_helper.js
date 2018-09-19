@@ -599,7 +599,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
 
         target.generic_event_handler = function(e) {
             var visible = target.visible_canvas;
-            e.pixel_location = visible.event_pixel_location(e);
+            // for testing allow test case to override pixel location.
+            if (!e.pixel_location) {
+                e.pixel_location = visible.event_pixel_location(e);
+            }
             e.canvas_name = target.object_name_at_position(
                 e, e.pixel_location.x, e.pixel_location.y);
             var last_event = target.last_canvas_event;
@@ -907,6 +910,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 if (transition.finished()) {
                     // xxxx any termination actions?
                     //console.log("done transitioning " + name);
+                    redraw = true;  // redraw for final interpolation
                 } else {
                     //console.log("continuing transitions for " + name);
                     remaining[name] = transition;
