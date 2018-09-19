@@ -38,11 +38,26 @@ class CanvasOperationsMixin(object):
 
     # xxxx Not all methods may make sense for all subclasses.
 
+    name_counter = 0
+
+    def fresh_name(self, prefix="anonymous"):
+        CanvasOperationsMixin.name_counter += 1
+        ms = int(time.time() * 1000)
+        return "%s_%s_%s" % (prefix, CanvasOperationsMixin.name_counter, ms)
+
+    def check_name(self, options, prefix="anon_name"):
+        name = options.get("name")
+        if name == True or ((not name) and options.get('events')):
+            options["name"] = self.fresh_name(prefix)
+        return options.get(name)
+
     def circle(self, x, y, r, color="black", fill=True, method_name="circle", **other_args):
         "Draw a circle or arc on the canvas frame."
         s = clean_dict(x=x, y=y, r=r, color=color, fill=fill)
         s.update(other_args)
+        name = self.check_name(s, method_name)
         self.call_method(method_name, s)
+        return name
 
     def frame_circle(self, x, y, r, color="black", fill=True, **other_args):
         "Draw a circle or arc on the canvas frame with radius adjusted to the frame."
@@ -54,7 +69,9 @@ class CanvasOperationsMixin(object):
         if lineWidth:
             s["lineWidth"] = lineWidth
         s.update(other_args)
+        name = self.check_name(s, "line")
         self.call_method("line", s)
+        return name
 
     def text(self, x, y, text, color="black", degrees=0, align="left", font=None, **other_args):
         "Draw some text on the canvas frame."
@@ -62,12 +79,15 @@ class CanvasOperationsMixin(object):
         if font:
             s["font"] = font
         s.update(other_args)
+        name = self.check_name(s, "text")
         self.call_method("text", s)
+        return name
 
     def rect(self, x, y, w, h, color="black", degrees=0, fill=True, method_name="rect", **other_args):
         "Draw a rectangle on the canvas frame."
         s = clean_dict(x=x, y=y, w=w, h=h, color=color, degrees=degrees, fill=fill)
         s.update(other_args)
+        name = self.check_name(s, method_name)
         self.call_method(method_name, s)
 
     def frame_rect(self, x, y, w, h, color="black", degrees=0, fill=True, **other_args):
@@ -78,14 +98,18 @@ class CanvasOperationsMixin(object):
         "Draw a polygon or polyline on the canvas frame"
         s = clean_dict(points=points, color=color, close=close, fill=fill)
         s.update(other_args)
+        name = self.check_name(s, "polygon")
         self.call_method("polygon", s)
+        return name
 
     def named_image(self, image_name, x, y, w, h, degrees=0, sx=None, sy=None, sWidth=None, sHeight=None, **other_args):
         s = clean_dict(
             x=x, y=y, w=w, h=h, image_name=image_name, 
             sx=sx, sy=sy, sHeight=sHeight, sWidth=sWidth, degrees=degrees)
         s.update(other_args)
+        name = self.check_name(s, "image")
         self.call_method("named_image", s)
+        return name
 
     def reset_canvas(self):
         "Re-initialize the canvas drawing area."
@@ -171,12 +195,14 @@ class CanvasOperationsMixin(object):
         "transition configuration values of object with name smoothly over duration."
         self.element.transition(object_name, to_values, seconds_duration)
 
-    def named_vector_frame(self, name, x_vector, y_vector, xy_offset):
+    def vector_frame(self, x_vector, y_vector, xy_offset, name=None):
         """
         Attach a named vector frame to the widget element and return an interface for accessing it.
         The vectors must be given as dictionaries like so: {"x": x_value, "y": y_value}.
         """
         # xxxx this doesn't make sense as a frame method?
+        if not name:
+            name = self.fresh_name("vector_frame")
         self.js_init("""
         // Attach the frame by name to the element
         element[name] = element.vector_frame(x_vector, y_vector, xy_offset, name);
@@ -184,11 +210,13 @@ class CanvasOperationsMixin(object):
         # return an interface wrapper for the named frame
         return FrameInterface(self, name)
 
-    def named_rframe(self, name, scale_x, scale_y, translate_x=0, translate_y=0):
+    def rframe(self, scale_x, scale_y, translate_x=0, translate_y=0, name=None):
         """
         Attach a named rectangular frame to the widget element and return an interface for accessing it.
         """
         # xxxx this doesn't make sense as a frame method?
+        if not name:
+            name = self.fresh_name("rframe")
         self.js_init("""
         // Attach the frame by name to the element
         element[name] = element.rframe(scale_x, scale_y, translate_x, translate_y, name);
@@ -196,11 +224,13 @@ class CanvasOperationsMixin(object):
         # return an interface wrapper for the named frame
         return FrameInterface(self, name)
 
-    def named_frame_region(self, name, minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy):
+    def frame_region(self, minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy, name=None):
         """
         Attach a named frame region to the widget element and return an interface for accessing it.
         """
         # xxxx this doesn't make sense as a frame method?
+        if not name:
+            name = self.fresh_name("frame_region")
         self.js_init("""
         // Attach the frame by name to the element
         element[name] = element.frame_region(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy, name);
