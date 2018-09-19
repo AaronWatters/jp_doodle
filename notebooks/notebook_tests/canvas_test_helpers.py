@@ -24,4 +24,19 @@ class ColorTester:
             assert color_list_expected == color_list_found, repr(
                 (self.name, position, color_list_expected, color_list_found))
         print ("Color tests okay for "+repr(self.name))
-        
+    def spoof_event(self, event_type, pixel_location_x, pixel_location_y, ms_delay=1000):
+        self.on_canvas.js_init("""
+        debugger;
+        var event = {
+            stopPropagation: (function() {}),
+            type: event_type,
+            pixel_location: {x: pixel_location_x, y: pixel_location_y},
+        };
+        setTimeout(
+            (function() { element.generic_event_handler(event); }),
+            ms_delay
+            );
+        """, 
+        event_type=event_type, 
+        pixel_location_x=pixel_location_x, pixel_location_y=pixel_location_y, 
+        ms_delay=ms_delay)
