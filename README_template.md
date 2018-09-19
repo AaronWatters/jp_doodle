@@ -12,6 +12,21 @@ The `jp_doodle` package provides `jQuery` plugins which make it easy to build
 interactive visualizations in Javascript.  The package also provides Jupyter widget
 interfaces to make it easy to build visualizations for Jupyter notebooks.
 
+# Installation
+
+To install the package for use with Jupyter please use
+
+```
+pip install git+https://github.com/aaronwatters/jp_doodle
+```
+
+Or if that doesn't work
+
+```
+python -m pip install git+https://github.com/aaronwatters/jp_doodle
+```
+
+or similar.
 
 # `dual_canvas`
 
