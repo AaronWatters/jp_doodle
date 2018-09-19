@@ -49,7 +49,12 @@ class CanvasOperationsMixin(object):
         name = options.get("name")
         if name == True or ((not name) and options.get('events')):
             options["name"] = self.fresh_name(prefix)
-        return options.get(name)
+        return options.get("name")
+
+    def wrap_name(self, name):
+        if not name:
+            return name  # Don't wrap a falsey name
+        return GeometryWrapper(self, name)
 
     def circle(self, x, y, r, color="black", fill=True, method_name="circle", **other_args):
         "Draw a circle or arc on the canvas frame."
@@ -57,7 +62,7 @@ class CanvasOperationsMixin(object):
         s.update(other_args)
         name = self.check_name(s, method_name)
         self.call_method(method_name, s)
-        return name
+        return self.wrap_name(name)
 
     def frame_circle(self, x, y, r, color="black", fill=True, **other_args):
         "Draw a circle or arc on the canvas frame with radius adjusted to the frame."
@@ -71,7 +76,7 @@ class CanvasOperationsMixin(object):
         s.update(other_args)
         name = self.check_name(s, "line")
         self.call_method("line", s)
-        return name
+        return self.wrap_name(name)
 
     def text(self, x, y, text, color="black", degrees=0, align="left", font=None, **other_args):
         "Draw some text on the canvas frame."
@@ -81,7 +86,7 @@ class CanvasOperationsMixin(object):
         s.update(other_args)
         name = self.check_name(s, "text")
         self.call_method("text", s)
-        return name
+        return self.wrap_name(name)
 
     def rect(self, x, y, w, h, color="black", degrees=0, fill=True, method_name="rect", **other_args):
         "Draw a rectangle on the canvas frame."
@@ -89,6 +94,7 @@ class CanvasOperationsMixin(object):
         s.update(other_args)
         name = self.check_name(s, method_name)
         self.call_method(method_name, s)
+        return self.wrap_name(name)
 
     def frame_rect(self, x, y, w, h, color="black", degrees=0, fill=True, **other_args):
         "Draw a rectangle on the canvas frame adjusted by frame transform."
@@ -100,7 +106,7 @@ class CanvasOperationsMixin(object):
         s.update(other_args)
         name = self.check_name(s, "polygon")
         self.call_method("polygon", s)
-        return name
+        return self.wrap_name(name)
 
     def named_image(self, image_name, x, y, w, h, degrees=0, sx=None, sy=None, sWidth=None, sHeight=None, **other_args):
         s = clean_dict(
@@ -109,7 +115,7 @@ class CanvasOperationsMixin(object):
         s.update(other_args)
         name = self.check_name(s, "image")
         self.call_method("named_image", s)
-        return name
+        return self.wrap_name(name)
 
     def reset_canvas(self):
         "Re-initialize the canvas drawing area."
@@ -129,7 +135,7 @@ class CanvasOperationsMixin(object):
 
     def forget_objects(self, names):
         "Remove named objects from the canvas object list and request redraw."
-        self.element.forget_object(names)
+        self.element.forget_objects(names)
 
     def set_visibilities(self, names, visibility):
         "Make named objects visible or invisible."
@@ -183,9 +189,16 @@ class CanvasOperationsMixin(object):
         assert ncolors == 4
         self.element.name_image_data(image_name, image_bytes, ncols, nrows)
 
-    def callback_with_pixel_color(self, pixel_x, pixel_y, callback):
+    def callback_with_pixel_color(self, pixel_x, pixel_y, callback, ms_delay=500):
         "For testing.  Deliver the color at pixel as a list of four integers to the callback(list_of_integers)."
-        self.element.callback_with_pixel_color(pixel_x, pixel_y, callback)
+        #self.element.callback_with_pixel_color(pixel_x, pixel_y, callback)
+        # delay to be able to test animations and transitions.
+        self.js_init("""
+            setTimeout(
+                (function() { element.callback_with_pixel_color(pixel_x, pixel_y, callback); }),
+                ms_delay
+            );
+        """, pixel_x=pixel_x, pixel_y=pixel_y, callback=callback, ms_delay=ms_delay)
 
     def do_lasso(self, lasso_callback, delete_after=True, **config):
         "Use a polygon to select named elements.  Return name --> description mappint to the callback."
@@ -433,3 +446,32 @@ class SnapshotCanvas(DualCanvasWidget):
         ms = int(time.time() * 1000)
         return "snapshot_id_%s_%s" % (SnapshotCanvas.snapshot_counter, ms)
 
+class GeometryWrapper:
+
+    """
+    Wrapper for a visible object on the canvas with convenient methods.
+    """
+
+    def __init__(self, on_canvas, name):
+        self.on_canvas = on_canvas
+        self.name = name
+
+    def change(self, **changed_options):
+        return self.on_canvas.change(self.name, **changed_options)
+
+    def forget(self):
+        return self.on_canvas.forget_objects([self.name])
+
+    def visible(self, visibility=True):
+        return self.on_canvas.set_visibilities([self.name], visibility)
+
+    def on(self, event_type, callback):
+        return self.on_canvas.on_canvas_event(event_type, callback, for_name=self.name)
+
+    def off(self, event_type):
+        return self.on_canvas.off_canvas_event(event_type, for_name=self.name)
+
+    def transition(self, seconds_duration=1, **to_values):
+        return self.on_canvas.transition(self.name, to_values, seconds_duration)
+
+    
