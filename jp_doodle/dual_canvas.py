@@ -100,9 +100,18 @@ class CanvasOperationsMixin(object):
         "Draw a rectangle on the canvas frame adjusted by frame transform."
         return self.rect(x, y, w, h, color, degrees, fill, method_name="frame_rect", **other_args)
 
+    def polyline(self, points, color="black", **other_args):
+        return self.polygon(points, color, close=False, fill=False, **other_args)
+
     def polygon(self, points, color="black", close=True, fill=True, **other_args):
         "Draw a polygon or polyline on the canvas frame"
-        s = clean_dict(points=points, color=color, close=close, fill=fill)
+        # convert tuples to lists automagically
+        lpoints = []
+        for p in points:
+            if type(p) != dict:
+                p = list(p)
+            lpoints.append(p)
+        s = clean_dict(points=lpoints, color=color, close=close, fill=fill)
         s.update(other_args)
         name = self.check_name(s, "polygon")
         self.call_method("polygon", s)
