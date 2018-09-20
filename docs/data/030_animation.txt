@@ -22,10 +22,10 @@ outer_radius = 100;
 inner_radius = 80;
 
 // Draw the clock face.
-element.circle({name: "face", x:0, y:0, r:100, color:"#dcf"});
+var face = element.circle({x:0, y:0, r:100, color:"#dcf", name:true});
 element.circle({x:0, y:0, r:100, color:"#449", fill:false, lineWidth:10});
 
-// Draw the numbers on the clock.
+// Draw the numbers on the clock as unnamed texts.
 for (var i=1; i<=12; i++) {
     var angle = twelve_oclock - i * five_seconds;
     element.text({
@@ -34,14 +34,14 @@ for (var i=1; i<=12; i++) {
 }
 
 // Draw a "seconds hand" and name it so we can change it later.
-element.rect({
-    name: "seconds hand",
+var seconds_hand = element.rect({
+    name: true,  // Use any available name
     x:0, y:0, w: inner_radius-15, h:5,
     color: "#937", degrees: 90});
     
 // Add a background yellow dot. Note that there is no blinking dot yet.
-var dot_visible = false;
-element.circle({name: "background dot", x:100, y:100, r:12, color:"yellow"});
+var blinking_dot = null;
+element.circle({x:100, y:100, r:12, color:"yellow"});
 
 // Every animation frame, adjust the seconds hand using the time.
 // Also add or delete a blinking dot every other second.
@@ -49,31 +49,33 @@ var animate = function () {
     var seconds = ((new Date()).getTime() * 0.001) % 60;
     var degrees = - 6 * seconds;
     // Adjust the seconds hand.
-    element.change("seconds hand", {degrees: degrees});
+    //element.change("seconds hand", {degrees: degrees});
+    seconds_hand.change({degrees: degrees})
     // every other second create or delete the blinking dot
     if ((seconds % 2) < 1) {
-        if (!dot_visible) {
+        if (!blinking_dot) {
             // Add the blinking dot.
-            element.circle({name: "blinking dot", x:100, y:100, r:10, color:"red"});
-            dot_visible = true;
+            blinking_dot = element.circle({name: true, x:100, y:100, r:10, color:"red"});
         }
-    } else if (dot_visible) {
+    } else if (blinking_dot) {
         // Remove the blinking dot.
-        element.forget_objects(["blinking dot"]);
-        dot_visible = false;
+        blinking_dot.forget();
+        blinking_dot = null;
     }
     // Repeat the animation again on the next animation iteration.
     requestAnimationFrame(animate);
 }
+// Adjust the canvas coordinate transform to center the drawn objects on the canvas.
+element.fit(null, 10);  // 10 pixel margin
 
 // Add transitions
 var bigger = false;
 var transition_face = function() {
     var seconds = 10;
     if (bigger) {
-        element.transition("face", {r:100, color:"#dcf"}, seconds);
+        face.transition({r:100, color:"#dcf"}, seconds);
     } else {
-        element.transition("face", {r:30, color:"#fcd"}, seconds);
+        face.transition({r:30, color:"#fcd"}, seconds);
     }
     bigger = !bigger;
 };
@@ -81,6 +83,7 @@ $("<button>transition face</button>").appendTo(element).click(transition_face);
 
 // Adjust the canvas coordinate transform to center the drawn objects on the canvas.
 element.fit(null, 10);  // 10 pixel margin
+
 // Start the animation
 animate();
 ***DISCUSSION

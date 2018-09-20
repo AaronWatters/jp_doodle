@@ -25,92 +25,93 @@ var config = {
         };
 element.dual_canvas_helper(config);
 
-element.text({
-    name: "bigger", text: "Click to enlarge", 
+bigger = element.text({
+    name: true, text: "Click to enlarge", 
     font: "20px Arial", x: 20, y:20, degrees: 5, color:"magenta"
 });
 var enlarge = function(event) {
     element.change("bigger", {font: "40px Arial"});
+    bigger.change({font: "40px Arial"});
     // change it back 5 seconds later
-    setTimeout(function () { element.change("bigger", {font: "20px Arial"}); }, 5000)
+    setTimeout(function () { bigger.change({font: "20px Arial"}); }, 5000)
 };
-//element.on_canvas_event("click", enlarge, "bigger");
+bigger.on("click", enlarge);
 
-element.text({
-    name: "redden", text: "Click to redden", 
+redden_text = element.text({
+    name: true, text: "Click to redden", 
     font: "20px Arial", x: 20, y:50, degrees: 5, color:"green"
 });
-var redden = function(event) {
-    element.transition("redden", {color: "red"});
+var redder = function(event) {
+    redden_text.transition({color: "red"});
     // change it back 5 seconds later
-    setTimeout(function () { element.transition("redden", {color: "green"}); }, 5000)
+    setTimeout(function () { redden_text.change({color: "green"}); }, 5000)
 };
-//element.on_canvas_event("click", redden, "redden");
+redden_text.on("click", redder);
 
-element.text({
-    name: "font", text: "Click to change font", 
+var font_text = element.text({
+    name: true, text: "Click to change font", 
     font: "20px Arial", x: 20, y:80, degrees: 5, color:"magenta"
 });
 var change_font = function(event) {
-    element.change("font", {font: "20px Courier"});
+    font_text.change({font: "20px Courier"});
     // change it back 5 seconds later
-    setTimeout(function () { element.change("font", {font: "20px Arial"}); }, 5000)
+    setTimeout(function () { font_text.change({font: "20px Arial"}); }, 5000)
 };
-//element.on_canvas_event("click", change_font, "font");
+font_text.on("click", change_font);
 
-element.text({
-    name: "rotate", text: "Click to rotate", 
+rotate_text = element.text({
+    name: true, text: "Click to rotate", 
     font: "20px Arial", x: 20, y:120, degrees: 5, color:"magenta"
 });
 var rotate = function(event) {
-    element.transition("rotate", {degrees: -15});
+    rotate_text.change({degrees: -15});
     // change it back 5 seconds later
-    setTimeout(function () { element.transition("rotate", {degrees: 5}); }, 5000)
+    setTimeout(function () { rotate_text.transition({degrees: 5}); }, 5000)
 };
-//element.on_canvas_event("click", rotate, "rotate");
+rotate_text.on("click", rotate);
 
-element.text({
-    name: "vanish", text: "Click to disappear", 
+var vanish_text = element.text({
+    name: true, text: "Click to disappear", 
     font: "20px Arial", x: 20, y:150, degrees: 5, color:"magenta"
 });
 var disappear = function(event) {
-    element.change("vanish", {hide: true});
+    vanish_text.change({hide: true});
     // change it back 5 seconds later
-    setTimeout(function () { element.change("vanish", {hide: false}); }, 5000)
+    setTimeout(function () { vanish_text.change({hide: false}); }, 5000)
 };
-//element.on_canvas_event("click", disappear, "vanish");
+vanish_text.on("click", disappear);
 
-element.text({name: "event status", text: "unknown status", x: 170, y:120, color:"red", font: "20px Arial"});
-element.text({name: "key press", text: "no keyboard key press", x: 170, y:70, color:"red", font: "20px Arial"});
+var event_status = element.text({name: "event status", text: "unknown status", x: 170, y:120, color:"red", font: "20px Arial"});
+var keypress = element.text({name: "key press", text: "no keyboard key press", x: 170, y:70, color:"red", font: "20px Arial"});
 
 var key_down_handler = function (event) {
     var code = event.keyCode;
-    element.change("key press", {color: "blue", text: "key press: " + code});
+    keypress.change({color: "blue", text: "key press: " + code});
 };
 
 var turn_events_on = function () {
     // events bound to text areas
-    element.on_canvas_event("click", enlarge, "bigger");
-    element.on_canvas_event("click", redden, "redden");
-    element.on_canvas_event("click", change_font, "font");
-    element.on_canvas_event("click", rotate, "rotate");
-    element.on_canvas_event("click", disappear, "vanish");
+    bigger.on("click", enlarge);
+    redden_text.on("click", redder);
+    font_text.on("click", change_font);
+    rotate_text.on("click", rotate);
+    vanish_text.on("click", disappear);
     // keyboard event bound to the whole canvas.
     element.on_canvas_event("keydown", key_down_handler);
     // put the focus on the canvas so the canvas can handle keyboard events
     element.on_canvas_event("mousemove", element.focus_canvas);
-    element.change("event status", {text: "events enabled", color:"green"});
+    event_status.change({text: "events enabled", color:"green"});
 };
 
 var turn_events_off = function () {
-    element.off_canvas_event("click", "bigger");
-    element.off_canvas_event("click", "redden");
-    element.off_canvas_event("click", "font");
-    element.off_canvas_event("click", "rotate");
-    element.off_canvas_event("click", "vanish");
+    bigger.off("click");
+    redden_text.off("click");
+    font_text.off("click");
+    rotate_text.off("click");
+    vanish_text.off("click");
     element.off_canvas_event("keydown");
     element.off_canvas_event("mousemove");
-    element.change("event status", {text: "events disabled", color:"red"});
+    event_status.change({text: "events disabled", color:"red"});
 };
 
 $("<button>Turn events OFF</button>")

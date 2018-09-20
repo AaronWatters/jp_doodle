@@ -59,6 +59,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             if (target.canvas_stats) {
                 target.canvas_stats = {};
             }
+            // Set the tab index to allow canvas focus (???)
+            target.attr("tabindex", "0");
         };
 
         target.reset_canvas();

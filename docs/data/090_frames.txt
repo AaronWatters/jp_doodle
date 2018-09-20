@@ -163,13 +163,13 @@ element.on_canvas_event("mousemove", function(event) {
     if (dragging == "dx_dragger") {
         x_vector = vlocation;
     }
-    element.change(frame, {x_vector: x_vector, y_vector: y_vector, xy_offset: xy_offset});
-    element.change(x_dragger, {text: "X=" + xy_offset.x, x: xy_offset.x,})
-    element.change(y_dragger, {text: "Y=" + xy_offset.y, y: xy_offset.y,})
-    element.change(dy_dragger, {x: y_vector.x, y: y_vector.y, text: vformat("dy", y_vector)});
-    element.change(dy_line, {x2: y_vector.x, y2: y_vector.y,});
-    element.change(dx_dragger, {x: x_vector.x, y: x_vector.y, text: vformat("dx", x_vector)});
-    element.change(dx_line, {x2: x_vector.x, y2: x_vector.y,});
+    frame.change({x_vector: x_vector, y_vector: y_vector, xy_offset: xy_offset});
+    x_dragger.change({text: "X=" + xy_offset.x, x: xy_offset.x,})
+    y_dragger.change({text: "Y=" + xy_offset.y, y: xy_offset.y,})
+    dy_dragger.change({x: y_vector.x, y: y_vector.y, text: vformat("dy", y_vector)});
+    dy_line.change({x2: y_vector.x, y2: y_vector.y,});
+    dx_dragger.change({x: x_vector.x, y: x_vector.y, text: vformat("dx", x_vector)});
+    dx_line.change({x2: x_vector.x, y2: x_vector.y,});
 });
 
 element.text({

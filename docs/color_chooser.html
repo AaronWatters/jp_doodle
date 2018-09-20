@@ -82,7 +82,6 @@ var config = {
         };
 element.dual_canvas_helper(config);
 
-
 // Draw some named elements on the canvas.
 // A filled yellow circle (disk) named "Colonel Mustard
 element.circle({name: "Colonel Mustard", x:100, y:150, r:90, color:"yellow"});
@@ -132,11 +131,10 @@ element.color_chooser({
     callback: function(color_array, color_string) { chosen_color = color_string; }
 });
 
-
 // mouse tracker circle (initially hidden)
-element.circle({
+var tracker = element.circle({
     name:"mouse_track", r:5,
-    no_events: true,  // This object is invisible to events.
+    events: false,  // This object is invisible to events.
     x:0, y:0, color:"black", hide:true});
     
 element.text({
@@ -151,14 +149,14 @@ var on_mouse_move = function(event) {
     var name = event.canvas_name;
     var location = element.event_model_location(event);
     if ((chosen_color) && (name) && (location.x < 310)) {
-        element.change("mouse_track",
+        tracker.change(
             {hide:false, x:location.x, y:location.y, color:chosen_color});
         // on click change the color of the named object
         if (event.type == "click") {
             element.transition(name, {color: chosen_color});
         }
     } else {
-        element.change("mouse_track", {hide: true});
+        tracker.change({hide: true});
     }
 };
 element.on_canvas_event("mousemove", on_mouse_move);
@@ -178,7 +176,6 @@ var config = {
         };
 element.dual_canvas_helper(config);
 
-
 // Draw some named elements on the canvas.
 // A filled yellow circle (disk) named "Colonel Mustard
 element.circle({name: "Colonel Mustard", x:100, y:150, r:90, color:"yellow"});
@@ -228,11 +225,10 @@ element.color_chooser({
     callback: function(color_array, color_string) { chosen_color = color_string; }
 });
 
-
 // mouse tracker circle (initially hidden)
-element.circle({
+var tracker = element.circle({
     name:"mouse_track", r:5,
-    no_events: true,  // This object is invisible to events.
+    events: false,  // This object is invisible to events.
     x:0, y:0, color:"black", hide:true});
     
 element.text({
@@ -247,14 +243,14 @@ var on_mouse_move = function(event) {
     var name = event.canvas_name;
     var location = element.event_model_location(event);
     if ((chosen_color) && (name) && (location.x < 310)) {
-        element.change("mouse_track",
+        tracker.change(
             {hide:false, x:location.x, y:location.y, color:chosen_color});
         // on click change the color of the named object
         if (event.type == "click") {
             element.transition(name, {color: chosen_color});
         }
     } else {
-        element.change("mouse_track", {hide: true});
+        tracker.change({hide: true});
     }
 };
 element.on_canvas_event("mousemove", on_mouse_move);

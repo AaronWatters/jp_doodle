@@ -266,7 +266,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     target.forget_objects([object_info.name]);
                 };
                 object_info.visible = function(visibility) {
-                    target.set_visibilities([object_info.name]);
+                    target.set_visibilities([object_info.name], visibility);
                 };
                 object_info.on = function(event_type, callback) {
                     target.on_canvas_event(event_type, callback, object_info.name);
@@ -361,7 +361,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
             var draw_info = draw_fn(target.visible_canvas, object_info);
             // store additional information attached during the draw operation
             $.extend(object_info, draw_info);
-            if ((object_info.name) && (!object_info.no_events)) {
+            if ((object_info.name) && (object_info.events !== false)) {
                 // also draw invisible object using psuedocolor for event lookups
                 target.draw_mask(object_info, target.invisible_canvas);
                 // Don't draw on the test canvas now.
@@ -546,7 +546,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 var object_info = target.get_object_info(for_name_or_info);
                 var for_name = object_info.name;
                 if (object_info) {
-                    if (object_info.no_events) {
+                    if (object_info.events === false) {
                         throw new Error("object " + name + " has events disabled.");
                     }
                     //var key = "on_" + event_type;
@@ -1224,12 +1224,12 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 var frame_location = intensity_frame.event_model_location(event);
                 var intensity = Math.round(frame_location.y);
                 intensity = Math.min(Math.max(0, intensity), max_intensity);
-                element.change(ibox, {y:intensity});
-                element.change(islider, {y:intensity, color:gray_scale(intensity)});
+                ibox.change({y:intensity});
+                islider.change({y:intensity, color:gray_scale(intensity)});
                 current_intensity = intensity;
                 draw_triangle_frame();
             }
-            element.on_canvas_event("mousemove", intensity_mouse_over, icolumn);
+            icolumn.on("mousemove", intensity_mouse_over);
             
             // Relative color computed at current intensity level.
             var color_array_at = function(r, g) {
@@ -1279,20 +1279,20 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     var color_array = color_array_at(r, g);
                     if (color_array) {
                         var color = element.array_to_color(color_array);
-                        element.change(color_track, {x:r, y:g, hide:false});
-                        element.change(preview, {color: color})
-                        element.change(rgb, {text: color})
+                        color_track.change({x:r, y:g, hide:false});
+                        preview.change({color: color})
+                        rgb.change({text: color})
                         // If the event is a click, then select the color as final.
                         if (event.type == "click") {
                             // Color selected!
-                            element.change(color_choice, {hide: false, text: color});
-                            element.change(final_color, {hide: false, color: color});
+                            color_choice.change({hide: false, text: color});
+                            final_color.change({hide: false, color: color});
                             if (settings.callback) {
                                 settings.callback(color_array, color);
                             }
                         }
                     } else {
-                        element.change(color_track, {hide:true});
+                        color_track.change({hide:true});
                     }
                 }
                 // invisible triangle covering the color area to receive events
@@ -1301,8 +1301,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     name: true,
                     color: "rgba(0,0,0,0)",
                 });
-                element.on_canvas_event("mousemove", color_mouse, color_choices);
-                element.on_canvas_event("click", color_mouse, color_choices);
+                color_choices.on("mousemove", color_mouse);
+                color_choices.on("click", color_mouse);
             };
             draw_triangle_frame();
             
@@ -1690,10 +1690,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
             frame[name] = frame.parent_canvas[name];
         };
 
-        delegate_to_parent("change");
+        // delegate_to_parent("change"); -- change will apply to frame
         delegate_to_parent("forget_objects");
         delegate_to_parent("set_visibilities");
-        delegate_to_parent("transition");
+        // delegate_to_parent("transition");  -- transition will apply to frame
         delegate_to_parent("name_image_url");
         delegate_to_parent("name_image_data");
 
