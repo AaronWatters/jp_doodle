@@ -266,7 +266,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     target.forget_objects([object_info.name]);
                 };
                 object_info.visible = function(visibility) {
-                    target.set_visibilities([object_info.name]);
+                    target.set_visibilities([object_info.name], visibility);
                 };
                 object_info.on = function(event_type, callback) {
                     target.on_canvas_event(event_type, callback, object_info.name);
@@ -1690,10 +1690,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
             frame[name] = frame.parent_canvas[name];
         };
 
-        delegate_to_parent("change");
+        // delegate_to_parent("change"); -- change will apply to frame
         delegate_to_parent("forget_objects");
         delegate_to_parent("set_visibilities");
-        delegate_to_parent("transition");
+        // delegate_to_parent("transition");  -- transition will apply to frame
         delegate_to_parent("name_image_url");
         delegate_to_parent("name_image_data");
 
