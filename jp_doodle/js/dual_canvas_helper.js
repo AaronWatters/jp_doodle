@@ -361,7 +361,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
             var draw_info = draw_fn(target.visible_canvas, object_info);
             // store additional information attached during the draw operation
             $.extend(object_info, draw_info);
-            if ((object_info.name) && (!object_info.no_events)) {
+            if ((object_info.name) && (object_info.events !== false)) {
                 // also draw invisible object using psuedocolor for event lookups
                 target.draw_mask(object_info, target.invisible_canvas);
                 // Don't draw on the test canvas now.
@@ -546,7 +546,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 var object_info = target.get_object_info(for_name_or_info);
                 var for_name = object_info.name;
                 if (object_info) {
-                    if (object_info.no_events) {
+                    if (object_info.events === false) {
                         throw new Error("object " + name + " has events disabled.");
                     }
                     //var key = "on_" + event_type;
