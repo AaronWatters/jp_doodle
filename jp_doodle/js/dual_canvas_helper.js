@@ -541,6 +541,22 @@ XXXXX target.shaded_objects -- need to test for false hits!
             return target.name_to_object_info[for_name];
         }
 
+        target.abbreviated_on_canvas_event = function(event_type, callback, for_name_or_info) {
+            // Intended for use with Jupyter. Abbreviate the size of the event sent to the callback
+            // to reduce message sizes sent to the Python kernel.
+            var callback_wrapper = function(event) {
+                var abbrev = $.extend({}, event);
+                abbrev.originalEvent = null;
+                abbrev.currentTarget = null
+                abbrev.toElement = null;
+                abbrev.target = null;
+                abbrev.delegateTarget = null;
+                abbrev.view = null;
+                callback(abbrev);
+            }
+            return target.on_canvas_event(event_type, callback_wrapper, for_name_or_info)
+        };
+
         target.on_canvas_event = function(event_type, callback, for_name_or_info) {
             if (for_name_or_info) {
                 var object_info = target.get_object_info(for_name_or_info);
@@ -629,11 +645,16 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 var event_type = e.type;
                 var default_handler = null;
                 var object_handler = null;
+                var reference_frame = target;
                 if (!no_default) {
                     default_handler = target.event_info.default_event_handlers[event_type];
                 }
                 if ((e.canvas_name) && (!target.disable_element_events)) {
                     e.object_info = target.name_to_object_info[e.canvas_name];
+                    // if the object has a frame, override the reference frame
+                    if ((e.object_info) && (e.object_info.frame)) {
+                        reference_frame = e.object_info.frame;
+                    }
                     var object_handlers = target.event_info.object_event_handlers[event_type];
                     if ((e.object_info) && (object_handlers)) {
                         // look for a handler specific to this object
@@ -643,6 +664,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
                             object_handler = object_handlers[e.object_info.frame.name];
                         }
                     }
+                }
+                // attach the model location relative to the reference frame (unless overridden by testing)
+                if (!e.model_location) {
+                    e.model_location = reference_frame.event_model_location(event);
                 }
                 // No "event bubbling"?
                 if (object_handler) {
