@@ -40,6 +40,9 @@ class CanvasOperationsMixin(object):
 
     name_counter = 0
 
+    def get_canvas(self):
+        raise NotImplementedError("must implement at subclass")
+
     def fresh_name(self, prefix="anonymous"):
         CanvasOperationsMixin.name_counter += 1
         ms = int(time.time() * 1000)
@@ -54,7 +57,7 @@ class CanvasOperationsMixin(object):
     def wrap_name(self, name):
         if not name:
             return name  # Don't wrap a falsey name
-        return GeometryWrapper(self, name)
+        return GeometryWrapper(self.get_canvas(), name)
 
     def circle(self, x, y, r, color="black", fill=True, method_name="circle", **other_args):
         "Draw a circle or arc on the canvas frame."
@@ -150,9 +153,16 @@ class CanvasOperationsMixin(object):
         "Make named objects visible or invisible."
         self.element.set_visibilities(names, visibility)
 
-    def on_canvas_event(self, event_type, callback, for_name=None):
+    def on_canvas_event(self, event_type, callback, for_name=None, abbreviated=True):
         "Register an event handler for the canvas or for a named element."
-        self.element.on_canvas_event(event_type, callback, for_name)
+        mycanvas = self.get_canvas()
+        # Translate 3 levels
+        callback2 = mycanvas.callable(callback, level=3)
+        # receive abbreviated event information by default to save bandwidth
+        if abbreviated:
+            return mycanvas.element.abbreviated_on_canvas_event(event_type, callback2, for_name)
+        else:
+            return mycanvas.element.on_canvas_event(event_type, callback2, for_name)
 
     def off_canvas_event(self, event_type, for_name=None):
         "Unregister the event handler for the canvas or for a named element."
@@ -314,6 +324,9 @@ class DualCanvasWidget(jp_proxy_widget.JSProxyWidget, CanvasOperationsMixin):
             element.dual_canvas_helper(config);
             """, config=config)
 
+    def get_canvas(self):
+        return self
+
     def pixels_array_async(self, callback, x=None, y=None, w=None, h=None):
         """
         Get all pixels in the canvas as an array, or pixels in rectangular region if specified.
@@ -352,6 +365,9 @@ class FrameInterface(CanvasOperationsMixin):
         self.from_widget = from_widget
         self.attribute_name = attribute_name
         self.element = self.from_widget.element[self.attribute_name]
+
+    def get_canvas(self):
+        return self.from_widget
 
 
 class SnapshotCanvas(DualCanvasWidget):
