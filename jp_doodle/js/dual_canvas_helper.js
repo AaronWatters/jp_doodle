@@ -1428,17 +1428,21 @@ XXXXX target.shaded_objects -- need to test for false hits!
             }
             params.tick_direction = tick_direction || {x: 0, y: -1};
             params.offset_vector = offset_direction || {x: 1, y: 0};
-            //degrees = degrees || -90;
-            if ((typeof degrees) != "number") {
-                degrees = -90;
+            var numeric_default = function(value, default_value) {
+                if ((typeof value) == "number") {
+                    return value;
+                }
+                return default_value;
             }
+            //degrees = degrees || -90;
+            degrees = numeric_default(degrees, -90);
             params.tick_text_config = $.extend({
                 degrees: degrees,
                 align: align
             }, params.tick_text_config)
             var stats = target.active_region(true);   // drawn region or model view box
-            var min_value = params.min_value || stats["min_" + coordinate];
-            var max_value = params.max_value || stats["max_" + coordinate]
+            var min_value = numeric_default(params.min_value, stats["min_" + coordinate]);
+            var max_value = numeric_default(params.max_value, stats["max_" + coordinate]);
             if (!params.ticks) {
                 // infer ticks from limits
                 params.ticks = target.axis_ticklist(min_value, max_value, params.max_tick_count, params.anchor);
