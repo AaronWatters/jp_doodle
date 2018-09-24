@@ -420,7 +420,8 @@ class SnapshotCanvas(DualCanvasWidget):
     def _make_snapshot_widget(self):
         if self.snapshot_widget is not None:
             raise ValueError("do not make more than one snapshot widget per canvas.")
-        html_text = '<img src="%s" id="%s"/>' % (self.snapshot_filename, self.snapshot_id)
+        identity = self.snapshot_id
+        html_text = '<img src="%s?id=%s" id="%s"/>' % (self.snapshot_filename, identity, identity)
         html_text += '\n <div id="%s">%s</div>' % (self.snapshot_text_id, self.snapshot_filename)
         snapshot_widget = widgets.HTML(value=html_text)
         #snapshot_widget = widgets.Accordion(children=[html_widget])
