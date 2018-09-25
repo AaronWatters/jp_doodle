@@ -798,26 +798,17 @@ XXXXX target.shaded_objects -- need to test for false hits!
         // XXXX move frame parameter config to frame methods to enable frame config transitions
 
         target.rframe = function(scale_x, scale_y, translate_x, translate_y, name) {
-            scale_x = scale_x || 1.0;
-            scale_y = scale_y || 1.0;
-            translate_x = translate_x || 0;
-            translate_y = translate_y || 0;
-            return target.vector_frame(
-                {x: scale_x, y:0},
-                {x:0, y: scale_y},
-                {x: translate_x, y: translate_y},
-                name
-            );
+            result = target.vector_frame(null, null, null, name);
+            result.set_rframe(scale_x, scale_y, translate_x, translate_y);
+            return result;
             // xxxx could add special methods like model_to_pixel.
         };
 
         target.frame_region = function(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy, name) {
             // Convenience: map frame region into the canvas region
-            var scale_x = (maxx - minx) * 1.0 / (frame_maxx - frame_minx);
-            var scale_y = (maxy - miny) * 1.0 / (frame_maxy - frame_miny);
-            var translate_x = minx - frame_minx * scale_x;
-            var translate_y = miny - frame_miny * scale_y;
-            return target.rframe(scale_x, scale_y, translate_x, translate_y, name)
+            result = target.vector_frame(null, null, null, name);
+            result.set_region(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy);
+            return result;
         }
 
         target.callback_with_pixel_color = function(pixel_x, pixel_y, callback, delay) {
@@ -1713,6 +1704,26 @@ XXXXX target.shaded_objects -- need to test for false hits!
             events: true,   // by default support events
             shape_name: "frame",
         };
+
+        // (Re)set operations
+        frame.set_rframe = function(scale_x, scale_y, translate_x, translate_y) {
+            scale_x = scale_x || 1.0;
+            scale_y = scale_y || 1.0;
+            translate_x = translate_x || 0;
+            translate_y = translate_y || 0;
+            frame.x_vector = {x: scale_x, y:0};
+            frame.y_vector = {x:0, y: scale_y};
+            frame.xy_offset = {x: translate_x, y: translate_y};
+        };
+
+        frame.set_region = function(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy) {
+            // Convenience: map frame region into the canvas region
+            var scale_x = (maxx - minx) * 1.0 / (frame_maxx - frame_minx);
+            var scale_y = (maxy - miny) * 1.0 / (frame_maxy - frame_miny);
+            var translate_x = minx - frame_minx * scale_x;
+            var translate_y = miny - frame_miny * scale_y;
+            return frame.set_rframe(scale_x, scale_y, translate_x, translate_y);
+        }
 
         // Delegate appropriate methods to parent
         var delegate_to_parent = function(name) {
