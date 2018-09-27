@@ -244,15 +244,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // top row chart frame
             top_frame.set_region(
                 0, height+spacer, width, height+cheight+spacer,
-                0, minrow, ncols, maxrow);
+                0, min_value, ncols, max_value);
             //top_frame.frame_rect({x:0, y:minrow, w:ncols, h:maxrow-minrow, color:"cornsilk"});
         
-            top_frame.right_axis({min_value:minrow, max_value:maxrow, max_tick_count:5, 
+            top_frame.right_axis({min_value:min_value, max_value:max_value, max_tick_count:5, 
                 add_end_points:true, axis_origin: {x:ncols, y:0}});
                 
             row_jitter_frame.set_region(
                 width + spacer + cheight * 0.5, height + spacer, width + spacer + cheight, height + spacer + cheight,
-                0, minrow, 1, maxrow
+                0, min_value, 1, max_value
             );
             //row_jitter_frame.frame_rect({x:0, y:minrow, w:1, h:maxrow-minrow, color:"cornsilk"});
         
@@ -261,22 +261,22 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var color = get_color(value);
                 top_frame.line({x1:i, x2:i+1, y1:value, y2:value, color:color, lineWidth:lineWidth});
                 var midi = i + 0.5;
-                top_frame.line({x1:midi, x2:midi, y1:minrow, y2:value, color:color, lineWidth:lineWidth});
+                top_frame.line({x1:midi, x2:midi, y1:min_value, y2:value, color:color, lineWidth:lineWidth});
                 row_jitter_frame.circle({x: Math.random(), y:value, r:lineWidth, color:color})
             }
         
             // left column chart frame
             left_frame.set_region(
                 -spacer, 0, -cwidth-spacer, height,
-                mincol, nrows, maxcol, 0);
+                min_value, nrows, max_value, 0);
             // uninverted y for axis
             left_axis_frame.set_region(
                 -spacer, 0, -cwidth-spacer, height,
-                mincol, 0, maxcol, nrows);
+                min_value, 0, max_value, nrows);
             col_jitter_frame.set_region(
                 -cwidth-spacer, -cwidth - spacer, -spacer, -cwidth * 0.5 - spacer,
-                maxcol, 0, mincol, 1.0)
-            left_axis_frame.bottom_axis({min_value:mincol, max_value:maxcol, 
+                max_value, 0, min_value, 1.0)
+            left_axis_frame.bottom_axis({min_value:min_value, max_value:max_value, 
                 max_tick_count:5, add_end_points:true});
         
             for (var j=0; j<nrows; j++) {
