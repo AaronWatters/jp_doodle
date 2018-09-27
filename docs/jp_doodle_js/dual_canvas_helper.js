@@ -541,6 +541,22 @@ XXXXX target.shaded_objects -- need to test for false hits!
             return target.name_to_object_info[for_name];
         }
 
+        target.abbreviated_on_canvas_event = function(event_type, callback, for_name_or_info) {
+            // Intended for use with Jupyter. Abbreviate the size of the event sent to the callback
+            // to reduce message sizes sent to the Python kernel.
+            var callback_wrapper = function(event) {
+                var abbrev = $.extend({}, event);
+                abbrev.originalEvent = null;
+                abbrev.currentTarget = null
+                abbrev.toElement = null;
+                abbrev.target = null;
+                abbrev.delegateTarget = null;
+                abbrev.view = null;
+                callback(abbrev);
+            }
+            return target.on_canvas_event(event_type, callback_wrapper, for_name_or_info)
+        };
+
         target.on_canvas_event = function(event_type, callback, for_name_or_info) {
             if (for_name_or_info) {
                 var object_info = target.get_object_info(for_name_or_info);
@@ -629,11 +645,16 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 var event_type = e.type;
                 var default_handler = null;
                 var object_handler = null;
+                var reference_frame = target;
                 if (!no_default) {
                     default_handler = target.event_info.default_event_handlers[event_type];
                 }
                 if ((e.canvas_name) && (!target.disable_element_events)) {
                     e.object_info = target.name_to_object_info[e.canvas_name];
+                    // if the object has a frame, override the reference frame
+                    if ((e.object_info) && (e.object_info.frame)) {
+                        reference_frame = e.object_info.frame;
+                    }
                     var object_handlers = target.event_info.object_event_handlers[event_type];
                     if ((e.object_info) && (object_handlers)) {
                         // look for a handler specific to this object
@@ -643,6 +664,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
                             object_handler = object_handlers[e.object_info.frame.name];
                         }
                     }
+                }
+                // attach the model location relative to the reference frame (unless overridden by testing)
+                if (!e.model_location) {
+                    e.model_location = reference_frame.event_model_location(event);
                 }
                 // No "event bubbling"?
                 if (object_handler) {
@@ -773,26 +798,17 @@ XXXXX target.shaded_objects -- need to test for false hits!
         // XXXX move frame parameter config to frame methods to enable frame config transitions
 
         target.rframe = function(scale_x, scale_y, translate_x, translate_y, name) {
-            scale_x = scale_x || 1.0;
-            scale_y = scale_y || 1.0;
-            translate_x = translate_x || 0;
-            translate_y = translate_y || 0;
-            return target.vector_frame(
-                {x: scale_x, y:0},
-                {x:0, y: scale_y},
-                {x: translate_x, y: translate_y},
-                name
-            );
+            result = target.vector_frame(null, null, null, name);
+            result.set_rframe(scale_x, scale_y, translate_x, translate_y);
+            return result;
             // xxxx could add special methods like model_to_pixel.
         };
 
         target.frame_region = function(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy, name) {
             // Convenience: map frame region into the canvas region
-            var scale_x = (maxx - minx) * 1.0 / (frame_maxx - frame_minx);
-            var scale_y = (maxy - miny) * 1.0 / (frame_maxy - frame_miny);
-            var translate_x = minx - frame_minx * scale_x;
-            var translate_y = miny - frame_miny * scale_y;
-            return target.rframe(scale_x, scale_y, translate_x, translate_y, name)
+            result = target.vector_frame(null, null, null, name);
+            result.set_region(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy);
+            return result;
         }
 
         target.callback_with_pixel_color = function(pixel_x, pixel_y, callback, delay) {
@@ -1403,17 +1419,21 @@ XXXXX target.shaded_objects -- need to test for false hits!
             }
             params.tick_direction = tick_direction || {x: 0, y: -1};
             params.offset_vector = offset_direction || {x: 1, y: 0};
-            //degrees = degrees || -90;
-            if ((typeof degrees) != "number") {
-                degrees = -90;
+            var numeric_default = function(value, default_value) {
+                if ((typeof value) == "number") {
+                    return value;
+                }
+                return default_value;
             }
+            //degrees = degrees || -90;
+            degrees = numeric_default(degrees, -90);
             params.tick_text_config = $.extend({
                 degrees: degrees,
                 align: align
             }, params.tick_text_config)
             var stats = target.active_region(true);   // drawn region or model view box
-            var min_value = params.min_value || stats["min_" + coordinate];
-            var max_value = params.max_value || stats["max_" + coordinate]
+            var min_value = numeric_default(params.min_value, stats["min_" + coordinate]);
+            var max_value = numeric_default(params.max_value, stats["max_" + coordinate]);
             if (!params.ticks) {
                 // infer ticks from limits
                 params.ticks = target.axis_ticklist(min_value, max_value, params.max_tick_count, params.anchor);
@@ -1684,6 +1704,26 @@ XXXXX target.shaded_objects -- need to test for false hits!
             events: true,   // by default support events
             shape_name: "frame",
         };
+
+        // (Re)set operations
+        frame.set_rframe = function(scale_x, scale_y, translate_x, translate_y) {
+            scale_x = scale_x || 1.0;
+            scale_y = scale_y || 1.0;
+            translate_x = translate_x || 0;
+            translate_y = translate_y || 0;
+            frame.x_vector = {x: scale_x, y:0};
+            frame.y_vector = {x:0, y: scale_y};
+            frame.xy_offset = {x: translate_x, y: translate_y};
+        };
+
+        frame.set_region = function(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy) {
+            // Convenience: map frame region into the canvas region
+            var scale_x = (maxx - minx) * 1.0 / (frame_maxx - frame_minx);
+            var scale_y = (maxy - miny) * 1.0 / (frame_maxy - frame_miny);
+            var translate_x = minx - frame_minx * scale_x;
+            var translate_y = miny - frame_miny * scale_y;
+            return frame.set_rframe(scale_x, scale_y, translate_x, translate_y);
+        }
 
         // Delegate appropriate methods to parent
         var delegate_to_parent = function(name) {

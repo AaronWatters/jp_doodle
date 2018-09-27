@@ -38,6 +38,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.canvas.appendTo(target);
             target.canvas_context = target.canvas[0].getContext("2d");
             var ctx = target.canvas_context;
+            ctx.imageSmoothingEnabled = false;
             var ts = target.canvas_translate_scale;
             //ctx.translate(ts.x, ts.y);
             //ctx.scale(ts.w, ts.h);
@@ -59,8 +60,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             if (target.canvas_stats) {
                 target.canvas_stats = {};
             }
-            // Set the tab index to allow canvas focus (???)
-            target.attr("tabindex", "0");
         };
 
         target.reset_canvas();

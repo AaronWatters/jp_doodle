@@ -1,0 +1,10 @@
+***TITLE
+Array explorer
+***SCREENSHOT
+http://sipi.usc.edu/database/preview/misc/4.2.03.png
+***PROLOGUE
+Interactive heatmap
+***CODE
+element.array_explorer.example(element);
+***DISCUSSION
+This widget allows the user to interactively example a data array.

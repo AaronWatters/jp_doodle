@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Rectangles -- jp_doodle demo</title>
+    <title>Array explorer -- jp_doodle demo</title>
     <link rel="icon" type="image/png" href="images/clock.png">
     <link rel=stylesheet href="static/style.css">
 
@@ -64,19 +64,9 @@
     to easily run the Jupyter notebooks of the package.
 </em></p>
 
-<h1>Rectangles</h1>
+<h1>Array explorer</h1>
 <div>
-    <p>
-The <code>rectangle_collection.js</code> plugin provides
-an experimental implementation of a two category bar chart.
-This proof of concept is useful as an example of a complex
-component built using <code>jp_doodle</code>.
-</p>
-<p>
-Click "person type" or "State" to start and stop adjusting the
-layout of the barchart.  Mouse over the rectangles and other labels
-for detail information.
-</p>
+    Interactive heatmap
 </div>
 
 <div id="target_container">
@@ -86,44 +76,7 @@ for detail information.
 <script>
     var element = $('#target_div');
     //$('<img src="http://sipi.usc.edu/database/preview/misc/4.2.03.png">').appendTo(element);
-    var bar_config = {
-    u: {x:-1, y:0},
-    v: {x:0.8, y:0.3},
-    x: 20,
-    y: 280,
-    u_label: "person type",
-    u_anchors: "men women children".split(" "),
-    v_label: "State",
-    v_anchors: "Pennsylvania New_Jersey New_York Delaware".split(" "),
-    max_vertical: 200,
-    max_depth: 200,
-    max_width: 50,
-    labels_position: {x: 150, y: 250},
-};
-var rectangles = [];
-for (var i=0; i<bar_config.u_anchors.length; i++) {
-    u_anchor = bar_config.u_anchors[i];
-    for (var j=0; j<bar_config.v_anchors.length; j++) {
-        var v_anchor = bar_config.v_anchors[j];
-        var height = (Math.sin(i+j)+1) * 50;
-        var rectangle = {
-            u_anchor: u_anchor,
-            v_anchor: v_anchor,
-            height: height,
-        }
-        rectangles.push(rectangle);
-    }
-}
-bar_config.bars = rectangles;
-element.empty();
-var canvas_config = {
-    width: 800,
-    height: 600,
-    //translate_scale: {x: x, y:y, w:w, h:h},
-};
-element.dual_canvas_helper(canvas_config);
-element.rectangle_collection(bar_config);
-element.draw_bars();
+    element.array_explorer.example(element);
 </script>
 
 <div id="code_text">
@@ -131,44 +84,7 @@ element.draw_bars();
     
         <div><textarea id="code" name="code">
 var element = $('#target_div');
-var bar_config = {
-    u: {x:-1, y:0},
-    v: {x:0.8, y:0.3},
-    x: 20,
-    y: 280,
-    u_label: "person type",
-    u_anchors: "men women children".split(" "),
-    v_label: "State",
-    v_anchors: "Pennsylvania New_Jersey New_York Delaware".split(" "),
-    max_vertical: 200,
-    max_depth: 200,
-    max_width: 50,
-    labels_position: {x: 150, y: 250},
-};
-var rectangles = [];
-for (var i=0; i<bar_config.u_anchors.length; i++) {
-    u_anchor = bar_config.u_anchors[i];
-    for (var j=0; j<bar_config.v_anchors.length; j++) {
-        var v_anchor = bar_config.v_anchors[j];
-        var height = (Math.sin(i+j)+1) * 50;
-        var rectangle = {
-            u_anchor: u_anchor,
-            v_anchor: v_anchor,
-            height: height,
-        }
-        rectangles.push(rectangle);
-    }
-}
-bar_config.bars = rectangles;
-element.empty();
-var canvas_config = {
-    width: 800,
-    height: 600,
-    //translate_scale: {x: x, y:y, w:w, h:h},
-};
-element.dual_canvas_helper(canvas_config);
-element.rectangle_collection(bar_config);
-element.draw_bars();
+element.array_explorer.example(element);
         </textarea></div>
     
     </div>
@@ -177,12 +93,7 @@ element.draw_bars();
         <h3>Discussion</h3>
     
         <div>
-            <p>
-The `rectangles_collection` proof of concept implementation provides
-an extended example of how to use dual canvases to build
-more complex visualizations.  It includes mouse event handling,
-object hiding, dynamic layout adjustment, and a floating dialog.
-<p>
+            This widget allows the user to interactively example a data array.
         </div>
     
     </div>
