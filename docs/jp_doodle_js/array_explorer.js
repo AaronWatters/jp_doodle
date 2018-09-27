@@ -28,8 +28,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             selected_row: 0,
             selected_col: 0,
             whiten: "rgba(255,255,255,0.5)",   // set to falsey for no whiten
+            background: "cornsilk",
             nswatches:  100,  // number of color samples in color bar
             lineWidth: 3,
+            hover_color: "rgba(255,0,0,0.2)"
         }, options);
 
         // Shared calculated state variables
@@ -64,6 +66,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         var nrows = column_names.length;
         var ncols = row_names.length;
         var lineWidth = settings.lineWidth;
+        var selected_charts = [];
+        var hover_charts = null;
     
         var reset_data = function() {
             width = settings.width;
@@ -96,6 +100,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             if ((max_value - min_value) < 0.01) {
                 maxvalue = min_value + 0.1;
             }
+            reset_selection_charts();
+        };
+
+        var reset_selection_charts = function() {
+            for (var i=0; i<selected_charts.length; i++) {
+                selected_charts[i].remove();
+            }
+            selected_charts = [];
+            var current_selection = selection_charts(selected_row, selected_col);
+            hover_charts = selection_charts(0, 0, "invisible", 0);
+            selected_charts = [hover_charts, current_selection];
+            element.selected_charts = selected_charts;
         };
 
         var refocus = function(start_row, start_col, row, col) {
@@ -129,6 +145,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             array = new_array;
             column_names = new_col_names;
             row_names = new_row_names;
+            reset_selection_charts();
             delayed_redraw();
         };
 
@@ -154,7 +171,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             position: "absolute",
             width: "140px",
             height: "auto",
-            background: "#ddd",
+            background: settings.background,
             font: "12px sans-serif",
             opacity: 0
         });
@@ -200,7 +217,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             srow = [];
             for (var i=0; i<ncols; i++) {
                 array_frame.text({x:i+0.5, y:nrows, text:" "+column_names[i], 
-                    degrees:-90, valign:"center", background:"cornsilk"});
+                    degrees:-90, valign:"center", background:settings.background});
                 srow.push(array[selected_row][i]);
             }
             minrow = Math.min(...srow);
@@ -212,7 +229,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             scol = [];
             for (var j=0; j<nrows; j++) {
                 array_frame.text({x:ncols, y:j+0.5, text:" "+row_names[j], 
-                    valign:"center", background:"cornsilk"});
+                    valign:"center", background:settings.background});
                 scol.push(array[j][selected_col]);
             }
             mincol = Math.min(...scol);
@@ -241,52 +258,112 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         var draw_charts = function () {
+            top_frame.reset_frame();
+            left_axis_frame.reset_frame();
+
             // top row chart frame
             top_frame.set_region(
                 0, height+spacer, width, height+cheight+spacer,
-                0, minrow, ncols, maxrow);
+                0, min_value, ncols, max_value);
             //top_frame.frame_rect({x:0, y:minrow, w:ncols, h:maxrow-minrow, color:"cornsilk"});
         
-            top_frame.right_axis({min_value:minrow, max_value:maxrow, max_tick_count:5, 
+            top_frame.right_axis({min_value:min_value, max_value:max_value, max_tick_count:5, 
                 add_end_points:true, axis_origin: {x:ncols, y:0}});
-                
-            row_jitter_frame.set_region(
-                width + spacer + cheight * 0.5, height + spacer, width + spacer + cheight, height + spacer + cheight,
-                0, minrow, 1, maxrow
-            );
-            //row_jitter_frame.frame_rect({x:0, y:minrow, w:1, h:maxrow-minrow, color:"cornsilk"});
         
-            for (var i=0; i<ncols; i++) {
-                var value = srow[i];
-                var color = get_color(value);
-                top_frame.line({x1:i, x2:i+1, y1:value, y2:value, color:color, lineWidth:lineWidth});
-                var midi = i + 0.5;
-                top_frame.line({x1:midi, x2:midi, y1:minrow, y2:value, color:color, lineWidth:lineWidth});
-                row_jitter_frame.circle({x: Math.random(), y:value, r:lineWidth, color:color})
-            }
-        
-            // left column chart frame
-            left_frame.set_region(
-                -spacer, 0, -cwidth-spacer, height,
-                mincol, nrows, maxcol, 0);
             // uninverted y for axis
             left_axis_frame.set_region(
                 -spacer, 0, -cwidth-spacer, height,
-                mincol, 0, maxcol, nrows);
-            col_jitter_frame.set_region(
-                -cwidth-spacer, -cwidth - spacer, -spacer, -cwidth * 0.5 - spacer,
-                maxcol, 0, mincol, 1.0)
-            left_axis_frame.bottom_axis({min_value:mincol, max_value:maxcol, 
+                min_value, 0, max_value, nrows);
+            left_axis_frame.bottom_axis({min_value:min_value, max_value:max_value, 
                 max_tick_count:5, add_end_points:true});
-        
-            for (var j=0; j<nrows; j++) {
-                var value = scol[j];
-                var color = get_color(value);
-                left_frame.line({y1:j, y2:j+1, x1:value, x2:value, color:color, lineWidth:lineWidth})
-                var midj = j + 0.5;
-                left_frame.line({y1: midj, y2: midj, x1:value, x2:mincol, color:color, lineWidth:lineWidth})
-                col_jitter_frame.circle({y: Math.random(), x:value, r:lineWidth, color:color})
+debugger;
+            for (var i=0; i<selected_charts.length; i++) {
+                selected_charts[i].draw();
             }
+        };
+
+        var selection_charts = function (row, col, color_override, offset) {
+            // xxxx shouldn't need to do this here?
+            nrows = row_names.length;
+            ncols = column_names.length;
+            offset = offset || 0;
+            var charts = {row: row, col:col, color_override:color_override, offset: offset};
+            var chart_color = function(value) {
+                if (charts.color_override) {
+                    return charts.color_override;
+                }
+                return get_color(value);
+            };
+            var right_jitter_offset = - offset * (cheight + spacer)
+            charts.right_jitter_frame = element.frame_region(
+                width + spacer + cwidth, height + spacer + right_jitter_offset, 
+                width + spacer + cwidth * 1.5, height + spacer + cheight + right_jitter_offset,
+                0, min_value, 1, max_value
+            );
+            charts.top_frame = element.frame_region(
+                0, height+spacer, width, height+cheight+spacer,
+                0, min_value, ncols, max_value);
+            charts.left_frame = element.frame_region(
+                -spacer, 0, -cwidth-spacer, height,
+                min_value, nrows, max_value, 0
+            );
+            var bottom_jitter_offset = offset * (cwidth + spacer);
+            charts.bottom_jitter_frame = element.frame_region(
+                bottom_jitter_offset-cwidth-spacer, -cwidth * 1.5 - spacer, 
+                bottom_jitter_offset-spacer, -cwidth - spacer,
+                max_value, 0, min_value, 1.0
+            )
+            charts.draw = function () {
+                // (re) draw the chart on the figure
+                charts.right_jitter_frame.reset_frame();
+                charts.top_frame.reset_frame();
+                charts.left_frame.reset_frame();
+                charts.bottom_jitter_frame.reset_frame();
+                // don't draw anything if the color_override is "invisible"
+                if (charts.color_override=="invisible") {
+                    return;
+                }
+                if ((charts.last_row != charts.row) || (!charts.random_row)) {
+                    charts.random_row = [];
+                    for (var i=0; i<ncols; i++) {
+                        charts.random_row.push(Math.random());
+                    }
+                }
+                charts.last_row = charts.row;
+                for (var i=0; i<ncols; i++) {
+                    var value = array[charts.row][i];
+                    var color = chart_color(value);
+                    charts.top_frame.line({x1:i, x2:i+1, y1:value, y2:value, color:color, lineWidth:lineWidth});
+                    var midi = i + 0.5;
+                    charts.top_frame.line({x1:midi, x2:midi, y1:min_value, y2:value, color:color, lineWidth:lineWidth});
+                    charts.right_jitter_frame.circle({x: charts.random_row[i], y:value, r:lineWidth, color:color});
+                }
+                if ((charts.last_col != charts.col) || (!charts.random_col)) {
+                    charts.random_col = [];
+                    for (var i=0; i<nrows; i++) {
+                        charts.random_col.push(Math.random());
+                    }
+                }
+                charts.last_col = charts.col;
+                for (var j=0; j<nrows; j++) {
+                    var value = array[j][charts.col];
+                    var color = chart_color(value);
+                    charts.left_frame.line({y1:j, y2:j+1, x1:value, x2:value, color:color, lineWidth:lineWidth})
+                    var midj = j + 0.5;
+                    charts.left_frame.line({y1: midj, y2: midj, x1:value, x2:mincol, color:color, lineWidth:lineWidth})
+                    charts.bottom_jitter_frame.circle({y: charts.random_col[j], x:value, r:lineWidth, color:color})
+                }
+            };
+            charts.remove = function () {
+                // remove these charts from the figure
+                element.forget_objects([
+                    charts.top_frame,
+                    charts.right_jitter_frame,
+                    charts.left_frame,
+                    charts.bottom_jitter_frame,
+                ])
+            };
+            return charts;
         };
 
         var draw_color_bar = function () {
@@ -357,6 +434,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var rowy = frame_location.y;
             var col = Math.floor(colx);
             var row = Math.floor(rowy);
+            // by default, don't draw the hover charts
+            if (hover_charts.color_override !== "invisible") {
+                hover_charts.color_override = "invisible";
+                draw_charts();
+            }
             if ((col<0) || (col>=ncols)) {
                 col = selected_col;
                 colx = col;
@@ -380,6 +462,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             })
             if (!mouse_down_row_col) {
                 array_selection.change({x: col, y: row, w:1, h:1, hide:false});
+                if ((col != selected_col) || (row != selected_row) && event.canvas_name ==  "array_selection") {
+                    // show the hover charts in transparent red
+                    hover_charts.row = row;
+                    hover_charts.col = col;
+                    hover_charts.color_override = settings.hover_color;
+                    draw_charts();
+                }
             }
             var start_col = null;
             var start_row = null;
@@ -406,14 +495,22 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             if (event_type == "click") {
                 selected_row = row;
                 selected_col = col;
+                reset_selection_charts();
                 redraw();
             }
         };
 
+        var on_mouseout_array = function(event) {
+            array_selection.change({hide: true});
+            hover_charts.color_override = "invisible";
+            draw_charts();
+        }
+
         var add_event_handlers = function () {
             array_area.on("click", on_mouse_array);
             array_area.on("mousemove", on_mouse_array);
-            array_area.on("mousedown", on_mouse_array);
+            array_area.on("mousemove", on_mouse_array);
+            array_area.on("mouseout", on_mouseout_array);
             array_area.on("mouseup", on_mouse_array);
             col_labels_area.on("click", on_mouse_array);
             col_labels_area.on("mousemove", on_mouse_array);
