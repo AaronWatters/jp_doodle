@@ -289,6 +289,23 @@ to change the parameters of the frame on the right.
 
 <tr>
     <td>
+        <a href="https://aaronwatters.github.io/jp_doodle/array_explorer.html">
+        <img width="200px" src="docs/images/ArrayChooser.png">
+        </a>
+    </td>
+    <td>
+        <h4><a href="https://aaronwatters.github.io/jp_doodle/array_explorer.html">
+        Array explorer
+        </a></h4>
+        <div>
+        This component allows an analyst to compare the rows and columns of an array of data.
+        </div>
+    </td>
+</tr>
+
+
+<tr>
+    <td>
         <a href="https://aaronwatters.github.io/jp_doodle/color_chooser.html">
         <img width="200px" src="docs/images/color_chooser.png">
         </a>

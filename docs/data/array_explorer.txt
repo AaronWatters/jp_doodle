@@ -1,10 +1,13 @@
 ***TITLE
 Array explorer
 ***SCREENSHOT
-http://sipi.usc.edu/database/preview/misc/4.2.03.png
+images/ArrayChooser.png
 ***PROLOGUE
-Interactive heatmap
+This component allows an analyst to compare the rows and columns of an array of data.
 ***CODE
 element.array_explorer.example(element);
 ***DISCUSSION
 This widget allows the user to interactively example a data array.
+<p>
+Click an entry to change the currently selected row and column.  Use the colorize button to fix
+multiple row/column pairs for comparison.  Click and drag to select a subsection of the array.
