@@ -301,16 +301,19 @@ XXXXX target.shaded_objects -- need to test for false hits!
             // modify to remove all frame members.... xxxxxx
             var object_infos = [];
             for (var i=0; i<names_or_infos.length; i++) {
+                // skip over any undefines or other false values
                 var object_info = names_or_infos[i];
-                var name = object_info;
-                if ((typeof name) == "string") {
-                    object_info = target.name_to_object_info[name];
-                } else if (object_info) {
-                    name = object_info.name;
+                if (object_info) {
+                    var name = object_info;
+                    if ((typeof name) == "string") {
+                        object_info = target.name_to_object_info[name];
+                    } else if (object_info) {
+                        name = object_info.name;
+                    }
+                    if ((name) && (object_info) && (target.name_to_object_info[name])) {
+                        object_infos.push(object_info);
+                    }  // ignore request to forget unknown object
                 }
-                if ((name) && (object_info) && (target.name_to_object_info[name])) {
-                    object_infos.push(object_info);
-                }  // ignore request to forget unknown object
             }
             target.forget_object_descriptions(object_infos);
         };
