@@ -287,7 +287,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         var draw_charts = function () {
-            console.log("drawing all charts");
             top_frame.reset_frame();
             left_axis_frame.reset_frame();
 
@@ -307,7 +306,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             left_axis_frame.bottom_axis({min_value:min_value, max_value:max_value, 
                 max_tick_count:5, add_end_points:true});
             for (var i=0; i<selected_charts.length; i++) {
-                console.log("calling draw chart " + i);
                 selected_charts[i].draw();
             }
         };
@@ -349,16 +347,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             charts.draw = function () {
                 charts.init();
                 // (re) draw the chart on the figure
-                console.log("   drawing chart " + charts.offset + " override=" + charts.color_override +
-                    " test=" + charts.chart_color(0.5));
                 // don't draw anything if the color_override is "invisible"
                 if (charts.color_override=="invisible") {
-                    console.log("skipping invisible chart " + charts.offset);
                     return;
                 }
                 // add backgrounds
                 charts.right_jitter_frame.frame_rect({
                     x:0, y:min_value, w:1, h:max_value-min_value, color: settings.background
+                })
+                charts.bottom_jitter_frame.frame_rect({
+                    x:min_value, y:0, w:max_value-min_value, h:1, color: settings.background
                 })
                 if ((charts.last_row != charts.row) || (!charts.random_row)) {
                     charts.random_row = [];
@@ -396,19 +394,28 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     charts.array_rect = array_frame.frame_rect({x:charts.col, y:charts.row, w:1, h:1, 
                         color:charts.color_override, name:true, events:false});
                 }
+                var outline_color = charts.color_override || "black";
+                charts.column_outline = array_frame.frame_rect({
+                    x:charts.col, y:0, w:1, h:nrows, color:outline_color, fill:false, lineWidth:lineWidth,
+                    name:true, events:false,
+                });
+                charts.row_outline = array_frame.frame_rect({
+                    x:0, y:charts.row, w:ncols, h:1, color:outline_color, fill:false, lineWidth:lineWidth,
+                    name:true, events:false,
+                });
             };
             charts.remove = function () {
-                // remove these charts from the figure
+                // remove these charts from the figure (undefined or null objects skipped)
                 if (charts.top_frame) {
                     element.forget_objects([
                         charts.top_frame,
                         charts.right_jitter_frame,
                         charts.left_frame,
                         charts.bottom_jitter_frame,
+                        charts.array_rect,
+                        charts.column_outline,
+                        charts.row_outline,
                     ]);
-                }
-                if (charts.array_rect) {
-                    charts.array_rect.forget();
                 }
             };
             return charts;
@@ -458,12 +465,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     x:selected_col+1, y:selected_row+1,
                     w:ncols-selected_col-1, h:nrows-selected_row-1, color:whiten});
             }
-            array_frame.frame_rect({
-                x:selected_col, y:0, w:1, h:nrows, color:"black", fill:false, lineWidth:lineWidth
-            });
-            array_frame.frame_rect({
-                x:0, y:selected_row, w:ncols, h:1, color:"black", fill:false, lineWidth:lineWidth
-            });
             // invisible rectangle for events
             array_area = array_frame.frame_rect({
                 name: "array_area",
@@ -478,15 +479,19 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         var info_div = $("<div>info here</div>").appendTo(element);
-        // info_div.css({display: "none", visibility:"hidden"});
+        if (!settings.debug) {
+            info_div.css({display: "none", visibility:"hidden"});
+        }
 
         // event handling
         var on_mouse_array = function(event) {
             var debug_log = function(message) {
-                var expanded = "<div>" + event.type + "@" + row + "," +col + ": " + message + "</div>";
-                info_div.html(expanded);
-                if (event.type != "mousemove") {
-                    console.log(expanded);
+                if (settings.debug) {
+                    var expanded = "<div>" + event.type + "@" + row + "," +col + ": " + message + "</div>";
+                    info_div.html(expanded);
+                    if (event.type != "mousemove") {
+                        console.log(expanded);
+                    }
                 }
             }
             let element_offset = element.offset();
@@ -572,6 +577,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     selected_col = col;
                     element.current_selection.row = row;
                     element.current_selection.col = col;
+                    element.hide_chooser();
                     //reset_selection_charts();
                     debug_log("changing primary selection");
                     redraw();
