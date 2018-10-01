@@ -33,7 +33,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             nswatches:  100,  // number of color samples in color bar
             lineWidth: 3,
             hover_color: "rgba(255,0,0,0.3)",
-            nbins: 5, // number of bins for histograms
+            nbins: 10, // number of bins for histograms
         }, options);
 
         // Shared calculated state variables
@@ -334,11 +334,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     min_value, nrows, max_value, 0
                 );
                 var bottomoffset = offset * (cwidth + spacer);
-                charts.bottomframe = element.frame_region(
-                    bottomoffset-cwidth-spacer, -cwidth * 1.5 - spacer, 
-                    bottomoffset-spacer, -cwidth - spacer,
-                    max_value, 0, min_value, 1.0
-                );
                 // (re) draw the chart on the figure
                 // don't draw anything if the color_override is "invisible"
                 if (charts.color_override=="invisible") {
@@ -373,39 +368,104 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
 
                 // upper right chart
-                var right_bins = get_bins(row_values);
-                var right_bin_max = Math.max(...right_bins);
-                charts.rightframe = element.frame_region(
-                    width + spacer + cwidth, height + spacer + rightoffset, 
-                    width + spacer + cwidth * 2, height + spacer + cheight + rightoffset,
-                    0, min_value, right_bin_max, max_value
-                );
-                for (var i=0; i<nbins; i++) {
-                    var binvalue = i * delta;
+                if (charts.row == selected_row) {
+                    // histogram
+                    var right_bins = get_bins(row_values);
+                    var right_bin_max = Math.max(...right_bins);
+                    charts.rightframe = element.frame_region(
+                        width + spacer + cwidth, height + spacer + rightoffset, 
+                        width + spacer + cwidth * 2, height + spacer + cheight + rightoffset,
+                        0, min_value, right_bin_max, max_value
+                    );
+                    // background
                     charts.rightframe.frame_rect({
-                        x:0, y:binvalue, w:right_bins[i], h:delta, color:charts.chart_color(binvalue),
+                        x:0, y:min_value, w:right_bin_max, h:max_value-min_value, color:settings.background,
                     })
-                }
-
-                charts.bottomframe.frame_rect({
-                    x:min_value, y:0, w:max_value-min_value, h:1, color: settings.background
-                })
-
-                if ((charts.last_col != charts.col) || (!charts.random_col)) {
-                    charts.random_col = [];
-                    for (var i=0; i<nrows; i++) {
-                        charts.random_col.push(Math.random());
+                    for (var i=0; i<nbins; i++) {
+                        var binvalue = min_value + i * delta;
+                        charts.rightframe.frame_rect({
+                            x:0, y:binvalue, w:right_bins[i], h:delta, color:charts.chart_color(binvalue+delta*0.5),
+                        })
                     }
+                    charts.rightframe.text({x:0, y:max_value, text:row_names[charts.row], 
+                        color:charts.chart_color(max_value), background:settings.background});
+                } else {
+                    charts.rightframe = element.frame_region(
+                        width + spacer + cwidth, height + spacer + rightoffset, 
+                        width + spacer + cwidth * 2, height + spacer + cheight + rightoffset,
+                        min_value, min_value, max_value, max_value
+                    );
+                    // background
+                    charts.rightframe.frame_rect({
+                        x:min_value, y:min_value, w:max_value-min_value, h:max_value-min_value, color:settings.background,
+                    })
+                    for (var i=0; i<ncols; i++) {
+                        var value = array[charts.row][i];
+                        var selected_value = array[selected_row][i];
+                        var color = charts.chart_color(value);
+                        charts.rightframe.circle({y: selected_value, x:value, r:lineWidth, color:color});
+                    }
+                    charts.rightframe.text({x:min_value, y:max_value, text:row_names[charts.row], 
+                        color:charts.chart_color(max_value), background:settings.background});
+                    charts.rightframe.text({x:max_value, y:max_value, text:row_names[selected_row], 
+                        color:charts.chart_color(max_value), background:settings.background, degrees:-90});
                 }
-                charts.last_col = charts.col;
+
+                // left chart
+                var col_values = [];
                 for (var j=0; j<nrows; j++) {
                     var value = array[j][charts.col];
+                    col_values.push(value);
                     var color = charts.chart_color(value);
                     charts.left_frame.line({y1:j, y2:j+1, x1:value, x2:value, color:color, lineWidth:lineWidth})
                     var midj = j + 0.5;
                     charts.left_frame.line({y1: midj, y2: midj, x1:value, x2:mincol, color:color, lineWidth:lineWidth})
-                    charts.bottomframe.circle({y: charts.random_col[j], x:value, r:lineWidth, color:color})
+                    //charts.bottomframe.circle({y: charts.random_col[j], x:value, r:lineWidth, color:color})
                 }
+                // bottom chart
+                if (charts.col == selected_col) {
+                    // histogram
+                    var bottom_bins = get_bins(col_values);
+                    var bottom_bin_max = Math.max(...bottom_bins);
+                    charts.bottomframe = element.frame_region(
+                        bottomoffset-cwidth-spacer, -cwidth * 2 - spacer, 
+                        bottomoffset-spacer, -cwidth - spacer,
+                        max_value, 0, min_value, bottom_bin_max
+                    );
+                    // background
+                    charts.bottomframe.frame_rect({
+                        x:min_value, y:0, h:bottom_bin_max, w:max_value-min_value, color:settings.background,
+                    })
+                    for (var i=0; i<nbins; i++) {
+                        var binvalue = min_value + i * delta;
+                        charts.bottomframe.frame_rect({
+                            y:0, x:binvalue, h:bottom_bins[i], w:delta, color:charts.chart_color(binvalue+delta*0.5),
+                        })
+                    }
+                    charts.bottomframe.text({y:bottom_bin_max, x:max_value, text:column_names[charts.col], 
+                        color:charts.chart_color(max_value), background:settings.background});
+                } else {
+                    charts.bottomframe = element.frame_region(
+                        bottomoffset-cwidth-spacer, -cwidth * 2 - spacer, 
+                        bottomoffset-spacer, -cwidth - spacer,
+                        max_value, min_value, min_value, max_value
+                    );
+                    // background
+                    charts.bottomframe.frame_rect({
+                        x:min_value, y:min_value, w:max_value-min_value, h:max_value-min_value, color:settings.background,
+                    })
+                    for (var i=0; i<nrows; i++) {
+                        var value = array[i][charts.col];
+                        var selected_value = array[i][selected_col];
+                        var color = charts.chart_color(value);
+                        charts.bottomframe.circle({y: selected_value, x:value, r:lineWidth, color:color});
+                    }
+                    charts.bottomframe.text({x:min_value*1.1, y:max_value, text:column_names[selected_col],
+                        color:charts.chart_color(max_value), background:settings.background, degrees:-90});
+                    charts.bottomframe.text({x:max_value, y:max_value*1.1, text:column_names[charts.col], 
+                        color:charts.chart_color(max_value), background:settings.background});
+                }
+
                 if (charts.color_override) {
                     // also colorize the array area
                     //   Important -- no events to prevent spurious mouseout events
@@ -460,7 +520,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var reset_button = color_frame.text({x:0, y:max_value * 1.1, text:"reset", color:"blue", name:"reset"});
             reset_button.on("click", function () { reset_data(); redraw(); });
             // add a colorize button
-            var reset_button = color_frame.text({x:0, y:max_value * 1.05, text:"colorize", color:"red", name:"colorize"});
+            var reset_button = color_frame.text({x:0, y:max_value * 1.05, text:"multi-select", color:"red", name:"colorize"});
             reset_button.on("click", element.show_chooser);
         };
 
@@ -548,7 +608,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 debug_log("showing selection")
                 var array_selection_color = selection_color || "red";
                 array_selection.change({x: col, y: row, w:1, h:1, hide:false, color:array_selection_color});
-                if ((col != selected_col) || (row != selected_row) && event.canvas_name ==  "array_selection") {
+                if ((col != hover_charts.col) || (row != hover_charts.row)) {
                     // show the hover charts in transparent red
                     hover_charts.row = row;
                     hover_charts.col = col;
@@ -634,23 +694,23 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             '2010002n04rik', '2010109k11rik', '2310004i24rik', '2310008h04rik', '2310033p09rik', '2610019f03rik', 
             '2810021b07rik', '3110003a17rik', '3110057o12rik', '4632428n05rik', '4930420k17rik', '4930583h14rik']
         var array = [
-            [2.3,2.9,2.9,3.0,3.0,2.1,3.0,2.9,3.0,2.1,1.9,2.9,2.9,2.9,3.1,3.3,3.3,2.4,3.2,3.2,],
-            [2.8,2.9,2.9,2.9,2.9,2.8,2.9,2.9,2.8,2.7,2.7,2.8,2.7,2.8,2.8,2.8,2.8,2.6,2.9,2.9,],
-            [2.1,1.9,2.0,1.9,1.9,2.2,2.1,1.9,2.0,2.0,1.9,1.9,2.1,2.2,2.2,2.2,2.5,1.8,2.0,2.1,],
-            [1.8,2.1,2.0,2.0,2.0,1.8,2.1,2.2,2.2,1.7,1.7,2.2,2.2,2.2,2.3,2.3,2.5,1.7,2.4,2.5,],
-            [2.1,1.5,1.5,1.6,1.6,2.1,1.5,1.6,1.5,2.1,2.1,1.5,1.5,1.5,1.5,1.5,1.5,1.9,1.5,1.5,],
-            [1.3,2.0,1.3,1.5,1.9,1.7,1.5,1.6,1.4,1.8,2.0,1.6,1.5,1.4,1.5,1.6,2.3,2.1,1.7,1.8,],
-            [2.1,2.0,2.1,2.1,2.0,2.1,2.1,2.0,2.1,2.2,2.0,2.0,2.1,2.0,2.1,2.1,1.9,2.1,2.0,2.1,],
-            [2.4,2.6,2.5,2.6,2.6,2.4,2.5,2.5,2.4,2.5,2.5,2.4,2.4,2.5,2.6,2.6,2.6,2.3,2.7,2.7,],
-            [1.8,1.8,1.9,2.0,1.8,1.7,1.9,1.8,2.0,1.6,1.3,1.9,1.9,1.9,2.0,2.0,2.4,1.7,2.0,2.0,],
-            [2.2,2.3,2.3,2.3,2.3,2.3,2.4,2.3,2.3,2.2,2.3,2.3,2.3,2.3,2.2,2.2,2.2,2.3,2.1,2.0,],
-            [3.0,1.8,1.9,1.8,1.9,3.3,1.8,2.0,1.8,3.4,3.0,1.8,1.8,1.9,1.9,1.9,1.9,2.6,1.9,2.0,],
-            [1.9,2.2,2.3,2.3,2.3,1.8,2.2,2.1,2.1,2.0,2.0,2.2,2.2,2.2,2.2,2.2,2.1,1.8,2.1,2.3,],
-            [3.4,3.2,3.3,3.2,3.2,3.3,3.2,3.2,3.3,3.3,3.3,3.3,3.3,3.3,3.2,3.2,3.1,3.3,3.2,3.2,],
-            [1.3,1.2,1.2,1.2,1.3,1.1,1.2,1.1,1.2,1.3,1.2,1.3,1.2,1.5,1.6,1.5,2.1,1.2,1.4,1.5,],
-            [3.3,3.1,3.0,3.0,3.0,3.3,2.7,3.0,2.4,3.5,3.7,2.4,2.4,2.4,2.5,2.5,2.6,3.6,2.4,2.4,],
-            [2.8,2.7,2.8,2.8,2.8,3.0,2.8,2.8,2.9,3.0,2.9,2.9,2.9,2.8,2.9,3.0,2.9,2.6,2.9,3.0,],
-            [1.1,1.2,1.1,1.1,1.1,1.2,1.2,1.2,1.2,1.1,1.2,1.2,1.2,1.4,1.6,1.6,2.7,1.1,1.8,1.9,],
+            [-1.4,0.3,0.1,0.4,0.3,-1.7,0.5,0.3,0.5,-1.7,-2.2,0.3,0.2,0.3,0.8,1.2,1.1,-1.0,0.9,1.1,],
+            [-0.2,0.7,1.2,1.4,1.4,0.0,0.5,1.1,0.0,-0.8,-1.6,-0.0,-1.3,-0.2,-0.5,-0.6,-0.2,-2.4,0.7,0.8,],
+            [0.6,-0.8,-0.1,-0.7,-1.0,0.8,0.3,-0.9,-0.1,-0.5,-0.7,-1.0,0.2,0.8,0.8,0.8,3.0,-1.7,-0.1,0.4,],
+            [-1.2,-0.1,-0.5,-0.5,-0.3,-1.1,-0.1,0.5,0.4,-1.4,-1.8,0.5,0.4,0.5,0.9,0.8,1.6,-1.5,1.3,1.6,],
+            [1.9,-0.5,-0.6,-0.3,-0.0,1.8,-0.7,-0.3,-0.8,1.9,1.8,-0.5,-0.5,-0.7,-0.8,-0.7,-0.6,1.0,-0.6,-0.7,],
+            [-1.2,1.2,-1.3,-0.7,0.9,-0.1,-0.6,-0.3,-1.2,0.5,1.0,-0.2,-0.8,-1.1,-0.6,-0.2,2.3,1.7,0.1,0.5,],
+            [0.7,-0.3,-0.1,0.1,-1.0,0.5,0.8,-0.7,0.2,1.6,-1.4,-0.1,0.9,-0.2,0.2,1.4,-3.1,-0.0,-0.1,0.7,],
+            [-1.5,0.5,-0.0,0.6,0.6,-0.8,-0.4,0.1,-0.8,-0.1,-0.4,-0.7,-0.9,-0.3,0.7,0.8,1.1,-2.2,1.8,1.9,],
+            [-0.3,-0.2,0.0,0.4,-0.4,-0.8,0.3,-0.5,0.8,-1.2,-2.7,0.1,0.4,-0.0,0.5,0.7,2.6,-0.9,0.5,0.6,],
+            [-1.1,0.6,1.0,0.1,0.6,0.1,1.7,0.7,0.9,-0.3,0.9,0.5,0.4,0.2,-0.3,-1.0,-1.1,0.4,-1.8,-2.4,],
+            [1.6,-0.6,-0.4,-0.6,-0.5,2.1,-0.7,-0.3,-0.7,2.3,1.6,-0.8,-0.6,-0.6,-0.6,-0.4,-0.6,0.7,-0.6,-0.4,],
+            [-1.3,0.8,1.0,1.2,1.0,-2.1,0.7,-0.5,-0.1,-0.6,-0.9,0.4,0.4,0.3,0.3,0.3,-0.0,-2.4,0.1,1.1,],
+            [1.8,-0.8,0.0,-0.6,-1.5,0.8,-0.0,-0.7,0.6,1.2,1.5,0.4,0.7,0.5,-0.3,-0.9,-1.6,1.2,-1.3,-1.1,],
+            [0.0,-0.8,-0.7,-0.5,-0.3,-0.9,-0.5,-0.9,-0.4,-0.4,-0.7,-0.3,-0.4,1.0,1.0,0.9,3.3,-0.7,0.3,1.0,],
+            [0.9,0.6,0.4,0.3,0.4,1.0,-0.3,0.2,-1.0,1.4,1.9,-1.0,-1.0,-1.1,-1.0,-0.8,-0.5,1.8,-1.2,-1.0,],
+            [-0.2,-1.8,-1.0,-0.4,-1.0,1.0,-0.3,-0.6,0.3,1.1,0.2,0.1,0.0,-0.3,0.6,1.8,0.2,-2.2,0.7,1.6,],
+            [-0.6,-0.4,-0.7,-0.5,-0.7,-0.3,-0.4,-0.5,-0.5,-0.8,-0.5,-0.5,-0.4,0.1,0.6,0.7,3.5,-0.6,1.2,1.3,],
             ];
         var array_config = {
             array: array,
