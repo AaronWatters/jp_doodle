@@ -32,7 +32,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             background: "cornsilk",
             nswatches:  100,  // number of color samples in color bar
             lineWidth: 3,
-            hover_color: "rgba(255,0,0,0.3)"
+            hover_color: "rgba(255,0,0,0.3)",
+            nbins: 5, // number of bins for histograms
         }, options);
 
         // Shared calculated state variables
@@ -191,8 +192,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         var left_axis_frame = element.vector_frame();
         var color_frame = element.vector_frame();
         var test_frame = element.vector_frame();
-        var col_jitter_frame = element.vector_frame();
-        var row_jitter_frame = element.vector_frame();
+        //var col_jitter_frame = element.vector_frame();
+        //var row_jitter_frame = element.vector_frame();
 
         // tooltip
         let arraytip = $("<div>tooltip here</div>").appendTo(element);
@@ -230,8 +231,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             left_axis_frame.reset_frame();
             color_frame.reset_frame();
             test_frame.reset_frame();
-            col_jitter_frame.reset_frame();
-            row_jitter_frame.reset_frame();
+            //col_jitter_frame.reset_frame();
+            //row_jitter_frame.reset_frame();
         };
 
         var draw_array = function () {
@@ -316,7 +317,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             ncols = column_names.length;
             offset = offset || 0;
             var charts = {row: row, col:col, color_override:color_override, offset: offset};
-            charts.init = function () {
+            charts.draw = function () {
                 charts.remove();
                 charts.chart_color = function(value) {
                     if (charts.color_override) {
@@ -324,12 +325,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     }
                     return get_color(value);
                 };
-                var right_jitter_offset = - offset * (cheight + spacer)
-                charts.right_jitter_frame = element.frame_region(
-                    width + spacer + cwidth, height + spacer + right_jitter_offset, 
-                    width + spacer + cwidth * 1.5, height + spacer + cheight + right_jitter_offset,
-                    0, min_value, 1, max_value
-                );
+                var rightoffset = - offset * (cheight + spacer);
                 charts.top_frame = element.frame_region(
                     0, height+spacer, width, height+cheight+spacer,
                     0, min_value, ncols, max_value);
@@ -337,42 +333,64 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     -spacer, 0, -cwidth-spacer, height,
                     min_value, nrows, max_value, 0
                 );
-                var bottom_jitter_offset = offset * (cwidth + spacer);
-                charts.bottom_jitter_frame = element.frame_region(
-                    bottom_jitter_offset-cwidth-spacer, -cwidth * 1.5 - spacer, 
-                    bottom_jitter_offset-spacer, -cwidth - spacer,
+                var bottomoffset = offset * (cwidth + spacer);
+                charts.bottomframe = element.frame_region(
+                    bottomoffset-cwidth-spacer, -cwidth * 1.5 - spacer, 
+                    bottomoffset-spacer, -cwidth - spacer,
                     max_value, 0, min_value, 1.0
                 );
-            };
-            charts.draw = function () {
-                charts.init();
                 // (re) draw the chart on the figure
                 // don't draw anything if the color_override is "invisible"
                 if (charts.color_override=="invisible") {
                     return;
                 }
-                // add backgrounds
-                charts.right_jitter_frame.frame_rect({
-                    x:0, y:min_value, w:1, h:max_value-min_value, color: settings.background
-                })
-                charts.bottom_jitter_frame.frame_rect({
-                    x:min_value, y:0, w:max_value-min_value, h:1, color: settings.background
-                })
-                if ((charts.last_row != charts.row) || (!charts.random_row)) {
-                    charts.random_row = [];
-                    for (var i=0; i<ncols; i++) {
-                        charts.random_row.push(Math.random());
+                // histogram computations
+                var nbins = settings.nbins;
+                var delta = (max_value - min_value) * (1.0 / nbins);
+                var get_bins = function(data) {
+                    result = [];
+                    for (var i=0; i<nbins; i++) {
+                        result.push(0);
                     }
+                    for (var i=0; i<nbins; i++) {
+                        var offset = data[i] - min_value;
+                        var bin = Math.min(nbins-1, Math.floor(offset/delta));
+                        result[bin]++;
+                    }
+                    return result;
                 }
-                charts.last_row = charts.row;
+
+                // top_chart
+                var row_values = [];
                 for (var i=0; i<ncols; i++) {
                     var value = array[charts.row][i];
+                    row_values.push(value);
                     var color = charts.chart_color(value);
                     charts.top_frame.line({x1:i, x2:i+1, y1:value, y2:value, color:color, lineWidth:lineWidth});
                     var midi = i + 0.5;
                     charts.top_frame.line({x1:midi, x2:midi, y1:min_value, y2:value, color:color, lineWidth:lineWidth});
-                    charts.right_jitter_frame.circle({x: charts.random_row[i], y:value, r:lineWidth, color:color});
+                    //charts.rightframe.circle({x: charts.random_row[i], y:value, r:lineWidth, color:color});
                 }
+
+                // upper right chart
+                var right_bins = get_bins(row_values);
+                var right_bin_max = Math.max(...right_bins);
+                charts.rightframe = element.frame_region(
+                    width + spacer + cwidth, height + spacer + rightoffset, 
+                    width + spacer + cwidth * 2, height + spacer + cheight + rightoffset,
+                    0, min_value, right_bin_max, max_value
+                );
+                for (var i=0; i<nbins; i++) {
+                    var binvalue = i * delta;
+                    charts.rightframe.frame_rect({
+                        x:0, y:binvalue, w:right_bins[i], h:delta, color:charts.chart_color(binvalue),
+                    })
+                }
+
+                charts.bottomframe.frame_rect({
+                    x:min_value, y:0, w:max_value-min_value, h:1, color: settings.background
+                })
+
                 if ((charts.last_col != charts.col) || (!charts.random_col)) {
                     charts.random_col = [];
                     for (var i=0; i<nrows; i++) {
@@ -386,7 +404,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     charts.left_frame.line({y1:j, y2:j+1, x1:value, x2:value, color:color, lineWidth:lineWidth})
                     var midj = j + 0.5;
                     charts.left_frame.line({y1: midj, y2: midj, x1:value, x2:mincol, color:color, lineWidth:lineWidth})
-                    charts.bottom_jitter_frame.circle({y: charts.random_col[j], x:value, r:lineWidth, color:color})
+                    charts.bottomframe.circle({y: charts.random_col[j], x:value, r:lineWidth, color:color})
                 }
                 if (charts.color_override) {
                     // also colorize the array area
@@ -409,9 +427,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 if (charts.top_frame) {
                     element.forget_objects([
                         charts.top_frame,
-                        charts.right_jitter_frame,
+                        charts.rightframe,
                         charts.left_frame,
-                        charts.bottom_jitter_frame,
+                        charts.bottomframe,
                         charts.array_rect,
                         charts.column_outline,
                         charts.row_outline,
