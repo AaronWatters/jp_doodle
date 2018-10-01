@@ -1165,6 +1165,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
             }, config);
             element = element || target;
 
+            // slots for chosen color
+            element.chosen_color = null;
+            element.chosen_color_array = null;
+
             const color_max = 255;
             // intensity is total of all colors
             const max_intensity = color_max * 3 + 15;
@@ -1306,6 +1310,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
                             // Color selected!
                             color_choice.change({hide: false, text: color});
                             final_color.change({hide: false, color: color});
+                            element.chosen_color = color;
+                            element.chosen_color_array = color_array;
                             if (settings.callback) {
                                 settings.callback(color_array, color);
                             }
@@ -1345,6 +1351,12 @@ XXXXX target.shaded_objects -- need to test for false hits!
             var color_choice = misc_frame.text({name: true, x:10+(left-20)*0.5, y:bottom*0.3+10, 
                 text: "click to select color", font: settings.font,
                 align: "center", valign: "center", background: "white"})
+            element.reset_color_choice = function () {
+                color_choice.change({hide: true});
+                final_color.change({hide: true});
+                element.chosen_color = null;
+                element.chosen_color_array = null;
+            }
         };
         
         target.right_axis = function(config) {
