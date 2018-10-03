@@ -15,6 +15,5 @@ setup(
     author_email="awatters@flatironinstitute.org",
     url=url,
     install_requires=["jp_proxy_widget", "requests", "matplotlib", "numpy", "scipy", "pillow"],
-    download_url="{}/tarball/{}".format(url, version),
     license="MIT"
 )
