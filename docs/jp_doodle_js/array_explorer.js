@@ -627,6 +627,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     hide:false, color:"red"});
                 if ((swidth != 1) || (sheight != 1)) {
                     selection_color = null;
+                    colorizer.reset_color_choice();
                 }
             }
             arraytip.css({opacity: 0.8});
@@ -650,6 +651,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     selected_charts.unshift(new_charts);
                     debug_log("adding chart " + selection_color + " " + new_charts.offset);
                     selection_color = null;  // have to choose a new one
+                    colorizer.reset_color_choice();
                 } else {
                     selected_row = row;
                     selected_col = col;
