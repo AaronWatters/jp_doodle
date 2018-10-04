@@ -153,14 +153,14 @@ class CanvasOperationsMixin(object):
         "Make named objects visible or invisible."
         self.element.set_visibilities(names, visibility)
 
-    def on_canvas_event(self, event_type, callback, for_name=None, abbreviated=True):
+    def on_canvas_event(self, event_type, callback, for_name=None, abbreviated=True, delay=True):
         "Register an event handler for the canvas or for a named element."
         mycanvas = self.get_canvas()
         # Translate 3 levels
         callback2 = mycanvas.callable(callback, level=3)
         # receive abbreviated event information by default to save bandwidth
         if abbreviated:
-            return mycanvas.element.abbreviated_on_canvas_event(event_type, callback2, for_name)
+            return mycanvas.element.abbreviated_on_canvas_event(event_type, callback2, for_name, delay)
         else:
             return mycanvas.element.on_canvas_event(event_type, callback2, for_name)
 

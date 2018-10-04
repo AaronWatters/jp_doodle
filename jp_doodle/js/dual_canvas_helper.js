@@ -544,7 +544,38 @@ XXXXX target.shaded_objects -- need to test for false hits!
             return target.name_to_object_info[for_name];
         }
 
-        target.abbreviated_on_canvas_event = function(event_type, callback, for_name_or_info) {
+        // Delayed events: designed to prevent event flooding across a communications connection
+        // like a Jupyter communications link, for example.
+        // Register of delayed events
+        target.type_to_delayed_event = {};
+        target.delayed_events_pending = false;
+        target.event_delay_ms = 200;
+        
+        target.delay_event = function(event_type, callback, event_object) {
+            // delay event -- only the last event of this type will be preserved when the timeout arrives.
+            var event_info = {callback: callback, event_object: event_object};
+            // override any existing event of this type.
+            target.type_to_delayed_event[event_type] = event_info;
+            target.request_drain_delayed_events();
+        }
+        target.request_drain_delayed_events = function () {
+            if (!target.delayed_events_pending) {
+                setTimeout(target.drain_delayed_events, target.event_delay_ms)
+                target.delayed_events_pending = true;
+            }
+        }
+        target.drain_delayed_events = function () {
+            // execute the delayed events
+            target.delayed_events_pending = false;
+            var pending = target.type_to_delayed_event;
+            target.type_to_delayed_event = {};
+            for (var type in pending) {
+                var event_info = pending[type];
+                event_info.callback(event_info.event_object);
+            }
+        }
+
+        target.abbreviated_on_canvas_event = function(event_type, callback, for_name_or_info, delayed) {
             // Intended for use with Jupyter. Abbreviate the size of the event sent to the callback
             // to reduce message sizes sent to the Python kernel.
             var callback_wrapper = function(event) {
@@ -555,7 +586,11 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 abbrev.target = null;
                 abbrev.delegateTarget = null;
                 abbrev.view = null;
-                callback(abbrev);
+                if (delayed) {
+                    target.delay_event(event_type, callback, abbrev);
+                } else {
+                    callback(abbrev);
+                }
             }
             return target.on_canvas_event(event_type, callback_wrapper, for_name_or_info)
         };
