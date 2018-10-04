@@ -206,12 +206,29 @@ XXXXX target.shaded_objects -- need to test for false hits!
         };
 
         target.redraw_pending = false;
+        target.disable_auto_redraw = false;
 
         // Call this after modifying the object collection to request an eventual redraw.
         target.request_redraw = function() {
             if (!target.redraw_pending) {
-                requestAnimationFrame(target.redraw);
+                if (!target.disable_auto_redraw) {
+                    requestAnimationFrame(target.redraw);
+                }
                 target.redraw_pending = true;
+            }
+        };
+
+        // enable or disable auto redraw on animation frame.
+        // Temporary disable prevents redraws during large or slow scene updates as an optimization for better speed and visual effect.
+        target.allow_auto_redraw = function(enabled) {
+            //console.log("allow_auto_redraw", enabled);
+            var disabled_before = target.disable_auto_redraw;
+            target.disable_auto_redraw = !enabled;
+            // if it was previously disabled and there is a redraw pending then request a redraw
+            if ((enabled) && (disabled_before) && (target.redraw_pending)) {
+                target.redraw_pending = false;
+                //console.log("requesting redraw afer delay")
+                target.request_redraw();
             }
         };
 
@@ -549,7 +566,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
         // Register of delayed events
         target.type_to_delayed_event = {};
         target.delayed_events_pending = false;
-        target.event_delay_ms = 200;
+        target.event_delay_ms = 50;
         
         target.delay_event = function(event_type, callback, event_object) {
             // delay event -- only the last event of this type will be preserved when the timeout arrives.

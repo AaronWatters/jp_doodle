@@ -291,6 +291,18 @@ class CanvasOperationsMixin(object):
     def right_axis(self, min_value=None, max_value=None, **other_args):
         return self.left_axis(min_value, max_value, method_name="right_axis", **other_args)
 
+    def delay_redraw(self):
+        """
+        Context manager to group operations and delay redraws until all the operations are complete.
+
+        >>> with my_canvas.delay_redraw();
+        ...    complex_update1(my_canvas)
+        ...    complex_update2(my_canvas)
+
+        Above 
+        """
+        return DisableRedrawContextManager(self.get_canvas())
+
 
 def clean_dict(**kwargs):
     "Like dict but with no None values"
@@ -300,6 +312,33 @@ def clean_dict(**kwargs):
         if v is not None:
             result[kw] = v
     return result
+
+
+# XXX the auto_flush part of the context manager should be a standard proxy_widgets feature.
+
+class DisableRedrawContextManager(object):
+    """
+    Temporarily disable redraws on a canvas and also collect canvas messages into a single group.
+    This can speed up scene updates and prevent the canvas from flashing partially modified scenes.
+    """
+
+    def __init__(self, canvas):
+        self.canvas = canvas
+        self.save_flush = canvas.auto_flush
+
+    def __enter__(self):
+        canvas = self.canvas
+        # xxx maybe should save previous setting somehow.
+        canvas.element.allow_auto_redraw(False)
+        self.save_flush = canvas.auto_flush
+        canvas.auto_flush = False
+
+    def __exit__(self, type, value, traceback):
+        canvas = self.canvas
+        canvas.element.allow_auto_redraw(True)
+        canvas.auto_flush = self.save_flush
+        if (self.save_flush):
+            canvas.flush()
 
 
 class DualCanvasWidget(jp_proxy_widget.JSProxyWidget, CanvasOperationsMixin):
