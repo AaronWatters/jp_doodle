@@ -64,8 +64,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var entries = element.datatable_settings.entries;
             var row_names = element.datatable_settings.row_names;
             for (var i=0; i<row_names.length; i++) {
-                element.table_rows_index[row_names[i]] = {};
-                element.construct_row(row_names[i], entries[i]).appendTo(tbody);
+                var row_name = row_names[i];
+                var row_info = {
+                    name: row_name,
+                    items: [],
+                };
+                element.table_rows_index[row_names[i]] = row_info;
+                element.construct_row(row_info, entries[i]).appendTo(tbody);
             }
             return tbody;
         };
@@ -75,44 +80,80 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var tr = $("<tr/>");
             $("<th>#</th>").appendTo(tr);
             for (var i=0; i<column_names.length; i++) {
-                element.table_columns_index[column_names[i]] = {}
-                element.construct_header(column_names[i]).appendTo(tr);
+                var column_name = column_names[i];
+                column_info = {
+                    name: column_name,
+                    items: [],
+                };
+                element.table_columns_index[column_name] = column_info;
+                element.construct_header(column_info).appendTo(tr);
             }
             return tr;
         };
 
-        element.construct_header = function (value) {
-            var th = $("<th>" + value + "</th>");
+        element.construct_header = function (column_info) {
+            var th = $("<th/>");
+            var span = $("<span> " + column_info.name + " </span>");
+            span.appendTo(th);
             if (element.datatable_settings.header_css) {
-                th.css(element.datatable_settings.header_css);
+                span.css(element.datatable_settings.header_css);
             }
+            var minimizer = $("<span> +/- </span>");
+            minimizer.appendTo(th);
+            minimizer.on("click", function(event) {
+                element.minimize_column(column_info);
+            });
+            column_info.header = span
             return th;
         };
 
-        element.construct_row = function (row_name, row_values) {
+        element.construct_row = function (row_info, row_values) {
+            var column_names = element.datatable_settings.column_names;
             var tr = $("<tr/>");
-            element.construct_row_name(row_name).appendTo(tr);
+            element.construct_row_name(row_info).appendTo(tr);
             for (var i=0; i<row_values.length; i++) {
-                element.construct_row_item(row_values[i]).appendTo(tr);
+                var column_info = element.table_columns_index[column_names[i]];
+                element.construct_row_item(row_info, column_info, row_values[i]).appendTo(tr);
             }
             return tr;
         };
 
-        element.construct_row_name = function (value) {
-            var td = $("<td>" + value + "</td>");
+        element.construct_row_name = function (row_info) {
+            var td = $("<td/>");
+            var span = $("<span> " + row_info.name + " </span>");
+            span.appendTo(td);
             if (element.datatable_settings.row_name_css) {
-                td.css(element.datatable_settings.row_name_css);
+                span.css(element.datatable_settings.row_name_css);
             }
+            row_info.name_element = td;
             return td;
         };
 
-        element.construct_row_item = function (value) {
-            var td = $("<td>" + value + "</td>");
+        element.construct_row_item = function (row_info, column_info, value) {
+            var td = $("<td/>");
+            var span = $("<span> " + value + "</span>");
+            span.appendTo(td);
             if (element.datatable_settings.entry_css) {
                 td.css(element.datatable_settings.entry_css);
             }
+            row_info.items.push(span);
+            column_info.items.push(span);
             return td;
         };
+
+        element.minimize_column = function (column_info) {
+            var items = column_info.items;
+            var method = "hide";
+            if (column_info.hidden) {
+                var method = "show";
+            }
+            column_info.hidden = !(column_info.hidden);
+            column_info.header[method]();
+            for (var i=0; i<items.length; i++) {
+                items[i][method]();
+            }
+            element.datatable_element.columns.adjust().draw();
+        }
 
         // create the table the first time
         element.requirejs( ["datatables_js"], function() {
