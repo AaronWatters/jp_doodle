@@ -41,6 +41,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             element.table_rows_index = {};
             var table = element.construct_html_table();
             var table_options = element.datatable_settings.table_options;
+            // https://stackoverflow.com/questions/17237812/datatable-jquery-table-header-width-not-aligned-with-body-width
+            table.css({"width":"100%"});
             // Table must be inserted in DOM before reformatting (???)
             table.appendTo(element);
             element.datatable_element = table.DataTable(table_options);
@@ -63,11 +65,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var tbody = $("<tbody/>");
             var entries = element.datatable_settings.entries;
             var row_names = element.datatable_settings.row_names;
-            for (var i=0; i<row_names.length; i++) {
-                var row_name = row_names[i];
-                var row_info = {
+            for (let i=0; i<row_names.length; i++) {
+                let row_name = row_names[i];
+                let row_info = {
+                    index: i,
                     name: row_name,
                     items: [],
+                    hidden: false,  // don't show values if hidden
+                    visible: true,   // don't take up space if not visible
                 };
                 element.table_rows_index[row_names[i]] = row_info;
                 element.construct_row(row_info, entries[i]).appendTo(tbody);
@@ -79,16 +84,47 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var column_names = element.datatable_settings.column_names;
             var tr = $("<tr/>");
             $("<th>#</th>").appendTo(tr);
-            for (var i=0; i<column_names.length; i++) {
-                var column_name = column_names[i];
+            $("<th> &nbsp; </th>").appendTo(tr);
+            for (let i=0; i<column_names.length; i++) {
+                let column_name = column_names[i];
                 column_info = {
+                    index: i,
                     name: column_name,
                     items: [],
+                    hidden: false,  // don't show values if hidden
+                    visible: true,  // don't take up space if not visible
+                    column: function() { return element.datatable_element.column(i + 2); },
                 };
                 element.table_columns_index[column_name] = column_info;
                 element.construct_header(column_info).appendTo(tr);
             }
             return tr;
+        };
+
+        element.indexed_column_info = function(i) {
+            var column_names = element.datatable_settings.column_names;
+            if ((i>=0) && (i<column_names.length)) {
+                return element.table_columns_index[column_names[i]];
+            }
+            return null;
+        };
+
+        element.toggle_column = function (column_info) {
+            var column_index = column_info.index;
+            var previous_column_info = element.indexed_column_info(column_index-1);
+            var next_column_info = element.indexed_column_info(column_index+1);
+            column_info.hidden = !(column_info.hidden);
+            if ((column_info.hidden) && (previous_column_info) && (previous_column_info.hidden)) {
+                column_info.visible = false;
+            }
+            if ((column_info.hidden) && (next_column_info) && (next_column_info.hidden)) {
+                //next_column.visible(false);
+                next_column_info.visible = false;
+            }
+            if ((!column_info.hidden) && (next_column_info)) {
+                next_column_info.visible = true;
+            }
+            element.fix_visibilities();
         };
 
         element.construct_header = function (column_info) {
@@ -98,12 +134,38 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             if (element.datatable_settings.header_css) {
                 span.css(element.datatable_settings.header_css);
             }
-            var minimizer = $("<span> +/- </span>");
+            var minimizer = $("<a> &mdash; </a>");
+            var maximizer = $("<a> &hellip; </a>");
+            maximizer.hide();
             minimizer.appendTo(th);
-            minimizer.on("click", function(event) {
-                element.minimize_column(column_info);
-            });
+            maximizer.appendTo(th);
+            var toggle = function(event) {
+                element.toggle_column(column_info);
+                event.preventDefault();
+                return false;
+            };
+            minimizer.on("click", toggle);
+            maximizer.on("click", toggle);
+            column_info.maximizer = maximizer;
+            column_info.minimizer = minimizer;
             column_info.header = span
+            column_info.check = function () {
+                column_info.column().visible(column_info.visible);
+                if (column_info.visible) {
+                    if (column_info.hidden) {
+                        span.hide();
+                        minimizer.hide();
+                        maximizer.show();
+                    } else {
+                        span.show();
+                        minimizer.show();
+                        maximizer.hide();
+                    }
+                    for (var i=0; i<column_info.items.length; i++) {
+                        column_info.items[i].check();
+                    }
+                }
+            }
             return th;
         };
 
@@ -111,11 +173,58 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var column_names = element.datatable_settings.column_names;
             var tr = $("<tr/>");
             element.construct_row_name(row_info).appendTo(tr);
+            element.construct_row_control(row_info).appendTo(tr);
             for (var i=0; i<row_values.length; i++) {
                 var column_info = element.table_columns_index[column_names[i]];
                 element.construct_row_item(row_info, column_info, row_values[i]).appendTo(tr);
             }
+            row_info.row = tr;
+            row_info.hide = function () {
+                row_info.minimizer.hide();
+                row_info.maximizer.show();
+                for (var i=0; i<row_info.items.length; i++) {
+                    row_info.items[i].hide();
+                }
+                if (row_info.visible) {
+                    tr.show();
+                } else {
+                    tr.hide();
+                }
+            };
+            row_info.show = function () {
+                tr.show();
+                row_info.minimizer.show();
+                row_info.maximizer.hide();
+                for (var i=0; i<row_info.items.length; i++) {
+                    row_info.items[i].check();
+                }
+            };
+            row_info.check = function () {
+                if (row_info.hidden) {
+                    row_info.hide();
+                } else {
+                    row_info.show();
+                }
+            }
             return tr;
+        };
+
+        element.construct_row_control = function (row_info) {
+            var td = $("<td/>");
+            var minimizer = $("<a> &mdash; </a>");
+            var maximizer = $("<a> &hellip; </a>");
+            maximizer.hide();
+            minimizer.appendTo(td);
+            maximizer.appendTo(td);
+            var toggle = function(event) {
+                element.toggle_row(row_info);
+            };
+            minimizer.on("click", toggle);
+            maximizer.on("click", toggle);
+            //row_info.header = span;
+            row_info.maximizer = maximizer;
+            row_info.minimizer = minimizer;
+            return td;
         };
 
         element.construct_row_name = function (row_info) {
@@ -136,24 +245,68 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             if (element.datatable_settings.entry_css) {
                 td.css(element.datatable_settings.entry_css);
             }
-            row_info.items.push(span);
-            column_info.items.push(span);
+            var item = {
+                td: td,
+                span: span,
+                value: value,
+                hide: function () {
+                    //td.hide();
+                    span.hide();
+                },
+                show: function () {
+                    //td.show();
+                    span.show();
+                },
+                check: function () {
+                    if ((row_info.hidden) || (column_info.hidden)) {
+                        item.hide();
+                    } else {
+                        item.show();
+                    }
+                }
+            };
+            row_info.items.push(item);
+            column_info.items.push(item);
             return td;
         };
 
-        element.minimize_column = function (column_info) {
-            var items = column_info.items;
-            var method = "hide";
-            if (column_info.hidden) {
-                var method = "show";
+        element.indexed_row_info = function(i) {
+            var row_names = element.datatable_settings.row_names;
+            if ((i>=0) && (i<row_names.length)) {
+                return element.table_rows_index[row_names[i]];
             }
-            column_info.hidden = !(column_info.hidden);
-            column_info.header[method]();
-            for (var i=0; i<items.length; i++) {
-                items[i][method]();
+            return null;
+        };
+
+        element.toggle_row = function (row_info) {
+            debugger
+            var row_index = row_info.index;
+            var previous_row_info = element.indexed_row_info(row_index-1);
+            var next_row_info = element.indexed_row_info(row_index+1);
+            row_info.hidden = !(row_info.hidden);
+            if ((row_info.hidden) && (previous_row_info) && (previous_row_info.hidden)) {
+                row_info.visible = false;
             }
-            element.datatable_element.columns.adjust().draw();
-        }
+            if ((row_info.hidden) && (next_row_info) && (next_row_info.hidden)) {
+                //next_column.visible(false);
+                next_row_info.visible = false;
+            }
+            if ((!row_info.hidden) && (next_row_info)) {
+                next_row_info.visible = true;
+            }
+            element.fix_visibilities();
+        };
+
+        element.fix_visibilities = function () {
+            var row_index = element.table_rows_index;
+            for (row_name in row_index) {
+                row_index[row_name].check();
+            }
+            var column_index = element.table_columns_index;
+            for (column_name in column_index) {
+                column_index[column_name].check();
+            }
+        };
 
         // create the table the first time
         element.requirejs( ["datatables_js"], function() {
