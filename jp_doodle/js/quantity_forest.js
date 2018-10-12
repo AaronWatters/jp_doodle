@@ -76,6 +76,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             var initial_group = {
                 parent: null,
+                x_start: 0,
+                x_end: settings.width,
                 members: settings.roots.map(function(root) { return {root: root, parent:null}; }),
             };
             var texts = [];
@@ -121,16 +123,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         rect.on("click", mouseclick);
                         x_cursor += scaled_size;
                         member.x_end = x_cursor;
-                        if (member.parent) {
-                            //debugger;
-                            var points = [
-                                [member.x_start, 0],
-                                [member.parent.x_start, settings.dh - settings.dy],
-                                [member.parent.x_end, settings.dh - settings.dy],
-                                [member.x_end, 0],
-                            ];
-                            level_frame.polygon({points: points, color: member.parent.root.color});
-                        }
                         if (settings.degrees) {
                             texts.push(
                                 [
@@ -146,7 +138,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         if ((root.expanded) && (root.children)) {
                             var children = root.children;
                             if (children.length > 0) {
-                                var group = {
+                                let new_group = {
                                     parent: member,
                                     members: children.map(
                                         function(root) {
@@ -154,11 +146,21 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                                         }
                                     ),
                                 };
-                                next_groups.push(group);
+                                next_groups.push(new_group);
                             }
                         }
                     }
                     group.x_end = x_cursor;
+                    if (group.parent) {
+                        debugger;
+                        var points = [
+                            [group.x_start, 0],
+                            [group.parent.x_start, settings.dh - settings.dy],
+                            [group.parent.x_end, settings.dh - settings.dy],
+                            [group.x_end, 0],
+                        ];
+                        level_frame.polygon({points: points, color: group.parent.root.color});
+                    }
                 }
                 if (next_groups.length > 0) {
                     format_groups(next_groups, level + 1);

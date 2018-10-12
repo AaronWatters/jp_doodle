@@ -67,7 +67,7 @@ class FileSystemExplorer:
                 dh: dh,
                 id_click: id_click,
                 degrees: degrees,
-                background: "rgba(200,200,255,0.3)",
+                background: "rgba(200,200,255,0.8)",
             }
             element.quantity_forest(forest_config);
             element.detail = $("<div>Initialized</div>").appendTo(element);
