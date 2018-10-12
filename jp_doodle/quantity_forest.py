@@ -36,15 +36,27 @@ def directory_usage(directory, epsilon=0.02):
         final["*other"] = {"name": "*other", "file_size": other, "percent": other*100/total, "id": "*" + directory}
     return final
 
+RIGHT = {"x": 1, "y":0}
+UP = {"x": 0, "y":1}
 
 class FileSystemExplorer:
 
-    epsilon = 0.02
-    degrees = 15
     color_counter = 333
     opacity = 0.5
 
-    def __init__(self, canvas_widget, path, width=600, enable_deletions=False):
+    def __init__(self, canvas_widget, path, width=600, enable_deletions=False,
+            horizontal=False, x_vector=None, y_vector=None,
+            dy=50, dh=20, epsilon=0.02, degrees=15, font="normal 10px Arial",
+            background="rgba(200,200,255,0.8)"):
+        if y_vector is None:
+            y_vector = UP
+            if horizontal:
+                y_vector = RIGHT
+        if x_vector is None:
+            x_vector = RIGHT
+            if horizontal:
+                x_vector = UP
+        self.epsilon = epsilon
         self.enable_deletions = enable_deletions
         path = os.path.expanduser(path)
         path = os.path.abspath(path)
@@ -67,7 +79,10 @@ class FileSystemExplorer:
                 dh: dh,
                 id_click: id_click,
                 degrees: degrees,
-                background: "rgba(200,200,255,0.8)",
+                background: background,
+                x_vector: x_vector,
+                y_vector: y_vector,
+                font: font,
             }
             element.quantity_forest(forest_config);
             element.detail = $("<div>Initialized</div>").appendTo(element);
@@ -81,8 +96,19 @@ class FileSystemExplorer:
                 var deleter = $("<a>delete " + identity + "</a>").appendTo(d);
                 deleter.on("click", function() { delete_id(identity); });
             };
-        """, width=width, members=members, dy=50, dh=20, id_click=self.id_click, top_label=path,
-            delete_id=self.delete_id, degrees=self.degrees)
+        """, 
+        width=width, 
+        members=members, 
+        dy=dy, dh=dh, 
+        id_click=self.id_click, 
+        top_label=path,
+        delete_id=self.delete_id, 
+        degrees=degrees,
+        x_vector=x_vector,
+        y_vector=y_vector,
+        font=font,
+        background=background,
+        )
         if enable_deletions:
             self.widget.element.detail.html("<div>DELETIONS ARE ENABLED!</div>");
 

@@ -20,7 +20,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             dh: 20,
             background: "cornsilk",
             id_click: null,
-            top_label: "ROOT"
+            top_label: ".",
+            x_vector: {x: 1, y: 0},
+            y_vector: {x: 0, y: 1},
+            labels: true,
+            degrees: 0,
+            font: "normal 10px Arial",
         }, options);
 
         element.forest_settings = settings;
@@ -95,10 +100,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     group.size = group_size;
                     total_size += group_size;
                 }
-                var level_frame = element.frame_region(
-                    0, level * settings.dy, settings.width, (level + 1) * settings.dy,
-                    0, 0, settings.width, settings.dy,
-                );
+                //var level_frame = element.frame_region(
+                //    0, level * settings.dy, settings.width, (level + 1) * settings.dy,
+                //    0, 0, settings.width, settings.dy,
+                //);
+                var level_offset = element.vscale(level * settings.dy, settings.y_vector);
+                var level_frame = element.vector_frame(settings.x_vector, settings.y_vector, level_offset);
                 var x_scale = settings.width * 1.0 / total_size;
                 var x_cursor = 0;
                 //element.print('total size', total_size, " x_scale:", x_scale);
@@ -123,7 +130,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         rect.on("click", mouseclick);
                         x_cursor += scaled_size;
                         member.x_end = x_cursor;
-                        if (settings.degrees) {
+                        if (settings.labels) {
                             texts.push(
                                 [
                                     level_frame,
@@ -133,6 +140,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                                         x: member.x_start,
                                         y: 0,
                                         background: settings.background,
+                                        font: settings.font,
                                     }])
                         }
                         if ((root.expanded) && (root.children)) {
@@ -152,7 +160,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     }
                     group.x_end = x_cursor;
                     if (group.parent) {
-                        debugger;
                         var points = [
                             [group.x_start, 0],
                             [group.parent.x_start, settings.dh - settings.dy],
