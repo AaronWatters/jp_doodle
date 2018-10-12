@@ -41,11 +41,14 @@ class FileSystemExplorer:
 
     epsilon = 0.02
     degrees = 15
+    color_counter = 333
+    opacity = 0.5
 
     def __init__(self, canvas_widget, path, width=600, enable_deletions=False):
         self.enable_deletions = enable_deletions
         path = os.path.expanduser(path)
         path = os.path.abspath(path)
+        self.color_cache = {}
         self.usage_cache = {}
         self.id_to_data = {}
         self.expanded = {}
@@ -95,6 +98,23 @@ class FileSystemExplorer:
             u["parent"] = directory
             self.id_to_data[u["id"]] = u
         return usage
+
+    def get_color(self, identity):
+        cache = self.color_cache
+        if identity in cache:
+            return cache[identity]
+        result = cache[identity] = self.pick_color()
+        return result
+
+    def pick_color(self):
+        self.color_counter += 1
+        counter = self.color_counter
+        rgb = [0, 0, 0]
+        for i in range(8):
+            for j in range(3):
+                rgb[j] = (rgb[j] << 1) | (counter & 1)
+                counter = (counter >> 1)
+        return "rgba(%s,%s,%s,%s)" % (tuple(rgb) + (self.opacity,))
 
     def delete_id(self, identity):
         try:
@@ -159,6 +179,7 @@ class FileSystemExplorer:
                 "size": u["file_size"],
                 "children": children,
                 "expanded": expanded,
+                "color": self.get_color(identity),
             }
             result.append(r)
         return result
