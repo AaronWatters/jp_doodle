@@ -26,6 +26,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             labels: true,
             degrees: 0,
             font: "normal 10px Arial",
+            clearHeight: null,
         }, options);
 
         element.forest_settings = settings;
@@ -74,7 +75,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         element.draw_forest = function () {
             arraytip.css({opacity: 0});
             element.reset_canvas();
-            element.text({x: 0, y:-settings.dh, text: settings.top_label});
+            element.text({x: 0, y:-settings.dh, text: settings.top_label, font:settings.font, background:settings.background});
             let pick_a_color = function () {
                 var arr = element.next_pseudocolor();
                 return element.array_to_color(arr);
@@ -109,6 +110,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var x_scale = settings.width * 1.0 / total_size;
                 var x_cursor = 0;
                 //element.print('total size', total_size, " x_scale:", x_scale);
+                // add a clearing rectangle if configured
+                if (settings.clearHeight && settings.background) {
+                    var cleary = settings.clearHeight - level * settings.dy;
+                    if (cleary > 0) {
+                    level_frame.frame_rect({
+                            x: 0, y:0, w:settings.width, h:cleary, color:settings.background
+                        });
+                    }
+                }
                 for (var g=0; g<groups.length; g++) {
                     var group = groups[g];
                     group.x_start = x_cursor;
@@ -137,8 +147,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                                     {
                                         degrees: settings.degrees,
                                         text: root.label,
-                                        x: member.x_start,
+                                        x: 0.5 * (member.x_start+member.x_end),
                                         y: 0,
+                                        //align: "center",
+                                        valign: "center",
                                         background: settings.background,
                                         font: settings.font,
                                     }])
@@ -148,9 +160,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                             if (children.length > 0) {
                                 let new_group = {
                                     parent: member,
+                                    frame: level_frame,
                                     members: children.map(
                                         function(root) {
-                                            return { root: root, parent: member };
+                                            return { root: root, parent: member, frame: level_frame };
                                         }
                                     ),
                                 };
@@ -160,13 +173,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     }
                     group.x_end = x_cursor;
                     if (group.parent) {
+                        // draw polygon on parents frame to prevent overwriting texts
+                        var back_y = settings.dh;
                         var points = [
-                            [group.x_start, 0],
-                            [group.parent.x_start, settings.dh - settings.dy],
-                            [group.parent.x_end, settings.dh - settings.dy],
-                            [group.x_end, 0],
+                            [group.x_start, settings.dy],
+                            [group.parent.x_start, back_y],
+                            [group.parent.x_end, back_y],
+                            [group.x_end, settings.dy],
                         ];
-                        level_frame.polygon({points: points, color: group.parent.root.color});
+                        group.frame.polygon({points: points, color: group.parent.root.color});
                     }
                 }
                 if (next_groups.length > 0) {

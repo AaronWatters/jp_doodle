@@ -47,7 +47,10 @@ class FileSystemExplorer:
     def __init__(self, canvas_widget, path, width=600, enable_deletions=False,
             horizontal=False, x_vector=None, y_vector=None,
             dy=50, dh=20, epsilon=0.02, degrees=15, font="normal 10px Arial",
-            background="rgba(200,200,255,0.8)"):
+            background="rgba(200,200,255,0.8)", opacity=0.7,
+            clearHeight=300,
+            ):
+        self.opacity = opacity
         if y_vector is None:
             y_vector = UP
             if horizontal:
@@ -83,6 +86,7 @@ class FileSystemExplorer:
                 x_vector: x_vector,
                 y_vector: y_vector,
                 font: font,
+                clearHeight: clearHeight,
             }
             element.quantity_forest(forest_config);
             element.detail = $("<div>Initialized</div>").appendTo(element);
@@ -93,8 +97,10 @@ class FileSystemExplorer:
                 for (key in info) {
                     $("<div>" + key + " : " + info[key] + "<div>").appendTo(d);
                 }
-                var deleter = $("<a>delete " + identity + "</a>").appendTo(d);
-                deleter.on("click", function() { delete_id(identity); });
+                if (!identity.startsWith("*")) {
+                    var deleter = $("<a>delete " + identity + "</a>").appendTo(d);
+                    deleter.on("click", function() { delete_id(identity); });
+                }
             };
         """, 
         width=width, 
@@ -108,6 +114,7 @@ class FileSystemExplorer:
         y_vector=y_vector,
         font=font,
         background=background,
+        clearHeight=clearHeight,
         )
         if enable_deletions:
             self.widget.element.detail.html("<div>DELETIONS ARE ENABLED!</div>");
