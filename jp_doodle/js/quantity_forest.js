@@ -78,6 +78,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 parent: null,
                 members: settings.roots.map(function(root) { return {root: root, parent:null}; }),
             };
+            var texts = [];
             var format_groups = function(groups, level) {
                 var next_groups = [];
                 var total_size = 0;
@@ -131,13 +132,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                             level_frame.polygon({points: points, color: member.parent.root.color});
                         }
                         if (settings.degrees) {
-                            level_frame.text({
-                                degrees: settings.degrees,
-                                text: root.label,
-                                x: member.x_start,
-                                y: 0,
-                                background: settings.background,
-                            })
+                            texts.push(
+                                [
+                                    level_frame,
+                                    {
+                                        degrees: settings.degrees,
+                                        text: root.label,
+                                        x: member.x_start,
+                                        y: 0,
+                                        background: settings.background,
+                                    }])
                         }
                         if ((root.expanded) && (root.children)) {
                             var children = root.children;
@@ -160,7 +164,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     format_groups(next_groups, level + 1);
                 }
             };
-            format_groups([initial_group], 0)
+            format_groups([initial_group], 0);
+            for (var i=0; i<texts.length; i++) {
+                var frame = texts[i][0];
+                var desc = texts[i][1];
+                frame.text(desc);
+            }
             element.fit(null, 20);
         };
 
