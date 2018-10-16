@@ -175,6 +175,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
             var name_to_object_info = target.name_to_object_info;
             for (var i=0; i<object_list.length; i++) {
                 var object_info = object_list[i];
+                var name = object_info.name;
                 if (object_info) {
                     var object_index = drawn_objects.length;
                     if (object_info.is_frame) {
@@ -182,11 +183,12 @@ XXXXX target.shaded_objects -- need to test for false hits!
                         frame.redraw_frame();
                         if (frame.is_empty()) {
                             // forget empty frames
+                            //console.log("forgetting empty frame " + object_info.name)
                             object_index = null;
                         }
                     } else {
                         // only draw objects with no name or with known names
-                        var name = object_info.name;
+                        //var name = object_info.name;
                         if ((!name) || (name_to_object_info[name])) {
                             // draw and save
                             target.draw_object_info(object_info);
@@ -198,6 +200,11 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     if (object_index != null) {
                         object_info.object_index = object_index;
                         drawn_objects[object_index] = object_info;
+                    } else {
+                        if (name_to_object_info[name]) {
+                            // don't keep names for undrawn objects
+                            delete name_to_object_info[name];
+                        }
                     }
                 }
             }
@@ -1821,6 +1828,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
         frame.reset_frame = function () {
             frame.parent_canvas.detach_objects(frame);
             frame.object_list = [];
+            frame.parent_canvas.request_redraw();
         };
 
         frame.redraw_frame = function () {
