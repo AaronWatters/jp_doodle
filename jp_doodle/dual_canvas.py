@@ -408,6 +408,9 @@ class FrameInterface(CanvasOperationsMixin):
     def get_canvas(self):
         return self.from_widget
 
+    def reset_frame(self):
+        self.element.reset_frame()
+
 
 class SnapshotCanvas(DualCanvasWidget):
 
