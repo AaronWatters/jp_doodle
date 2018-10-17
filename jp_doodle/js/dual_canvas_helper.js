@@ -73,6 +73,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
             // lookup structures for named objects
             target.name_to_object_info = {};
             target.color_index_to_name = {};
+            target.active_transitions = {};
             //target.event_types = {};
             //target.default_event_handlers = {};
             target.reset_events();
@@ -175,8 +176,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
             var name_to_object_info = target.name_to_object_info;
             for (var i=0; i<object_list.length; i++) {
                 var object_info = object_list[i];
-                var name = object_info.name;
                 if (object_info) {
+                    var name = object_info.name;
                     var object_index = drawn_objects.length;
                     if (object_info.is_frame) {
                         var frame = object_info;
@@ -358,6 +359,9 @@ XXXXX target.shaded_objects -- need to test for false hits!
                             if (target.color_index_to_name[color_index]) {
                                 delete target.color_index_to_name[color_index];
                             }
+                        }
+                        if (target.active_transitions[name]) {
+                            delete target.active_transitions[name];
                         }
                     }
                     if (object_info.is_frame) {
@@ -1202,6 +1206,9 @@ XXXXX target.shaded_objects -- need to test for false hits!
                         if ((object_name) && (target.name_to_object_info[object_name])) {
                             delete target.name_to_object_info[object_name];
                         }
+                        if ((object_name) && (target.active_transitions[object_name])) {
+                            delete target.active_transitions[object_name];
+                        }
                         object_info.object_index = null;
                         object_info.name = null;
                         if (object_info.is_frame) {
@@ -1810,6 +1817,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
         // delegate_to_parent("transition");  -- transition will apply to frame
         delegate_to_parent("name_image_url");
         delegate_to_parent("name_image_data");
+
+        frame.forget = function () {
+            frame.parent_canvas.forget_objects([frame]);
+        };
 
         frame.active_region = function (default_to_view_box) {
             var pa = frame.parent_canvas.active_region(default_to_view_box);
