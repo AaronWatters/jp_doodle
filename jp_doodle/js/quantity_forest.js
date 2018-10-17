@@ -175,13 +175,20 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     if (group.parent) {
                         // draw polygon on parents frame to prevent overwriting texts
                         var back_y = settings.dh;
+                        shift = (group.parent.x_end - group.parent.x_start) * 0.2;
                         var points = [
                             [group.x_start, settings.dy],
-                            [group.parent.x_start, back_y],
-                            [group.parent.x_end, back_y],
+                            [group.parent.x_start+shift, back_y],
+                            [group.parent.x_end-shift, back_y],
                             [group.x_end, settings.dy],
                         ];
                         group.frame.polygon({points: points, color: group.parent.root.color});
+                        level_frame.frame_rect({
+                            x:group.x_start+1, y:1,
+                            w:group.x_end - group.x_start-2, h:settings.dh-2,
+                            color: group.parent.root.color,
+                            fill:false, lineWidth:3,
+                        })
                     }
                 }
                 if (next_groups.length > 0) {
