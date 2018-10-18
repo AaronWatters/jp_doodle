@@ -14,7 +14,26 @@ interfaces to make it easy to build visualizations for Jupyter notebooks.
 
 # Installation
 
-To install the package for use with Jupyter please use
+To install the package for use with Jupyter please install
+`jp_proxy_widget` first and enable it.  To install either use
+
+```
+pip install jp_proxy_widget
+```
+
+Or use
+
+```
+python -m pip install jp_proxy_widget
+```
+
+Then enable `jp_proxy_widget` as a notebook extension
+
+```
+jupyter nbextension enable --py --sys-prefix jp_proxy_widget
+```
+
+Then install `jp_doodle` from github
 
 ```
 pip install git+https://github.com/aaronwatters/jp_doodle
