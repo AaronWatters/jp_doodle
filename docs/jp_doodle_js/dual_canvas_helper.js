@@ -73,6 +73,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
             // lookup structures for named objects
             target.name_to_object_info = {};
             target.color_index_to_name = {};
+            target.active_transitions = {};
             //target.event_types = {};
             //target.default_event_handlers = {};
             target.reset_events();
@@ -176,17 +177,19 @@ XXXXX target.shaded_objects -- need to test for false hits!
             for (var i=0; i<object_list.length; i++) {
                 var object_info = object_list[i];
                 if (object_info) {
+                    var name = object_info.name;
                     var object_index = drawn_objects.length;
                     if (object_info.is_frame) {
                         var frame = object_info;
                         frame.redraw_frame();
                         if (frame.is_empty()) {
                             // forget empty frames
+                            //console.log("forgetting empty frame " + object_info.name)
                             object_index = null;
                         }
                     } else {
                         // only draw objects with no name or with known names
-                        var name = object_info.name;
+                        //var name = object_info.name;
                         if ((!name) || (name_to_object_info[name])) {
                             // draw and save
                             target.draw_object_info(object_info);
@@ -198,6 +201,11 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     if (object_index != null) {
                         object_info.object_index = object_index;
                         drawn_objects[object_index] = object_info;
+                    } else {
+                        if (name_to_object_info[name]) {
+                            // don't keep names for undrawn objects
+                            delete name_to_object_info[name];
+                        }
                     }
                 }
             }
@@ -206,12 +214,29 @@ XXXXX target.shaded_objects -- need to test for false hits!
         };
 
         target.redraw_pending = false;
+        target.disable_auto_redraw = false;
 
         // Call this after modifying the object collection to request an eventual redraw.
         target.request_redraw = function() {
             if (!target.redraw_pending) {
-                requestAnimationFrame(target.redraw);
+                if (!target.disable_auto_redraw) {
+                    requestAnimationFrame(target.redraw);
+                }
                 target.redraw_pending = true;
+            }
+        };
+
+        // enable or disable auto redraw on animation frame.
+        // Temporary disable prevents redraws during large or slow scene updates as an optimization for better speed and visual effect.
+        target.allow_auto_redraw = function(enabled) {
+            //console.log("allow_auto_redraw", enabled);
+            var disabled_before = target.disable_auto_redraw;
+            target.disable_auto_redraw = !enabled;
+            // if it was previously disabled and there is a redraw pending then request a redraw
+            if ((enabled) && (disabled_before) && (target.redraw_pending)) {
+                target.redraw_pending = false;
+                //console.log("requesting redraw afer delay")
+                target.request_redraw();
             }
         };
 
@@ -334,6 +359,9 @@ XXXXX target.shaded_objects -- need to test for false hits!
                             if (target.color_index_to_name[color_index]) {
                                 delete target.color_index_to_name[color_index];
                             }
+                        }
+                        if (target.active_transitions[name]) {
+                            delete target.active_transitions[name];
                         }
                     }
                     if (object_info.is_frame) {
@@ -549,7 +577,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
         // Register of delayed events
         target.type_to_delayed_event = {};
         target.delayed_events_pending = false;
-        target.event_delay_ms = 200;
+        target.event_delay_ms = 50;
         
         target.delay_event = function(event_type, callback, event_object) {
             // delay event -- only the last event of this type will be preserved when the timeout arrives.
@@ -1178,6 +1206,9 @@ XXXXX target.shaded_objects -- need to test for false hits!
                         if ((object_name) && (target.name_to_object_info[object_name])) {
                             delete target.name_to_object_info[object_name];
                         }
+                        if ((object_name) && (target.active_transitions[object_name])) {
+                            delete target.active_transitions[object_name];
+                        }
                         object_info.object_index = null;
                         object_info.name = null;
                         if (object_info.is_frame) {
@@ -1787,6 +1818,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
         delegate_to_parent("name_image_url");
         delegate_to_parent("name_image_data");
 
+        frame.forget = function () {
+            frame.parent_canvas.forget_objects([frame]);
+        };
+
         frame.active_region = function (default_to_view_box) {
             var pa = frame.parent_canvas.active_region(default_to_view_box);
             var ll = frame.model_location(pa.min_x, pa.min_y);
@@ -1804,6 +1839,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
         frame.reset_frame = function () {
             frame.parent_canvas.detach_objects(frame);
             frame.object_list = [];
+            frame.parent_canvas.request_redraw();
         };
 
         frame.redraw_frame = function () {

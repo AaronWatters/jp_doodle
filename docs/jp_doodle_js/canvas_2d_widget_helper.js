@@ -379,7 +379,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // eg: element.rect({name:"a rect", x:10, y:50, w:10, h:120, color:"salmon", degrees:-15});
             var s = $.extend({
                 image_name: null,
-                fill: true,  // if false then do a outline
                 coordinate_conversion: no_change_conversion,
                 //frame: target,
             }, opt);
@@ -416,7 +415,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             // use a rectangle for masking operations
             s.draw_mask = function (to_canvas, info) {
-                to_canvas.rect({x: info.x, y: info.y, w:info.w, h:info.h, degrees:info.degrees, color:info.color});
+                var config = $.extend({}, info);
+                to_canvas.rect(config);
             };
             return s;
         };
