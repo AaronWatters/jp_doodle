@@ -361,17 +361,17 @@ Click again to close the polygon.  Press the reset button to play again.
 
 <tr>
     <td>
-        <a href="https://aaronwatters.github.io/jp_doodle/spiders.html">
-        <img width="200px" src="docs/images/spider_transparent_background.png">
+        <a href="https://aaronwatters.github.io/jp_doodle/vector_field.html">
+        <img width="200px" src="docs/images/vector_field.png">
         </a>
     </td>
     <td>
-        <h4><a href="https://aaronwatters.github.io/jp_doodle/spiders.html">
-        Spiders
+        <h4><a href="https://aaronwatters.github.io/jp_doodle/vector_field.html">
+        Vector Field
         </a></h4>
         <div>
-        Seven spiders attack Tulsa:
-a demonstration that illustrates image transparency, rotation, and animation.
+        The vector field component adds an animation of directional moving points
+on a canvas.
         </div>
     </td>
 </tr>
