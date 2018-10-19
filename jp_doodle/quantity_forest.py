@@ -47,7 +47,7 @@ class FileSystemExplorer:
     def __init__(self, canvas_widget, path, width=600, enable_deletions=False,
             horizontal=False, x_vector=None, y_vector=None,
             dy=50, dh=20, epsilon=0.02, degrees=15, font="normal 10px Arial",
-            background="rgba(200,200,255,0.8)", opacity=0.7,
+            background="rgba(244,230,255,0.8)", opacity=0.7,
             clearHeight=300,
             ):
         self.opacity = opacity
@@ -147,6 +147,9 @@ class FileSystemExplorer:
             for j in range(3):
                 rgb[j] = (rgb[j] << 1) | (counter & 1)
                 counter = (counter >> 1)
+        # darken
+        for i in range(3):
+            rgb[i] = (rgb[i] * 200) // 255
         return "rgba(%s,%s,%s,%s)" % (tuple(rgb) + (self.opacity,))
 
     def delete_id(self, identity):
