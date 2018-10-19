@@ -1094,6 +1094,9 @@ XXXXX target.shaded_objects -- need to test for false hits!
                         if (attr == "color") {
                             map_interpolators[attr] = target.color_interpolator(from_value, to_value);
                             trivial = false;
+                        } else if (attr == "points") {
+                            map_interpolators[attr] = target.polygon_points_interpolator(from_value, to_value);
+                            trivial = false;
                         } else if (to_value_type == "object") {
                             var interp = target.interpolate_mapping(from_value, to_value);
                             if (interp) {
@@ -1140,7 +1143,77 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 }
                 return new_value;
             }
-        }
+        };
+
+        target.polygon_points_interpolator = function(old_points, new_points) {
+            var points_interpolation = function (from_points, other_points) {
+                var interval = other_points.length - 1;
+                var my_interval = from_points.length - 1;
+                // special cases
+                if (interval < 1) {
+                    return from_points;  // other list has one entry or none.
+                }
+                if (my_interval < 0) {
+                    // no points to interpolate -- just use the other points (???)
+                    return other_points;
+                }
+                if (my_interval == 0) {
+                    // one entry: repeat it to match other points
+                    return other_points.map(_ => from_points[0]);
+                }
+                var result = [];
+                var my_cursor = 0;
+                var other_cursor = 0;
+                var last_point = null;
+                var last_cursor = null;
+                for (var index=0; index<from_points.length; index++) {
+                    var this_point = from_points[index];
+                    while ((last_point) && (other_cursor < my_cursor)) {
+                        // add an interpolation point
+                        var lambda = (other_cursor - last_cursor) * (1.0 / interval);
+                        var xi = lambda * this_point[0] + (1 - lambda) * last_point[0];
+                        var yi = lambda * this_point[1] + (1 - lambda) * last_point[1];
+                        result.push([xi, yi])
+                        other_cursor += my_interval;
+                    }
+                    // don't add an interpolation point at matching position.
+                    if (other_cursor == my_cursor) {
+                        other_cursor += my_interval;
+                    }
+                    result.push(this_point);
+                    last_point = this_point;
+                    last_cursor = my_cursor;
+                    my_cursor = my_cursor + interval;
+                }
+                return result;
+            };
+            var old_int = points_interpolation(old_points, new_points);
+            var new_int = points_interpolation(new_points, old_points);
+            if (old_int.length != new_int.length) {
+                throw new Error("point interpolation sanity check failed.");
+            }
+            var interpolator = function (lmd) {
+                if (lmd <= 0) {
+                    return old_points;
+                }
+                if (lmd >= 1) {
+                    return new_points;
+                }
+                result = []
+                for (var i=0; i<new_int.length; i++) {
+                    var new_p = new_int[i];
+                    var old_p = old_int[i];
+                    var xi = (new_p[0] * lmd) + (old_p[0] * (1 - lmd));
+                    var yi = (new_p[1] * lmd) + (old_p[1] * (1 - lmd));
+                    result.push([xi, yi]);
+                }
+                return result;
+            };
+            // for test and debug
+            interpolator.old_int = old_int;
+            interpolator.new_int = new_int;
+            return interpolator;
+        };
 
         target.color_interpolator = function(old_string, new_string) {
             //console.log("interpolating color from ", old_string, " to ", new_string)
@@ -1918,7 +1991,11 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 var s = $.extend({
                     coordinate_conversion: frame.converted_location,
                     frame: frame,
-                }, opt)
+                }, opt);
+                if (s.temporary) {
+                    // short cut optimization, step around bookkeeping for temporary object.
+                    return frame.parent_canvas.visible_canvas[shape_name](s);
+                }
                 var method = frame.parent_canvas[shape_name];
                 return method(s, wait);
             }
