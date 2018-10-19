@@ -163,11 +163,11 @@ XXXXX target.shaded_objects -- need to test for false hits!
         target.redraw = function () {
             // cancel redraw_pending if set
             target.redraw_pending = false;
-            // perform any transitions
-            target.do_transitions();
             target.visible_canvas.clear_canvas();
             target.invisible_canvas.clear_canvas();
             target.object_list = target.objects_drawn(target.object_list);
+            // perform any transitions last to allow for temporary objects
+            target.do_transitions();
         };
 
         target.objects_drawn = function (object_list) {
