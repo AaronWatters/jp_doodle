@@ -24,6 +24,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             final_color: "orange",
             radius: 3,
             shape: "circle",
+            temporary: true,
         }, options);
 
         var color_interpolator = element.color_interpolator(
@@ -60,7 +61,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                             color: color,
                             x: motion.sx * lambda1 + motion.ex * lambda,
                             y: motion.sy * lambda1 + motion.ey * lambda,
-                            temporary: true,
+                            temporary: settings.temporary,
                         })
                     } else {
                         // default to line
@@ -73,6 +74,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                             y1: motion.sy + (lambda - qscale) * dy,
                             x2: motion.sx + (lambda + qscale) * dx,
                             y2: motion.sy + (lambda + qscale) * dy,
+                            temporary: settings.temporary,
                         })
                     }
                 }
@@ -101,7 +103,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             frame: frame,
             duration: 10.0,  // seconds
             initial_color: "blue",
-            final_color: "orange",
+            //final_color: "orange",
+            final_color: "blue",
             shape: "circle",  // or "line"
             radius: 0.1,
             motions: [

@@ -163,11 +163,11 @@ XXXXX target.shaded_objects -- need to test for false hits!
         target.redraw = function () {
             // cancel redraw_pending if set
             target.redraw_pending = false;
-            // perform any transitions
-            target.do_transitions();
             target.visible_canvas.clear_canvas();
             target.invisible_canvas.clear_canvas();
             target.object_list = target.objects_drawn(target.object_list);
+            // perform any transitions last to allow for temporary objects
+            target.do_transitions();
         };
 
         target.objects_drawn = function (object_list) {
@@ -733,7 +733,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 }
                 // attach the model location relative to the reference frame (unless overridden by testing)
                 if (!e.model_location) {
-                    e.model_location = reference_frame.event_model_location(event);
+                    e.model_location = reference_frame.event_model_location(e);
                 }
                 // No "event bubbling"?
                 if (object_handler) {
@@ -1697,12 +1697,16 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 } else {
                     var tick = $.extend({}, tick);  // fresh copy
                 }
-                tick.start = target.vadd(
+                tick.origin = target.vadd(
                     params.axis_origin,
                     target.vscale(tick.offset, params.offset_vector)
                 );
+                tick.start = target.vadd(
+                    tick.origin,
+                    target.vscale(-1, tick_shift)
+                );
                 tick.end = target.vadd(
-                    tick.start,
+                    tick.origin,
                     tick_shift
                 );
                 line.x1 = tick.start.x; line.y1 = tick.start.y;
@@ -1722,7 +1726,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 }
                 label.valign = "center";
                 label.offset = target.vadd(
-                    tick.start,
+                    tick.origin,
                     label_shift
                 )
                 label.x = label.offset.x;
@@ -1742,10 +1746,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
             // draw the connector if configured
             if ((min_tick) && (params.connecting_line_config)) {
                 var connecting_line = $.extend({}, params.tick_line_config, params.connecting_line_config);
-                connecting_line.x1 = min_tick.start.x;
-                connecting_line.y1 = min_tick.start.y;
-                connecting_line.x2 = max_tick.start.x;
-                connecting_line.y2 = max_tick.start.y;
+                connecting_line.x1 = min_tick.origin.x;
+                connecting_line.y1 = min_tick.origin.y;
+                connecting_line.x2 = max_tick.origin.x;
+                connecting_line.y2 = max_tick.origin.y;
                 target.line(connecting_line);
             }
             return transformed_ticks;
