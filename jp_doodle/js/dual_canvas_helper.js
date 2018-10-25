@@ -1091,7 +1091,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                         trivial = false;
                     } else {
                         // non numeric value
-                        if (attr == "color") {
+                        if ((attr == "color") || (attr == "background")) {
                             map_interpolators[attr] = target.color_interpolator(from_value, to_value);
                             trivial = false;
                         } else if (attr == "points") {
