@@ -733,7 +733,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 }
                 // attach the model location relative to the reference frame (unless overridden by testing)
                 if (!e.model_location) {
-                    e.model_location = reference_frame.event_model_location(event);
+                    e.model_location = reference_frame.event_model_location(e);
                 }
                 // No "event bubbling"?
                 if (object_handler) {
