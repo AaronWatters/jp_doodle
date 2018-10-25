@@ -6,6 +6,9 @@ import os
 from subprocess import check_output
 import pprint
 
+if bytes != str:
+    unicode = str
+
 def directory_usage(directory, epsilon=0.02):
     if not os.path.isdir(directory):
         return None
@@ -19,6 +22,7 @@ def directory_usage(directory, epsilon=0.02):
         except Exception:
             pass
         else:
+            usage = unicode(usage, "utf8")   # py 3
             [snum, sname] = usage.strip().split("\t")
             num = float(snum)
             total += num
