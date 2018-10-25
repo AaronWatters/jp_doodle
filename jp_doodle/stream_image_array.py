@@ -95,7 +95,7 @@ class VolumeImageViewer:
         self.idi = idi = self.i_max * di
         self.jdj = jdj = self.j_max * dj
         self.kdk = kdk = self.k_max * dk
-        print (volume_image.shape, idi, jdj, kdk)
+        #print (volume_image.shape, idi, jdj, kdk)
         lower_y = y0 - max(idi, jdj) - spacer
         right_x = x0 + max(idi, kdk) + spacer
         self.ul_frame = on_canvas.frame_region(
@@ -107,7 +107,7 @@ class VolumeImageViewer:
         self.ul_rect = self.ul_frame.frame_rect(name=True, x=0, y=0, w=self.j_max, h=self.i_max, color="blue")
         self.ll_frame = on_canvas.frame_region(
             x0, lower_y, x0 + kdk, lower_y - idi,
-            0, 0, self.j_max, self.i_max
+            0, 0, self.k_max, self.i_max
         )
         self.ll_rect = self.ll_frame.frame_rect(name=True, x=0, y=0, w=self.k_max, h=self.i_max, color="green")
         self.ur_frame = on_canvas.frame_region(
