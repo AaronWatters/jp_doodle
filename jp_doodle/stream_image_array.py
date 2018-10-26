@@ -1,6 +1,7 @@
 import jp_proxy_widget
 import numpy as np
 from jp_doodle import dual_canvas
+from threading import Timer
 
 class StreamImageArray(jp_proxy_widget.JSProxyWidget):
     
@@ -84,7 +85,8 @@ class StreamImageArray(jp_proxy_widget.JSProxyWidget):
 
 class VolumeImageViewer:
 
-    def __init__(self, volume_image, on_canvas, x0=0, y0=0, spacer=50, di=1, dj=1, dk=1):
+    def __init__(self, volume_image, on_canvas, x0=0, y0=0, spacer=50, di=1, dj=1, dk=1, draw_delay=0.3):
+        self.draw_delay = draw_delay
         (self.i_max, self.j_max, self.k_max) = volume_image.shape
         self.image = volume_image
         self.canvas = on_canvas
@@ -126,6 +128,7 @@ class VolumeImageViewer:
         self.draw()
 
     def draw(self):
+        self.draw_scheduled = False
         canvas = self.canvas
         self.ul_frame.reset_frame()
         self.ll_frame.reset_frame()
@@ -188,8 +191,21 @@ class VolumeImageViewer:
         y_name = canvas_name[1]
         setattr(self, x_name, x)
         setattr(self, y_name, y)
-        with self.canvas.delay_redraw():
-            self.draw()
+        self.delayed_draw()
+
+    draw_scheduled = False
+    #draw_delay = 0.3  # seconds
+
+    def delayed_draw(self):
+        "delay to prevent event flooding on slow connections"
+        if self.draw_scheduled:
+            return
+        self.draw_scheduled = True
+        def do_draw():
+            with self.canvas.delay_redraw():
+                self.draw()
+        t = Timer(self.draw_delay, do_draw)
+        t.start()
 
     def get_frame_and_slice(self, axis):
         def clamp(index, maximum):
