@@ -124,4 +124,4 @@ if __name__ == "__main__":
     headers = "some header names".split()
     body = ["random body choice".split(), "another line example".split()]
     B = Table0(headers, body, jupyter=False)
-    print B.table_html
+    print (B.table_html)
