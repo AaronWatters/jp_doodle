@@ -1,2 +1,4 @@
 include README.md
 recursive-include jp_doodle/js *.*
+recursive-include jp_doodle/DataTables *.*
+
