@@ -140,8 +140,10 @@ class VolumeImageViewer:
             rect.on("mousemove", self.mousemove)
             rect.on("mousedown", self.mousedown)
             rect.on("mouseup", self.mouseup)
-        blue = np.array([0,0,255]).reshape([1,1,3])
-        yellow = np.array([255,255,0]).reshape([1,1,3])
+        #blue = np.array([0,0,255]).reshape([1,1,3])
+        #yellow = np.array([255,255,0]).reshape([1,1,3])
+        blue = [0,0,255,255]
+        yellow = [255,255,0,255]
         for axis in range(3):
             (frame, A, (y, x, h, w)) = self.get_frame_and_slice(axis)
             m = A.min()
@@ -149,12 +151,14 @@ class VolumeImageViewer:
             if (M - m) < 1:
                 M = m + 1.0
             factor = 1.0 / (M - m)
+            # B is scaled in [0..1]
             B = (A - m) * factor
             (nrows, ncols) = B.shape
-            B = B.reshape(B.shape + (1,))
-            C = B * blue + (1.0 - B) * yellow
+            #B = B.reshape(B.shape + (1,))
+            #C = B * blue + (1.0 - B) * yellow
+            C = 255 * B
             name = "image_" + repr(axis)
-            canvas.name_image_array(name, C)
+            canvas.name_image_array(name, C, low_color=yellow, high_color=blue)
             #frame.reset_frame()
             frame.named_image(name, 0, nrows, w, h)
             lw = 5

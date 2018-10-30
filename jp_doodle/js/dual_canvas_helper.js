@@ -510,20 +510,40 @@ XXXXX target.shaded_objects -- need to test for false hits!
             }
         };
 
-        target.name_image_data = function(image_name, data_array, width, height) {
+        target.name_image_data = function(image_name, data_array, width, height, low_color, high_color) {
             // Create a named image from byte RGBA data.
             // https://stackoverflow.com/questions/21300921/how-to-convert-byte-array-to-image-in-javascript/21301006#21301006
             // Data must be linearized rgba values of the right size
-            var size = width * height * 4;
+            // low color and high color are interpolation points for grey scale images
+            var wh = width * height;
+            var size = wh * 4;
             var length = data_array.length;
-            if (data_array.length != size) {
-                throw new Error("array length " + length + " doesn't match dimensions 4 X " + width +" X "+height);
+            var grey_scale = true;
+            if (length != wh) {
+                grey_scale = false;
+                if (length != size) {
+                    throw new Error("array length " + length + " doesn't match dimensions 4 X " + width +" X "+height);
+                }
             }
             var context = target.visible_canvas.canvas_context;
             var imgdata = context.createImageData(width, height);
             var data = imgdata.data;
-            for (var i=0; i<size; i++) {
-                data[i] = data_array[i];
+            if (grey_scale) {
+                low_color = low_color || [0, 0, 0, 255];
+                high_color = high_color || [255, 255, 255, 0];
+                for (var i=0; i<wh; i++) {
+                    // interpolate grey image
+                    var lambda = data_array[i]/255;
+                    var lambda1 = 1.0 - lambda;
+                    for (var j=0; j<4; j++) {
+                        var index = i * 4 + j;
+                        data[index] = Math.floor(lambda1 * low_color[j] + lambda * high_color[j]);
+                    }
+                }
+            } else {
+                for (var i=0; i<size; i++) {
+                    data[i] = data_array[i];
+                }
             }
             // put the image into a canvas
             var container_canvas = $('<canvas width="'+width+'px" height="'+height+'px"/>');

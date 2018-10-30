@@ -175,7 +175,8 @@ class CanvasOperationsMixin(object):
     def request_redraw(self):
         self.element.request_redraw()
 
-    def name_image_array(self, image_name, np_array):
+    def name_image_array(self, image_name, np_array,
+            low_color=None, high_color=None):
         import numpy as np
         shape = np_array.shape
         ndim = len(shape)
@@ -183,11 +184,14 @@ class CanvasOperationsMixin(object):
         assert ndim < 4, "image data should have no more than 3 dimensions"
         # For now KISS: try to convert array to nrows x ncols x 4 for rgba values
         if ndim == 2:
+            # grey scale, interpolate at javascript level
             (nrows, ncols) = shape
-            coerced = np.zeros((nrows, ncols, 4), dtype=np.ubyte)
-            for i in range(3):
-                coerced[:, :, i] = np_array
-            coerced[:, :, 3] = 255   # fully opaque
+            coerced = np.zeros(shape, dtype=np.ubyte)
+            coerced[:, :] = np_array
+            #coerced = np.zeros((nrows, ncols, 4), dtype=np.ubyte)
+            #for i in range(3):
+            #    coerced[:, :, i] = np_array
+            #coerced[:, :, 3] = 255   # fully opaque
             np_array = coerced
         elif ndim == 3:
             (nrows, ncols, ncolors) = shape
@@ -204,9 +208,10 @@ class CanvasOperationsMixin(object):
                 coerced[:,:,:] = np_array
                 np_array = coerced
         image_bytes = bytearray(np_array.tobytes())
-        (nrows, ncols, ncolors) = np_array.shape
-        assert ncolors == 4
-        self.element.name_image_data(image_name, image_bytes, ncols, nrows)
+        # (nrows, ncols, ncolors) = np_array.shape
+        # assert ncolors == 4
+        self.element.name_image_data(image_name, image_bytes, ncols, nrows, 
+            low_color, high_color)
 
     def callback_with_pixel_color(self, pixel_x, pixel_y, callback, ms_delay=500):
         "For testing.  Deliver the color at pixel as a list of four integers to the callback(list_of_integers)."
