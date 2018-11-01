@@ -8,11 +8,28 @@ makes implementing special purpose interactive visualizations easy.</b>
 It is designed to facilitate the development of bespoke scientific data presentation
 and interactive exploration tools.
 
+Below is a screenshot of the "array explorer" proof of
+concept using `jp_doodle dual_canvas`.
+
 <img src="array.png" width="70%"/>
 
 The `jp_doodle` package provides `jQuery` plugins which make it easy to build
 interactive visualizations in Javascript.  The package also provides Jupyter widget
 interfaces to make it easy to build visualizations for Jupyter notebooks.
+
+Most demonstration code is provided as Jupyter notebooks
+under the
+[`./notebooks`](./notebooks) directory.
+You can 
+[view `./notebooks` using `nbviewer](https://nbviewer.jupyter.org/github/AaronWatters/jp_doodle/tree/master/notebooks/) or use
+[Binder](https://mybinder.org/v2/gh/AaronWatters/jp_doodle/master)
+to run the notebooks interactively.  The `Tutorial`
+introduces dual canvases primarily from a Javascript
+perspective.  The `Simple Python Examples` shows
+some examples of using dual canvases in Jupyter widgets
+using only the Python interface.  The `Feature demonstrations` sub-directory provides many other examples of how to use
+the various features of dual canvases.
+
 
 # Installation
 
@@ -82,6 +99,8 @@ relative event coordinate transformations.
 - A built in "lasso tool" for selecting multiple objects in a canvas.
 
 - Animation support.
+
+
 
 DEMOS_HERE
 
