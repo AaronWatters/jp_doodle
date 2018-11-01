@@ -21,14 +21,17 @@ Most demonstration code is provided as Jupyter notebooks
 under the
 [`./notebooks`](./notebooks) directory.
 You can 
-[view `./notebooks` using `nbviewer](https://nbviewer.jupyter.org/github/AaronWatters/jp_doodle/tree/master/notebooks/) or use
-[Binder](https://mybinder.org/v2/gh/AaronWatters/jp_doodle/master)
+<a href="https://nbviewer.jupyter.org/github/AaronWatters/jp_doodle/tree/master/notebooks">
+view `./notebooks` using `nbviewer`</a>
+or use
+<a href="https://mybinder.org/v2/gh/AaronWatters/jp_doodle/master">
+Binder</a>
 to run the notebooks interactively.  The `Tutorial`
 introduces dual canvases primarily from a Javascript
 perspective.  The `Simple Python Examples` shows
 some examples of using dual canvases in Jupyter widgets
 using only the Python interface.  The `Feature demonstrations` sub-directory provides many other examples of how to use
-the various features of dual canvases.
+the various features of dual canvases both in the Javascript and the Python contexts.
 
 
 # Installation
