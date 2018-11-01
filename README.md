@@ -14,6 +14,8 @@ makes implementing special purpose interactive visualizations easy.</b>
 It is designed to facilitate the development of bespoke scientific data presentation
 and interactive exploration tools.
 
+<img src="array.png" width="70%"/>
+
 The `jp_doodle` package provides `jQuery` plugins which make it easy to build
 interactive visualizations in Javascript.  The package also provides Jupyter widget
 interfaces to make it easy to build visualizations for Jupyter notebooks.
