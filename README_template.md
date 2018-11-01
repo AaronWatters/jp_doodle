@@ -33,6 +33,19 @@ Then enable `jp_proxy_widget` as a notebook extension
 jupyter nbextension enable --py --sys-prefix jp_proxy_widget
 ```
 
+
+For jupyterlab also do
+
+```
+jupyter labextension install jp_proxy_widget
+```
+
+The following must have been run once at sometime in the past:
+
+```
+jupyter labextension install @jupyter-widgets/jupyterlab-manager
+```
+
 Then install `jp_doodle` from github
 
 ```
