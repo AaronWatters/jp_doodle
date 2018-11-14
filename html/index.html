@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Drawing -- jp_doodle demo</title>
+
+    <link rel="stylesheet" href="bundle.css" />
+
+    <!--
+
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="../docs/jp_doodle_js/canvas_2d_widget_helper.js"></script>
+    <script src="../docs/jp_doodle_js/dual_canvas_helper.js"></script>
+    <script src="../docs/jp_doodle_js/rectangle_collection.js"></script>
+    <script src="../docs/jp_doodle_js/array_explorer.js"></script>
+    <script src="../docs/jp_doodle_js/canvas_2d_vector_field.js"></script>
+
+    -->
+
+</head>
+
+<body>
+
+<p><em>
+    This page tests the npm packaging for the
+    <code><a href="https://github.com/AaronWatters/jp_doodle">jp_doodle</a></em></code>
+    package. <br>
+
+    <p><b><code><a href="https://github.com/AaronWatters/jp_doodle">jp_doodle</a></em></code>
+        makes implementing special purpose interactive visualizations easy.</b></p>
+
+    Please see the Jupyter notebooks in the package for additional
+    discussion and documentation. <br>
+
+    Please use 
+    <a href="https://mybinder.org/v2/gh/AaronWatters/jp_doodle/master">Binder</a>
+    to easily run the Jupyter notebooks of the package.
+</em></p>
+
+<h1>Drawing</h1>
+<div>
+    <p>
+The <code>jp_doodle</code> package includes <code>jQuery</code> plugins to
+make figures that can interact with mouse events and may be animated.
+</p>
+<p>
+In this figure we draw a number of objects on a canvas to illustrate
+basic shapes.  The figure also responds to mouse-over events.
+Move the mouse over the objects to see the "name" of the object undeneith
+the mouse.
+</p>
+</div>
+
+<div id="target_container">
+    <div id="target_div"/>
+</div>
+
+<script src="bundle.js"></script>
+            
+</body>
+</html>
