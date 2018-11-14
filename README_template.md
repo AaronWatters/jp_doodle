@@ -1,5 +1,7 @@
 
 [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/AaronWatters/jp_doodle/master)
+[![Build Status](https://travis-ci.org/AaronWatters/jp_doodle.svg?branch=master)](https://travis-ci.org/AaronWatters/jp_doodle)
+[![Coverage Status](https://coveralls.io/repos/github/AaronWatters/jp_doodle/badge.svg?branch=master)](https://coveralls.io/github/AaronWatters/jp_doodle?branch=master)
 
 # `jp_doodle`
 
