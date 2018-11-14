@@ -643,21 +643,21 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         // generally useful vector calculations (xxxx here?)
         target.vscale = function(scalar, vector) {
             var result = {};
-            for (slot in vector){
+            for (var slot in vector){
                 result[slot] = vector[slot] * scalar;
             }
             return result;
         };
         target.vadd = function(v1, v2) {
             var result = {};
-            for (slot in v1){
+            for (var slot in v1){
                 result[slot] = v1[slot] + v2[slot];
             }
             return result;
         };
         target.vdot = function(v1, v2) {
             var result = 0.0;
-            for (slot in v1) {
+            for (var slot in v1) {
                 result += v1[slot] * v2[slot];
             }
             return result;
@@ -675,7 +675,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         }
         target.vint = function(vector) {
             var result = {};
-            for (slot in vector){
+            for (var slot in vector){
                 result[slot] = Math.floor(vector[slot]);
             }
             return result;

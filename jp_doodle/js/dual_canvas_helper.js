@@ -436,7 +436,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
         target.next_pseudocolor = function () {
             // XXX this wraps after about 16M elements.
             // keep seeking for free color
-            result = null;
+            var result = null;
             for (var i=0; i<10; i++) {
                 target.color_counter++;
                 result = target.garish_pseudocolor_array(target.color_counter);
