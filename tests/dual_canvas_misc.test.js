@@ -17,6 +17,17 @@ describe("misc dual_canvas tests", () => {
         expect(elt.get_object_info("polly")).toBeFalsy();
     });
 
+    it("does frame shapes", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        var f = elt.rframe(1,2,3,4,"frame");
+        var c = f.frame_circle({r:22, x:3, y:5, color:"pink", name:"circle"})
+        var r = f.frame_rect({w:22, h:100, x:3, y:5, color:"red", name:"rect"})
+        expect(elt.get_object_info("circle").frame).toBe(f);
+        expect(elt.get_object_info("rect").frame).toBe(f);
+    });
+
     it("abbreviates events", () => {
         mockCanvas(window);
         var elt = jQuery("<b>test</b>");
@@ -55,6 +66,13 @@ describe("misc dual_canvas tests", () => {
         elt.dual_canvas_helper();
         var array = elt.name_image_url("xyz_name", "http://example.com/x.png");
         expect(elt.visible_canvas.named_images["xyz_name"]).toBeTruthy();
+        var img = elt.named_image({image_name: "xyz_name", name:"img",
+                 x:10, y:11, dx:22, dy:33, w:44, h:55, degrees:66,
+                 sx:77, sy:88, sWidth:99, sHeight:11});
+        expect(elt.get_object_info("img").image_name).toBe("xyz_name");
+        var img2 = elt.named_image({image_name: "xyz_name", name:"img2",
+                 x:10, y:11, dx:22, dy:33, w:44, h:55, degrees:66});
+        expect(elt.get_object_info("img2").image_name).toBe("xyz_name");
     });
 
     it("stores a color image", () => {

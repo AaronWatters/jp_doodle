@@ -14,6 +14,14 @@ require('jquery-ui');
 // Mock Canvas / Context2D calls
 //
 function mockCanvas (window) {
+    var imgdata = function(w, h) {
+        var length = w * h * 4;
+        var result = new Array(length);
+        for (var i=0; i<length; i++) {
+            result[i] = 0;
+        }
+        return result;
+    }
     window.HTMLCanvasElement.prototype.getContext = function () {
         return {
             fillRect: function() {},
@@ -21,12 +29,12 @@ function mockCanvas (window) {
             resetTransform: function(){},
             getImageData: function(x, y, w, h) {
                 return  {
-                    data: new Array(w*h*4)
+                    data: imgdata(w, h),  // new Array(w*h*4)
                 };
             },
             putImageData: function() {},
             createImageData: function(width, height){ 
-                return {data: []};
+                return {data: imgdata(width, height)};
             },
             setTransform: function(){},
             drawImage: function(){},
