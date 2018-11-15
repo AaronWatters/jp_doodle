@@ -104,6 +104,24 @@ describe("misc dual_canvas tests", () => {
         expect(elt.event_info.event_types["mousemove"]).toBeTruthy();
     });
 
+    it("supports delayed events", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        var test = false;
+        var event_object = {overridden: false};
+        var callback = function (event) {
+            expect(event).toBe(event_object);
+            expect(event.overridden).toBe(false);
+            test = true;
+        };
+        elt.delay_event("click", callback, {overridden: true});
+        elt.delay_event("click", callback, event_object);
+        expect(test).toBe(false);
+        elt.drain_delayed_events();
+        expect(test).toBe(true);
+    });
+
     it("doesn't index transparent colors", () => {
         mockCanvas(window);
         var elt = jQuery("<b>test</b>");
