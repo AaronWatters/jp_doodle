@@ -3,6 +3,31 @@ import jp_doodle_is_loaded from "../dist/index";
 
 describe("misc dual_canvas tests", () => {
 
+    it("gets colors and pixels", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        expect(elt.visible_canvas.color_at(10,10).data).toEqual([0,0,0,0]);
+        expect(elt.pixels(10,10,1,1).data).toEqual([0,0,0,0]);
+    });
+
+    it("computes pixel locations", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        expect(elt.event_pixel_location(1,2)).toBeTruthy();
+    });
+
+    it("does coordinate calculations", () => {
+        // just increasing coverage, not chacking closely.
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        expect(elt.converted_location(1,2)).toBeTruthy();
+        expect(elt.visible_canvas.canvas_to_pixel(2,3)).toBeTruthy();
+        expect(elt.visible_canvas.model_to_pixel(2,3)).toBeTruthy();
+    });
+
     it("saves, changes, forgets a polygon", () => {
         mockCanvas(window);
         var elt = jQuery("<b>test</b>");
@@ -99,7 +124,7 @@ describe("misc dual_canvas tests", () => {
         expect(array).toEqual([1,2,3,0]);
     });
 
-    it("doesn't parses a bad color", () => {
+    it("doesn't parse a bad color", () => {
         mockCanvas(window);
         var elt = jQuery("<b>test</b>");
         elt.dual_canvas_helper();
