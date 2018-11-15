@@ -25,7 +25,9 @@ function mockCanvas (window) {
                 };
             },
             putImageData: function() {},
-            createImageData: function(){ return []},
+            createImageData: function(width, height){ 
+                return {data: []};
+            },
             setTransform: function(){},
             drawImage: function(){},
             save: function(){},

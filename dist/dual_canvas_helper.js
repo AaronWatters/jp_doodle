@@ -976,7 +976,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
                         // for consistency scale alpha to 255
                         numbers[3] = numbers[3] * 255;
                         for (var i = 0; i < 4; i++) {
-                            if (numbers[i] < 0 || numbers[i] > 256) {
+                            var n = numbers[i];
+                            if (isNaN(n) || n < 0 || n > 256) {
                                 ok = false;
                             }
                         }
@@ -988,6 +989,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     console.warn("error parsing rgba format " + color_string + " " + err);
                 }
                 console.warn("failed parsing rgba format " + color_string);
+                return null;
             }
             var bbox = target.model_view_box();
             // draw a test rectangle of that color
