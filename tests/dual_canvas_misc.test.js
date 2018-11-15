@@ -9,13 +9,19 @@ describe("misc dual_canvas tests", () => {
         elt.dual_canvas_helper();
         expect(elt.visible_canvas.color_at(10,10).data).toEqual([0,0,0,0]);
         expect(elt.pixels(10,10,1,1).data).toEqual([0,0,0,0]);
+        expect(elt.color_index_at(elt.invisible_canvas,10,10,1,1)).toEqual(null);
     });
 
-    it("computes pixel locations", () => {
+    it("computes event locations", () => {
         mockCanvas(window);
         var elt = jQuery("<b>test</b>");
         elt.dual_canvas_helper();
-        expect(elt.event_pixel_location(1,2)).toBeTruthy();
+        var event = {pageX: 10, pageY: 20};
+        expect(elt.event_pixel_location(event)).toBeTruthy();
+        var event2 = {clientX: 10, clientY: 20};
+        expect(elt.event_pixel_location(event2)).toBeTruthy();
+        expect(elt.event_canvas_location(event2)).toBeTruthy();
+        expect(elt.event_model_location(event2)).toBeTruthy();
     });
 
     it("computes vector directions", () => {
