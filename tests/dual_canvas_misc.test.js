@@ -34,6 +34,31 @@ describe("misc dual_canvas tests", () => {
         expect(elt.vdirection_degrees(v)).toEqual(-45);
     });
 
+    it("interpolates mappings", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        var starting = {
+            x: 100, y:200,
+            points: [[0,0], [10, 10], [0,10]],
+            color: "blue",
+            text: "starting"
+        };
+        var ending = {
+            x: 300, y:-200,
+            points: [[0,0], [-10, 10], [0,-10]],
+            color: "green",
+            text: "ending"
+        };
+        var interpolator = elt.interpolate_mapping(starting, ending);
+        var before = interpolator(0);
+        var middle = interpolator(0.5);
+        var after = interpolator(1.0);
+        expect(before).toEqual(starting);
+        expect(after).toEqual(ending);
+        expect(middle.x).toEqual(200);
+    });
+
     it("computes vector distance", () => {
         mockCanvas(window);
         var elt = jQuery("<b>test</b>");

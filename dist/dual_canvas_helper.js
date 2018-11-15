@@ -1210,7 +1210,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 if (lmd >= 1) {
                     return new_points;
                 }
-                result = [];
+                var result = [];
                 for (var i = 0; i < new_int.length; i++) {
                     var new_p = new_int[i];
                     var old_p = old_int[i];
