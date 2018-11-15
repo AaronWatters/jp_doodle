@@ -6,7 +6,7 @@ if (!global.jQuery) {
 }
 
 require('jquery-ui');
-require('jest-canvas-mock');
+//require('jest-canvas-mock');
   
 // https://github.com/jsdom/jsdom/issues/1782
 
