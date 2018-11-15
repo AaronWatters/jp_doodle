@@ -1,10 +1,11 @@
 {
   "name": "jp_doodle",
-  "version": "1.0.0",
-  "description": "Example npm module using jest for testing.",
+  "version": "0.1.0",
+  "description": "jp_doodle makes implementing special purpose interactive visualizations easy.",
   "main": "dist/index.js",
   "files": [
-    "dist/my_plugin.js",
+    "canvas_2d_widget_helper.js",
+    "dual_canvas_helper.js",
     "dist/index.js"
   ],
   "dependencies": {
@@ -16,11 +17,11 @@
     "babel-eslint": "^8.0.3",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-env": "^1.6.1",
+    "browserify": "*",
     "coveralls": "^3.0.0",
     "eslint": "^4.13.0",
     "eslint-plugin-import": "^2.8.0",
     "jest": "^22.4.3",
-    "browserify": "*",
     "opener": "^1.4.0",
     "parcelify": "^0.12.5"
   },
