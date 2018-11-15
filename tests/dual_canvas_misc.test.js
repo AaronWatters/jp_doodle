@@ -42,13 +42,15 @@ describe("misc dual_canvas tests", () => {
             x: 100, y:200,
             points: [[0,0], [10, 10], [0,10]],
             color: "blue",
-            text: "starting"
+            text: "starting",
+            object: {greeting: "hello"},
         };
         var ending = {
             x: 300, y:-200,
             points: [[0,0], [-10, 10], [0,-10]],
             color: "green",
-            text: "ending"
+            text: "ending",
+            object: {greeting: "goodbye"},
         };
         var interpolator = elt.interpolate_mapping(starting, ending);
         var before = interpolator(0);
