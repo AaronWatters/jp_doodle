@@ -16,7 +16,7 @@ before_install:
 install:
 - npm install
 script:
-- npm test
+#- npm test
 - npm run coveralls
 #after_success:
 #- python3 stop_test_http_server.py 
