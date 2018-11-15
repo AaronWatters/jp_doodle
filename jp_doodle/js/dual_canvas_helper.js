@@ -318,7 +318,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     target.request_redraw();
                 }
             } else {
-                console.warn("change: no such element with name " + name);
+                console.warn("change: no such element with name " + name_or_info);
             }
         };
         

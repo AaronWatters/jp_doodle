@@ -61,6 +61,19 @@ describe("misc dual_canvas tests", () => {
         expect(elt.get_object_info("polly")).toBeFalsy();
     });
 
+    it("resets", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        var points = [[50,0], [40,-20], [40,-40], [30,-60]];
+        var p = elt.polygon({points:points, cx:10, cy:-10, degrees:33, color:"green",
+            fill:false, lineWidth:16, close:true, name:"polly"});
+        expect(elt.get_object_info("polly").color).toBe("green");
+        elt.reset_canvas(true);
+        expect(elt.get_object_info("polly")).toBeFalsy();
+        expect(elt.object_list.length).toBe(0);
+    });
+
     it("does frame shapes", () => {
         mockCanvas(window);
         var elt = jQuery("<b>test</b>");
@@ -70,6 +83,24 @@ describe("misc dual_canvas tests", () => {
         var r = f.frame_rect({w:22, h:100, x:3, y:5, color:"red", name:"rect"})
         expect(elt.get_object_info("circle").frame).toBe(f);
         expect(elt.get_object_info("rect").frame).toBe(f);
+    });
+
+    it("replaces object with same name", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        var c = elt.frame_circle({r:22, x:3, y:5, color:"pink", name:"same"})
+        expect(elt.get_object_info("same").r).toBe(22);
+        var r = elt.frame_rect({w:22, h:100, x:3, y:5, color:"red", name:"same"})
+        expect(elt.get_object_info("same").h).toBe(100);
+        expect(elt.object_list.length).toBe(1);
+    });
+
+    it("permits changing missing objects", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        elt.change("missing", {color: "pink"});
     });
 
     it("abbreviates events", () => {
@@ -100,6 +131,9 @@ describe("misc dual_canvas tests", () => {
         expect(elt.disable_auto_redraw).toBeFalsy();
         elt.allow_auto_redraw(false);
         expect(elt.disable_auto_redraw).toBeTruthy();
+        var c = elt.frame_circle({r:22, x:3, y:5, color:"pink", name:"circle"})
+        c.change({"color": "brown"});
+        expect(elt.redraw_pending).toBe(true);
         elt.allow_auto_redraw(true);
         expect(elt.disable_auto_redraw).toBeFalsy();
     });
