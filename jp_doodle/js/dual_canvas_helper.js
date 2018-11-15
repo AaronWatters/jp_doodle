@@ -245,7 +245,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
             var name = info.name;
             // automatically assign name if needed
             if ((name === true) || ((!name) && (info.events))) {
-                prefix = info.shape_name || "anon";
+                var prefix = info.shape_name || "anon";
                 name = target.fresh_name(prefix);
                 info.name = name;
             }
@@ -884,7 +884,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
         // XXXX move frame parameter config to frame methods to enable frame config transitions
 
         target.rframe = function(scale_x, scale_y, translate_x, translate_y, name) {
-            result = target.vector_frame(null, null, null, name);
+            var result = target.vector_frame(null, null, null, name);
             result.set_rframe(scale_x, scale_y, translate_x, translate_y);
             return result;
             // xxxx could add special methods like model_to_pixel.
@@ -892,7 +892,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
 
         target.frame_region = function(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy, name) {
             // Convenience: map frame region into the canvas region
-            result = target.vector_frame(null, null, null, name);
+            var result = target.vector_frame(null, null, null, name);
             result.set_region(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy);
             return result;
         }

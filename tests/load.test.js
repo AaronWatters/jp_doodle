@@ -36,4 +36,22 @@ describe('testing loading jp_doodle plugins', () => {
         expect(elt.visible_canvas).toBeTruthy();
     });
 
+    it("runs the lasso example", () => {
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper.lasso_example(elt);
+        expect(elt.visible_canvas).toBeTruthy();
+    });
+
+    it("runs the frame example", () => {
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper.frame_example(elt);
+        expect(elt.visible_canvas).toBeTruthy();
+    });
+
+    it("runs the 2d canvas example", () => {
+        var elt = jQuery("<b>test</b>");
+        elt.canvas_2d_widget_helper.example(elt);
+        expect(elt.canvas_context).toBeTruthy();
+    });
+
   });
