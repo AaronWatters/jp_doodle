@@ -18,6 +18,16 @@ describe("misc dual_canvas tests", () => {
         expect(elt.event_pixel_location(1,2)).toBeTruthy();
     });
 
+    it("computes vector directions", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        var v = {x: 33, y:33};
+        expect(elt.vdirection_degrees(v)).toEqual(45);
+        var v = {x: 33, y:-33};
+        expect(elt.vdirection_degrees(v)).toEqual(-45);
+    });
+
     it("does coordinate calculations", () => {
         // just increasing coverage, not chacking closely.
         mockCanvas(window);
