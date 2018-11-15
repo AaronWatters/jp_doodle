@@ -85,6 +85,25 @@ describe("misc dual_canvas tests", () => {
         expect(elt.get_object_info("rect").frame).toBe(f);
     });
 
+    it("scrambles pseudocolors on collision", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        elt.color_counter = 47;
+        var c = elt.frame_circle({r:22, x:3, y:5, color:"pink", name:"circle"})
+        elt.color_counter = 47;
+        var r = elt.frame_rect({w:22, h:100, x:3, y:5, color:"red", name:"rect"})
+        expect(c.pseudocolor == r.pseudocolor).toBeFalsy();
+    });
+
+    it("doesn't index transparent colors", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        var color_array = [100, 100, 100, 100];
+        expect(elt.color_array_to_index(color_array)).toBe(null);
+    });
+
     it("replaces object with same name", () => {
         mockCanvas(window);
         var elt = jQuery("<b>test</b>");
@@ -94,6 +113,20 @@ describe("misc dual_canvas tests", () => {
         var r = elt.frame_rect({w:22, h:100, x:3, y:5, color:"red", name:"same"})
         expect(elt.get_object_info("same").h).toBe(100);
         expect(elt.object_list.length).toBe(1);
+    });
+
+    it("sets visibilities", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        var c = elt.frame_circle({r:22, x:3, y:5, color:"pink", name:"same"})
+        expect(elt.get_object_info("same").hide).toBeFalsy();
+        elt.set_visibilities(["same"], false);
+        // eventually check that object is not drawn here:
+        elt.draw_object_info(elt.get_object_info("same"));
+        expect(elt.get_object_info("same").hide).toBeTruthy();
+        elt.set_visibilities(["same"], true);
+        expect(elt.get_object_info("same").hide).toBeFalsy();
     });
 
     it("permits changing missing objects", () => {
