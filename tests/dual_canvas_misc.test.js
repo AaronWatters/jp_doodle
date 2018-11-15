@@ -163,12 +163,35 @@ describe("misc dual_canvas tests", () => {
         expect(c.pseudocolor == r.pseudocolor).toBeFalsy();
     });
 
+    it("resets and restores events", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        var c = elt.frame_circle({r:22, x:3, y:5, color:"pink", name:"circle"})
+        var callback = function (event) {
+            // do nothing
+        };
+        c.on("click", callback);
+        var save_event_info = elt.reset_events();
+        expect(elt.event_info.object_event_handlers).toEqual({});
+        elt.restore_events(save_event_info);
+        expect(elt.event_info.object_event_handlers["click"]["circle"]).toBe(callback);
+    });
+
     it("watches mouse move on mouseover", () => {
         mockCanvas(window);
         var elt = jQuery("<b>test</b>");
         elt.dual_canvas_helper();
         elt.watch_event("mouseover");
         expect(elt.event_info.event_types["mousemove"]).toBeTruthy();
+    });
+
+    it("focuses", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        elt.focus_canvas();
+        expect(elt.visible_canvas.canvas.attr("tabindex")).toBe("0");
     });
 
     it("supports delayed events", () => {
@@ -293,6 +316,14 @@ describe("misc dual_canvas tests", () => {
         elt.dual_canvas_helper();
         var array = elt.name_image_data("xyz_name", [4], 1, 1);
         expect(elt.visible_canvas.named_images["xyz_name"]).toBeTruthy();
+    });
+
+    it("doesn't store an image of wrong size", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        expect(() => { elt.name_image_data("xyz_name", [4, 5], 1, 1); }).toThrow();
+        expect(elt.visible_canvas.named_images["xyz_name"]).toBeFalsy();
     });
 
     it("parses a color", () => {
