@@ -17,6 +17,46 @@ describe("misc dual_canvas tests", () => {
         expect(elt.get_object_info("polly")).toBeFalsy();
     });
 
+    it("abbreviates events", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        var points = [[50,0], [40,-20], [40,-40], [30,-60]];
+        var p = elt.polygon({points:points, cx:10, cy:-10, degrees:33, color:"green",
+            fill:false, lineWidth:16, close:true, name:"polly"});
+        var callback = function(event) {
+            // nothing yet...
+        };
+        elt.abbreviated_on_canvas_event("click", callback, "polly");
+        expect(elt.event_info.object_event_handlers["click"]["polly"]).toBeTruthy();
+    });
+
+    it("can't get an unnamed object", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        expect(() => { elt.get_object_info({}); }).toThrow();
+    });
+
+    it("disables, enables redraws", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        expect(elt.disable_auto_redraw).toBeFalsy();
+        elt.allow_auto_redraw(false);
+        expect(elt.disable_auto_redraw).toBeTruthy();
+        elt.allow_auto_redraw(true);
+        expect(elt.disable_auto_redraw).toBeFalsy();
+    });
+
+    it("stores a url image", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        var array = elt.name_image_url("xyz_name", "http://example.com/x.png");
+        expect(elt.visible_canvas.named_images["xyz_name"]).toBeTruthy();
+    });
+
     it("stores a color image", () => {
         mockCanvas(window);
         var elt = jQuery("<b>test</b>");
