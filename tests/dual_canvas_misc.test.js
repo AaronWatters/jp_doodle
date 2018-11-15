@@ -96,6 +96,14 @@ describe("misc dual_canvas tests", () => {
         expect(c.pseudocolor == r.pseudocolor).toBeFalsy();
     });
 
+    it("watches mouse move on mouseover", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        elt.watch_event("mouseover");
+        expect(elt.event_info.event_types["mousemove"]).toBeTruthy();
+    });
+
     it("doesn't index transparent colors", () => {
         mockCanvas(window);
         var elt = jQuery("<b>test</b>");
