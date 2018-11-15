@@ -59,6 +59,41 @@ describe("misc dual_canvas tests", () => {
         expect(middle.x).toEqual(200);
     });
 
+    it("finds objects by position", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        var c = elt.frame_circle({r:22, x:3, y:5, color:"pink", name:"circle"});
+        var pc = c.pseudocolor_array;
+        var color_index = elt.color_array_to_index(pc);
+        // mocks
+        elt.color_index_at = function () { return color_index; };
+        var event = {};
+        expect(elt.object_name_at_position(event, 100, 300)).toBe("circle");
+    });
+
+    it("doesn't find objects if validation fails", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        var c = elt.frame_circle({r:22, x:3, y:5, color:"pink", name:"circle"});
+        var pc = c.pseudocolor_array;
+        var color_index = elt.color_array_to_index(pc);
+        // mocks
+        var found = false;
+        elt.color_index_at = function (on_canvas) { 
+            if (on_canvas === elt.invisible_canvas) {
+                found = true;
+                return color_index; 
+            }
+            // otherwise fail the validation
+            return "garbage";
+        };
+        var event = {};
+        expect(elt.object_name_at_position(event, 100, 300)).toBe(null);
+        expect(found).toBeTruthy();
+    });
+
     it("computes vector distance", () => {
         mockCanvas(window);
         var elt = jQuery("<b>test</b>");
@@ -114,6 +149,7 @@ describe("misc dual_canvas tests", () => {
         var r = f.frame_rect({w:22, h:100, x:3, y:5, color:"red", name:"rect"})
         expect(elt.get_object_info("circle").frame).toBe(f);
         expect(elt.get_object_info("rect").frame).toBe(f);
+        expect(f.active_region(true)).toBeTruthy();
     });
 
     it("scrambles pseudocolors on collision", () => {
