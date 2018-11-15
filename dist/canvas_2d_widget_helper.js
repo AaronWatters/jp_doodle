@@ -266,7 +266,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             // If background is provided, draw a background rectangle
             if (s.background) {
-                background_info = $.extend({}, s);
+                var background_info = $.extend({}, s);
                 background_info.color = s.background;
                 s.draw_mask(target, background_info);
             }

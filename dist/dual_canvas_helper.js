@@ -1330,8 +1330,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
             var top = left;
             var bottom = right;
 
-            slider_height = 20;
-            column_width = 0.25;
+            var slider_height = 20;
+            var column_width = 0.25;
 
             // Miscellaneous frame for positioning random elements
             var misc_frame = element.frame_region(settings.x, settings.y, settings.x + side, settings.y + side, -10, -10, side + 20, side + 20);
