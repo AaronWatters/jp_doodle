@@ -28,6 +28,15 @@ describe("misc dual_canvas tests", () => {
         expect(elt.vdirection_degrees(v)).toEqual(-45);
     });
 
+    it("computes vector distance", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        var v = {x: 33, y:33};
+        var v2 = {x: 36, y:37};
+        expect(elt.vdistance(v, v2)).toEqual(5);
+    });
+
     it("does coordinate calculations", () => {
         // just increasing coverage, not chacking closely.
         mockCanvas(window);
