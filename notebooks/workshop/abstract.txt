@@ -1,0 +1,19 @@
+
+An introduction to building visualizations using dual canvases
+
+by Aaron Watters
+
+This presentation consists of a collection of Jupyter notebooks
+which introduce dual canvases and how to build interactive visualizations
+with dual canvases.  The presentation will focus on using Python in
+Jupyter notebooks to build visualizations (even though it is also possible to use Javascript
+in other contexts).
+
+It includes:
+
+- A summary of background information from the Big Bang to the creation of dual canvases.
+- An explanation of how to install the components needed to develop the visualizations.
+- Some advanced examples to show what is possible before we dive into the grubby details.
+- A walk through of dual canvas features.
+- A deep dive into a few Python based visualization implementations.
+
