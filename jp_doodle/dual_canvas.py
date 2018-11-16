@@ -362,6 +362,7 @@ class DualCanvasWidget(jp_proxy_widget.JSProxyWidget, CanvasOperationsMixin):
             config["height"] = height
         if width is not None:
             config["width"] = width
+        self.canvas_config = config
         # Standard initialization
         self.js_init("""
             element.empty();
@@ -400,6 +401,9 @@ class DualCanvasWidget(jp_proxy_widget.JSProxyWidget, CanvasOperationsMixin):
             if after:
                 after()
         self.pixels_array_async(save_callback, x, y, w, h)
+
+    def in_dialog(self):
+        self.element.dialog()
 
 class FrameInterface(CanvasOperationsMixin):
 
