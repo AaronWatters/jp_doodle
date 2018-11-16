@@ -34,6 +34,15 @@ describe("misc dual_canvas tests", () => {
         expect(elt.vdirection_degrees(v)).toEqual(-45);
     });
 
+    it("draws a color chooser", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        elt.color_chooser();
+        var v = {x: 33, y:33};
+        expect(elt.chosen_color).toBe(null);
+    });
+
     it("interpolates mappings", () => {
         mockCanvas(window);
         var elt = jQuery("<b>test</b>");
@@ -59,6 +68,20 @@ describe("misc dual_canvas tests", () => {
         expect(before).toEqual(starting);
         expect(after).toEqual(ending);
         expect(middle.x).toEqual(200);
+    });
+
+    it("doesn't interpolate trivial mappings", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        var starting = {
+            x: 100, y:200,
+        };
+        var ending = {
+            x: 100, y:200,
+        };
+        var interpolator = elt.interpolate_mapping(starting, ending);
+        expect(interpolator).toBe(null);
     });
 
     it("finds objects by position", () => {
