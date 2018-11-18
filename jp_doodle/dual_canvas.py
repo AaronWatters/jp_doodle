@@ -276,8 +276,10 @@ class CanvasOperationsMixin(object):
         # return an interface wrapper for the named frame
         return FrameInterface(self, name)
 
-    def lower_left_axes(self, min_x=None, min_y=None, max_x=None, max_y=None, **other_args):
-        s = clean_dict(min_x=min_x, min_y=min_y, max_x=max_x, max_y=max_y)
+    def lower_left_axes(self, min_x=None, min_y=None, max_x=None, max_y=None, 
+        max_tick_count=None, **other_args):
+        s = clean_dict(min_x=min_x, min_y=min_y, max_x=max_x, max_y=max_y, 
+                max_tick_count=max_tick_count)
         s.update(other_args)
         #self.call_method("lower_left_axes", s)
         self.element.lower_left_axes(s)
