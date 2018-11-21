@@ -44,8 +44,13 @@
     "canvas",
     "animation",
     "visualization",
+    "event",
+    "scientific",
     "jquery",
-    "plugin"
+    "plugin",
+    "javascript",
+    "browser",
+    "library"
   ],
   "author": "Aaron Watters",
   "license": "ISC",
