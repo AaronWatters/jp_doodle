@@ -1,4 +1,7 @@
 
+// Note: this demo html packaging does not work with jquery-ui
+// because there is some issue with using jquery-ui with browserify.
+
 if (!global.jQuery) {
   global.jQuery = require('jquery');
 }

@@ -12,6 +12,9 @@
     "jquery": "^3.0.0",
     "jquery-ui": "^1.12.1"
   },
+  "style": [
+    "./node_modules/jquery-ui/themes/base/all.css"
+  ],
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-eslint": "^8.0.3",
