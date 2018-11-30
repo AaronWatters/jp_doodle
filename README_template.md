@@ -15,6 +15,13 @@ concept using `jp_doodle dual_canvas`.
 
 <img src="array.png" width="70%"/>
 
+Please click the <a href="https://youtu.be/nyuCqlTvf0c">youtube link</a> to view
+a presentation about dual canvases and related technologies.
+
+<a href="https://youtu.be/nyuCqlTvf0c">
+<img src="https://i1.ytimg.com/vi/nyuCqlTvf0c/hqdefault.jpg" width="200"/>
+</a>
+
 The `jp_doodle` package provides `jQuery` plugins which make it easy to build
 interactive visualizations in Javascript.  The package also provides Jupyter widget
 interfaces to make it easy to build visualizations for Jupyter notebooks.

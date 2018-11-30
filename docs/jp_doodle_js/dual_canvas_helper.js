@@ -245,7 +245,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
             var name = info.name;
             // automatically assign name if needed
             if ((name === true) || ((!name) && (info.events))) {
-                prefix = info.shape_name || "anon";
+                var prefix = info.shape_name || "anon";
                 name = target.fresh_name(prefix);
                 info.name = name;
             }
@@ -318,7 +318,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     target.request_redraw();
                 }
             } else {
-                console.warn("change: no such element with name " + name);
+                console.warn("change: no such element with name " + name_or_info);
             }
         };
         
@@ -884,7 +884,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
         // XXXX move frame parameter config to frame methods to enable frame config transitions
 
         target.rframe = function(scale_x, scale_y, translate_x, translate_y, name) {
-            result = target.vector_frame(null, null, null, name);
+            var result = target.vector_frame(null, null, null, name);
             result.set_rframe(scale_x, scale_y, translate_x, translate_y);
             return result;
             // xxxx could add special methods like model_to_pixel.
@@ -892,7 +892,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
 
         target.frame_region = function(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy, name) {
             // Convenience: map frame region into the canvas region
-            result = target.vector_frame(null, null, null, name);
+            var result = target.vector_frame(null, null, null, name);
             result.set_region(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy);
             return result;
         }
@@ -987,7 +987,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
                         // for consistency scale alpha to 255
                         numbers[3] = numbers[3] * 255;
                         for (var i=0; i<4; i++) {
-                            if ((numbers[i]<0) || (numbers[i]>256)) {
+                            var n = numbers[i];
+                            if (isNaN(n) || (n<0) || (n>256)) {
                                 ok = false;
                             }
                         }
@@ -999,6 +1000,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     console.warn("error parsing rgba format " + color_string + " " + err);
                 }
                 console.warn("failed parsing rgba format " + color_string);
+                return null;
             }
             var bbox = target.model_view_box();
             // draw a test rectangle of that color
@@ -1219,7 +1221,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 if (lmd >= 1) {
                     return new_points;
                 }
-                result = []
+                var result = []
                 for (var i=0; i<new_int.length; i++) {
                     var new_p = new_int[i];
                     var old_p = old_int[i];
@@ -1339,8 +1341,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
             var top = left;
             var bottom = right;
             
-            slider_height = 20;
-            column_width = 0.25;
+            var slider_height = 20;
+            var column_width = 0.25;
 
             // Miscellaneous frame for positioning random elements
             var misc_frame = element.frame_region(
