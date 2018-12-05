@@ -343,7 +343,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var nbins = settings.nbins;
                 var delta = (max_value - min_value) * (1.0 / nbins);
                 var get_bins = function(data) {
-                    result = [];
+                    var result = [];
                     for (var i=0; i<nbins; i++) {
                         result.push(0);
                     }
