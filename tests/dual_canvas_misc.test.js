@@ -198,9 +198,10 @@ describe("misc dual_canvas tests", () => {
         };
         c.on("click", callback);
         var save_event_info = elt.reset_events();
-        expect(elt.event_info.object_event_handlers).toEqual({});
+        expect(elt.event_info.name2type2handler).toEqual({});
         elt.restore_events(save_event_info);
-        expect(elt.event_info.object_event_handlers["click"]["circle"]).toBe(callback);
+        //expect(elt.event_info.object_event_handlers["click"]["circle"]).toBe(callback);
+        expect(elt.event_info.name2type2handler["circle"]["click"]).toBe(callback);
     });
 
     it("watches mouse move on mouseover", () => {
@@ -288,7 +289,8 @@ describe("misc dual_canvas tests", () => {
             // nothing yet...
         };
         elt.abbreviated_on_canvas_event("click", callback, "polly");
-        expect(elt.event_info.object_event_handlers["click"]["polly"]).toBeTruthy();
+        //expect(elt.event_info.object_event_handlers["click"]["polly"]).toBeTruthy();
+        expect(elt.event_info.name2type2handler["polly"]["click"]).toBeTruthy();
     });
 
     it("can't get an unnamed object", () => {
