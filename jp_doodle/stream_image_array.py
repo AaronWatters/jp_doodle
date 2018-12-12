@@ -87,7 +87,15 @@ class VolumeImageViewer:
 
     def __init__(self, volume_image, on_canvas, x0=0, y0=0, spacer=50, di=1, dj=1, dk=1, draw_delay=0.3):
         self.draw_delay = draw_delay
-        (self.i_max, self.j_max, self.k_max) = volume_image.shape
+        shape = volume_image.shape
+        if len(shape) == 3:
+            (self.i_max, self.j_max, self.k_max) = volume_image.shape
+            self.channels = 1
+        elif len(shape) == 4:
+            (self.i_max, self.j_max, self.k_max, self.channels) = volume_image.shape
+            assert self.channels in (3, 4), "color channels must be 3 or 4: " + repr(shape)
+        else:
+            raise ValueError("bad volume array shape " + repr(shape))
         self.image = volume_image
         self.canvas = on_canvas
         self.x0 = x0
@@ -153,7 +161,7 @@ class VolumeImageViewer:
             factor = 1.0 / (M - m)
             # B is scaled in [0..1]
             B = (A - m) * factor
-            (nrows, ncols) = B.shape
+            (nrows, ncols) = B.shape[:2]
             #B = B.reshape(B.shape + (1,))
             #C = B * blue + (1.0 - B) * yellow
             C = 255 * B
