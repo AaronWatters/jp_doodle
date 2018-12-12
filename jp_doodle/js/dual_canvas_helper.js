@@ -364,6 +364,9 @@ XXXXX clean up events for forgotten objects
                         if (target.active_transitions[name]) {
                             delete target.active_transitions[name];
                         }
+                        if (target.event_info.name2type2handler[name]) {
+                            delete target.event_info.name2type2handler[name]
+                        }
                     }
                     if (object_info.is_frame) {
                         object_info.clear_frame();

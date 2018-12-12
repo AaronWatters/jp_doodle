@@ -148,8 +148,11 @@ describe("misc dual_canvas tests", () => {
         expect(elt.get_object_info("polly").color).toBe("green");
         p.change({color: "yellow"});
         expect(elt.get_object_info("polly").color).toBe("yellow");
+        p.on("click", function () {});
+        expect(elt.event_info.name2type2handler["polly"]).toBeTruthy();
         p.forget();
         expect(elt.get_object_info("polly")).toBeFalsy();
+        expect(elt.event_info.name2type2handler["polly"]).toBeFalsy();
     });
 
     it("resets", () => {
