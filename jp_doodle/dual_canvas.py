@@ -416,6 +416,9 @@ class FrameInterface(CanvasOperationsMixin):
         self.attribute_name = attribute_name
         self.element = self.from_widget.element[self.attribute_name]
 
+    def hide(self, hidden=True):
+        self.element.change({"hide": True})
+
     def get_canvas(self):
         return self.from_widget
 
