@@ -772,9 +772,9 @@ XXXXX clean up events for forgotten objects
                         object_handler = n2t2h[object_name][event_type];
                     }
                     // otherwise look for a handler bound to the frame
-                    if ((!object_handler) && (e.object_info.frame)) {
+                    if ((!object_handler) && (e.object_info) && (e.object_info.frame)) {
                         var fname = e.object_info.frame.name;
-                        if (n2t2h[fname][event_type]) {
+                        if ((n2t2h[fname]) && (n2t2h[fname][event_type])) {
                             object_handler = n2t2h[event_type];
                         }
                     }
