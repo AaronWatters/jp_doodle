@@ -10,6 +10,7 @@ Uses canvas_2d_widget_helper
 Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
 XXXXX target.shaded_objects -- need to test for false hits!
+XXXXX clean up events for forgotten objects
 
 */
 
@@ -363,6 +364,9 @@ XXXXX target.shaded_objects -- need to test for false hits!
                         if (target.active_transitions[name]) {
                             delete target.active_transitions[name];
                         }
+                        if (target.event_info.name2type2handler[name]) {
+                            delete target.event_info.name2type2handler[name]
+                        }
                     }
                     if (object_info.is_frame) {
                         object_info.clear_frame();
@@ -569,9 +573,9 @@ XXXXX target.shaded_objects -- need to test for false hits!
             if (!target.event_info.event_types[event_type]) {
                 target.visible_canvas.canvas.on(event_type, target.generic_event_handler);
                 target.event_info.event_types[event_type] = true;
-                if (!(target.event_info.object_event_handlers[event_type])) {
-                    target.event_info.object_event_handlers[event_type] = {};
-                }
+                //if (!(target.event_info.object_event_handlers[event_type])) {
+                //    target.event_info.object_event_handlers[event_type] = {};
+                //}
             }
             // mouseover and mouseout events are emulated using mousemove
             if ((event_type == "mouseover") || (event_type == "mouseout")) {
@@ -654,7 +658,12 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     //var key = "on_" + event_type;
                     target.watch_event(event_type);
                     //object_info[key] = callback;
-                    target.event_info.object_event_handlers[event_type][for_name] = callback;
+                    //target.event_info.object_event_handlers[event_type][for_name] = callback;
+                    var n2t2h = target.event_info.name2type2handler;
+                    if (!n2t2h[for_name]) {
+                        n2t2h[for_name] = {};
+                    }
+                    n2t2h[for_name][event_type] = callback;
                 } else {
                     console.warn("in on_canvas_event no object found with name: " + for_name);
                 }
@@ -669,11 +678,17 @@ XXXXX target.shaded_objects -- need to test for false hits!
             if (for_name_or_info) {
                 var object_info =  target.get_object_info(for_name_or_info);
                 var for_name = object_info.name;
-                if ((object_info) && (target.event_info.object_event_handlers[event_type]) &&
-                        (target.event_info.object_event_handlers[event_type][for_name])) {
-                    delete target.event_info.object_event_handlers[event_type][for_name];
+                //if ((object_info) && (target.event_info.object_event_handlers[event_type]) &&
+                //        (target.event_info.object_event_handlers[event_type][for_name])) {
+                //    delete target.event_info.object_event_handlers[event_type][for_name];
+                //} else {
+                //    console.warn("in off_canvas_event no object found with name: " + for_name);
+                //}
+                var n2t2h = target.event_info.name2type2handler;
+                if ((object_info) && (n2t2h[for_name]) && (n2t2h[for_name][event_type])) {
+                    delete n2t2h[for_name][event_type];
                 } else {
-                    console.warn("in off_canvas_event no object found with name: " + for_name);
+                    console.warn("in off_canvas_event no bound object found with name: " + for_name);
                 }
             } else {
                 target.event_info.default_event_handlers[event_type] = null;
@@ -736,18 +751,31 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     default_handler = target.event_info.default_event_handlers[event_type];
                 }
                 if ((e.canvas_name) && (!target.disable_element_events)) {
+                    var object_name = e.canvas_name
                     e.object_info = target.name_to_object_info[e.canvas_name];
                     // if the object has a frame, override the reference frame
                     if ((e.object_info) && (e.object_info.frame)) {
                         reference_frame = e.object_info.frame;
                     }
-                    var object_handlers = target.event_info.object_event_handlers[event_type];
-                    if ((e.object_info) && (object_handlers)) {
-                        // look for a handler specific to this object
-                        object_handler = object_handlers[e.canvas_name];
-                        if ((!object_handler) && (e.object_info.frame)) {
-                            // otherwise, look for a handler specific to this frame
-                            object_handler = object_handlers[e.object_info.frame.name];
+                    //var object_handlers = target.event_info.object_event_handlers[event_type];
+                    //if ((e.object_info) && (object_handlers)) {
+                    //    // look for a handler specific to this object
+                    //    object_handler = object_handlers[e.canvas_name];
+                    //    if ((!object_handler) && (e.object_info.frame)) {
+                    //        // otherwise, look for a handler specific to this frame
+                    //        object_handler = object_handlers[e.object_info.frame.name];
+                    //    }
+                    //}
+                    var n2t2h = target.event_info.name2type2handler;
+                    // look for a event handler specific to this name
+                    if ((n2t2h[object_name]) && (n2t2h[object_name][event_type])) {
+                        object_handler = n2t2h[object_name][event_type];
+                    }
+                    // otherwise look for a handler bound to the frame
+                    if ((!object_handler) && (e.object_info) && (e.object_info.frame)) {
+                        var fname = e.object_info.frame.name;
+                        if ((n2t2h[fname]) && (n2t2h[fname][event_type])) {
+                            object_handler = n2t2h[event_type];
                         }
                     }
                 }
@@ -793,7 +821,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
             target.event_info = {
                 event_types: {},   // Is event enabled? type --> boolean.
                 default_event_handlers: {},  // type --> global event handler.
-                object_event_handlers: {},  // type --> (name --> handler)
+                //object_event_handlers: {},  // type --> (name --> handler)
+                name2type2handler: {},  // name --> (type --> handler) for events bound to an object by event
             };
             // turn off object events and defaults
             //target.disable_element_events = true;
