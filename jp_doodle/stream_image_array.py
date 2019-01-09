@@ -83,9 +83,27 @@ class StreamImageArray(jp_proxy_widget.JSProxyWidget):
             raise ValueError("array shape must be rows x columns or rows x columns x colors " + repr(shape))
         return (nrows, ncols, coerced)
 
+def showVolume(array, width, height, draw_delay=0.01, di=1, dj=1, dk=1):
+    c = dual_canvas.DualCanvasWidget(width, height)
+    S = VolumeImageViewer(array, c, draw_delay=draw_delay, di=di, dj=dj, dk=dk)
+    c.fit()
+    return c
+
+def showImage(array, width, height, draw_delay=0.01, di=1, dj=1):
+    return showVolume(array, width, height, draw_delay, di=di, dj=dj)
+
 class VolumeImageViewer:
 
     def __init__(self, volume_image, on_canvas, x0=0, y0=0, spacer=50, di=1, dj=1, dk=1, draw_delay=0.3):
+        # automatically convert 2d image to a flat volume
+        shape = volume_image.shape
+        if len(shape) == 2:
+            # 2 d greyscale
+            volume_image = volume_image.reshape(shape + (1,))
+        elif len(shape) == 3 and shape[-1] in (3, 4):
+            # 2 d color
+            new_shape = shape[:2] + [1, shape[-1]]
+            volume_image = volume_image.reshape(new_shape)
         self.draw_delay = draw_delay
         shape = volume_image.shape
         if len(shape) == 3:
@@ -133,9 +151,15 @@ class VolumeImageViewer:
         self.i = self.i_max // 2
         self.j = self.j_max // 2
         self.k = self.k_max // 2
+        if self.k_max < 2:
+            # single image 2d case
+            self.ll_frame.hide()
+            self.ur_frame.hide()
+        self.axis_to_slice = {}
         self.draw()
 
     def draw(self):
+        axis_to_slice = self.axis_to_slice
         self.draw_scheduled = False
         canvas = self.canvas
         self.ul_frame.reset_frame()
@@ -153,7 +177,7 @@ class VolumeImageViewer:
         blue = [0,0,255,255]
         yellow = [255,255,0,255]
         for axis in range(3):
-            (frame, A, (y, x, h, w)) = self.get_frame_and_slice(axis)
+            (frame, A, (y, x, h, w, z)) = self.get_frame_and_slice(axis)
             m = A.min()
             M = A.max()
             if (M - m) < 1:
@@ -166,7 +190,9 @@ class VolumeImageViewer:
             #C = B * blue + (1.0 - B) * yellow
             C = 255 * B
             name = "image_" + repr(axis)
-            canvas.name_image_array(name, C, low_color=yellow, high_color=blue)
+            # change the image only if the slice has changed
+            if axis_to_slice.get(axis) != z:
+                canvas.name_image_array(name, C, low_color=yellow, high_color=blue)
             #frame.reset_frame()
             frame.named_image(name, 0, nrows, w, h)
             lw = 5
@@ -177,6 +203,7 @@ class VolumeImageViewer:
             frame.line(0, y, x-5, y, color=cl, lineWidth=lw)
             frame.frame_rect(x, y, 20, 20, color=cl, dx=-10, dy=-10, fill=False, lineWidth=lw)
             #frame.lower_left_axes(min_x=0, max_x=200, min_y=0, max_y=200)
+            axis_to_slice[axis] = z
         self.ul_frame.text(10, -10, repr((self.i, self.j, self.k, self.image[self.i, self.j, self.k])))
         self.feedback = self.ur_frame.text(10, -10, "drawn", name=True)
 
@@ -224,12 +251,12 @@ class VolumeImageViewer:
             return max(0, min(index, maximum - 1))
         if axis == 0:
             self.i = clamp(self.i, self.i_max)
-            return (self.ur_frame, self.image[self.i, :, :], (self.j, self.k, self.jdj, self.kdk))
+            return (self.ur_frame, self.image[self.i, :, :], (self.j, self.k, self.jdj, self.kdk, self.i))
         elif axis == 1:
             self.j = clamp(self.j, self.j_max)
-            return (self.ll_frame, self.image[:, self.j, :], (self.i, self.k, self.idi, self.kdk))
+            return (self.ll_frame, self.image[:, self.j, :], (self.i, self.k, self.idi, self.kdk, self.j))
         elif axis == 2:
             self.k = clamp(self.k, self.k_max)
-            return (self.ul_frame, self.image[:, :, self.k], (self.i, self.j, self.idi, self.jdj))
+            return (self.ul_frame, self.image[:, :, self.k], (self.i, self.j, self.idi, self.jdj, self.k))
         else:
             raise ValueError("bad axis " + repr(axis))
