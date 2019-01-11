@@ -48,6 +48,31 @@ describe('testing loading jp_doodle plugins', () => {
         expect(elt.visible_canvas).toBeTruthy();
     });
 
+    it("serializes and deserializes the frame example", () => {
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper.frame_example(elt);
+        var json = elt.json_serialize();
+        var other = jQuery("<div/>").appendTo(elt);
+        other.dual_canvas_json(json);
+        expect(other.visible_canvas).toBeTruthy();
+        // look for some objects
+        var some_frame = null;
+        var some_text = null;
+        var objects = other.object_list;
+        for (var i=0; i<objects.length; i++) {
+            var obj = objects[i];
+            var shape_name = obj.shape_name;
+            if (shape_name == "frame") {
+                some_frame = obj;
+            }
+            if (shape_name == "text") {
+                some_text = obj;
+            }
+        }
+        expect(some_frame).toBeTruthy();
+        expect(some_text).toBeTruthy();
+    });
+
     it("runs the 2d canvas example", () => {
         var elt = jQuery("<b>test</b>");
         elt.canvas_2d_widget_helper.example(elt);
