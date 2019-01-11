@@ -16,6 +16,35 @@ XXXXX clean up events for forgotten objects
 
 (function($) {
 
+    $.fn.dual_canvas_json = function (json) {
+        // json deserializer...
+        var target = this;
+        var canvas_options = {};
+        for (var attr in json) {
+            if (attr.startsWith('canvas_')) {
+                var suffix = attr.substring(7);
+                canvas_options[suffix] = json[attr];
+            }
+        }
+        // initialize the dual canvas
+        target.dual_canvas_helper(canvas_options);
+        // install all the images
+        var image_urls = json.image_urls;
+        for (var name in image_urls) {
+            var url = image_urls[name];
+            target.name_image_url(name, url);
+        }
+        var image_data = json.image_data;
+        for (var name in image_data) {
+            var d = image_data[name];
+            target.name_image_data(name, d.data_array, d.width, d.height, d.low_color, d.high_color);
+        }
+        // create all objects (and objects in frames recursively)
+        target.deserialize_json_objects(json.object_list);
+        target.request_redraw();  // needed?
+        return target;
+    };
+
     $.fn.dual_canvas_helper = function (options) {
         var target = this;
         var settings = $.extend({
@@ -75,6 +104,8 @@ XXXXX clean up events for forgotten objects
             target.name_to_object_info = {};
             target.color_index_to_name = {};
             target.active_transitions = {};
+            target.image_urls = {};
+            target.image_data = {};
             //target.event_types = {};
             //target.default_event_handlers = {};
             target.reset_events();
@@ -82,6 +113,41 @@ XXXXX clean up events for forgotten objects
             target.invisible_canvas.clear_canvas();
             // no need to clear the test_canvas now
         };
+
+        target.local_json_data = function () {
+            // top level information for serialization
+            var result = {};
+            result.shape_name = "canvas";
+            for (var name in target) {
+                if (name.startsWith('canvas_') && (name != 'canvas_container')) {
+                    result[name] = target[name];
+                }
+            }
+            // convert data arrays to JSON compatible arrays in place
+            var image_data = target.image_data;
+            for (var name in image_data) {
+                var description = image_data[name];
+                var data_array = description.data_array;
+                if (!Array.isArray(data_array)) {
+                    var a = [];
+                    for (var i=0; i<data_array.length; i++) {
+                        a.push(data_array[i]);
+                    }
+                    description.data_array = a;
+                }
+            }
+            result.image_data = image_data;
+            result.image_urls = target.image_urls;
+            result.name_counter = target.name_counter;
+            return result;
+        };
+
+        target.deserialize_frame = function(desc) {
+            var frame = target.vector_frame(desc.x_vector, desc.y_vector, desc.xy_offset, desc.name);
+            frame.hide = desc.hide;
+            frame.deserialize_json_objects(desc.object_list);
+            return frame;
+        }
 
         target.active_region = function (default_to_view_box) {
             // This is only defined if stats have been previously computed
@@ -501,7 +567,10 @@ XXXXX clean up events for forgotten objects
         assign_shape_factory("polygon");
         assign_shape_factory("named_image");
 
+        target.image_urls = {};
+
         target.name_image_url = function(image_name, url, no_redraw) {
+            target.image_urls[image_name] = url;
             // load an image url
             var the_image = new Image();
             the_image.src = url;
@@ -514,11 +583,20 @@ XXXXX clean up events for forgotten objects
             }
         };
 
+        target.image_data = {};
+
         target.name_image_data = function(image_name, data_array, width, height, low_color, high_color) {
             // Create a named image from byte RGBA data.
             // https://stackoverflow.com/questions/21300921/how-to-convert-byte-array-to-image-in-javascript/21301006#21301006
             // Data must be linearized rgba values of the right size
             // low color and high color are interpolation points for grey scale images
+            target.image_data[image_name] = {
+                data_array: data_array,
+                width: width,
+                height: height,
+                low_color: low_color || null,
+                high_color: high_color || null,
+            }
             var wh = width * height;
             var size = wh * 4;
             var length = data_array.length;
@@ -1304,6 +1382,17 @@ XXXXX clean up events for forgotten objects
         return target;
     };
 
+    $.fn.dual_canvas_helper.json_attributes = {
+        rect: ("close color dx dy degrees fill h w x y lineWidth").split(" "),
+        frame_rect: ("close color dx dy degrees fill h w x y lineWidth").split(" "),
+        circle: ("arc color fill start x y r lineWidth").split(" "),
+        frame_circle: ("arc color fill start x y r lineWidth").split(" "),
+        line: ("color x1 y1 x2 y2 lineWidth").split(" "),
+        text: ("align background color font text valign x y").split(" "),
+        named_image: ("image_name h w x y degrees sx sy sWidth sHeight dx dy").split(" "),
+        polygon: ("close color cx cy dx dy degrees fill points lineWidth").split(" "),
+    }
+
     $.fn.dual_canvas_helper.add_geometry_logic = function (target) {
         // shared functionality for frames and dual canvases
 
@@ -1342,6 +1431,56 @@ XXXXX clean up events for forgotten objects
                 }
             }
         };
+
+        target.json_serialize = function () {
+            var result = target.local_json_data();
+            var object_list = target.object_list;
+            var objects_json = [];
+            var json_attributes = $.fn.dual_canvas_helper.json_attributes;
+            for (var i=0; i<object_list.length; i++) {
+                var description = object_list[i];
+                var object_json = {};
+                var shape_name = description.shape_name;
+                var atts = json_attributes[shape_name];
+                if (shape_name == "frame") {
+                    object_json = description.json_serialize();
+                    objects_json.push(object_json);
+                } else if ((shape_name) && (atts)) {
+                    object_json.shape_name = shape_name;
+                    object_json.hide = description.hide || false;
+                    object_json.name = description.name || null;
+                    if ((description.events) || (description.events===false)) {
+                        object_json.events = description.events;
+                    }
+                    for (var j=0; j<atts.length; j++) {
+                        var att = atts[j];
+                        object_json[att] = description[att];  // xxxx undefines?
+                    }
+                    objects_json.push(object_json);
+                } else {
+                    console.warn("unknown shape name: " + shape_name);
+                }
+            }
+            result.object_list = objects_json;
+            return result;
+        };
+
+        target.deserialize_json_objects = function (object_list) {
+            for (var i=0; i<object_list.length; i++) {
+                var desc = object_list[i];
+                var shape_name = desc.shape_name;
+                if (shape_name == "frame") {
+                    target.deserialize_frame(desc);
+                } else {
+                    var method = target[shape_name];
+                    if (method) {
+                        method(desc);
+                    } else {
+                        console.error("Unknown shape name: " + shape_name);
+                    }
+                }
+            }
+        }
 
         target.color_chooser = function(config, element) {
             var settings = $.extend({
@@ -1913,6 +2052,18 @@ XXXXX clean up events for forgotten objects
             events: true,   // by default support events
             shape_name: "frame",
         };
+
+        frame.local_json_data = function () {
+            // top level information for serialization
+            var result = {};
+            result.shape_name = frame.shape_name;
+            result.y_vector = frame.y_vector;
+            result.x_vector = frame.x_vector;
+            result.xy_offset = frame.xy_offset;
+            result.name = frame.name || null;
+            result.hide = frame.hide || false;
+            return result;
+        }
 
         // (Re)set operations
         frame.set_rframe = function(scale_x, scale_y, translate_x, translate_y) {
