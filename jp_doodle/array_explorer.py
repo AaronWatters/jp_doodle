@@ -40,6 +40,7 @@ def display_array(to_canvas_widget, row_names, col_names, data, config=None):
                 "array": data.tolist(),
                 "column_names": col_names,
                 "row_names": row_names,
+                "name_limit": 15,
             }
     if config:
         array_config.update(config)
