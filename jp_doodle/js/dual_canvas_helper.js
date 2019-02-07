@@ -870,11 +870,13 @@ XXXXX clean up events for forgotten objects
                 target.last_canvas_event = e;
             };
             // "normal" event handling
-            process_event(e);
+            //process_event(e);
             // mouseover and mouseout simulation:
-            if ((last_event) && (e.type == "mousemove") && (last_event.canvas_name != e.canvas_name)) {
+            //console.log("check emulations: ", [e.type, e.canvas_name,  ((!last_event) || last_event.canvas_name)]); //debug only.
+            //if ((last_event) && (e.type == "mousemove") && (last_event.canvas_name != e.canvas_name)) {
+            if (e.type == "mousemove") {
                 //console.log("doing transition emulations " + last_event.canvas_name)
-                if (last_event.canvas_name) {
+                if ((last_event) && (last_event.canvas_name) && ((!e.canvas_name) || (e.canvas_name!=last_event.canvas_name))) {
                     //console.log("emulating mouseout");
                     var mouseout_event = $.extend({}, e);
                     mouseout_event.type = "mouseout";
@@ -883,13 +885,15 @@ XXXXX clean up events for forgotten objects
                     // attempt a mouseout with no default
                     process_event(mouseout_event);
                 }
-                if (e.canvas_name) {
+                if ((e.canvas_name) && ((!last_event) || (!last_event.canvas_name) || (last_event.canvas_name!=e.canvas_name))) {
                     var mouseover_event = $.extend({}, e);
                     mouseover_event.type = "mouseover"
                     // attempt a mouseover with no default
                     process_event(mouseover_event, true);
                 }
             }
+            // "normal" event handling -- after emulations!
+            process_event(e);
             // do not allow event to propagate
             e.stopPropagation();
         };
