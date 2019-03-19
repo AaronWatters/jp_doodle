@@ -310,6 +310,12 @@ class CanvasOperationsMixin(object):
         """
         return DisableRedrawContextManager(self.get_canvas())
 
+    def deserialize_json_objects(self, object_list):
+        """
+        Install serialized json objects into the canvas or frame.
+        """
+        return self.element.deserialize_json_objects(object_list)
+
 
 def clean_dict(**kwargs):
     "Like dict but with no None values"
@@ -348,28 +354,9 @@ class DisableRedrawContextManager(object):
             canvas.flush()
 
 
-class DualCanvasWidget(jp_proxy_widget.JSProxyWidget, CanvasOperationsMixin):
-    
-    "Wrapper for dual_canvas jQuery extension object."
+class TopLevelCanvasMixin(CanvasOperationsMixin):
 
-    default_config = dict(width=400, height=400)
-    
-    def __init__(self, width=None, height=None, config=None, *pargs, **kwargs):
-        "Create a canvas drawing area widget."
-        super(DualCanvasWidget, self).__init__(*pargs, **kwargs)
-        load_requirements(self)
-        if config is None:
-            config = self.default_config.copy()
-        if height is not None:
-            config["height"] = height
-        if width is not None:
-            config["width"] = width
-        self.canvas_config = config
-        # Standard initialization
-        self.js_init("""
-            element.empty();
-            element.dual_canvas_helper(config);
-            """, config=config)
+    "Common operations for top level canvas objects."
 
     def get_canvas(self):
         return self
@@ -406,6 +393,58 @@ class DualCanvasWidget(jp_proxy_widget.JSProxyWidget, CanvasOperationsMixin):
 
     def in_dialog(self):
         self.element.dialog()
+
+    def json_serialization_async(self, callback):
+        """
+        Get a JSON compatible serialization of the current canvas object configuration
+        asynchronously delivered to a callback function at some later time.
+        Note that image URLs are not converted to image arrays and relative URLs will not be portable.
+        """
+        self.js_init("""
+            var json = element.json_serialize();
+            callback(json);
+        """, callback=callback)
+
+
+class DualCanvasWidget(jp_proxy_widget.JSProxyWidget, TopLevelCanvasMixin):
+    
+    "Wrapper for dual_canvas jQuery extension object."
+
+    default_config = dict(width=400, height=400)
+    
+    def __init__(self, width=None, height=None, config=None, *pargs, **kwargs):
+        "Create a canvas drawing area widget."
+        super(DualCanvasWidget, self).__init__(*pargs, **kwargs)
+        load_requirements(self)
+        if config is None:
+            config = self.default_config.copy()
+        if height is not None:
+            config["height"] = height
+        if width is not None:
+            config["width"] = width
+        self.canvas_config = config
+        # Standard initialization
+        self.js_init("""
+            element.empty();
+            element.dual_canvas_helper(config);
+            """, config=config)
+
+
+class JSONDualCanvasWidget(jp_proxy_widget.JSProxyWidget, TopLevelCanvasMixin):
+
+    "Dual canvas widget created from JSON serialization"
+
+    def __init__(self, json_serialization, *pargs, **kwargs):
+        "Create a canvas drawing area widget."
+        super(JSONDualCanvasWidget, self).__init__(*pargs, **kwargs)
+        load_requirements(self)
+        self.initial_json = json_serialization
+        # Standard initialization
+        self.js_init("""
+            element.empty();
+            element.dual_canvas_json(json_serialization);
+            """, json_serialization=json_serialization)
+
 
 class FrameInterface(CanvasOperationsMixin):
 
