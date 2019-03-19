@@ -249,11 +249,11 @@ XXXXX clean up events for forgotten objects
                     if (object_info.is_frame) {
                         var frame = object_info;
                         frame.redraw_frame();
-                        if (frame.is_empty()) {
+                        //if (frame.is_empty()) {
                             // forget empty frames
                             //console.log("forgetting empty frame " + object_info.name)
-                            object_index = null;
-                        }
+                            //object_index = null;
+                        //}
                     } else {
                         // only draw objects with no name or with known names
                         //var name = object_info.name;
