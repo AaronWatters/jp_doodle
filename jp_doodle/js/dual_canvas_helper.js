@@ -828,7 +828,8 @@ XXXXX clean up events for forgotten objects
                 if (!no_default) {
                     default_handler = target.event_info.default_event_handlers[event_type];
                 }
-                if ((e.canvas_name) && (!target.disable_element_events)) {
+                // object specific handling for registered objects
+                if ((e.canvas_name) && (!target.disable_element_events) && (target.name_to_object_info[e.canvas_name])) {
                     var object_name = e.canvas_name
                     e.object_info = target.name_to_object_info[e.canvas_name];
                     // if the object has a frame, override the reference frame
@@ -874,7 +875,7 @@ XXXXX clean up events for forgotten objects
             // mouseover and mouseout simulation:
             //console.log("check emulations: ", [e.type, e.canvas_name,  ((!last_event) || last_event.canvas_name)]); //debug only.
             //if ((last_event) && (e.type == "mousemove") && (last_event.canvas_name != e.canvas_name)) {
-            if (e.type == "mousemove") {
+            //if (e.type == "mousemove") {
                 //console.log("doing transition emulations " + last_event.canvas_name)
                 if ((last_event) && (last_event.canvas_name) && ((!e.canvas_name) || (e.canvas_name!=last_event.canvas_name))) {
                     //console.log("emulating mouseout");
@@ -891,7 +892,7 @@ XXXXX clean up events for forgotten objects
                     // attempt a mouseover with no default
                     process_event(mouseover_event, true);
                 }
-            }
+            //}
             // "normal" event handling -- after emulations!
             process_event(e);
             // do not allow event to propagate
