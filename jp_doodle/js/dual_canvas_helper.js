@@ -84,6 +84,8 @@ XXXXX clean up events for forgotten objects
             target.test_canvas = $("<div/>").appendTo(target.canvas_container);
             target.test_canvas.hide();
             target.visible_canvas.canvas_2d_widget_helper(settings_overrides);
+            target.no_change_conversion = target.visible_canvas.no_change_conversion;  // delegate 
+
             target.invisible_canvas.canvas_2d_widget_helper(settings_overrides);
             target.test_canvas.canvas_2d_widget_helper(settings_overrides);
 
@@ -2162,6 +2164,11 @@ XXXXX clean up events for forgotten objects
             return cvt;
         };
 
+        frame.coordinate_conversion = function (position, attribute_name, coordinate_names) {
+            var nc = frame.parent_canvas.no_change_conversion(position, attribute_name, coordinate_names);
+            return frame.converted_location(nc.x, nc.y);
+        };
+
         frame.model_location = function(mx, my) {
             // Convert "model" location to "frame" location.
             // untranslate
@@ -2200,7 +2207,7 @@ XXXXX clean up events for forgotten objects
                 // Make sure the frame exists in parent.
                 frame.check_registration();
                 var s = $.extend({
-                    coordinate_conversion: frame.converted_location,
+                    coordinate_conversion: frame.coordinate_conversion,
                     frame: frame,
                 }, opt);
                 if (s.temporary) {
