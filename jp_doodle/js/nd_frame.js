@@ -275,104 +275,297 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         return result;
     };
 
-    $.fn.nd_frame.invert = function(element, Vectors, variables) {
+    $.fn.nd_frame.matrix = function(variable_to_vector, vi_order, vj_order) {
         //var element = this;
 
         // xxxx eventually move this somewhere else...
-        class Matrix_Inverter {
-            constructor(Vectors, variables) {
-                this.Vectors = [];
-                this.variables = variables;
-                this.inverse = []
-                this.N = Vectors.length;
-                for (var i=0; i<this.N; i++) {
-                    var vectori = Vectors[i];
-                    var vari = variables[i];
-                    this.Vectors[i] = element.vscale(1.0, vectori);
-                    this.inverse[i] = element.vscale(0.0, vectori);
-                    this.inverse[i][vari] = 1.0;
+        class Matrix {
+            constructor(variable_to_vector, vi_order, vj_order) {
+                variable_to_vector = variable_to_vector || {};
+                var get_sample = function (order) {
+                    var result = {};
+                    if (order) {
+                        for (var i=0; i<order.length; i++) {
+                            result[order[i]] = 1
+                        }
+                    }
+                    return result;
+                };
+                var samplei = get_sample(vi_order);
+                var samplej = get_sample(vj_order);
+                var check_var = function (vname, sample, order) {
+                    if (order) {
+                        if (!(sample[vname])) {
+                            throw new Error("var name not in order array " + vname + " " + order);
+                        } 
+                    } else {
+                        sample[vname] = 1
+                    }
+                };
+                var matrix = {};
+                for (var vi in variable_to_vector) {
+                    check_var(vi, samplei, vi_order);
+                    var vec = variable_to_vector[vi];
+                    var row = {};
+                    for (var vj in vec) {
+                        check_var(vj, samplej, vj_order);
+                        row[vj] = vec[vj];
+                    }
+                    matrix[vi] = row;
                 }
+                // define all vi vectors if needed
+                for (var vi in samplei) {
+                    matrix[vi] = matrix[vi] || {};
+                }
+                // define orders if needed
+                var order_for = function(sample, order) {
+                    if (order) {
+                        return order;
+                    }
+                    var order = [];
+                    for (var v in sample) {
+                        order.push(v);
+                    }
+                    order.sort();
+                    return order;
+                }
+                this.orderi = order_for(samplei, vi_order);
+                this.orderj = order_for(samplej, vj_order);
+                this.samplei = samplei;
+                this.samplej = samplej;
+                this.matrix = matrix;
             };
-            member(i, j) {
-                return this.Vectors[i][this.variables[j]];
+            clone() {
+                return new Matrix(this.matrix, this.orderi, this.orderj);
             }
-            calc() {
-                var Vectors = this.Vectors;
-                var inverse = this.inverse;
-                var N = this.N;
-                for (var i=0; i<N; i++) {
-                    for (var j=i+1; j<N; j++) {
-                        var Mii = this.member(i, i);
-                        var Mji = this.member(j, i);
-                        if ((i != j) && (Math.abs(Mii) < Math.abs(Mji))) {
-                            this.swap(i, j);
+            default_value(x) {
+                if (x) {
+                    return x;
+                }
+                return 0.0;
+            };
+            check_names(vi, vj) {
+                if ((!(this.samplei[vi])) || (!(this.samplej[vj])) ) {
+                    throw new Error("bad variable name(s) " + [vi, vj]);
+                }
+            }
+            member(vi, vj, permissive) {
+                if (!permissive) {
+                    this.check_names(vi, vj);
+                }
+                var rowi = this.matrix[vi];
+                if (rowi) {
+                    return this.default_value(rowi[vj]);
+                }
+                return this.default_value();  // default
+            }
+            set_member(vi, vj, value, permissive) {
+                if (!permissive) {
+                    this.check_names(vi, vj);
+                }
+                var row = this.matrix[vi] || {};
+                row[vj] = value;
+                this.matrix[vi] = row;
+            }
+            vscale(scalar, vector) {
+                var result = {};
+                for (var v in vector) {
+                    result[v] = scalar * vector[v];
+                };
+                return result;
+            };
+            vadd(v1, v2) {
+                var result = {};
+                var that = this;
+                var addv1v2 = function(v1, v2) {
+                    for (var v in v1) {
+                        if (!result[v]) {
+                            result[v] = v1[v] + that.default_value(v2[v]);
                         }
                     }
-                    this.normalize(i);
-                    for (var j=0; j<N; j++) {
-                        this.cancel(i, j);
+                }
+                addv1v2(v1, v2);
+                addv1v2(v2, v1);
+                return result;
+            };
+            vdot(v1, v2) {
+                var result = 0;
+                for (var v in v1) {
+                    result += v1[v] * this.default_value(v2[v]);
+                }
+                return result;
+            };
+            dot(vector) {
+                // matrix.dot(vector) like numpy (M.v)
+                var result = {};
+                var matrix = this.matrix;
+                for (var vi in matrix) {
+                    var row = matrix[vi];
+                    result[vi] = this.vdot(row, vector);
+                }
+                return result;
+            }
+            eye(permissive) {
+                // identity matrix of same shape as this.
+                var orderi = this.orderi;
+                var orderj = this.orderj;
+                var leni = orderi.length;
+                var lenj = orderj.length;
+                if ((!permissive) && (leni != lenj)) {
+                    throw new Error("cannot get identity unless dimensions are equal " + [leni, lenj]);
+                }
+                var result = new Matrix({}, this.orderi, this.orderj)
+                var len = Math.min(leni, lenj);
+                for (var i=0; i<len; i++) {
+                    result.set_member(orderi[i], orderj[i], 1)
+                }
+                return result;
+            }
+            transpose() {
+                var result = new Matrix({}, this.orderj, this.orderi);
+                var matrix = this.matrix;
+                for (var vari in matrix) {
+                    var row = matrix[vari];
+                    for (var varj in row) {
+                        result.set_member(varj, vari, row[varj]);
                     }
                 }
-            };
-            swap(i, j) {
-                var Vectors = this.Vectors;
-                var inverse = this.inverse;
-                var a = Vectors[i];
-                var b = Vectors[j];
-                Vectors[i] = b;
-                Vectors[j] = a;
-                a = inverse[i];
-                b = inverse[j];
-                inverse[i] = b;
-                inverse[j] = a;
-            };
-            normalize(i) {
-                var Mii = this.member(i, i);
-                var Vectors = this.Vectors;
-                var inverse = this.inverse;
-                var det = 1.0/Mii;
-                Vectors[i] = element.vscale(det, Vectors[i]);
-                inverse[i] = element.vscale(det, inverse[i]);
-            };
-            cancel(i, j) {
-                if (i == j) {
-                    return;
-                }
-                var Vectors = this.Vectors;
-                var inverse = this.inverse;
-                var Mji = this.member(j, i);
-                var shiftM = element.vscale(- Mji, Vectors[i])
-                Vectors[j] = element.vadd(shiftM, Vectors[j])
-                var shiftinv = element.vscale(- Mji, inverse[i])
-                inverse[j] = element.vadd(shiftinv, inverse[j])
-            };
-            mmult(Vectors1, Vectors2, variables) {
-                Vectors2 = Vectors2 || this.inverse;
-                variables = variables || this.variables;
-                var N = variables.length;
-                var result = [];
-                for (var i=0; i<N; i++) {
-                    result.push({});
-                }
-                for (var i=0; i<N; i++) {
-                    for (var j=0; j<N; j++) {
-                        var varj = variables[j];
-                        var val = 0;
-                        for (var k=0; k<N; k++) {
-                            var vark = variables[k];
-                            val += Vectors1[i][vark] * Vectors2[k][varj]
+                return result;
+            }
+            swap(i, k) {
+                // in place swap row i with k
+                var orderi = this.orderi;
+                var vari = orderi[i];
+                var vark = orderi[k];
+                var matrix = this.matrix;
+                var rowi = matrix[vari];
+                var rowk = matrix[vark];
+                matrix[vari] = rowk;
+                matrix[vark] = rowi;
+            }
+            invert(permissive) {
+                var M = this.clone();
+                var inverse = this.eye(permissive).transpose();
+                var orderi = this.orderi;
+                var orderj = this.orderj;
+                var leni = orderi.length;
+                var lenj = orderj.length;
+                var len = Math.min(leni, lenj);
+                for (var i=0; i<len; i++) {
+                    var vari = orderi[i];
+                    var varj = orderj[i];
+                    for (var k=0; k<len; k++) {
+                        if (k != i) {
+                            var vark = orderi[k];
+                            var Mii = M.member(vari, varj);
+                            var Mki = M.member(vark, varj)
+                            if (Math.abs(Mii) < Math.abs(Mki)) {
+                                M.swap(i, k);
+                                inverse.swap(i, k);
+                            }
                         }
-                        result[i][varj] = val;
+                    }
+                    var Mii = M.member(vari, varj);
+                    M.normalize(vari, Mii);
+                    inverse.normalize(varj, Mii)
+                    for (var k=0; k<len; k++) {
+                        var varik = orderi[k];
+                        var varjk = orderj[k];
+                        if (k != i) {
+                            var Mki = M.member(varik, varj);
+                            M.cancel(Mki, varik, vari);
+                            inverse.cancel(Mki, varjk, varj);
+                        }
+                    }
+                }
+                return inverse;
+            };
+            normalize(vari, factor) {
+                // XXXX should error if factor near 0???
+                var det = 1.0 / factor;
+                var matrix = this.matrix;
+                var rowi = matrix[vari];
+                matrix[vari] = this.vscale(det, rowi);
+            };
+            cancel(factor, vark, vari) {
+                // in place set M[k] -= f * M[i]
+                var matrix = this.matrix;
+                var rowk = matrix[vark];
+                var rowi = matrix[vari];
+                var shift = this.vscale(- factor, rowi);
+                matrix[vark] = this.vadd(shift, rowk);
+            };
+            column(varj, permissive) {
+                if ((!permissive) && (!this.samplej[varj])) {
+                    throw new Error("no such column variable " + [varj, this.orderj]);
+                }
+                var result = {};
+                var matrix = this.matrix;
+                for (var vi in this.samplei) {
+                    var value = this.member(vi, varj);
+                    if (value) {
+                        result[vi] = value;
                     }
                 }
                 return result;
             };
-            left_multiply(Vectors2) {
-                return this.mmult(this.inverse, Vectors2);
+            mmult(other) {
+                var result = new Matrix({}, this.orderi, other.orderj);
+                for (var vari in this.samplei) {
+                    for (var varj in other.samplej) {
+                        var sum = 0;
+                        for (var vark in this.samplej) {
+                            sum += this.member(vari, vark) * other.member(vark, varj)
+                        }
+                        if (sum) {
+                            result.set_member(vari, varj, sum);
+                        }
+                    }
+                }
+                return result;
+            };
+            madd(other) {
+                var result = new Matrix({}, this.orderi, this.orderj);
+                for (var vari in this.samplei) {
+                    for (var varj in this.samplej) {
+                        var sum = this.member(vari, varj) + other.member(vari, varj);
+                        if (sum) {
+                            result.set_member(vari, varj, sum);
+                        }
+                    }
+                }
+                return result;
+            };
+            mscale(factor) {
+                var result = new Matrix({}, this.orderi, this.orderj);
+                for (var vari in this.samplei) {
+                    for (var varj in this.samplej) {
+                        var sum = factor * this.member(vari, varj);
+                        if (sum) {
+                            result.set_member(vari, varj, sum);
+                        }
+                    }
+                }
+                return result;
+            };
+            maxabs() {
+                // primarily for testing...
+                var result = 0
+                for (var vari in this.samplei) {
+                    for (var varj in this.samplej) {
+                        result = Math.max(Math.abs(this.member(vari, varj)), result)
+                    }
+                }
+                return result;
+            };
+            divergence(other) {
+                // primariliy for testing whether two matrices are "close" in value.
+                var diff = this.madd(other.mscale(-1));
+                return diff.maxabs()
             }
         };
 
-        return new Matrix_Inverter(Vectors, variables);
+        return new Matrix(variable_to_vector, vi_order, vj_order);
     };
 
     $.fn.nd_frame.example = function(element) {
