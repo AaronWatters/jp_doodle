@@ -34,15 +34,19 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return default_value;
         }
 
+        var permitted_projector_vars = {x: 1, y:2, z:3};
+
         class ND_Frame {
             constructor(options, element) {
                 this.settings = $.extend({
                     // 2d frame to draw on.
                     dedicated_frame: null,
-                    // name order for variable conversion to/from arrays.
+                    // name order for model variable conversion to/from arrays.
                     variable_name_order: null,
-                    // mapping of variable name to x, y converter vectors
+                    // mapping of variable name to x, y, (z) converter vectors
                     variable_projectors: null,
+                    // translation in projection space
+                    projected_translation: null,
                     is_frame: true,
                     events: true,   // by default support events
                     shape_name: "nd_frame",
@@ -51,7 +55,25 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // initialize or check data structures
                 let vp = this.settings.variable_projectors;
                 let vno = this.settings.variable_name_order;
+                let model_origin = {};  // filled in from parameters
+                let view_origin = {x: 0, y:0};  // possibly z too if specified
+                if (vno) {
+                    for (var i=0; i<vno.length; i++) {
+                        let vname = vno[i];
+                        model_origin[vname] = 0;
+                    }
+                }
                 if (vp) {
+                    for (var vname in vp) {
+                        model_origin[vname] = 0;
+                        let proj = vp[vname];
+                        for (var pname in proj) {
+                            view_origin[pname] = 0;
+                            if (!permitted_projector_vars[pname]) {
+                                throw new Error("unknown projection variable " + pname);
+                            }
+                        }
+                    }
                     if (vno) {
                         // validate
                         for (var vname in vp) {
@@ -80,8 +102,25 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 } else {
                     throw new Error("either variable_projectors or variable names must be specified.")
                 }
+                let pt = this.settings.projected_translation;
+                if (!pt) {
+                    pt = view_origin;
+                }
+                let view_variable_order = [];
+                for (var vname in view_origin) {
+                    view_variable_order.push(vname);
+                }
+                // fill in any missing variable slots
+                pt = this.as_vector(pt, view_variable_order);
+                for (var vname in vp) {
+                    vp[vname] = this.as_vector(vp[vname], view_variable_order)
+                }
+                this.settings.view_variable_order = view_variable_order;
+                this.settings.projected_translation = pt;
                 this.settings.variable_projectors = vp;
                 this.settings.variable_name_order = vno;
+                this.settings.model_origin = model_origin;
+                this.settings.view_origin = view_origin;
                 this.reset();
             };
             prepare_for_redraw() {
@@ -129,16 +168,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 // convert from array as needed.
                 position_vector = this.as_vector(position_vector);
-                var result = null;
+                var result = this.settings.projected_translation;
                 for (var vname in vp) {
                     var projector = vp[vname];
                     var coord_value = numeric_default(position_vector[vname], 0);
                     var increment = element.vscale(coord_value, projector);
-                    if (!result) {
-                        result = increment;
-                    } else {
-                        result = element.vadd(result, increment);
-                    }
+                    result = element.vadd(result, increment);
                 }
                 return result;
             }
@@ -159,23 +194,26 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             text(opt) {
                 return new ND_Text(this, opt);
             };
-            as_vector(descriptor) {
-                // convert array descriptor to mapping representation.
+            as_vector(descriptor, name_order) {
+                // convert model array descriptor to mapping representation.
+                name_order = name_order || this.settings.variable_name_order;
+                let n = name_order.length;
+                var mapping = {};
                 if (Array.isArray(descriptor)) {
-                    let vno = this.settings.variable_name_order;
-                    let n = vno.length;
                     if (descriptor.length != n) {
                         throw new Error("array descriptor length should match names length.")
                     }
-                    var mapping = {};
                     for (var i=0; i<n; i++) {
-                        mapping[vno[i]] = descriptor[i]
+                        mapping[name_order[i]] = descriptor[i]
                     }
-                    return mapping
                 } else {
-                    // assume it's okay (could validate?)
-                    return descriptor;
+                    // copy and fill in missing values with 0 (xxx don't check for extra slots?)
+                    for (var i=0; i<n; i++) {
+                        var vname = name_order[i];
+                        mapping[vname] = numeric_default(descriptor[vname]);
+                    }
                 }
+                return mapping;
             }
         };
 
