@@ -234,10 +234,23 @@ XXXXX clean up events for forgotten objects
             target.redraw_pending = false;
             target.visible_canvas.clear_canvas();
             target.invisible_canvas.clear_canvas();
+            target.prepare_for_redraw();
             target.object_list = target.objects_drawn(target.object_list);
             // perform any transitions last to allow for temporary objects
             target.do_transitions();
         };
+
+        target.prepare_for_redraw = function () {
+            // allow each of the objects in the object list to do bookkeeping before a redraw.
+            // This is used for example by n-d frames to recalculate draw order
+            var object_list = target.object_list;
+            for (var i=0; i<object_list.length; i++) {
+                var object_info = object_list[i];
+                if (object_info.prepare_for_redraw) {
+                    object_info.prepare_for_redraw();
+                }
+            }
+        }
 
         target.objects_drawn = function (object_list) {
             // Don't draw anything on the test canvas now.
@@ -380,6 +393,10 @@ XXXXX clean up events for forgotten objects
         target.change = function (name_or_info, opt, no_redraw) {
             var object_info = target.get_object_info(name_or_info);
             if (object_info) {
+                // call the on_change callback if defined
+                if (object_info.on_change) {
+                    object_info.on_change(opt);
+                }
                 // in place update object description
                 $.extend(object_info, opt);
                 if (!no_redraw) {
@@ -2127,6 +2144,10 @@ XXXXX clean up events for forgotten objects
             frame.object_list = [];
             frame.parent_canvas.request_redraw();
         };
+
+        frame.request_redraw = function () {
+            frame.parent_canvas.request_redraw();
+        }
 
         frame.redraw_frame = function () {
             if (frame.hide) {

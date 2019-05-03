@@ -21,6 +21,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 */
 "use strict";
 
+
 (function($) {
 
     $.fn.nd_frame = function (options, element) {
@@ -34,7 +35,19 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return default_value;
         }
 
-        var permitted_projector_vars = {x: 1, y:2, z:3};
+        var projector_vars = {x: 1, y:2, z:3};
+        var projector_var_order = ["x", "y", "z"];
+        var default_3d_axes = [
+            {x: 1, y:0, z:0},
+            {x: 0, y:1, z:0},
+            {x: 0, y:0, z:1},
+        ];
+        var default_4d_axes = [
+            {x: 1, y:1, z:1},
+            {x: -1, y:-1, z:1},
+            {x: -1, y:1, z:-1},
+            {x: 1, y:-1, z:-1},
+        ];
 
         class ND_Frame {
             constructor(options, element) {
@@ -42,85 +55,82 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     // 2d frame to draw on.
                     dedicated_frame: null,
                     // name order for model variable conversion to/from arrays.
-                    variable_name_order: null,
-                    // mapping of variable name to x, y, (z) converter vectors
-                    variable_projectors: null,
-                    // translation in projection space
-                    projected_translation: null,
-                    is_frame: true,
+                    feature_names: null,
+                    // mapping of variable name to x, y, z converter vectors
+                    feature_axes: null,
+                    // translation in model space
+                    translation: null,
+                    // rotates/skew etcetera from model space to 2d_projection
+                    model_axes: null,
+                    //is_frame: true,
                     events: true,   // by default support events
-                    shape_name: "nd_frame",
+                    //shape_name: "nd_frame",
                 }, options);
                 this.is_frame = true;
+                this.shape_name = "nd_frame";
                 // initialize or check data structures
-                let vp = this.settings.variable_projectors;
-                let vno = this.settings.variable_name_order;
-                let model_origin = {};  // filled in from parameters
-                let view_origin = {x: 0, y:0};  // possibly z too if specified
-                if (vno) {
-                    for (var i=0; i<vno.length; i++) {
-                        let vname = vno[i];
-                        model_origin[vname] = 0;
+                var fn = this.settings.feature_names;
+                var fa = this.settings.feature_axes;
+                var tr = this.settings.translation;
+                var ma = this.settings.model_axes;
+                // make default axes and translation as needed
+                tr = tr || {};
+                if (!ma) {
+                    ma = {};
+                    for (var v in projector_vars) {
+                        var axis = {}
+                        axis[v] = 1.0;
+                        ma[v] = axis;
                     }
                 }
-                if (vp) {
-                    for (var vname in vp) {
-                        model_origin[vname] = 0;
-                        let proj = vp[vname];
-                        for (var pname in proj) {
-                            view_origin[pname] = 0;
-                            if (!permitted_projector_vars[pname]) {
-                                throw new Error("unknown projection variable " + pname);
+                // check feature names versus feature axes
+                if (fn) {
+                    // yes feature names
+                    if (!fa) {
+                        //  no axes: invent feature axes
+                        fa = {};
+                        var nf = fn.length;
+                        if (nf <= 3) {
+                            // use canonical axes
+                            for (var i=0; i<nf; i++) {
+                                fa[fn[i]] = default_3d_axes[i];
+                            }
+                        } else if (nf == 4) {
+                            // use tetrahedral axes
+                            for (var i=0; i<nf; i++) {
+                                fa[fn[i]] = default_4d_axes[i];
+                            }
+                        } else {
+                            // arbitrary unit vectors if nf > 4
+                            var sign = 1;
+                            for (var i=0; i<nf; i++) {
+                                sign = -sign;
+                                var theta = i * (1.0/nf);
+                                var omega = theta * 6;
+                                var z = Math.sin(theta);
+                                var c = Math.cos(theta);
+                                var x = c * Math.sin(omega);
+                                var y = c * Math.cos(omega);
+                                fa[fn[i]] = {x: x, y:sign*y, z:z};
                             }
                         }
-                    }
-                    if (vno) {
-                        // validate
-                        for (var vname in vp) {
-                            if (!vno.includes(vname)) {
-                                throw new Error("all projection names should be in name order list.")
-                            }
-                        }
-                    } else {
-                        // use sorted names as name order
-                        vno = [];
-                        for (var vname in vp) {
-                            vno.push(vname);
-                        }
-                        vno.sort();
-                    }
-                } else if (vno) {
-                    // assign arbitrary unit vectors as projections for names.
-                    vp = {};
-                    var nnames = vno.length;
-                    var theta = 2 * Math.PI / nnames;
-                    for (var i=0; i<nnames; i++) {
-                        var vname = vno[i];
-                        var omega = theta * i;
-                        vp[vname] = {y: Math.sin(omega), x: Math.cos(omega)};
-                    }
+                    } // xxx should check axes match names?
                 } else {
-                    throw new Error("either variable_projectors or variable names must be specified.")
+                    // no feature names: infer them from axes and sort.
+                    if (!fa) {
+                        throw new Error("feature names or axes must be provided.")
+                    }
+                    fn = [];
+                    for (var name in fa) {
+                        fn.push(name);
+                    }
+                    fn.sort();
                 }
-                let pt = this.settings.projected_translation;
-                if (!pt) {
-                    pt = view_origin;
-                }
-                let view_variable_order = [];
-                for (var vname in view_origin) {
-                    view_variable_order.push(vname);
-                }
-                // fill in any missing variable slots
-                pt = this.as_vector(pt, view_variable_order);
-                for (var vname in vp) {
-                    vp[vname] = this.as_vector(vp[vname], view_variable_order)
-                }
-                this.settings.view_variable_order = view_variable_order;
-                this.settings.projected_translation = pt;
-                this.settings.variable_projectors = vp;
-                this.settings.variable_name_order = vno;
-                this.settings.model_origin = model_origin;
-                this.settings.view_origin = view_origin;
+                this.settings.feature_names = fn;
+                this.settings.feature_axes = fa;
+                this.settings.translation = tr;
+                this.settings.model_axes = ma;
+                
                 this.reset();
             };
             prepare_for_redraw() {
@@ -128,8 +138,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     // leave frame alone.
                     return;
                 }
+                this.prepare_transform();
                 var object_list = this.object_list;
-                // project the objects into frame coordinates
+                // project the objects into canvas frame coordinates
                 for (var i=0; i<object_list.length; i++) {
                     var nd_object_info = object_list[i];
                     nd_object_info.project(this);
@@ -157,31 +168,53 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 dedicated_frame.object_list = frame_object_list;
                 this.changed = false;   // everything is up to date.
             };
+            request_redraw() {
+                this.changed = true;
+                this.settings.dedicated_frame.request_redraw();
+            }
             redraw_frame() {
                 // Do nothing.
                 // the dedicated frame should also be on the object list and it redraws the objects.
             };
-            coordinate_conversion(position_vector) {
-                let vp = this.settings.variable_projectors;
-                if (!position_vector) {
+            coordinate_conversion(feature_vector) {
+                if (!feature_vector) {
                     throw new Error("falsy vector entry not allowed");
                 }
                 // convert from array as needed.
-                position_vector = this.as_vector(position_vector);
-                var result = this.settings.projected_translation;
-                for (var vname in vp) {
-                    var projector = vp[vname];
-                    var coord_value = numeric_default(position_vector[vname], 0);
-                    var increment = element.vscale(coord_value, projector);
-                    result = element.vadd(result, increment);
-                }
+                feature_vector = this.as_vector(feature_vector);
+                var result = this.feature_to_model.affine(feature_vector);
                 return result;
             }
             reset() {
                 this.settings.dedicated_frame.reset_frame();
                 this.object_list = [];
                 this.changed = false;
+                this.prepare_transform();
             };
+            prepare_transform() {
+                var fn = this.settings.feature_names;
+                var fa = this.settings.feature_axes;
+                var tr = this.settings.translation;
+                var ma = this.settings.model_axes;
+                var ma_matrix = $.fn.nd_frame.matrix(ma, projector_var_order, projector_var_order);
+                var model_transform = ma_matrix.transpose().augment(tr);
+                this.model_transform = model_transform;
+                var fa_matrix = $.fn.nd_frame.matrix(fa, fn, projector_var_order);
+                // xxxx No translation for features?
+                var feature_transform = fa_matrix.transpose().augment();
+                this.feature_to_model = model_transform.mmult(feature_transform)
+                // model_vector = self.feature_to_model.affine(feature_vector);
+            }
+            install_model_transform(model_transform) {
+                // Extract transform structure from transformed model.
+                var translation = model_transform.translation();
+                var axes = model_transform.axes();
+                this.settings.translation = translation;
+                this.settings.model_axes = axes;
+                this.model_transform = model_transform;
+                this.prepare_transform();   // probably redundant.
+                this.request_redraw();
+            }
             store_object(object) {
                 this.object_list.push(object);
             };
@@ -196,7 +229,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             as_vector(descriptor, name_order) {
                 // convert model array descriptor to mapping representation.
-                name_order = name_order || this.settings.variable_name_order;
+                name_order = name_order || this.settings.feature_names;
                 let n = name_order.length;
                 var mapping = {};
                 if (Array.isArray(descriptor)) {
@@ -207,14 +240,33 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         mapping[name_order[i]] = descriptor[i]
                     }
                 } else {
-                    // copy and fill in missing values with 0 (xxx don't check for extra slots?)
+                    // copy for valid features (xxx don't check for extra slots?)
                     for (var i=0; i<n; i++) {
                         var vname = name_order[i];
-                        mapping[vname] = numeric_default(descriptor[vname]);
+                        var d = descriptor[vname];
+                        if (d) {
+                            mapping[vname] = d;
+                        }
                     }
                 }
                 return mapping;
+            };
+            orbit(center3d, radius, shift2d) {
+                var model_transform = this.model_transform;
+                var rotation = model_transform.orbit_rotation_xyz(center3d, radius, shift2d);
+                var new_transform = rotation.mmult(model_transform);
+                this.install_model_transform(new_transform);
             }
+            /* not needed?
+            transform_model_axes(axes_transform) {
+                var ma = this.settings.model_axes;
+                var ma_matrix = $.fn.nd_frame.matrix(ma, projector_var_order, projector_var_order);
+                var tf_matrix = $.fn.nd_frame.matrix(axes_transform, projector_var_order, projector_var_order);
+                var combined = tf_matrix.mmult(ma_matrix);
+                this.settings.model_axes = combined.matrix;
+                this.request_redraw();
+            }
+            */
         };
 
         class ND_Shape {
@@ -275,12 +327,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         return result;
     };
 
-    $.fn.nd_frame.matrix = function(variable_to_vector, vi_order, vj_order) {
-        //var element = this;
+    $.fn.nd_frame.matrix = function(variable_to_vector, vi_order, vj_order, translator) {
 
         // xxxx eventually move this somewhere else...
         class Matrix {
-            constructor(variable_to_vector, vi_order, vj_order) {
+            constructor(variable_to_vector, vi_order, vj_order, translator) {
                 variable_to_vector = variable_to_vector || {};
                 var get_sample = function (order) {
                     var result = {};
@@ -302,7 +353,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         sample[vname] = 1
                     }
                 };
-                var matrix = {};
+                var matrix = {};  // fresh copy
                 for (var vi in variable_to_vector) {
                     check_var(vi, samplei, vi_order);
                     var vec = variable_to_vector[vi];
@@ -320,7 +371,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // define orders if needed
                 var order_for = function(sample, order) {
                     if (order) {
-                        return order;
+                        return order.slice();  // fresh copy
                     }
                     var order = [];
                     for (var v in sample) {
@@ -334,10 +385,41 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.samplei = samplei;
                 this.samplej = samplej;
                 this.matrix = matrix;
+                // set this for augmented affine matrix.
+                this.translator = translator;
+                // for "near 0" comparisons
+                this.epsilon = 1e-10;
             };
             clone() {
                 return new Matrix(this.matrix, this.orderi, this.orderj);
-            }
+            };
+            as_table(sep, indent) {
+                // primarily for debug/test
+                sep = sep || "\n";
+                indent = indent || "    ";
+                var result = [];
+                var matrix = this.matrix;
+                var orderi = this.orderi;
+                var orderj = this.orderj;
+                // heading
+                result.push("<table border><tr><th>&nbsp;</th>")
+                for (var j=0; j<orderj.length; j++) {
+                    result.push(indent + "<th>" + orderj[j] + "</th>")
+                }
+                result.push("</tr>")
+                // rows
+                for (var i=0; i<orderi.length; i++) {
+                    var vi = orderi[i];
+                    result.push(indent + "<tr><th>" + vi + "</th>")
+                    for (var j=0; j<orderj.length; j++) {
+                        var vj = orderj[j];
+                        result.push(indent + "<td>" + this.member(vi, vj) + "</td>")
+                    }
+                    result.push("</tr>")
+                }
+                result.push("</table>")
+                return result.join(sep);
+            };
             default_value(x) {
                 if (x) {
                     return x;
@@ -346,9 +428,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             check_names(vi, vj) {
                 if ((!(this.samplei[vi])) || (!(this.samplej[vj])) ) {
-                    throw new Error("bad variable name(s) " + [vi, vj]);
+                    throw new Error("bad variable name(s) " + [vi, vj, this.orderi, this.orderj]);
                 }
-            }
+            };
             member(vi, vj, permissive) {
                 if (!permissive) {
                     this.check_names(vi, vj);
@@ -358,7 +440,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     return this.default_value(rowi[vj]);
                 }
                 return this.default_value();  // default
-            }
+            };
             set_member(vi, vj, value, permissive) {
                 if (!permissive) {
                     this.check_names(vi, vj);
@@ -366,7 +448,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var row = this.matrix[vi] || {};
                 row[vj] = value;
                 this.matrix[vi] = row;
-            }
+            };
             vscale(scalar, vector) {
                 var result = {};
                 for (var v in vector) {
@@ -388,6 +470,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 addv1v2(v2, v1);
                 return result;
             };
+            vsub(v1, v2) {
+                return this.vadd(
+                    v1,
+                    this.vscale(-1, v2)
+                );
+            }
             vdot(v1, v2) {
                 var result = 0;
                 for (var v in v1) {
@@ -395,6 +483,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 return result;
             };
+            vlength(v) {
+                // euclidean length of vector v
+                return Math.sqrt(this.vdot(v, v))
+            };
+            vunit(v) {
+                // unit length vector in direction v
+                var length = this.vlength(v);
+                // xxxx check for length too small???
+                return this.vscale(1.0/length, v);
+            }
             dot(vector) {
                 // matrix.dot(vector) like numpy (M.v)
                 var result = {};
@@ -404,25 +502,106 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     result[vi] = this.vdot(row, vector);
                 }
                 return result;
-            }
-            eye(permissive) {
+            };
+            eye(orderi, orderj, permissive) {
                 // identity matrix of same shape as this.
-                var orderi = this.orderi;
-                var orderj = this.orderj;
+                orderj = orderj || orderi || this.orderj;
+                orderi = orderi || this.orderi;
                 var leni = orderi.length;
                 var lenj = orderj.length;
                 if ((!permissive) && (leni != lenj)) {
                     throw new Error("cannot get identity unless dimensions are equal " + [leni, lenj]);
                 }
-                var result = new Matrix({}, this.orderi, this.orderj)
+                var result = new Matrix({}, orderi, orderj)
                 var len = Math.min(leni, lenj);
                 for (var i=0; i<len; i++) {
                     result.set_member(orderi[i], orderj[i], 1)
                 }
                 return result;
+            };
+            augment(translation_vector, translator) {
+                // augmented affine matrix
+                // https://en.wikipedia.org/wiki/Affine_transformation#Augmented_matrix
+                translator = translator || "_t";
+                translation_vector = translation_vector || {};
+                var matrix = this.matrix;
+                var orderi = this.orderi;
+                var orderj = this.orderj;
+                var aorderi = orderi.slice();
+                var aorderj = orderj.slice();
+                aorderi.push(translator);
+                aorderj.push(translator);
+                var augmented = new Matrix(matrix, aorderi, aorderj);
+                for (var v in translation_vector) {
+                    augmented.set_member(v, translator, translation_vector[v]);
+                }
+                augmented.translator = translator;
+                augmented.set_member(translator, translator, 1);
+                return augmented;
+            };
+            affine(vector) {
+                // apply affine transform to vector
+                var translator = this.translator;
+                if (!translator) {
+                    throw new Error("Cannot apply transform: this is not an augmented affine matrix.");
+                }
+                var avector = $.extend({}, vector);
+                avector[translator] = 1;
+                var bvector = this.dot(avector);
+                var result = {};
+                for (var v in this.samplei) {
+                    if (v!=translator) {
+                        result[v] = this.default_value(bvector[v]);
+                    }
+                }
+                return result;
+            };
+            axes() {
+                // get "source axes" for affine transform
+                var translator = this.translator;
+                if (!translator) {
+                    throw new Error("Cannot get axes: this is not an augmented affine matrix.");
+                }
+                var matrix = this.matrix;
+                var result = {};
+                for (var vj in this.samplej) {
+                    if (vj != translator) {
+                        var vector = {};
+                        for (var vi in this.samplei) {
+                            if (vi != translator) {
+                                var value = matrix[vi][vj];
+                                if (value) {
+                                    vector[vi] = value;
+                                }
+                            }
+                        }
+                        result[vj] = vector;
+                    }
+                }
+                return result;
+            };
+            translation() {
+                // get translation from affine transform
+                var translator = this.translator;
+                if (!translator) {
+                    throw new Error("Cannot get axes: this is not an augmented affine matrix.");
+                }
+                var matrix = this.matrix;
+                var vector = {};
+                for (var vi in this.samplei) {
+                    if (vi != translator) {
+                        var value = matrix[vi][translator];
+                        if (value) {
+                            vector[vi] = value;
+                        }
+                    }
+                }
+                return vector
             }
-            transpose() {
-                var result = new Matrix({}, this.orderj, this.orderi);
+            transpose(matrix, orderj, orderi) {
+                orderj = orderj || this.orderj;
+                orderi = orderi || this.orderi;
+                var result = new Matrix({}, orderj, orderi);
                 var matrix = this.matrix;
                 for (var vari in matrix) {
                     var row = matrix[vari];
@@ -431,7 +610,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     }
                 }
                 return result;
-            }
+            };
             swap(i, k) {
                 // in place swap row i with k
                 var orderi = this.orderi;
@@ -442,7 +621,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var rowk = matrix[vark];
                 matrix[vari] = rowk;
                 matrix[vark] = rowi;
-            }
+            };
             invert(permissive) {
                 var M = this.clone();
                 var inverse = this.eye(permissive).transpose();
@@ -451,10 +630,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var leni = orderi.length;
                 var lenj = orderj.length;
                 var len = Math.min(leni, lenj);
+                //var inverse = this.eye(orderi, orderi, permissive);
                 for (var i=0; i<len; i++) {
                     var vari = orderi[i];
                     var varj = orderj[i];
-                    for (var k=0; k<len; k++) {
+                    for (var k=i+1; k<len; k++) {
                         if (k != i) {
                             var vark = orderi[k];
                             var Mii = M.member(vari, varj);
@@ -522,6 +702,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         }
                     }
                 }
+                result.translator = this.translator || other.translator;  // preserve affine translation slot.
                 return result;
             };
             madd(other) {
@@ -563,9 +744,83 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var diff = this.madd(other.mscale(-1));
                 return diff.maxabs()
             }
+            orbit_rotation_xyz(center3d, radius, shift2d) {
+                // return an affine transform which rotates the xyz axis by shift2d at radius.
+                // make fresh copies.
+                center3d = $.extend({}, center3d);
+                shift2d = $.extend({}, shift2d);
+                var translator = "_t";
+                var z_vector = {z: 1};
+                if (Math.abs(this.vdot(z_vector, shift2d)) > this.epsilon) {
+                    throw new Error("shift should be othogonal to z axis.");
+                }
+                // need to define these:
+                var center_z, center_z_rotate, center_shift, center_shift_rotate, center_norm;
+                center_z = this.vadd(center3d, z_vector);
+                // if the shift is too small then do a trivialized "no rotation" test computation
+                var shift_length = this.vlength(shift2d)
+                if (Math.abs(shift_length) < this.epsilon) {
+                    // this should result in an identity transform:
+                    center_z_rotate = center_z;
+                    center_shift = this.vadd(center3d, {x:1});
+                    center_shift_rotate = center_shift;
+                    center_norm = this.vadd(center3d, {y:1});
+                } else {
+                    var sine_theta = shift_length * (1.0 / Math.sqrt((radius * radius)+ (shift_length * shift_length)));
+                    var cosine_theta = Math.sqrt(1.0 - sine_theta * sine_theta)
+                    var shift_unit = this.vunit(shift2d);
+                    var center_shift = this.vadd(center3d, shift_unit);
+                    var shift_unit_rotate = this.vadd(
+                        this.vscale(cosine_theta, shift_unit),
+                        this.vscale(- sine_theta, z_vector)
+                    );
+                    var center_shift_rotate = this.vadd(center3d, shift_unit_rotate);
+                    var z_rotate = this.vadd(
+                        this.vscale(cosine_theta, z_vector),
+                        this.vscale(sine_theta, shift_unit)
+                    );
+                    center_z_rotate = this.vadd(center3d, z_rotate);
+                    var normal = {
+                        x: this.default_value(shift_unit.y), 
+                        y: - this.default_value(shift_unit.x), 
+                        z: 0
+                    };
+                    var center_norm = this.vadd(center3d, normal);
+                }
+                // Get matrices from reference points
+                var unrotated = {
+                    point: center_z,
+                    center_shift: center_shift,
+                    center: center3d,
+                    center_norm: center_norm
+                };
+                var rotated = {
+                    point: center_z_rotate,
+                    center_shift: center_shift_rotate,
+                    center: center3d,
+                    center_norm: center_norm
+                }
+                var include_translator = function (vectors) {
+                    for (var v in vectors) {
+                        vectors[v][translator] = 1.0
+                    }
+                }
+                include_translator(rotated);
+                include_translator(unrotated);
+                var Rmatrix = new Matrix(rotated);
+                var Umatrix = new Matrix(unrotated);
+                var RmatrixT = Rmatrix.transpose();
+                var UmatrixT = Umatrix.transpose();
+                var Uinverse = UmatrixT.invert();
+                // result converts unrotated to rotated
+                var Affine_result = RmatrixT.mmult(Uinverse);
+                // make it an affine matrix
+                Affine_result.translator = translator;
+                return Affine_result;
+            }
         };
 
-        return new Matrix(variable_to_vector, vi_order, vj_order);
+        return new Matrix(variable_to_vector, vi_order, vj_order, translator);
     };
 
     $.fn.nd_frame.example = function(element) {
