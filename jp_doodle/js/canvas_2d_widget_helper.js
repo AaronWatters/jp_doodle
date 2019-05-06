@@ -354,8 +354,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         target.frame_rect = function(opt) {
             // rectangle distorted by reference frame transform
-            var x = opt.x || 0;
-            var y = opt.y || 0;
+            //var x = opt.x || 0;
+            //var y = opt.y || 0;
+            var position = no_change_conversion(opt);
+            var x = position.x;
+            var y = position.y;
             var h = opt.h || 0;
             var w = opt.w || 0;
             var dx = opt.dx || 0;

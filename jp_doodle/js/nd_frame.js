@@ -28,10 +28,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         element = element || this;
 
         var numeric_default = function(value, default_value) {
-            default_value = default_value || 0;
             if ((typeof value) == "number") {
                 return value;
             }
+            default_value = default_value || 0;
             return default_value;
         }
 
@@ -218,14 +218,26 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             store_object(object) {
                 this.object_list.push(object);
             };
+            rect(opt) {
+                return new ND_Rect(this, opt);
+            };
+            frame_rect(opt) {
+                return new ND_Frame_Rect(this, opt);
+            };
             circle(opt) {
                 return new ND_Circle(this, opt);
+            };
+            frame_circle(opt) {
+                return new ND_Frame_Circle(this, opt);
             };
             line(opt) {
                 return new ND_Line(this, opt);
             };
             text(opt) {
                 return new ND_Text(this, opt);
+            };
+            polygon(opt) {
+                return new ND_Polygon(this, opt);
             };
             as_vector(descriptor, name_order) {
                 // convert model array descriptor to mapping representation.
@@ -302,8 +314,20 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
         };
 
+        class ND_Rect extends ND_Shape {
+            shape_name() { return "rect"; }  // xxxx should be a class member?
+        };
+
+        class ND_Frame_Rect extends ND_Shape {
+            shape_name() { return "frame_rect"; }  // xxxx should be a class member?
+        };
+
         class ND_Circle extends ND_Shape {
             shape_name() { return "circle"; }  // xxxx should be a class member?
+        };
+
+        class ND_Frame_Circle extends ND_Shape {
+            shape_name() { return "frame_circle"; }  // xxxx should be a class member?
         };
 
         class ND_Text extends ND_Shape {
@@ -313,11 +337,26 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         class ND_Line extends ND_Shape {
             shape_name() { return "line"; }  // xxxx should be a class member?
             mutate_coordinates(opt2d, opt, nd_frame) {
-                opt2d.position1 = nd_frame.coordinate_conversion(opt.position1)
-                opt2d.position2 = nd_frame.coordinate_conversion(opt.position2)
+                opt2d.position1 = nd_frame.coordinate_conversion(opt.position1);
+                opt2d.position2 = nd_frame.coordinate_conversion(opt.position2);
             };
             position2d() {
                 return this.opt2d.position1;  // xxxx arbitrary choice; could use midpoint.
+            };
+        };
+
+        class ND_Polygon extends ND_Shape {
+            shape_name() { return "polygon"; }  // xxxx should be a class member?
+            mutate_coordinates(opt2d, opt, nd_frame) {
+                // xxx should convert cx, cy too...
+                var positional_xy = function(point) {
+                    var cvt = nd_frame.coordinate_conversion(point);
+                    return [cvt.x, cvt.y];
+                }
+                opt2d.points = opt.points.map(positional_xy);
+            };
+            position2d() {
+                return this.opt2d.points[0];  // xxxx arbitrary choice; could use centroid.
             };
         };
 
