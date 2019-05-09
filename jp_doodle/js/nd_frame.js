@@ -189,6 +189,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.settings.dedicated_frame.reset_frame();
                 this.object_list = [];
                 this.changed = false;
+                // no orbiter after reset.
+                this.orbiter = null;
                 this.prepare_transform();
             };
             prepare_transform() {
@@ -284,6 +286,21 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var new_transform = rotation.mmult(model_transform);
                 this.install_model_transform(new_transform);
             };
+            orbit_region(center3d, radius, min_x, min_y, width, height) {
+                // create and overlay frame with orbit control over region in target frame.
+                this.orbit_off();
+                this.orbiter = new ND_Orbiter(
+                    this, center3d, radius, min_x, min_y, width, height
+                );
+            };
+            orbit_off() {
+                // turn off any active orbit controls.
+                var orbiter = this.orbiter;
+                if (orbiter) {
+                    orbiter.off();
+                }
+                this.orbiter = null;
+            }
             /* not needed?
             transform_model_axes(axes_transform) {
                 var ma = this.settings.model_axes;
@@ -305,6 +322,51 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.settings.dedicated_frame.set_visibilities(...args);
             };
         };
+
+        class ND_Orbiter {
+            constructor(nd_frame, center3d, radius, min_x, min_y, width, height) {
+                var that = this;
+                height = height || width;
+                this.nd_frame = nd_frame;
+                this.center3d = center3d;
+                this.radius = radius;
+                this.orbit_frame = nd_frame.settings.dedicated_frame.duplicate();
+                // invisible rectangle for capturing events.
+                this.orbit_rect = this.orbit_frame.frame_rect({
+                    x:min_x, y:min_y, w:width, h:height, 
+                    color:"rgba(0,0,0,0)", name:true});
+                var start_orbitting = function(event) {
+                    that.last_location = event.model_location;
+                };
+                var stop_orbitting = function(event) {
+                    that.last_location = null;
+                };
+                var orbit_if_dragging = function(event) {
+                    if (that.last_location) {
+                        var nd_frame = that.nd_frame;
+                        var location = event.model_location;
+                        var shift2d = nd_frame.model_transform.vsub(location, that.last_location);
+                        if (event.shiftKey) {
+                            nd_frame.pan(shift2d);
+                        } else {
+                            nd_frame.orbit(that.center3d, that.radius, shift2d);
+                        }
+                        that.last_location = location;
+                    }
+                };
+                this.orbit_rect.on("mousedown", start_orbitting);
+                this.orbit_rect.on("mouseup", stop_orbitting);
+                this.orbit_rect.on("mousemove", orbit_if_dragging);
+                this.last_location = null;
+            };
+            off() {
+                if (this.orbit_frame) {
+                    this.orbit_frame.forget();
+                }
+                this.orbit_frame = null;
+                this.orbit_rect = null;
+            };
+        }
 
         class ND_Shape {
             constructor(nd_frame, opt) {
@@ -813,6 +875,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 return diff.maxabs()
             };
             zoom_transform_xyz(center, factor) {
+                // xxx could zoom the target frame instead...
                 center = $.extend({}, center);
                 var translator = "_t";
                 var x = {x:1, y:0, z:0};

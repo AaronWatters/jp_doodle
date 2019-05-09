@@ -246,7 +246,7 @@ XXXXX clean up events for forgotten objects
             var object_list = target.object_list;
             for (var i=0; i<object_list.length; i++) {
                 var object_info = object_list[i];
-                if (object_info.prepare_for_redraw) {
+                if ((object_info) && (object_info.prepare_for_redraw)) {
                     object_info.prepare_for_redraw();
                 }
             }
@@ -2076,6 +2076,15 @@ XXXXX clean up events for forgotten objects
             events: true,   // by default support events
             shape_name: "frame",
         };
+
+        frame.duplicate = function () {
+            // make a new frame with same geometry and same parent
+            return frame.parent_canvas.vector_frame(
+                $.extend({}, frame.x_vector),
+                $.extend({}, frame.y_vector),
+                $.extend({}, frame.xy_offset)
+            );
+        }
 
         frame.local_json_data = function () {
             // top level information for serialization
