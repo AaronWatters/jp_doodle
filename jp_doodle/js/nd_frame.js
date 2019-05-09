@@ -239,6 +239,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             polygon(opt) {
                 return new ND_Polygon(this, opt);
             };
+            named_image(opt) {
+                return new ND_Named_Image(this, opt);
+            };
             as_vector(descriptor, name_order) {
                 // convert model array descriptor to mapping representation.
                 name_order = name_order || this.settings.feature_names;
@@ -268,7 +271,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var rotation = model_transform.orbit_rotation_xyz(center3d, radius, shift2d);
                 var new_transform = rotation.mmult(model_transform);
                 this.install_model_transform(new_transform);
-            }
+            };
             /* not needed?
             transform_model_axes(axes_transform) {
                 var ma = this.settings.model_axes;
@@ -279,6 +282,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.request_redraw();
             }
             */
+            // delegated methods
+            name_image_url(...args) {
+                this.settings.dedicated_frame.name_image_url(...args);
+            };
+            name_image_data(...args) {
+                this.settings.dedicated_frame.name_image_data(...args);
+            };
+            set_visibilities(...args) {
+                this.settings.dedicated_frame.set_visibilities(...args);
+            };
         };
 
         class ND_Shape {
@@ -316,6 +329,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         class ND_Rect extends ND_Shape {
             shape_name() { return "rect"; }  // xxxx should be a class member?
+        };
+
+        class ND_Named_Image extends ND_Shape {
+            shape_name() { return "named_image"; }  // xxxx should be a class member?
         };
 
         class ND_Frame_Rect extends ND_Shape {
