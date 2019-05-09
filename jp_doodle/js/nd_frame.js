@@ -272,6 +272,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var new_transform = rotation.mmult(model_transform);
                 this.install_model_transform(new_transform);
             };
+            pan(shift2d) {
+                var model_transform = this.model_transform;
+                var rotation = model_transform.pan_transform_xyz(shift2d);
+                var new_transform = rotation.mmult(model_transform);
+                this.install_model_transform(new_transform);
+            };
+            zoom(center3d, factor) {
+                var model_transform = this.model_transform;
+                var rotation = model_transform.zoom_transform_xyz(center3d, factor);
+                var new_transform = rotation.mmult(model_transform);
+                this.install_model_transform(new_transform);
+            };
             /* not needed?
             transform_model_axes(axes_transform) {
                 var ma = this.settings.model_axes;
@@ -799,7 +811,48 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // primariliy for testing whether two matrices are "close" in value.
                 var diff = this.madd(other.mscale(-1));
                 return diff.maxabs()
-            }
+            };
+            zoom_transform_xyz(center, factor) {
+                center = $.extend({}, center);
+                var translator = "_t";
+                var x = {x:1, y:0, z:0};
+                var y = {x:0, y:1, z:0};
+                var z = {x:0, y:0, z:1};
+                var before = {
+                    center: center,
+                    x: this.vadd(x, center),
+                    y: this.vadd(y, center),
+                    z: this.vadd(z, center)
+                };
+                var after = {
+                    center: center,
+                    x: this.vadd(this.vscale(factor, x), center),
+                    y: this.vadd(this.vscale(factor, y), center),
+                    z: this.vadd(this.vscale(factor, z), center)
+                };
+                return this.affine_transformation(before, after, translator);
+            };
+            pan_transform_xyz(shift2d) {
+                shift2d = $.extend({}, shift2d);
+                var translator = "_t";
+                var center = {x:0, y:0, z:0};
+                var x = {x:1, y:0, z:0};
+                var y = {x:0, y:1, z:0};
+                var z = {x:0, y:0, z:1};
+                var before = {
+                    center: center,
+                    x: x,
+                    y: y,
+                    z: z
+                };
+                var after = {
+                    center: this.vadd(center, shift2d),
+                    x: this.vadd(x, shift2d),
+                    y: this.vadd(y, shift2d),
+                    z: this.vadd(z, shift2d),
+                };
+                return this.affine_transformation(before, after, translator);
+            };
             orbit_rotation_xyz(center3d, radius, shift2d) {
                 // return an affine transform which rotates the xyz axis by shift2d at radius.
                 // make fresh copies.
@@ -855,7 +908,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     center_shift: center_shift_rotate,
                     center: center3d,
                     center_norm: center_norm
-                }
+                };
+                return this.affine_transformation(unrotated, rotated, translator);
+            };
+            affine_transformation(unrotated, rotated, translator) {
                 var include_translator = function (vectors) {
                     for (var v in vectors) {
                         vectors[v][translator] = 1.0
@@ -873,7 +929,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // make it an affine matrix
                 Affine_result.translator = translator;
                 return Affine_result;
-            }
+            };
         };
 
         return new Matrix(variable_to_vector, vi_order, vj_order, translator);
