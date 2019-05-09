@@ -446,9 +446,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             //fill_or_stroke(context, s);
             var isnum = function(x) { return ((typeof x) == 'number'); };
             if (isnum(s.sx) && isnum(s.sy) && isnum(s.sWidth) && isnum(s.sHeight) ) {
-                context.drawImage(image_source, s.sx, s.sy, s.sWidth, s.sHeight, dx, dy, s.w, height);
+                try {
+                    context.drawImage(image_source, s.sx, s.sy, s.sWidth, s.sHeight, dx, dy, s.w, height);
+                } catch (err) {
+                    console.warn("failed to draw image window " + [s.image_name, err.message]);
+                }
             } else {
-                context.drawImage(image_source, dx, dy, s.w, height);
+                try {
+                    context.drawImage(image_source, dx, dy, s.w, height);
+                } catch (err) {
+                    console.warn("failed to draw whole image " + [s.image_name, err.message]);
+                }
             }
             context.restore();  // matches translate_and_rotate
             // update stats

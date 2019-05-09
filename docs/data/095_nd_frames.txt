@@ -1,0 +1,98 @@
+***TITLE
+Multidimensional Frames
+***SCREENSHOT
+images/nd_frame.png
+***PROLOGUE
+<p>
+Multidimensional frames allow data to be projected from higher
+dimensions into 3 dimensions and then into 2 dimensions.  the
+3 dimensional representation can be rotated or otherwise animated
+before the presentation in 2 dimensions.
+</p>
+<p>
+Below we draw elements with 3 dimensional coordinates.
+Drag the mouse on the figure to rotate the diagram.
+Shift-drag the mouse on the figure to translate the diagram.
+</p>
+***CODE
+
+            var canvas_config = {
+                width: 900,
+                height: 700,
+            };
+            element.dual_canvas_helper(canvas_config);
+            var frame = element.frame_region(
+                0, 0, 900, 700,
+                -2, -2, +2, +2);
+
+            // Create a multidimensional frame, by default in 3d using variables x,y,z
+            var nd_frame = element.nd_frame({
+                dedicated_frame: frame,
+            });
+
+            // Enable orbitting.
+            var center3d = {x:0.1, y:-0.1, z:-0.25};
+            var radius = 3;
+            nd_frame.orbit_region(center3d, radius, -4, -4, 8)
+
+            // Give the frame a small initial rotation.
+            var shift2d = {x:-0.3, y:-0.2};
+            nd_frame.orbit(center3d, radius, shift2d);
+
+            // Draw simple axes.
+            nd_frame.line({position1: {x:1.5}, position2: {x:-1.5}, color:"red", lineWidth:3});
+            nd_frame.line({position1: {y:1.5}, position2: {y:-1.5}, color:"blue", lineWidth:3});
+            nd_frame.line({position1: {z:1.5}, position2: {z:-1.5}, color:"green", lineWidth:3});
+            nd_frame.text({position: {x:1.9}, text: "X", font: "normal 30px Arial"});
+            nd_frame.text({position: {y:1.9}, text: "Y", font: "normal 30px Arial"});
+            nd_frame.text({position: {z:1.9}, text: "Z", font: "normal 30px Arial"});
+
+            // make a spiral thingy using a function that maps indices to spiral coordinates.
+            var count = 50
+            var spiral_coordinates = function (index) {
+                var height = (index - count) * 1.0 / count;
+                var radius = Math.sqrt(1.0 - height*height);
+                var radians = index / 10.0;
+                return {z: Math.cos(radians) * radius, y: Math.sin(radians) * radius, x: height}
+            }
+            var transparent_pink = "rgba(255,200,200,0.7)"
+            for (var index=0; index<2*count; index++) {
+                var start = spiral_coordinates(index);
+                var end = spiral_coordinates(index + 0.5);
+                nd_frame.circle({position: start, r:3, color:"cyan"})
+                nd_frame.polygon({
+                        points: [start, end, {z: start.z}],
+                        color: transparent_pink
+                    });
+            }
+
+            // Also put an image in the frame:
+            var mandrill_url = "../docs/static/mandrill.png"
+            nd_frame.name_image_url("mandrill", mandrill_url);
+            var mandrill = nd_frame.named_image({
+                name: "whole mandrill",
+                image_name: "mandrill", position: {z: -1.1}, w:100, h:100
+            });
+
+            var zoom_in = function() {
+                nd_frame.zoom(center3d, 1.2);
+            };
+            var zin_button = $("<button>zoom_in</button>").appendTo(element);
+            zin_button.click(zoom_in);
+            var zoom_out = function() {
+                nd_frame.zoom(center3d, 0.8);
+            };
+            var zout_button = $("<button>zoom_out</button>").appendTo(element);
+            zout_button.click(zoom_out);
+
+            $("<div>Please drag to rotate or shift-drag to translate the figure.</div>").appendTo(element);
+***DISCUSSION
+<p>
+Note that the mandrill image does not rotate even though its position changes.
+Images, circles, rectangles and text are drawn using the 2 dimensional context.
+</p>
+<p>
+This example shows data drawn in 3 dimensions, but the infrastructure allows objects
+to be drawn in more dimensions.  Projection vectors define the translation of higher
+dimensions into the 3 and 2 dimensional contexts.
+</p>

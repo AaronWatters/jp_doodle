@@ -118,7 +118,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 } else {
                     // no feature names: infer them from axes and sort.
                     if (!fa) {
-                        throw new Error("feature names or axes must be provided.")
+                        // default trivial x, y, z feature axes
+                        fa = {
+                            x: {x:1},
+                            y: {y:1},
+                            z: {z:1}
+                        }
                     }
                     fn = [];
                     for (var name in fa) {
@@ -189,6 +194,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.settings.dedicated_frame.reset_frame();
                 this.object_list = [];
                 this.changed = false;
+                // no orbiter after reset.
+                this.orbiter = null;
                 this.prepare_transform();
             };
             prepare_transform() {
@@ -239,6 +246,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             polygon(opt) {
                 return new ND_Polygon(this, opt);
             };
+            named_image(opt) {
+                return new ND_Named_Image(this, opt);
+            };
             as_vector(descriptor, name_order) {
                 // convert model array descriptor to mapping representation.
                 name_order = name_order || this.settings.feature_names;
@@ -268,6 +278,33 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var rotation = model_transform.orbit_rotation_xyz(center3d, radius, shift2d);
                 var new_transform = rotation.mmult(model_transform);
                 this.install_model_transform(new_transform);
+            };
+            pan(shift2d) {
+                var model_transform = this.model_transform;
+                var rotation = model_transform.pan_transform_xyz(shift2d);
+                var new_transform = rotation.mmult(model_transform);
+                this.install_model_transform(new_transform);
+            };
+            zoom(center3d, factor) {
+                var model_transform = this.model_transform;
+                var rotation = model_transform.zoom_transform_xyz(center3d, factor);
+                var new_transform = rotation.mmult(model_transform);
+                this.install_model_transform(new_transform);
+            };
+            orbit_region(center3d, radius, min_x, min_y, width, height) {
+                // create and overlay frame with orbit control over region in target frame.
+                this.orbit_off();
+                this.orbiter = new ND_Orbiter(
+                    this, center3d, radius, min_x, min_y, width, height
+                );
+            };
+            orbit_off() {
+                // turn off any active orbit controls.
+                var orbiter = this.orbiter;
+                if (orbiter) {
+                    orbiter.off();
+                }
+                this.orbiter = null;
             }
             /* not needed?
             transform_model_axes(axes_transform) {
@@ -279,7 +316,62 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.request_redraw();
             }
             */
+            // delegated methods
+            name_image_url(...args) {
+                this.settings.dedicated_frame.name_image_url(...args);
+            };
+            name_image_data(...args) {
+                this.settings.dedicated_frame.name_image_data(...args);
+            };
+            set_visibilities(...args) {
+                this.settings.dedicated_frame.set_visibilities(...args);
+            };
         };
+
+        class ND_Orbiter {
+            constructor(nd_frame, center3d, radius, min_x, min_y, width, height) {
+                var that = this;
+                height = height || width;
+                this.nd_frame = nd_frame;
+                this.center3d = center3d;
+                this.radius = radius;
+                this.orbit_frame = nd_frame.settings.dedicated_frame.duplicate();
+                // invisible rectangle for capturing events.
+                this.orbit_rect = this.orbit_frame.frame_rect({
+                    x:min_x, y:min_y, w:width, h:height, 
+                    color:"rgba(0,0,0,0)", name:true});
+                var start_orbitting = function(event) {
+                    that.last_location = event.model_location;
+                };
+                var stop_orbitting = function(event) {
+                    that.last_location = null;
+                };
+                var orbit_if_dragging = function(event) {
+                    if (that.last_location) {
+                        var nd_frame = that.nd_frame;
+                        var location = event.model_location;
+                        var shift2d = nd_frame.model_transform.vsub(location, that.last_location);
+                        if (event.shiftKey) {
+                            nd_frame.pan(shift2d);
+                        } else {
+                            nd_frame.orbit(that.center3d, that.radius, shift2d);
+                        }
+                        that.last_location = location;
+                    }
+                };
+                this.orbit_rect.on("mousedown", start_orbitting);
+                this.orbit_rect.on("mouseup", stop_orbitting);
+                this.orbit_rect.on("mousemove", orbit_if_dragging);
+                this.last_location = null;
+            };
+            off() {
+                if (this.orbit_frame) {
+                    this.orbit_frame.forget();
+                }
+                this.orbit_frame = null;
+                this.orbit_rect = null;
+            };
+        }
 
         class ND_Shape {
             constructor(nd_frame, opt) {
@@ -316,6 +408,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         class ND_Rect extends ND_Shape {
             shape_name() { return "rect"; }  // xxxx should be a class member?
+        };
+
+        class ND_Named_Image extends ND_Shape {
+            shape_name() { return "named_image"; }  // xxxx should be a class member?
         };
 
         class ND_Frame_Rect extends ND_Shape {
@@ -782,7 +878,49 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // primariliy for testing whether two matrices are "close" in value.
                 var diff = this.madd(other.mscale(-1));
                 return diff.maxabs()
-            }
+            };
+            zoom_transform_xyz(center, factor) {
+                // xxx could zoom the target frame instead...
+                center = $.extend({}, center);
+                var translator = "_t";
+                var x = {x:1, y:0, z:0};
+                var y = {x:0, y:1, z:0};
+                var z = {x:0, y:0, z:1};
+                var before = {
+                    center: center,
+                    x: this.vadd(x, center),
+                    y: this.vadd(y, center),
+                    z: this.vadd(z, center)
+                };
+                var after = {
+                    center: center,
+                    x: this.vadd(this.vscale(factor, x), center),
+                    y: this.vadd(this.vscale(factor, y), center),
+                    z: this.vadd(this.vscale(factor, z), center)
+                };
+                return this.affine_transformation(before, after, translator);
+            };
+            pan_transform_xyz(shift2d) {
+                shift2d = $.extend({}, shift2d);
+                var translator = "_t";
+                var center = {x:0, y:0, z:0};
+                var x = {x:1, y:0, z:0};
+                var y = {x:0, y:1, z:0};
+                var z = {x:0, y:0, z:1};
+                var before = {
+                    center: center,
+                    x: x,
+                    y: y,
+                    z: z
+                };
+                var after = {
+                    center: this.vadd(center, shift2d),
+                    x: this.vadd(x, shift2d),
+                    y: this.vadd(y, shift2d),
+                    z: this.vadd(z, shift2d),
+                };
+                return this.affine_transformation(before, after, translator);
+            };
             orbit_rotation_xyz(center3d, radius, shift2d) {
                 // return an affine transform which rotates the xyz axis by shift2d at radius.
                 // make fresh copies.
@@ -838,7 +976,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     center_shift: center_shift_rotate,
                     center: center3d,
                     center_norm: center_norm
-                }
+                };
+                return this.affine_transformation(unrotated, rotated, translator);
+            };
+            affine_transformation(unrotated, rotated, translator) {
                 var include_translator = function (vectors) {
                     for (var v in vectors) {
                         vectors[v][translator] = 1.0
@@ -856,7 +997,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // make it an affine matrix
                 Affine_result.translator = translator;
                 return Affine_result;
-            }
+            };
         };
 
         return new Matrix(variable_to_vector, vi_order, vj_order, translator);

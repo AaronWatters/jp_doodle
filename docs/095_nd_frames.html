@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multidimensional Frames -- jp_doodle demo</title>
+    <link rel="icon" type="image/png" href="images/clock.png">
+    <link rel=stylesheet href="static/style.css">
+
+    <link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css">
+    <script src="jquery-ui-1.12.1/external/jquery/jquery.js"></script>
+    <script src="jquery-ui-1.12.1/jquery-ui.js"></script>
+
+    <link rel="stylesheet" href="codemirrorjs/codemirror.css">
+    <script src="codemirrorjs/codemirror.js"></script>
+    <script src="codemirrorjs/matchbrackets.js"></script>
+    <script src="codemirrorjs/continuecomment.js"></script>
+    <script src="codemirrorjs/comment.js"></script>
+    <script src="codemirrorjs/javascript.js"></script>
+    <style type="text/css">.CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black;}</style>
+    <script src="jp_doodle_js/canvas_2d_widget_helper.js"></script>
+    <script src="jp_doodle_js/dual_canvas_helper.js"></script>
+    <script src="jp_doodle_js/rectangle_collection.js"></script>
+    <script src="jp_doodle_js/array_explorer.js"></script>
+    <script src="jp_doodle_js/canvas_2d_vector_field.js"></script>
+    <script src="jp_doodle_js/nd_frame.js"></script>
+
+    <script>
+        $( function() {
+          $( "#discussion" ).accordion({collapsible : true, active : 'none'});
+          $( "#code_text" ).accordion({collapsible : true, active : 'none'});
+        } );
+    </script>
+</head>
+
+<body>
+<div class="top_menu">
+<ul>
+<li><a href="index.html">Drawing <br><img src="images/drawing.png" style="background-color:#cdf" width="50px"></a></li>
+<li><a href="010_events.html">Events <br><img src="images/events.png" style="background-color:#cdf" width="50px"></a></li>
+<li><a href="020_bindings.html">Bindings <br><img src="images/bindings.png" style="background-color:#cdf" width="50px"></a></li>
+<li><a href="030_animation.html">Animation <br><img src="images/clock.png" style="background-color:#cdf" width="50px"></a></li>
+<li><a href="040_lasso.html">Lasso <br><img src="images/lasso.png" style="background-color:#cdf" width="50px"></a></li>
+<li><a href="050_rectangles.html">Rectangles <br><img src="images/rectangle.png" style="background-color:#cdf" width="50px"></a></li>
+<li><a href="060_chart.html">Chart <br><img src="images/chart.png" style="background-color:#cdf" width="50px"></a></li>
+<li><a href="070_images.html">Images <br><img src="images/Images.png" style="background-color:#cdf" width="50px"></a></li>
+<li><a href="080_transitions.html">Transitions <br><img src="images/Transitions.png" style="background-color:#cdf" width="50px"></a></li>
+<li><a href="090_frames.html">Frames <br><img src="images/Frame.png" style="background-color:#cdf" width="50px"></a></li>
+<li><a href="095_nd_frames.html">Multidimensional Frames <br><img src="images/nd_frame.png" style="background-color:#cdf" width="50px"></a></li>
+<li><a href="array_explorer.html">Array explorer <br><img src="images/ArrayChooser.png" style="background-color:#cdf" width="50px"></a></li>
+<li><a href="color_chooser.html">Color chooser <br><img src="images/color_chooser.png" style="background-color:#cdf" width="50px"></a></li>
+<li><a href="opacity.html">Opacity Sliders <br><img src="images/opacity.png" style="background-color:#cdf" width="50px"></a></li>
+<li><a href="polygon.html">Edit polygon <br><img src="images/edit_poly.png" style="background-color:#cdf" width="50px"></a></li>
+<li><a href="vector_field.html">Vector Field <br><img src="images/vector_field.png" style="background-color:#cdf" width="50px"></a></li>
+</ul>
+</div>
+
+<p><em>
+    This is an example page for the 
+    <code><a href="https://github.com/AaronWatters/jp_doodle">jp_doodle</a></em></code>
+    package. <br>
+
+    <p><b><code><a href="https://github.com/AaronWatters/jp_doodle">jp_doodle</a></em></code>
+        makes implementing special purpose interactive visualizations easy.</b></p>
+
+    Please see the Jupyter notebooks in the package for additional
+    discussion and documentation. <br>
+
+    Please use 
+    <a href="https://mybinder.org/v2/gh/AaronWatters/jp_doodle/master">Binder</a>
+    to easily run the Jupyter notebooks of the package.
+</em></p>
+
+<h1>Multidimensional Frames</h1>
+<div>
+    <p>
+Multidimensional frames allow data to be projected from higher
+dimensions into 3 dimensions and then into 2 dimensions.  the
+3 dimensional representation can be rotated or otherwise animated
+before the presentation in 2 dimensions.
+</p>
+<p>
+Below we draw elements with 3 dimensional coordinates.
+Drag the mouse on the figure to rotate the diagram.
+Shift-drag the mouse on the figure to translate the diagram.
+</p>
+</div>
+
+<div id="target_container">
+    <div id="target_div"/>
+</div>
+
+<script>
+    var element = $('#target_div');
+    //$('<img src="http://sipi.usc.edu/database/preview/misc/4.2.03.png">').appendTo(element);
+    var canvas_config = {
+                width: 900,
+                height: 700,
+            };
+            element.dual_canvas_helper(canvas_config);
+            var frame = element.frame_region(
+                0, 0, 900, 700,
+                -2, -2, +2, +2);
+
+            // Create a multidimensional frame, by default in 3d using variables x,y,z
+            var nd_frame = element.nd_frame({
+                dedicated_frame: frame,
+            });
+
+            // Enable orbitting.
+            var center3d = {x:0.1, y:-0.1, z:-0.25};
+            var radius = 3;
+            nd_frame.orbit_region(center3d, radius, -4, -4, 8)
+
+            // Give the frame a small initial rotation.
+            var shift2d = {x:-0.3, y:-0.2};
+            nd_frame.orbit(center3d, radius, shift2d);
+
+            // Draw simple axes.
+            nd_frame.line({position1: {x:1.5}, position2: {x:-1.5}, color:"red", lineWidth:3});
+            nd_frame.line({position1: {y:1.5}, position2: {y:-1.5}, color:"blue", lineWidth:3});
+            nd_frame.line({position1: {z:1.5}, position2: {z:-1.5}, color:"green", lineWidth:3});
+            nd_frame.text({position: {x:1.9}, text: "X", font: "normal 30px Arial"});
+            nd_frame.text({position: {y:1.9}, text: "Y", font: "normal 30px Arial"});
+            nd_frame.text({position: {z:1.9}, text: "Z", font: "normal 30px Arial"});
+
+            // make a spiral thingy using a function that maps indices to spiral coordinates.
+            var count = 50
+            var spiral_coordinates = function (index) {
+                var height = (index - count) * 1.0 / count;
+                var radius = Math.sqrt(1.0 - height*height);
+                var radians = index / 10.0;
+                return {z: Math.cos(radians) * radius, y: Math.sin(radians) * radius, x: height}
+            }
+            var transparent_pink = "rgba(255,200,200,0.7)"
+            for (var index=0; index<2*count; index++) {
+                var start = spiral_coordinates(index);
+                var end = spiral_coordinates(index + 0.5);
+                nd_frame.circle({position: start, r:3, color:"cyan"})
+                nd_frame.polygon({
+                        points: [start, end, {z: start.z}],
+                        color: transparent_pink
+                    });
+            }
+
+            // Also put an image in the frame:
+            var mandrill_url = "../docs/static/mandrill.png"
+            nd_frame.name_image_url("mandrill", mandrill_url);
+            var mandrill = nd_frame.named_image({
+                name: "whole mandrill",
+                image_name: "mandrill", position: {z: -1.1}, w:100, h:100
+            });
+
+            var zoom_in = function() {
+                nd_frame.zoom(center3d, 1.2);
+            };
+            var zin_button = $("<button>zoom_in</button>").appendTo(element);
+            zin_button.click(zoom_in);
+            var zoom_out = function() {
+                nd_frame.zoom(center3d, 0.8);
+            };
+            var zout_button = $("<button>zoom_out</button>").appendTo(element);
+            zout_button.click(zoom_out);
+
+            $("<div>Please drag to rotate or shift-drag to translate the figure.</div>").appendTo(element);
+</script>
+
+<div id="code_text">
+        <h3>Code</h3>
+    
+        <div><textarea id="code" name="code">
+var element = $('#target_div');
+var canvas_config = {
+                width: 900,
+                height: 700,
+            };
+            element.dual_canvas_helper(canvas_config);
+            var frame = element.frame_region(
+                0, 0, 900, 700,
+                -2, -2, +2, +2);
+
+            // Create a multidimensional frame, by default in 3d using variables x,y,z
+            var nd_frame = element.nd_frame({
+                dedicated_frame: frame,
+            });
+
+            // Enable orbitting.
+            var center3d = {x:0.1, y:-0.1, z:-0.25};
+            var radius = 3;
+            nd_frame.orbit_region(center3d, radius, -4, -4, 8)
+
+            // Give the frame a small initial rotation.
+            var shift2d = {x:-0.3, y:-0.2};
+            nd_frame.orbit(center3d, radius, shift2d);
+
+            // Draw simple axes.
+            nd_frame.line({position1: {x:1.5}, position2: {x:-1.5}, color:"red", lineWidth:3});
+            nd_frame.line({position1: {y:1.5}, position2: {y:-1.5}, color:"blue", lineWidth:3});
+            nd_frame.line({position1: {z:1.5}, position2: {z:-1.5}, color:"green", lineWidth:3});
+            nd_frame.text({position: {x:1.9}, text: "X", font: "normal 30px Arial"});
+            nd_frame.text({position: {y:1.9}, text: "Y", font: "normal 30px Arial"});
+            nd_frame.text({position: {z:1.9}, text: "Z", font: "normal 30px Arial"});
+
+            // make a spiral thingy using a function that maps indices to spiral coordinates.
+            var count = 50
+            var spiral_coordinates = function (index) {
+                var height = (index - count) * 1.0 / count;
+                var radius = Math.sqrt(1.0 - height*height);
+                var radians = index / 10.0;
+                return {z: Math.cos(radians) * radius, y: Math.sin(radians) * radius, x: height}
+            }
+            var transparent_pink = "rgba(255,200,200,0.7)"
+            for (var index=0; index<2*count; index++) {
+                var start = spiral_coordinates(index);
+                var end = spiral_coordinates(index + 0.5);
+                nd_frame.circle({position: start, r:3, color:"cyan"})
+                nd_frame.polygon({
+                        points: [start, end, {z: start.z}],
+                        color: transparent_pink
+                    });
+            }
+
+            // Also put an image in the frame:
+            var mandrill_url = "../docs/static/mandrill.png"
+            nd_frame.name_image_url("mandrill", mandrill_url);
+            var mandrill = nd_frame.named_image({
+                name: "whole mandrill",
+                image_name: "mandrill", position: {z: -1.1}, w:100, h:100
+            });
+
+            var zoom_in = function() {
+                nd_frame.zoom(center3d, 1.2);
+            };
+            var zin_button = $("<button>zoom_in</button>").appendTo(element);
+            zin_button.click(zoom_in);
+            var zoom_out = function() {
+                nd_frame.zoom(center3d, 0.8);
+            };
+            var zout_button = $("<button>zoom_out</button>").appendTo(element);
+            zout_button.click(zoom_out);
+
+            $("<div>Please drag to rotate or shift-drag to translate the figure.</div>").appendTo(element);
+        </textarea></div>
+    
+    </div>
+
+<div id="discussion">
+        <h3>Discussion</h3>
+    
+        <div>
+            <p>
+Note that the mandrill image does not rotate even though its position changes.
+Images, circles, rectangles and text are drawn using the 2 dimensional context.
+</p>
+<p>
+This example shows data drawn in 3 dimensions, but the infrastructure allows objects
+to be drawn in more dimensions.  Projection vectors define the translation of higher
+dimensions into the 3 and 2 dimensional contexts.
+</p>
+        </div>
+    
+    </div>
+    
+    <script>
+            var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+              lineNumbers: true,
+              matchBrackets: true,
+              continueComments: "Enter",
+              extraKeys: {"Ctrl-Q": "toggleComment"}
+            });
+     </script>
+            
+</body>
+</html>
