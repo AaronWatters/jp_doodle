@@ -118,7 +118,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 } else {
                     // no feature names: infer them from axes and sort.
                     if (!fa) {
-                        throw new Error("feature names or axes must be provided.")
+                        // default trivial x, y, z feature axes
+                        fa = {
+                            x: {x:1},
+                            y: {y:1},
+                            z: {z:1}
+                        }
                     }
                     fn = [];
                     for (var name in fa) {
