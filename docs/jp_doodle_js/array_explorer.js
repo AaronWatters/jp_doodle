@@ -34,9 +34,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             lineWidth: 3,
             hover_color: "rgba(255,0,0,0.3)",
             nbins: 10, // number of bins for histograms
+            name_limit: null,  // limit for name length in heatmap
         }, options);
 
         // Shared calculated state variables
+        var name_limit = settings.name_limit;
         var mouse_down_row_col = null;
         var nrows = 0;
         var ncols = 0;
@@ -235,6 +237,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             //row_jitter_frame.reset_frame();
         };
 
+        var trim_name = function(name) {
+            if (name_limit) {
+                name = name.substring(0, name_limit);
+            }
+            return name;
+        }
+
         var draw_array = function () {
             // Main array central frame.
             nrows = row_names.length;
@@ -246,7 +255,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // Column labels along the bottom
             srow = [];
             for (var i=0; i<ncols; i++) {
-                array_frame.text({x:i+0.5, y:nrows, text:" "+column_names[i], 
+                var cname = trim_name(column_names[i]);
+                array_frame.text({x:i+0.5, y:nrows, text:" "+cname, 
                     degrees:-90, valign:"center", background:settings.background});
                 srow.push(array[selected_row][i]);
             }
@@ -258,7 +268,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // Row labels along the right.
             scol = [];
             for (var j=0; j<nrows; j++) {
-                array_frame.text({x:ncols, y:j+0.5, text:" "+row_names[j], 
+                var rname = trim_name(row_names[j]);
+                array_frame.text({x:ncols, y:j+0.5, text:" "+rname, 
                     valign:"center", background:settings.background});
                 scol.push(array[j][selected_col]);
             }
@@ -387,7 +398,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                             x:0, y:binvalue, w:right_bins[i], h:delta, color:charts.chart_color(binvalue+delta*0.5),
                         })
                     }
-                    charts.rightframe.text({x:0, y:max_value, text:row_names[charts.row], 
+                    var rname = trim_name(row_names[charts.row]);
+                    charts.rightframe.text({x:0, y:max_value, text:rname, 
                         color:charts.chart_color(max_value), background:settings.background});
                 } else {
                     charts.rightframe = element.frame_region(
@@ -405,9 +417,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         var color = charts.chart_color(value);
                         charts.rightframe.circle({y: selected_value, x:value, r:lineWidth, color:color});
                     }
-                    charts.rightframe.text({x:min_value, y:max_value, text:row_names[charts.row], 
+                    var r_name = trim_name(row_names[charts.row]);
+                    charts.rightframe.text({x:min_value, y:max_value, text:rname, 
                         color:charts.chart_color(max_value), background:settings.background});
-                    charts.rightframe.text({x:max_value, y:max_value, text:row_names[selected_row], 
+                    var s_name = trim_name(row_names[selected_row]);
+                    charts.rightframe.text({x:max_value, y:max_value, s_name, 
                         color:charts.chart_color(max_value), background:settings.background, degrees:-90});
                 }
 
@@ -442,7 +456,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                             y:0, x:binvalue, h:bottom_bins[i], w:delta, color:charts.chart_color(binvalue+delta*0.5),
                         })
                     }
-                    charts.bottomframe.text({y:bottom_bin_max, x:max_value, text:column_names[charts.col], 
+                    charts.bottomframe.text({y:bottom_bin_max, x:max_value, 
+                        text:trim_name(column_names[charts.col]), 
                         color:charts.chart_color(max_value), background:settings.background});
                 } else {
                     charts.bottomframe = element.frame_region(
@@ -460,9 +475,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         var color = charts.chart_color(value);
                         charts.bottomframe.circle({y: selected_value, x:value, r:lineWidth, color:color});
                     }
-                    charts.bottomframe.text({x:min_value*1.1, y:max_value, text:column_names[selected_col],
+                    charts.bottomframe.text({x:min_value*1.1, y:max_value, 
+                        text: trim_name(column_names[selected_col]),
                         color:charts.chart_color(max_value), background:settings.background, degrees:-90});
-                    charts.bottomframe.text({x:max_value, y:max_value*1.1, text:column_names[charts.col], 
+                    charts.bottomframe.text({x:max_value, y:max_value*1.1, 
+                        text: trim_name(column_names[charts.col]), 
                         color:charts.chart_color(max_value), background:settings.background});
                 }
 
