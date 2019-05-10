@@ -95,7 +95,7 @@ class HTML_Builder:
             result = result.replace(placeholder, replacement)
         return result
 
-    def build_menu1(self):
+    def old_build_menu(self):
         entries = []
         for file_name in sorted(self.file_name_to_info.keys()):
             info = self.file_name_to_info[file_name]
@@ -113,7 +113,14 @@ class HTML_Builder:
             url = info["url"]
             title = info["TITLE"]
             screenshot = info["SCREENSHOT"]
-            entry = '<span><a href="%s">%s <br><img src="%s" style="background-color:#cdf" width="50px"></a></span>' % (url, title, screenshot)
+            entry = (
+                '<span style="display: inline-block; margin: 10px;">' +
+                '<a href="%s">' +
+                '<div> %s </div>' +
+                '<div> <img src="%s" style="background-color:#cdf" width="50px"/> </div>' +
+                '</a>' +
+                '</span>'
+                ) % (url, title, screenshot)
             entries.append(entry)
         self.menu = "<div>\n%s\n</div>" % "\n".join(entries)
 
