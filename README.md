@@ -16,10 +16,11 @@ makes implementing special purpose interactive visualizations easy.</b>
 It is designed to facilitate the development of bespoke scientific data presentation
 and interactive exploration tools.
 
-Below is a screenshot of the "array explorer" proof of
-concept using `jp_doodle dual_canvas`.
+Below is a screenshot the 
+<a href="https://aaronwatters.github.io/jp_doodle/095_nd_frames.html">multidimensional frames
+example</a> using <code>jp_doodle</code> dual canvases.
 
-<img src="array.png" width="70%"/>
+<img src="docs/images/nd_frame.png" width="70%"/>
 
 Please click the <a href="https://youtu.be/nyuCqlTvf0c">youtube link</a> to view
 a presentation about dual canvases and related technologies.
@@ -354,6 +355,33 @@ to change the parameters of the frame on the right.
 
 <tr>
     <td>
+        <a href="https://aaronwatters.github.io/jp_doodle/095_nd_frames.html">
+        <img width="200px" src="docs/images/nd_frame.png">
+        </a>
+    </td>
+    <td>
+        <h4><a href="https://aaronwatters.github.io/jp_doodle/095_nd_frames.html">
+        Multidimensional Frames
+        </a></h4>
+        <div>
+        <p>
+Multidimensional frames allow data to be projected from higher
+dimensions into 3 dimensions and then into 2 dimensions.  the
+3 dimensional representation can be rotated or otherwise animated
+before the presentation in 2 dimensions.
+</p>
+<p>
+Below we draw elements with 3 dimensional coordinates.
+Drag the mouse on the figure to rotate the diagram.
+Shift-drag the mouse on the figure to translate the diagram.
+</p>
+        </div>
+    </td>
+</tr>
+
+
+<tr>
+    <td>
         <a href="https://aaronwatters.github.io/jp_doodle/array_explorer.html">
         <img width="200px" src="docs/images/ArrayChooser.png">
         </a>
@@ -381,6 +409,24 @@ to change the parameters of the frame on the right.
         </a></h4>
         <div>
         A color chooser.  Choose a color and then click an object to apply the color.
+        </div>
+    </td>
+</tr>
+
+
+<tr>
+    <td>
+        <a href="https://aaronwatters.github.io/jp_doodle/opacity.html">
+        <img width="200px" src="docs/images/opacity.png">
+        </a>
+    </td>
+    <td>
+        <h4><a href="https://aaronwatters.github.io/jp_doodle/opacity.html">
+        Opacity Sliders
+        </a></h4>
+        <div>
+        This example uses a dual canvas in a JQueryUI dialog with multiple sliders to adjust
+object colors and opacities in another dual canvas.
         </div>
     </td>
 </tr>

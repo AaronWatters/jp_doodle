@@ -10,10 +10,11 @@ makes implementing special purpose interactive visualizations easy.</b>
 It is designed to facilitate the development of bespoke scientific data presentation
 and interactive exploration tools.
 
-Below is a screenshot of the "array explorer" proof of
-concept using `jp_doodle dual_canvas`.
+Below is a screenshot the 
+<a href="https://aaronwatters.github.io/jp_doodle/095_nd_frames.html">multidimensional frames
+example</a> using <code>jp_doodle</code> dual canvases.
 
-<img src="array.png" width="70%"/>
+<img src="docs/images/nd_frame.png" width="70%"/>
 
 Please click the <a href="https://youtu.be/nyuCqlTvf0c">youtube link</a> to view
 a presentation about dual canvases and related technologies.
