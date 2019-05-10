@@ -12,10 +12,40 @@ Uses canvas_2d_widget_helper
 Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
 XXXXX target.shaded_objects -- need to test for false hits!
+XXXXX clean up events for forgotten objects
 
 */
 
 (function ($) {
+
+    $.fn.dual_canvas_json = function (json) {
+        // json deserializer...
+        var target = this;
+        var canvas_options = {};
+        for (var attr in json) {
+            if (attr.startsWith('canvas_')) {
+                var suffix = attr.substring(7);
+                canvas_options[suffix] = json[attr];
+            }
+        }
+        // initialize the dual canvas
+        target.dual_canvas_helper(canvas_options);
+        // install all the images
+        var image_urls = json.image_urls;
+        for (var name in image_urls) {
+            var url = image_urls[name];
+            target.name_image_url(name, url);
+        }
+        var image_data = json.image_data;
+        for (var name in image_data) {
+            var d = image_data[name];
+            target.name_image_data(name, d.data_array, d.width, d.height, d.low_color, d.high_color);
+        }
+        // create all objects (and objects in frames recursively)
+        target.deserialize_json_objects(json.object_list);
+        target.request_redraw(); // needed?
+        return target;
+    };
 
     $.fn.dual_canvas_helper = function (options) {
         var target = this;
@@ -56,6 +86,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
             target.test_canvas = $("<div/>").appendTo(target.canvas_container);
             target.test_canvas.hide();
             target.visible_canvas.canvas_2d_widget_helper(settings_overrides);
+            target.no_change_conversion = target.visible_canvas.no_change_conversion; // delegate 
+
             target.invisible_canvas.canvas_2d_widget_helper(settings_overrides);
             target.test_canvas.canvas_2d_widget_helper(settings_overrides);
 
@@ -76,12 +108,49 @@ XXXXX target.shaded_objects -- need to test for false hits!
             target.name_to_object_info = {};
             target.color_index_to_name = {};
             target.active_transitions = {};
+            target.image_urls = {};
+            target.image_data = {};
             //target.event_types = {};
             //target.default_event_handlers = {};
             target.reset_events();
             target.visible_canvas.clear_canvas();
             target.invisible_canvas.clear_canvas();
             // no need to clear the test_canvas now
+        };
+
+        target.local_json_data = function () {
+            // top level information for serialization
+            var result = {};
+            result.shape_name = "canvas";
+            for (var name in target) {
+                if (name.startsWith('canvas_') && name != 'canvas_container') {
+                    result[name] = target[name];
+                }
+            }
+            // convert data arrays to JSON compatible arrays in place
+            var image_data = target.image_data;
+            for (var name in image_data) {
+                var description = image_data[name];
+                var data_array = description.data_array;
+                if (!Array.isArray(data_array)) {
+                    var a = [];
+                    for (var i = 0; i < data_array.length; i++) {
+                        a.push(data_array[i]);
+                    }
+                    description.data_array = a;
+                }
+            }
+            result.image_data = image_data;
+            result.image_urls = target.image_urls;
+            result.name_counter = target.name_counter;
+            return result;
+        };
+
+        target.deserialize_frame = function (desc) {
+            var frame = target.vector_frame(desc.x_vector, desc.y_vector, desc.xy_offset, desc.name);
+            frame.hide = desc.hide;
+            frame.deserialize_json_objects(desc.object_list);
+            return frame;
         };
 
         target.active_region = function (default_to_view_box) {
@@ -167,9 +236,22 @@ XXXXX target.shaded_objects -- need to test for false hits!
             target.redraw_pending = false;
             target.visible_canvas.clear_canvas();
             target.invisible_canvas.clear_canvas();
+            target.prepare_for_redraw();
             target.object_list = target.objects_drawn(target.object_list);
             // perform any transitions last to allow for temporary objects
             target.do_transitions();
+        };
+
+        target.prepare_for_redraw = function () {
+            // allow each of the objects in the object list to do bookkeeping before a redraw.
+            // This is used for example by n-d frames to recalculate draw order
+            var object_list = target.object_list;
+            for (var i = 0; i < object_list.length; i++) {
+                var object_info = object_list[i];
+                if (object_info && object_info.prepare_for_redraw) {
+                    object_info.prepare_for_redraw();
+                }
+            }
         };
 
         target.objects_drawn = function (object_list) {
@@ -184,11 +266,11 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     if (object_info.is_frame) {
                         var frame = object_info;
                         frame.redraw_frame();
-                        if (frame.is_empty()) {
-                            // forget empty frames
-                            //console.log("forgetting empty frame " + object_info.name)
-                            object_index = null;
-                        }
+                        //if (frame.is_empty()) {
+                        // forget empty frames
+                        //console.log("forgetting empty frame " + object_info.name)
+                        //object_index = null;
+                        //}
                     } else {
                         // only draw objects with no name or with known names
                         //var name = object_info.name;
@@ -313,6 +395,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
         target.change = function (name_or_info, opt, no_redraw) {
             var object_info = target.get_object_info(name_or_info);
             if (object_info) {
+                // call the on_change callback if defined
+                if (object_info.on_change) {
+                    object_info.on_change(opt);
+                }
                 // in place update object description
                 $.extend(object_info, opt);
                 if (!no_redraw) {
@@ -364,6 +450,9 @@ XXXXX target.shaded_objects -- need to test for false hits!
                         }
                         if (target.active_transitions[name]) {
                             delete target.active_transitions[name];
+                        }
+                        if (target.event_info.name2type2handler[name]) {
+                            delete target.event_info.name2type2handler[name];
                         }
                     }
                     if (object_info.is_frame) {
@@ -499,7 +588,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
         assign_shape_factory("polygon");
         assign_shape_factory("named_image");
 
+        target.image_urls = {};
+
         target.name_image_url = function (image_name, url, no_redraw) {
+            target.image_urls[image_name] = url;
             // load an image url
             var the_image = new Image();
             the_image.src = url;
@@ -512,11 +604,20 @@ XXXXX target.shaded_objects -- need to test for false hits!
             }
         };
 
+        target.image_data = {};
+
         target.name_image_data = function (image_name, data_array, width, height, low_color, high_color) {
             // Create a named image from byte RGBA data.
             // https://stackoverflow.com/questions/21300921/how-to-convert-byte-array-to-image-in-javascript/21301006#21301006
             // Data must be linearized rgba values of the right size
             // low color and high color are interpolation points for grey scale images
+            target.image_data[image_name] = {
+                data_array: data_array,
+                width: width,
+                height: height,
+                low_color: low_color || null,
+                high_color: high_color || null
+            };
             var wh = width * height;
             var size = wh * 4;
             var length = data_array.length;
@@ -571,9 +672,9 @@ XXXXX target.shaded_objects -- need to test for false hits!
             if (!target.event_info.event_types[event_type]) {
                 target.visible_canvas.canvas.on(event_type, target.generic_event_handler);
                 target.event_info.event_types[event_type] = true;
-                if (!target.event_info.object_event_handlers[event_type]) {
-                    target.event_info.object_event_handlers[event_type] = {};
-                }
+                //if (!(target.event_info.object_event_handlers[event_type])) {
+                //    target.event_info.object_event_handlers[event_type] = {};
+                //}
             }
             // mouseover and mouseout events are emulated using mousemove
             if (event_type == "mouseover" || event_type == "mouseout") {
@@ -656,7 +757,12 @@ XXXXX target.shaded_objects -- need to test for false hits!
                     //var key = "on_" + event_type;
                     target.watch_event(event_type);
                     //object_info[key] = callback;
-                    target.event_info.object_event_handlers[event_type][for_name] = callback;
+                    //target.event_info.object_event_handlers[event_type][for_name] = callback;
+                    var n2t2h = target.event_info.name2type2handler;
+                    if (!n2t2h[for_name]) {
+                        n2t2h[for_name] = {};
+                    }
+                    n2t2h[for_name][event_type] = callback;
                 } else {
                     console.warn("in on_canvas_event no object found with name: " + for_name);
                 }
@@ -671,10 +777,17 @@ XXXXX target.shaded_objects -- need to test for false hits!
             if (for_name_or_info) {
                 var object_info = target.get_object_info(for_name_or_info);
                 var for_name = object_info.name;
-                if (object_info && target.event_info.object_event_handlers[event_type] && target.event_info.object_event_handlers[event_type][for_name]) {
-                    delete target.event_info.object_event_handlers[event_type][for_name];
+                //if ((object_info) && (target.event_info.object_event_handlers[event_type]) &&
+                //        (target.event_info.object_event_handlers[event_type][for_name])) {
+                //    delete target.event_info.object_event_handlers[event_type][for_name];
+                //} else {
+                //    console.warn("in off_canvas_event no object found with name: " + for_name);
+                //}
+                var n2t2h = target.event_info.name2type2handler;
+                if (object_info && n2t2h[for_name] && n2t2h[for_name][event_type]) {
+                    delete n2t2h[for_name][event_type];
                 } else {
-                    console.warn("in off_canvas_event no object found with name: " + for_name);
+                    console.warn("in off_canvas_event no bound object found with name: " + for_name);
                 }
             } else {
                 target.event_info.default_event_handlers[event_type] = null;
@@ -734,19 +847,33 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 if (!no_default) {
                     default_handler = target.event_info.default_event_handlers[event_type];
                 }
-                if (e.canvas_name && !target.disable_element_events) {
+                // object specific handling for registered objects
+                if (e.canvas_name && !target.disable_element_events && target.name_to_object_info[e.canvas_name]) {
+                    var object_name = e.canvas_name;
                     e.object_info = target.name_to_object_info[e.canvas_name];
                     // if the object has a frame, override the reference frame
                     if (e.object_info && e.object_info.frame) {
                         reference_frame = e.object_info.frame;
                     }
-                    var object_handlers = target.event_info.object_event_handlers[event_type];
-                    if (e.object_info && object_handlers) {
-                        // look for a handler specific to this object
-                        object_handler = object_handlers[e.canvas_name];
-                        if (!object_handler && e.object_info.frame) {
-                            // otherwise, look for a handler specific to this frame
-                            object_handler = object_handlers[e.object_info.frame.name];
+                    //var object_handlers = target.event_info.object_event_handlers[event_type];
+                    //if ((e.object_info) && (object_handlers)) {
+                    //    // look for a handler specific to this object
+                    //    object_handler = object_handlers[e.canvas_name];
+                    //    if ((!object_handler) && (e.object_info.frame)) {
+                    //        // otherwise, look for a handler specific to this frame
+                    //        object_handler = object_handlers[e.object_info.frame.name];
+                    //    }
+                    //}
+                    var n2t2h = target.event_info.name2type2handler;
+                    // look for a event handler specific to this name
+                    if (n2t2h[object_name] && n2t2h[object_name][event_type]) {
+                        object_handler = n2t2h[object_name][event_type];
+                    }
+                    // otherwise look for a handler bound to the frame
+                    if (!object_handler && e.object_info && e.object_info.frame) {
+                        var fname = e.object_info.frame.name;
+                        if (n2t2h[fname] && n2t2h[fname][event_type]) {
+                            object_handler = n2t2h[event_type];
                         }
                     }
                 }
@@ -763,26 +890,30 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 target.last_canvas_event = e;
             };
             // "normal" event handling
-            process_event(e);
+            //process_event(e);
             // mouseover and mouseout simulation:
-            if (last_event && e.type == "mousemove" && last_event.canvas_name != e.canvas_name) {
-                //console.log("doing transition emulations " + last_event.canvas_name)
-                if (last_event.canvas_name) {
-                    //console.log("emulating mouseout");
-                    var mouseout_event = $.extend({}, e);
-                    mouseout_event.type = "mouseout";
-                    mouseout_event.canvas_name = last_event.canvas_name;
-                    mouseout_event.object_info = last_event.object_info;
-                    // attempt a mouseout with no default
-                    process_event(mouseout_event);
-                }
-                if (e.canvas_name) {
-                    var mouseover_event = $.extend({}, e);
-                    mouseover_event.type = "mouseover";
-                    // attempt a mouseover with no default
-                    process_event(mouseover_event, true);
-                }
+            //console.log("check emulations: ", [e.type, e.canvas_name,  ((!last_event) || last_event.canvas_name)]); //debug only.
+            //if ((last_event) && (e.type == "mousemove") && (last_event.canvas_name != e.canvas_name)) {
+            //if (e.type == "mousemove") {
+            //console.log("doing transition emulations " + last_event.canvas_name)
+            if (last_event && last_event.canvas_name && (!e.canvas_name || e.canvas_name != last_event.canvas_name)) {
+                //console.log("emulating mouseout");
+                var mouseout_event = $.extend({}, e);
+                mouseout_event.type = "mouseout";
+                mouseout_event.canvas_name = last_event.canvas_name;
+                mouseout_event.object_info = last_event.object_info;
+                // attempt a mouseout with no default
+                process_event(mouseout_event);
             }
+            if (e.canvas_name && (!last_event || !last_event.canvas_name || last_event.canvas_name != e.canvas_name)) {
+                var mouseover_event = $.extend({}, e);
+                mouseover_event.type = "mouseover";
+                // attempt a mouseover with no default
+                process_event(mouseover_event, true);
+            }
+            //}
+            // "normal" event handling -- after emulations!
+            process_event(e);
             // do not allow event to propagate
             e.stopPropagation();
         };
@@ -792,7 +923,8 @@ XXXXX target.shaded_objects -- need to test for false hits!
             target.event_info = {
                 event_types: {}, // Is event enabled? type --> boolean.
                 default_event_handlers: {}, // type --> global event handler.
-                object_event_handlers: {} // type --> (name --> handler)
+                //object_event_handlers: {},  // type --> (name --> handler)
+                name2type2handler: {} // name --> (type --> handler) for events bound to an object by event
             };
             // turn off object events and defaults
             //target.disable_element_events = true;
@@ -1264,6 +1396,17 @@ XXXXX target.shaded_objects -- need to test for false hits!
         return target;
     };
 
+    $.fn.dual_canvas_helper.json_attributes = {
+        rect: "close color dx dy degrees fill h w x y lineWidth".split(" "),
+        frame_rect: "close color dx dy degrees fill h w x y lineWidth".split(" "),
+        circle: "arc color fill start x y r lineWidth".split(" "),
+        frame_circle: "arc color fill start x y r lineWidth".split(" "),
+        line: "color x1 y1 x2 y2 lineWidth".split(" "),
+        text: "align background color font text valign x y".split(" "),
+        named_image: "image_name h w x y degrees sx sy sWidth sHeight dx dy".split(" "),
+        polygon: "close color cx cy dx dy degrees fill points lineWidth".split(" ")
+    };
+
     $.fn.dual_canvas_helper.add_geometry_logic = function (target) {
         // shared functionality for frames and dual canvases
 
@@ -1298,6 +1441,56 @@ XXXXX target.shaded_objects -- need to test for false hits!
                         if (object_info.is_frame) {
                             target.detach_objects(object_info);
                         }
+                    }
+                }
+            }
+        };
+
+        target.json_serialize = function () {
+            var result = target.local_json_data();
+            var object_list = target.object_list;
+            var objects_json = [];
+            var json_attributes = $.fn.dual_canvas_helper.json_attributes;
+            for (var i = 0; i < object_list.length; i++) {
+                var description = object_list[i];
+                var object_json = {};
+                var shape_name = description.shape_name;
+                var atts = json_attributes[shape_name];
+                if (shape_name == "frame") {
+                    object_json = description.json_serialize();
+                    objects_json.push(object_json);
+                } else if (shape_name && atts) {
+                    object_json.shape_name = shape_name;
+                    object_json.hide = description.hide || false;
+                    object_json.name = description.name || null;
+                    if (description.events || description.events === false) {
+                        object_json.events = description.events;
+                    }
+                    for (var j = 0; j < atts.length; j++) {
+                        var att = atts[j];
+                        object_json[att] = description[att]; // xxxx undefines?
+                    }
+                    objects_json.push(object_json);
+                } else {
+                    console.warn("unknown shape name: " + shape_name);
+                }
+            }
+            result.object_list = objects_json;
+            return result;
+        };
+
+        target.deserialize_json_objects = function (object_list) {
+            for (var i = 0; i < object_list.length; i++) {
+                var desc = object_list[i];
+                var shape_name = desc.shape_name;
+                if (shape_name == "frame") {
+                    target.deserialize_frame(desc);
+                } else {
+                    var method = target[shape_name];
+                    if (method) {
+                        method(desc);
+                    } else {
+                        console.error("Unknown shape name: " + shape_name);
                     }
                 }
             }
@@ -1840,6 +2033,23 @@ XXXXX target.shaded_objects -- need to test for false hits!
             shape_name: "frame"
         };
 
+        frame.duplicate = function () {
+            // make a new frame with same geometry and same parent
+            return frame.parent_canvas.vector_frame($.extend({}, frame.x_vector), $.extend({}, frame.y_vector), $.extend({}, frame.xy_offset));
+        };
+
+        frame.local_json_data = function () {
+            // top level information for serialization
+            var result = {};
+            result.shape_name = frame.shape_name;
+            result.y_vector = frame.y_vector;
+            result.x_vector = frame.x_vector;
+            result.xy_offset = frame.xy_offset;
+            result.name = frame.name || null;
+            result.hide = frame.hide || false;
+            return result;
+        };
+
         // (Re)set operations
         frame.set_rframe = function (scale_x, scale_y, translate_x, translate_y) {
             scale_x = scale_x || 1.0;
@@ -1896,6 +2106,10 @@ XXXXX target.shaded_objects -- need to test for false hits!
             frame.parent_canvas.request_redraw();
         };
 
+        frame.request_redraw = function () {
+            frame.parent_canvas.request_redraw();
+        };
+
         frame.redraw_frame = function () {
             if (frame.hide) {
                 // don't redraw hidden frame
@@ -1930,6 +2144,11 @@ XXXXX target.shaded_objects -- need to test for false hits!
             // now DON't convert wrt parent
             //return frame.parent_canvas.converted_location(cvt.x, cvt.y);
             return cvt;
+        };
+
+        frame.coordinate_conversion = function (position, attribute_name, coordinate_names) {
+            var nc = frame.parent_canvas.no_change_conversion(position, attribute_name, coordinate_names);
+            return frame.converted_location(nc.x, nc.y);
         };
 
         frame.model_location = function (mx, my) {
@@ -1970,7 +2189,7 @@ XXXXX target.shaded_objects -- need to test for false hits!
                 // Make sure the frame exists in parent.
                 frame.check_registration();
                 var s = $.extend({
-                    coordinate_conversion: frame.converted_location,
+                    coordinate_conversion: frame.coordinate_conversion,
                     frame: frame
                 }, opt);
                 if (s.temporary) {

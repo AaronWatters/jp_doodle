@@ -133,10 +133,36 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
         */
 
+        /*
         var no_change_conversion = function (x, y) {
             // default frame conversion: no change
-            return { x: x, y: y };
+            return {x: x, y: y};
+        }
+        */
+
+        var no_change_conversion = function (position, attribute_name, coordinate_names) {
+            // extract x,y coordinate mapping from position description.
+            attribute_name = attribute_name || "position";
+            coordinate_names = coordinate_names || ["x", "y"];
+            // if there is a position slot, use the slot value.
+            var position_slot = position[attribute_name];
+            var result = null;
+            if (position_slot) {
+                position = position_slot;
+                result = position; // don't translate coordinate names in slot value
+            }
+            if (Array.isArray(position)) {
+                // positional array
+                result = { x: position[0], y: position[1] };
+            } else if (!result) {
+                // otherwise translate named slots
+                result = { x: position[coordinate_names[0]], y: position[coordinate_names[1]] };
+            }
+            return result;
         };
+
+        // for use in frames, for example.
+        target.no_change_conversion = no_change_conversion;
 
         target.circle = function (opt) {
             // eg: element.circle({x: 140, y: 100, r: 10, color: "green"});
@@ -153,7 +179,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             context.save();
             context.beginPath();
             //context.fillStyle = s.color;
-            var fcenter = s.coordinate_conversion(s.x, s.y);
+            //var fcenter = s.coordinate_conversion(s.x, s.y);
+            var fcenter = s.coordinate_conversion(s);
             var center = target.converted_location(fcenter.x, fcenter.y);
             // XXXX should also convert s.r?
             context.arc(center.x, center.y, s.r, s.start, s.arc);
@@ -174,9 +201,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var factor = 1.0;
             var cc = s.coordinate_conversion;
             if (cc) {
-                var origin = cc(0, 0);
-                var x1 = cc(1, 0);
-                var y1 = cc(0, 1);
+                var cxy = function (x, y) {
+                    return cc({ x: x, y: y });
+                };
+                var origin = cxy(0, 0);
+                var x1 = cxy(1, 0);
+                var y1 = cxy(0, 1);
                 var dd = target.vdistance;
                 var factor = Math.max(dd(origin, x1), dd(origin, y1));
             }
@@ -200,8 +230,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             context.beginPath();
             context.strokeStyle = s.color;
             context.lineWidth = s.lineWidth;
-            var fp1 = s.coordinate_conversion(s.x1, s.y1);
-            var fp2 = s.coordinate_conversion(s.x2, s.y2);
+            //var fp1 = s.coordinate_conversion(s.x1, s.y1);
+            //var fp2 = s.coordinate_conversion(s.x2, s.y2);
+            var fp1 = s.coordinate_conversion(s, "position1", ["x1", "y1"]);
+            var fp2 = s.coordinate_conversion(s, "position2", ["x2", "y2"]);
             var p1 = target.converted_location(fp1.x, fp1.y);
             var p2 = target.converted_location(fp2.x, fp2.y);
             context.moveTo(p1.x, p1.y);
@@ -274,24 +306,27 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             if (target.canvas_y_up) {
                 dy = -dy;
             }
-            target.translate_and_rotate(s.x, s.y, s.degrees, s.coordinate_conversion);
+            //target.translate_and_rotate(s.x, s.y, s.degrees, s.coordinate_conversion);
+            target.translate_and_rotate(s);
             context.fillText(text, dx, dy); // translated to (x,y)
             // update stats
             if (target.canvas_stats) {
-                target.rectangle_stats(s.x, s.y, rwidth, height, s.degrees, s.coordinate_conversion, dx, rdy);
+                //target.rectangle_stats(s.x, s.y, rwidth, height, s.degrees, s.coordinate_conversion, dx, rdy);
+                target.rectangle_stats(s, rwidth, height, s.degrees, s.coordinate_conversion, dx, rdy);
             }
             context.restore(); // matches translate_and_rotate
             return s;
         };
 
-        target.rectangle_stats = function (x, y, w, h, degrees, coordinate_conversion, dx, dy) {
+        target.rectangle_stats = function (s, w, h, degrees, coordinate_conversion, dx, dy) {
             dx = dx || 0;
             dy = dy || 0;
             var radians = 0.0;
             if (degrees) {
                 radians = degrees * Math.PI / 180.0;
             }
-            var cvt = coordinate_conversion(x, y);
+            //var cvt = coordinate_conversion(x, y);
+            var cvt = coordinate_conversion(s);
             var c = Math.cos(radians);
             var s = Math.sin(radians);
             var add_offset = function (dx, dy) {
@@ -306,10 +341,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             add_offset(w + dx, h + dy);
         };
 
-        target.translate_and_rotate = function (x, y, degrees, coordinate_conversion) {
+        target.translate_and_rotate = function (s) {
+            var degrees = s.degrees;
             var context = target.canvas_context;
             context.save(); // should be matched by restore elsewhere
-            var coords = coordinate_conversion(x, y);
+            var coords = s.coordinate_conversion(s);
             var cvt = target.converted_location(coords.x, coords.y);
             if (degrees && target.canvas_y_up) {
                 degrees = -degrees; // standard counter clockwise rotation convention.
@@ -322,8 +358,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         target.frame_rect = function (opt) {
             // rectangle distorted by reference frame transform
-            var x = opt.x || 0;
-            var y = opt.y || 0;
+            //var x = opt.x || 0;
+            //var y = opt.y || 0;
+            var position = no_change_conversion(opt);
+            var x = position.x;
+            var y = position.y;
             var h = opt.h || 0;
             var w = opt.w || 0;
             var dx = opt.dx || 0;
@@ -349,7 +388,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 //frame: target,
             }, opt);
             // xxxx should also convert s.w and s.h?
-            target.translate_and_rotate(s.x, s.y, s.degrees, s.coordinate_conversion);
+            //target.translate_and_rotate(s.x, s.y, s.degrees, s.coordinate_conversion);
+            target.translate_and_rotate(s);
             var context = target.canvas_context;
             context.beginPath();
             //context.fillStyle = s.color;
@@ -366,7 +406,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             context.restore(); // matches translate_and_rotate
             // update stats
             if (target.canvas_stats) {
-                target.rectangle_stats(s.x, s.y, s.w, s.h, s.degrees, s.coordinate_conversion, dx, dy0);
+                //target.rectangle_stats(s.x, s.y, s.w, s.h, s.degrees, s.coordinate_conversion, dx, dy0);
+                target.rectangle_stats(s, s.w, s.h, s.degrees, s.coordinate_conversion, dx, dy0);
             }
             return s;
         };
@@ -392,7 +433,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             // xxxx this is copy/pasted from rect -- should refactor.
             // xxxx should also convert s.w and s.h?
-            target.translate_and_rotate(s.x, s.y, s.degrees, s.coordinate_conversion);
+            //target.translate_and_rotate(s.x, s.y, s.degrees, s.coordinate_conversion);
+            target.translate_and_rotate(s);
             var context = target.canvas_context;
             context.beginPath();
             //context.fillStyle = s.color;
@@ -410,14 +452,23 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 return typeof x == 'number';
             };
             if (isnum(s.sx) && isnum(s.sy) && isnum(s.sWidth) && isnum(s.sHeight)) {
-                context.drawImage(image_source, s.sx, s.sy, s.sWidth, s.sHeight, dx, dy, s.w, height);
+                try {
+                    context.drawImage(image_source, s.sx, s.sy, s.sWidth, s.sHeight, dx, dy, s.w, height);
+                } catch (err) {
+                    console.warn("failed to draw image window " + [s.image_name, err.message]);
+                }
             } else {
-                context.drawImage(image_source, dx, dy, s.w, height);
+                try {
+                    context.drawImage(image_source, dx, dy, s.w, height);
+                } catch (err) {
+                    console.warn("failed to draw whole image " + [s.image_name, err.message]);
+                }
             }
             context.restore(); // matches translate_and_rotate
             // update stats
             if (target.canvas_stats) {
-                target.rectangle_stats(s.x, s.y, s.w, s.h, s.degrees, s.coordinate_conversion, dx, dy0);
+                //target.rectangle_stats(s.x, s.y, s.w, s.h, s.degrees, s.coordinate_conversion, dx, dy0);
+                target.rectangle_stats(s, s.w, s.h, s.degrees, s.coordinate_conversion, dx, dy0);
             }
             // use a rectangle for masking operations
             s.draw_mask = function (to_canvas, info) {
@@ -485,7 +536,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             context.beginPath();
             var point0 = points[0];
-            var p0f = s.coordinate_conversion(point0[0], point0[1]);
+            //var p0f = s.coordinate_conversion(point0[0], point0[1]);
+            var p0f = s.coordinate_conversion(point0);
             var p0c = target.converted_location(p0f.x, p0f.y);
             if (target.canvas_stats) {
                 target.add_point_stats(p0f.x, p0f.y);
@@ -493,7 +545,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             context.moveTo(p0c.x, p0c.y);
             for (var i = 1; i < points.length; i++) {
                 var point = points[i];
-                var pf = s.coordinate_conversion(point[0], point[1]);
+                //var pf = s.coordinate_conversion(point[0], point[1]);
+                var pf = s.coordinate_conversion(point);
                 var pc = target.converted_location(pf.x, pf.y);
                 context.lineTo(pc.x, pc.y);
                 if (target.canvas_stats) {

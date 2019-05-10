@@ -34,7 +34,7 @@
     "start": "npm run build-css && npm run build-js && opener html/index.html",
     "build": "babel jp_doodle/js -D -d dist",
     "prepare": "npm run build",
-    "test": "jest",
+    "test": "jest --useStderr",
     "coverage": "jest --coverage",
     "coveralls": "jest --coverage && cat ./tests/coverage/lcov.info | coveralls",
     "lint": "eslint src test --ignore-pattern tests/coverage*"
