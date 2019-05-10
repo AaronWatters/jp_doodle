@@ -95,7 +95,7 @@ class HTML_Builder:
             result = result.replace(placeholder, replacement)
         return result
 
-    def build_menu(self):
+    def build_menu1(self):
         entries = []
         for file_name in sorted(self.file_name_to_info.keys()):
             info = self.file_name_to_info[file_name]
@@ -105,6 +105,17 @@ class HTML_Builder:
             entry = '<li><a href="%s">%s <br><img src="%s" style="background-color:#cdf" width="50px"></a></li>' % (url, title, screenshot)
             entries.append(entry)
         self.menu = "<ul>\n%s\n</ul>" % "\n".join(entries)
+
+    def build_menu(self):
+        entries = []
+        for file_name in sorted(self.file_name_to_info.keys()):
+            info = self.file_name_to_info[file_name]
+            url = info["url"]
+            title = info["TITLE"]
+            screenshot = info["SCREENSHOT"]
+            entry = '<span><a href="%s">%s <br><img src="%s" style="background-color:#cdf" width="50px"></a></span>' % (url, title, screenshot)
+            entries.append(entry)
+        self.menu = "<div>\n%s\n</div>" % "\n".join(entries)
 
     def file_content(self, info):
         result = self.here_substitutions(self.template_text, info)
