@@ -427,7 +427,15 @@ class DualCanvasWidget(jp_proxy_widget.JSProxyWidget, TopLevelCanvasMixin):
         self.js_init("""
             element.empty();
             element.dual_canvas_helper(config);
+
+            // other configuration: attach request animation frame for easy Python access.
+            element.requestAnimationFrame = function(callback) {
+                requestAnimationFrame(callback);
+            };
             """, config=config)
+
+    def requestAnimationFrame(self, callback):
+        return self.element.requestAnimationFrame(callback)
 
 
 class JSONDualCanvasWidget(jp_proxy_widget.JSProxyWidget, TopLevelCanvasMixin):
