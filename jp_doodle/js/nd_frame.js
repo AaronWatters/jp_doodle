@@ -460,7 +460,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var new_transform = rotation.mmult(model_transform);
                 this.install_model_transform(new_transform);
             };
-            orbit_region(radius, center3d, min_x, min_y, width, height) {
+            orbit_region(radius, center3d, min_x, min_y, width, height, after) {
                 // create and overlay frame with orbit control over region in target frame.
                 center3d = center3d || this.center();
                 var e = this.dedicated_frame.extrema;
@@ -471,10 +471,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var in_place = false;
                 this.orbit_off();
                 this.orbiter = new ND_Orbiter(
-                    this, center3d, radius, min_x, min_y, width, height, in_place
+                    this, center3d, radius, min_x, min_y, width, height, in_place, after
                 );
             };
-            orbit_all(radius, center3d) {
+            orbit_all(radius, center3d, after) {
                 // orbit the whole frame in place.  
                 // Other event frame bindings might interfere with orbit.
                 this.orbit_off();
@@ -482,7 +482,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 center3d = center3d || this.center();
                 // min_x, min_y, width, height are not relevant
                 this.orbiter = new ND_Orbiter(
-                    this, center3d, radius, 0, 0, 0, 0, in_place
+                    this, center3d, radius, 0, 0, 0, 0, in_place, after
                 );
             }
             orbit_off() {
@@ -513,7 +513,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         class ND_Orbiter {
-            constructor(nd_frame, center3d, radius, min_x, min_y, width, height, in_place) {
+            constructor(nd_frame, center3d, radius, min_x, min_y, width, height, in_place, after) {
+                this.after = after;  // call this after adjusting orbit
                 var that = this;
                 height = height || width;
                 this.nd_frame = nd_frame;
@@ -551,6 +552,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                             nd_frame.pan(shift2d);
                         } else {
                             nd_frame.orbit(that.center3d, that.radius, shift2d);
+                        }
+                        if (that.after) {
+                            that.after();
                         }
                         that.last_location = location;
                     }
