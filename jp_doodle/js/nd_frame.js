@@ -51,7 +51,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         class ND_Frame {
             constructor(options, element) {
-                this.settings = $.extend({
+                var settings = $.extend({
                     // 2d frame to draw on.
                     dedicated_frame: null,
                     // name order for model variable conversion to/from arrays.
@@ -65,14 +65,24 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     //is_frame: true,
                     events: true,   // by default support events
                     //shape_name: "nd_frame",
+                    epsilon: 1e-5,
                 }, options);
                 this.is_frame = true;
                 this.shape_name = "nd_frame";
+
+                // copy settings as attributes of this.
+                for (var setting in settings) {
+                    this[setting] = settings[setting];
+                }
+
                 // initialize or check data structures
-                var fn = this.settings.feature_names;
-                var fa = this.settings.feature_axes;
-                var tr = this.settings.translation;
-                var ma = this.settings.model_axes;
+                if (!this.dedicated_frame.extrema) {
+                    throw new Error("frame extrema are required.")
+                }
+                var fn = this.feature_names;
+                var fa = this.feature_axes;
+                var tr = this.translation;
+                var ma = this.model_axes;
                 // make default axes and translation as needed
                 tr = tr || {};
                 if (!ma) {
@@ -131,10 +141,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     }
                     fn.sort();
                 }
-                this.settings.feature_names = fn;
-                this.settings.feature_axes = fa;
-                this.settings.translation = tr;
-                this.settings.model_axes = ma;
+                this.feature_names = fn;
+                this.feature_axes = fa;
+                this.translation = tr;
+                this.model_axes = ma;
                 
                 this.reset();
             };
@@ -143,8 +153,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     // leave frame alone.
                     return;
                 }
+                this.reset_stats();
                 this.prepare_transform();
-                var object_list = this.object_list;
+                var object_list = this.object_list.slice();
                 // project the objects into canvas frame coordinates
                 for (var i=0; i<object_list.length; i++) {
                     var nd_object_info = object_list[i];
@@ -159,15 +170,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     return (a_value - b_value);
                 }
                 object_list.sort(comparison);
+                // the event rectangle should always be the first element drawn.
+                object_list.unshift(this.event_rectangle);
                 // reset the frame object list in place in sorted order.
                 // XXXX any "other" objects in the frame will be lost.
                 var frame_object_list =  [];
-                var dedicated_frame = this.settings.dedicated_frame;
+                var dedicated_frame = this.dedicated_frame;
                 for (var i=0; i<object_list.length; i++) {
                     var object_info = object_list[i];
-                    var description2d = object_info.description2d();
+                    var description2d = object_info;
                     description2d.object_index = frame_object_list.length;
-                    description2d.object_nd = object_info;
+                    // description2d.object_nd = object_info;
                     frame_object_list.push(description2d);
                 }
                 dedicated_frame.object_list = frame_object_list;
@@ -175,34 +188,105 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             request_redraw() {
                 this.changed = true;
-                this.settings.dedicated_frame.request_redraw();
+                this.dedicated_frame.request_redraw();
             }
             redraw_frame() {
                 // Do nothing.
                 // the dedicated frame should also be on the object list and it redraws the objects.
             };
-            coordinate_conversion(feature_vector) {
+            coordinate_conversion(feature_vector, invisible) {
                 if (!feature_vector) {
                     throw new Error("falsy vector entry not allowed");
                 }
                 // convert from array as needed.
                 feature_vector = this.as_vector(feature_vector);
-                var result = this.feature_to_model.affine(feature_vector);
+                var matrix = this.feature_to_model;
+                var result = matrix.affine(feature_vector);
+                if (!invisible) {
+                    // record statistics.
+                    this.min_feature = matrix.vmin(this.min_feature, feature_vector, this.feature_axes);
+                    this.max_feature = matrix.vmax(this.max_feature, feature_vector, this.feature_axes);
+                    this.min_vector = matrix.vmin(this.min_vector, result, this.model_axes);
+                    this.max_vector = matrix.vmax(this.max_vector, result, this.model_axes);
+                }
                 return result;
             }
+            fit(zoom) {
+                // fit the dedicated frame to show all drawn points
+                // preserve relative x/y scaling.
+                zoom = zoom || 1.0;
+                var matrix = this.feature_to_model;
+                var m = this.min_vector;
+                var M = this.max_vector;
+                var center = matrix.vscale(0.5, matrix.vadd(m, M));
+                var shift = matrix.vscale(0.5 / zoom, matrix.vsub(M, m));
+                if (shift.x > shift.y) {
+                    shift.y = shift.x;
+                } else {
+                    shift.x = shift.y;
+                }
+                var lower = matrix.vsub(center, shift);
+                var upper = matrix.vadd(center, shift);
+                // no scaling change if too close
+                var dedicated_frame = this.dedicated_frame;
+                if ((upper.x - lower.x < this.epsilon) || (upper.y - lower.y < this.epsilon)) {
+                    var old_extrema = dedicated_frame.extrema;
+                    var diff = Math.max(old_extrema.frame_maxx - old_extrema.frame_minx, old_extrema.frame_maxy - old_extrema.frame_miny);
+                    var dshift = diff * 0.5 / diff;
+                    upper.x = center.x + dshift;
+                    lower.x = center.x - dshift
+                    upper.y = center.y + dshift;
+                    lower.y = center.y - dshift;
+                }
+                var extrema = {
+                    frame_minx: lower.x, frame_miny: lower.y,
+                    frame_maxx: upper.x, frame_maxy: upper.y,
+                };
+                dedicated_frame.set_extrema(extrema);
+                this.recalibrate_frame();
+            };
+            recalibrate_frame() {
+                // adjust data structures after the 2d frame changes geometry parameters.
+                var f = this.dedicated_frame;
+                // recalculate geometry for event rectangle, preserving any event bindings.
+                this.event_rectangle = f.event_region(this.event_rectangle);
+                // fix the orbitter if present (?)
+                var orbiter = this.orbiter;
+                if (orbiter) {
+                    var radius = orbiter.radius;
+                    this.orbit_off();
+                    this.orbit_region(radius);
+                }
+                f.request_redraw();
+            }
+            center() {
+                var matrix = this.feature_to_model;
+                var m = this.min_vector;
+                var M = this.max_vector;
+                return matrix.vscale(0.5, matrix.vadd(m, M));
+            };
             reset() {
-                this.settings.dedicated_frame.reset_frame();
+                var f = this.dedicated_frame;
+                f.reset_frame();
+                this.event_rectangle = f.event_region();
                 this.object_list = [];
                 this.changed = false;
                 // no orbiter after reset.
-                this.orbiter = null;
+                this.orbit_off();
+                this.reset_stats();
                 this.prepare_transform();
             };
+            reset_stats() {
+                this.min_vector = null;
+                this.max_vector = null;
+                this.min_feature = null;
+                this.max_feature = null;
+            };
             prepare_transform() {
-                var fn = this.settings.feature_names;
-                var fa = this.settings.feature_axes;
-                var tr = this.settings.translation;
-                var ma = this.settings.model_axes;
+                var fn = this.feature_names;
+                var fa = this.feature_axes;
+                var tr = this.translation;
+                var ma = this.model_axes;
                 var ma_matrix = $.fn.nd_frame.matrix(ma, projector_var_order, projector_var_order);
                 var model_transform = ma_matrix.transpose().augment(tr);
                 this.model_transform = model_transform;
@@ -211,17 +295,35 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var feature_transform = fa_matrix.transpose().augment();
                 this.feature_to_model = model_transform.mmult(feature_transform)
                 // model_vector = self.feature_to_model.affine(feature_vector);
-            }
+                // model inverse is computed as needed.
+                this._model_inverse = null;
+                // feature inverse is not well defined in general...
+            };
+            model_inverse_transform() {
+                var result = this._model_inverse;
+                if (!result) {
+                    result = this.model_transform.invert();
+                    this._model_inverse = result;
+                }
+                return result;
+            };
+            frame_position_to_model_location(frame_position) {
+                // convert 2d frame coordinates to xyz model coordinates (source z assumed at 0)
+                var M = this.model_inverse_transform();
+                frame_position = $.extend({}, frame_position);
+                frame_position.z = frame_position.z || 0;
+                return M.affine(frame_position);
+            };
             install_model_transform(model_transform) {
                 // Extract transform structure from transformed model.
                 var translation = model_transform.translation();
                 var axes = model_transform.axes();
-                this.settings.translation = translation;
-                this.settings.model_axes = axes;
+                this.translation = translation;
+                this.model_axes = axes;
                 this.model_transform = model_transform;
                 this.prepare_transform();   // probably redundant.
                 this.request_redraw();
-            }
+            };
             store_object(object) {
                 this.object_list.push(object);
             };
@@ -251,7 +353,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             as_vector(descriptor, name_order) {
                 // convert model array descriptor to mapping representation.
-                name_order = name_order || this.settings.feature_names;
+                name_order = name_order || this.feature_names;
                 let n = name_order.length;
                 var mapping = {};
                 if (Array.isArray(descriptor)) {
@@ -273,6 +375,73 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 return mapping;
             };
+            axis_scale(axis3d, shift2d) {
+                // shift the axis vector by the 2d mouse move shift2d.
+                var model_transform = this.model_transform;
+                var origin_projection = this.frame_position_to_model_location({x:0, y:0});
+                var offset_projection = this.frame_position_to_model_location(shift2d);
+                var projected_shift = model_transform.vsub(offset_projection, origin_projection);
+                var alength = model_transform.vlength(axis3d);
+                if (alength < this.epsilon) {
+                    // if axis is too short then set the axis using the shift direction.
+                    return projected_shift;
+                }
+                // otherwise scale the axis using the projection of the shift direction.
+                var axis_norm = model_transform.vunit(axis3d);
+                var dot = model_transform.vdot(axis_norm, projected_shift);
+                var scale_factor = 1.0 + (dot / alength);
+                var scaled_axis = model_transform.vscale(scale_factor, axis3d);
+                return scaled_axis;
+            };
+            feature_scale(feature_name, shift2d, fixed_feature_point) {
+                // adjust the feature axis by the 2d mouse move shift.
+                var feature_axes = this.feature_axes;
+                var axis = feature_axes[feature_name];
+                if (!axis) {
+                    throw new Error("no such feature "+ feature_name);
+                }
+                var scaled_axis = this.axis_scale(axis, shift2d);
+                return this.reset_axis(feature_name, scaled_axis, fixed_feature_point);
+            };
+            axis_rotate(axis3d, shift2d) {
+                // rotate the axis vector by the 2d mous move shift2d.
+                var model_transform = this.model_transform;
+                var origin_projection = this.frame_position_to_model_location({x:0, y:0});
+                var offset_projection = this.frame_position_to_model_location(shift2d);
+                var projected_shift = model_transform.vsub(offset_projection, origin_projection);
+                var alength = model_transform.vlength(axis3d);
+                var offset = model_transform.vadd(axis3d, projected_shift);
+                var direction = model_transform.vunit(offset);
+                var rotated_axis = model_transform.vscale(alength, direction);
+                return rotated_axis;
+            }
+            feature_rotate(feature_name, shift2d, fixed_feature_point) {
+                // adjust the feature axis by the 2d mouse move shift.
+                var feature_axes = this.feature_axes;
+                var axis = feature_axes[feature_name];
+                if (!axis) {
+                    throw new Error("no such feature "+ feature_name);
+                }
+                var rotated_axis = this.axis_rotate(axis, shift2d);
+                return this.reset_axis(feature_name, rotated_axis, fixed_feature_point);
+            };
+            reset_axis(feature_name, rotated_axis, fixed_feature_point) {
+                var feature_axes = this.feature_axes;
+                var point_before = null;
+                if (fixed_feature_point) {
+                    point_before = this.coordinate_conversion(fixed_feature_point);
+                }
+                feature_axes[feature_name] = rotated_axis;
+                this.prepare_transform();
+                if (fixed_feature_point) {
+                    // adjust the translation so the fixed point stays in the same place.
+                    var point_after = this.coordinate_conversion(fixed_feature_point);
+                    var shift_translation = this.model_transform.vsub(point_before, point_after);
+                    this.translation = this.model_transform.vadd(this.translation, shift_translation);
+                    this.prepare_transform();
+                }
+                this.request_redraw();
+            };
             orbit(center3d, radius, shift2d) {
                 var model_transform = this.model_transform;
                 var rotation = model_transform.orbit_rotation_xyz(center3d, radius, shift2d);
@@ -291,8 +460,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var new_transform = rotation.mmult(model_transform);
                 this.install_model_transform(new_transform);
             };
-            orbit_region(center3d, radius, min_x, min_y, width, height) {
+            orbit_region(radius, center3d, min_x, min_y, width, height) {
                 // create and overlay frame with orbit control over region in target frame.
+                center3d = center3d || this.center();
+                var e = this.dedicated_frame.extrema;
+                min_x = min_x || e.frame_minx;
+                min_y = min_y || e.frame_miny;
+                width = width || e.frame_maxx - e.frame_minx;
+                height = height || e.frame_maxy - e.frame_miny;
                 this.orbit_off();
                 this.orbiter = new ND_Orbiter(
                     this, center3d, radius, min_x, min_y, width, height
@@ -306,25 +481,22 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 this.orbiter = null;
             }
-            /* not needed?
-            transform_model_axes(axes_transform) {
-                var ma = this.settings.model_axes;
-                var ma_matrix = $.fn.nd_frame.matrix(ma, projector_var_order, projector_var_order);
-                var tf_matrix = $.fn.nd_frame.matrix(axes_transform, projector_var_order, projector_var_order);
-                var combined = tf_matrix.mmult(ma_matrix);
-                this.settings.model_axes = combined.matrix;
-                this.request_redraw();
-            }
-            */
             // delegated methods
             name_image_url(...args) {
-                this.settings.dedicated_frame.name_image_url(...args);
+                this.dedicated_frame.name_image_url(...args);
             };
             name_image_data(...args) {
-                this.settings.dedicated_frame.name_image_data(...args);
+                this.dedicated_frame.name_image_data(...args);
             };
             set_visibilities(...args) {
-                this.settings.dedicated_frame.set_visibilities(...args);
+                this.dedicated_frame.set_visibilities(...args);
+            };
+            on(event_type, callback) {
+                // use the event rectangle to capture events.
+                this.event_rectangle.on(event_type, callback);
+            };
+            off(event_type) {
+                this.event_rectangle.off(event_type);
             };
         };
 
@@ -335,7 +507,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.nd_frame = nd_frame;
                 this.center3d = center3d;
                 this.radius = radius;
-                this.orbit_frame = nd_frame.settings.dedicated_frame.duplicate();
+                this.orbit_frame = nd_frame.dedicated_frame.duplicate();
                 // invisible rectangle for capturing events.
                 this.orbit_rect = this.orbit_frame.frame_rect({
                     x:min_x, y:min_y, w:width, h:height, 
@@ -375,35 +547,37 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         class ND_Shape {
             constructor(nd_frame, opt) {
-                opt = $.extend({}, opt);
-                var opt2d = $.extend({}, opt);
+                // opt = $.extend({}, opt);
+                // var opt2d = $.extend({}, opt);
                 var shape_name = this.shape_name();
-                var dedicated_frame = nd_frame.settings.dedicated_frame;
+                var dedicated_frame = nd_frame.dedicated_frame;
                 var method = dedicated_frame[shape_name];
                 this.nd_frame = nd_frame;
+                // store this object in place (do not copy)
+                this.in_place = true;
                 nd_frame.changed = true;
+                // store option attributes
+                for (var desc in opt) {
+                    this[desc] = opt[desc];
+                }
                 // project the object
-                this.opt = opt;
-                opt2d = this.project(nd_frame, opt2d, opt);
+                // this.opt = opt;
+                this.project(nd_frame);
                 // draw the projected object (the first time) on the canvas
-                this.opt2d = method(opt2d);
+                var descriptors = method(this);
                 nd_frame.store_object(this);
+                // store any modified descriptor elements
+                for (var desc in descriptors) {
+                    this[desc] = descriptors[desc];
+                }
             };
-            description2d() {
-                return this.opt2d;
-            }
-            project(nd_frame, opt2d, opt) {
-                opt2d = opt2d || this.opt2d;
-                opt = opt || this.opt;
-                this.mutate_coordinates(opt2d, opt, nd_frame);
-                return opt2d;
-            };
-            mutate_coordinates(opt2d, opt, nd_frame) {
-                opt2d.position = nd_frame.coordinate_conversion(opt.position)
+            project(nd_frame) {
+                this.position = nd_frame.coordinate_conversion(this.location);
             };
             position2d() {
-                return this.opt2d.position;
+                return this.position;
             };
+            // delegated methods on and off are added automatically.
         };
 
         class ND_Rect extends ND_Shape {
@@ -432,27 +606,27 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         class ND_Line extends ND_Shape {
             shape_name() { return "line"; }  // xxxx should be a class member?
-            mutate_coordinates(opt2d, opt, nd_frame) {
-                opt2d.position1 = nd_frame.coordinate_conversion(opt.position1);
-                opt2d.position2 = nd_frame.coordinate_conversion(opt.position2);
+            project(nd_frame) {
+                this.position1 = nd_frame.coordinate_conversion(this.location1);
+                this.position2 = nd_frame.coordinate_conversion(this.location2);
             };
             position2d() {
-                return this.opt2d.position1;  // xxxx arbitrary choice; could use midpoint.
+                return this.position1;  // xxxx arbitrary choice; could use midpoint.
             };
         };
 
         class ND_Polygon extends ND_Shape {
             shape_name() { return "polygon"; }  // xxxx should be a class member?
-            mutate_coordinates(opt2d, opt, nd_frame) {
+            project(nd_frame) {
                 // xxx should convert cx, cy too...
                 var positional_xy = function(point) {
                     var cvt = nd_frame.coordinate_conversion(point);
                     return [cvt.x, cvt.y];
                 }
-                opt2d.points = opt.points.map(positional_xy);
+                this.points = this.locations.map(positional_xy);
             };
             position2d() {
-                return this.opt2d.points[0];  // xxxx arbitrary choice; could use centroid.
+                return this.points[0];  // xxxx arbitrary choice; could use centroid.
             };
         };
 
@@ -605,6 +779,23 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 addv1v2(v2, v1);
                 return result;
             };
+            vmin(v1, v2, sample, fn) {
+                if (!v1) {
+                    return v2;
+                }
+                if (!v2) {
+                    return v1;
+                }
+                fn = fn || Math.min;
+                var result = {};
+                for (var v in sample) {
+                    result[v] = fn(this.default_value(v1[v]), this.default_value(v2[v]))
+                }
+                return result;
+            };
+            vmax(v1, v2, sample) {
+                return this.vmin(v1, v2, sample, Math.max);
+            }
             vsub(v1, v2) {
                 return this.vadd(
                     v1,
@@ -793,6 +984,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         }
                     }
                 }
+                // if the original matrix was augmented then so is the inverse.
+                inverse.translator = this.translator;
                 return inverse;
             };
             normalize(vari, factor) {

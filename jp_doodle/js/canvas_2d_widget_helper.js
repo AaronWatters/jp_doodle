@@ -177,6 +177,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             //context.fillStyle = s.color;
             //var fcenter = s.coordinate_conversion(s.x, s.y);
             var fcenter = s.coordinate_conversion(s);
+            // for debugging
+            s.fcenter = fcenter;
             var center = target.converted_location(fcenter.x, fcenter.y);
             // XXXX should also convert s.r?
             context.arc(center.x, center.y, s.r, s.start, s.arc);
@@ -515,7 +517,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var sn = Math.sin(radians);
                 for (var i=0; i<input_points.length; i++) {
                     var point = input_points[i];
-                    var vx = point[0] - cx;
+                    var vx = point[0] - cx;                         
                     var vy = point[1] - cy;
                     var rx = (vx * cs - vy * sn);
                     var ry = (vx * sn + vy * cs);
