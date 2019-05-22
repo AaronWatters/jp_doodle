@@ -468,11 +468,23 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 min_y = min_y || e.frame_miny;
                 width = width || e.frame_maxx - e.frame_minx;
                 height = height || e.frame_maxy - e.frame_miny;
+                var in_place = false;
                 this.orbit_off();
                 this.orbiter = new ND_Orbiter(
-                    this, center3d, radius, min_x, min_y, width, height
+                    this, center3d, radius, min_x, min_y, width, height, in_place
                 );
             };
+            orbit_all(radius, center3d) {
+                // orbit the whole frame in place.  
+                // Other event frame bindings might interfere with orbit.
+                this.orbit_off();
+                var in_place = true;
+                center3d = center3d || this.center();
+                // min_x, min_y, width, height are not relevant
+                this.orbiter = new ND_Orbiter(
+                    this, center3d, radius, 0, 0, 0, 0, in_place
+                );
+            }
             orbit_off() {
                 // turn off any active orbit controls.
                 var orbiter = this.orbiter;
@@ -501,25 +513,37 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         class ND_Orbiter {
-            constructor(nd_frame, center3d, radius, min_x, min_y, width, height) {
+            constructor(nd_frame, center3d, radius, min_x, min_y, width, height, in_place) {
                 var that = this;
                 height = height || width;
                 this.nd_frame = nd_frame;
                 this.center3d = center3d;
                 this.radius = radius;
-                this.orbit_frame = nd_frame.dedicated_frame.duplicate();
-                // invisible rectangle for capturing events.
-                this.orbit_rect = this.orbit_frame.frame_rect({
-                    x:min_x, y:min_y, w:width, h:height, 
-                    color:"rgba(0,0,0,0)", name:true});
+                var event_target;
+                if (in_place) {
+                    this.is_overlay = false;
+                    this.orbit_frame = nd_frame.dedicated_frame;
+                    this.orbit_rect = nd_frame.event_rectangle;
+                    event_target = this.orbit_frame;
+                } else {
+                    this.is_overlay = true;
+                    this.orbit_frame = nd_frame.dedicated_frame.duplicate();
+                    // invisible rectangle for capturing events.
+                    this.orbit_rect = this.orbit_frame.frame_rect({
+                        x:min_x, y:min_y, w:width, h:height, 
+                        color:"rgba(0,0,0,0)", name:true});
+                    event_target = this.orbit_rect;
+                }
                 var start_orbitting = function(event) {
-                    that.last_location = event.model_location;
+                    if (event.model_location) {
+                        that.last_location = event.model_location;
+                    }
                 };
                 var stop_orbitting = function(event) {
                     that.last_location = null;
                 };
                 var orbit_if_dragging = function(event) {
-                    if (that.last_location) {
+                    if ((that.last_location) && (event.model_location)) {
                         var nd_frame = that.nd_frame;
                         var location = event.model_location;
                         var shift2d = nd_frame.model_transform.vsub(location, that.last_location);
@@ -531,14 +555,21 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         that.last_location = location;
                     }
                 };
-                this.orbit_rect.on("mousedown", start_orbitting);
-                this.orbit_rect.on("mouseup", stop_orbitting);
-                this.orbit_rect.on("mousemove", orbit_if_dragging);
+                event_target.on("mousedown", start_orbitting);
+                event_target.on("mouseup", stop_orbitting);
+                event_target.on("mousemove", orbit_if_dragging);
                 this.last_location = null;
+                this.event_target = event_target;
             };
             off() {
                 if (this.orbit_frame) {
-                    this.orbit_frame.forget();
+                    if (this.is_overlay) {
+                        this.orbit_frame.forget();
+                    } else {
+                        this.event_target.off("mousedown");
+                        this.event_target.off("mousemove");
+                        this.event_target.off("mouseup");
+                    }
                 }
                 this.orbit_frame = null;
                 this.orbit_rect = null;
