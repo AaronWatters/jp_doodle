@@ -126,12 +126,32 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 axis_detail.css({
                     "background-color": "#ffe",
                 });
-                axis_detail.html("axis detail here.")
+                //axis_detail.html("axis detail here.")
+                var axis_slider_div = $("<div/>").appendTo(axis_detail);
+                axis_slider_div.css({
+                    "background-color": "#dde",
+                    "display": "grid",
+                    "grid-template-columns": `auto auto 60%`,
+                });
+                $("<div>length</div>").appendTo(axis_slider_div);
+                var slider_value_div = $("<div/>").appendTo(axis_slider_div)
+                slider_value_div.html("35")
+                var axis_slider_container = $("<div/>").appendTo(axis_slider_div);
+                axis_slider_container.slider({
+                    min: -100,
+                    max: 100,
+                    step: 5,
+                    value: 35,
+                    //slide: slider_update,
+                });
+    
+
                 this.axis_detail = axis_detail;
 
                 var feature_info = $("<div/>").appendTo(sidebar);
                 feature_info.css({
                     "background-color": "#fef",
+                    "overflow": "scroll",
                 });
                 feature_info.html("feature_info here.")
                 this.feature_info = feature_info;
@@ -139,6 +159,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var config_info = $("<div/>").appendTo(sidebar);
                 config_info.css({
                     "background-color": "#eff",
+                    "overflow": "scroll",
                 });
                 config_info.html("config_info here.")
                 this.config_info = config_info;
