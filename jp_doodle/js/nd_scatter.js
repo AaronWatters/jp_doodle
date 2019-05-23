@@ -136,6 +136,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 $("<div>length</div>").appendTo(axis_slider_div);
                 var slider_value_div = $("<div/>").appendTo(axis_slider_div)
                 slider_value_div.html("35")
+                this.slider_value_div = slider_value_div;
+
                 var axis_slider_container = $("<div/>").appendTo(axis_slider_div);
                 axis_slider_container.slider({
                     min: -100,
@@ -144,7 +146,24 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     value: 35,
                     //slide: slider_update,
                 });
-    
+                this.axis_slider = axis_slider_container;
+
+                var coordinate_div = $("<div/>").appendTo(axis_detail);
+                coordinate_div.css({
+                    "background-color": "#fde",
+                    "display": "grid",
+                    "grid-template-columns": `auto auto auto auto auto auto auto auto`,
+                });
+
+                var add_3d_coord_area = function(label, size, d) {
+                    $("<div> " + label + " </div>").appendTo(coordinate_div);
+                    var area = $(`<input type="text" value="${d}" size="${size}" readonly>`).appendTo(coordinate_div);
+                    return area;
+                };
+                this.feature_name_area = add_3d_coord_area("feature", 10, "f1")
+                this.x_area = add_3d_coord_area("X", 4, 0);
+                this.x_area = add_3d_coord_area("Y", 4, 0);
+                this.x_area = add_3d_coord_area("Z", 4, 0);
 
                 this.axis_detail = axis_detail;
 
@@ -153,16 +172,55 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     "background-color": "#fef",
                     "overflow": "scroll",
                 });
-                feature_info.html("feature_info here.")
-                this.feature_info = feature_info;
+                var feature_table = $("<div/>").appendTo(feature_info);
+                feature_table.css({
+                    "background-color": "#eed",
+                    "display": "grid",
+                    "grid-template-columns": `auto 30% auto auto auto auto auto`,
+                    "grid-gap": `2`,
+                });
+                // include_check, name, x y z min max
+                this.reset_feature_table = function () {
+                    feature_table.empty();
+                    // header row
+                    $("<div>\u2713</div>").appendTo(feature_table);
+                    $("<div>feature</div>").appendTo(feature_table);
+                    $("<div>X</div>").appendTo(feature_table);
+                    $("<div>Y</div>").appendTo(feature_table);
+                    $("<div>Z</div>").appendTo(feature_table);
+                    $("<div>min</div>").appendTo(feature_table);
+                    $("<div>max</div>").appendTo(feature_table);
+                }
+                this.reset_feature_table();
+                //feature_info.html("feature_info here.")
+                this.feature_table = feature_table;
+                //this.feature_info = feature_info;
         
                 var config_info = $("<div/>").appendTo(sidebar);
                 config_info.css({
                     "background-color": "#eff",
                     "overflow": "scroll",
                 });
-                config_info.html("config_info here.")
-                this.config_info = config_info;
+                //config_info.html("config_info here.")
+                var config_table = $("<div/>").appendTo(config_info);
+                config_table.css({
+                    "background-color": "#eed",
+                    "display": "grid",
+                    "grid-template-columns": `auto 80%`,
+                    "grid-gap": `10`,
+                });
+                // select radio button, configuration name
+                this.reset_config_table = function () {
+                    config_table.empty();
+                    // header row
+                    $("<div>\u2713</div>").appendTo(config_table);
+                    $("<div>configuration</div>").appendTo(config_table);
+                }
+                this.reset_config_table();
+                //feature_info.html("feature_info here.")
+                this.config_table = config_table;
+                this.save_config_button = $("<button>save new configuration</button>").appendTo(config_info);
+                //this.config_info = config_info;
 
                 var info = $("<div/>").appendTo(container);
                 info.css({
