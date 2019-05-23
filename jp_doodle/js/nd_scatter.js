@@ -18,8 +18,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             constructor(options, element) {
                 this.settings = $.extend({
                     // default settings:
-                    scatter_size: "700px",
-                    axis_size: "300px",
+                    scatter_size: 700,
+                    axis_size: 300,
                     header_size: "30px",
                     info_height: "200px",
                     gap: "10px",
@@ -33,9 +33,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var container = this.element;
                 container.empty();
                 container.css({
+                    //"background-color": "#eed",
                     "display": "grid",
-                    "grid-template-columns": `${s.scatter_size} ${s.axis_size}`,
-                    "grid-template-rows": `${s.header_size} ${s.scatter_size} ${s.info_height}`,
+                    "grid-template-columns": `${s.scatter_size}px ${s.axis_size}px`,
+                    "grid-template-rows": `${s.header_size} ${s.scatter_size}px ${s.info_height}`,
                     "grid-gap": `${s.gap}`,
                 });
 
@@ -84,11 +85,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         
                 var scatter = $("<div/>").appendTo(container);
                 scatter.css({
-                    "background-color": "#999",
+                    "background-color": "#efe",
                     "grid-column": "1",
                     "grid-row": "2",
                 });
-                scatter.html("scatter plot here.");
+                //scatter.html("scatter plot here.");
+                var w = s.scatter_size;
+                var canvas_config = {
+                    width: w,
+                    height: w,
+                };
+                scatter.dual_canvas_helper(canvas_config);
                 this.scatter = scatter;
         
                 var sidebar = $("<div/>").appendTo(container);
@@ -98,15 +105,21 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     "grid-row": "1 / 4",
                     "display": "grid",
                     "grid-template-columns": `auto`,
-                    "grid-template-rows": `auto auto auto auto`,
+                    "grid-template-rows": `${s.axis_size}px auto auto auto`,
                     "grid-gap": `${s.gap}`,
                 });
                 //sidebar.html("axis and features here.");
                 var axis_canvas = $("<div/>").appendTo(sidebar);
                 axis_canvas.css({
-                    "background-color": "#faa",
+                    "background-color": "#eef",
                 });
-                axis_canvas.html("axis canvas here.")
+                //axis_canvas.html("axis canvas here.")
+                w = s.axis_size;
+                var canvas_config = {
+                    width: w,
+                    height: w,
+                };
+                axis_canvas.dual_canvas_helper(canvas_config);
                 this.axis_canvas = axis_canvas;
 
                 var axis_detail = $("<div/>").appendTo(sidebar);
