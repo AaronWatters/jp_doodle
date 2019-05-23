@@ -211,6 +211,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 return result;
             }
+            view_extrema() {
+                // return extrema for the viewing frame
+                return this.dedicated_frame.extrema;
+            }
             fit(zoom) {
                 // fit the dedicated frame to show all drawn points
                 // preserve relative x/y scaling.
@@ -504,11 +508,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.dedicated_frame.set_visibilities(...args);
             };
             on(event_type, callback) {
-                // use the event rectangle to capture events.
+                // use the event rectangle to capture events. (xxxx should attach to frame?)
                 this.event_rectangle.on(event_type, callback);
             };
             off(event_type) {
                 this.event_rectangle.off(event_type);
+            };
+            forget_objects(objects_or_infos) {
+                this.dedicated_frame.forget_objects(objects_or_infos);
             };
         };
 
@@ -584,7 +591,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             constructor(nd_frame, opt) {
                 // opt = $.extend({}, opt);
                 // var opt2d = $.extend({}, opt);
-                var shape_name = this.shape_name();
+                var shape_name = this._shape_name();
+                this.shape_name = shape_name;
                 var dedicated_frame = nd_frame.dedicated_frame;
                 var method = dedicated_frame[shape_name];
                 this.nd_frame = nd_frame;
@@ -616,31 +624,31 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         class ND_Rect extends ND_Shape {
-            shape_name() { return "rect"; }  // xxxx should be a class member?
+            _shape_name() { return "rect"; }  // xxxx should be a class member?
         };
 
         class ND_Named_Image extends ND_Shape {
-            shape_name() { return "named_image"; }  // xxxx should be a class member?
+            _shape_name() { return "named_image"; }  // xxxx should be a class member?
         };
 
         class ND_Frame_Rect extends ND_Shape {
-            shape_name() { return "frame_rect"; }  // xxxx should be a class member?
+            _shape_name() { return "frame_rect"; }  // xxxx should be a class member?
         };
 
         class ND_Circle extends ND_Shape {
-            shape_name() { return "circle"; }  // xxxx should be a class member?
+            _shape_name() { return "circle"; }  // xxxx should be a class member?
         };
 
         class ND_Frame_Circle extends ND_Shape {
-            shape_name() { return "frame_circle"; }  // xxxx should be a class member?
+            _shape_name() { return "frame_circle"; }  // xxxx should be a class member?
         };
 
         class ND_Text extends ND_Shape {
-            shape_name() { return "text"; }  // xxxx should be a class member?
+            _shape_name() { return "text"; }  // xxxx should be a class member?
         };
 
         class ND_Line extends ND_Shape {
-            shape_name() { return "line"; }  // xxxx should be a class member?
+            _shape_name() { return "line"; }  // xxxx should be a class member?
             project(nd_frame) {
                 this.position1 = nd_frame.coordinate_conversion(this.location1);
                 this.position2 = nd_frame.coordinate_conversion(this.location2);
@@ -651,7 +659,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         class ND_Polygon extends ND_Shape {
-            shape_name() { return "polygon"; }  // xxxx should be a class member?
+            _shape_name() { return "polygon"; }  // xxxx should be a class member?
             project(nd_frame) {
                 // xxx should convert cx, cy too...
                 var positional_xy = function(point) {
