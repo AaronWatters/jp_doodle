@@ -28,6 +28,54 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 element.empty();
                 element.html("uninitialized nd_scatter plot widget.");
             };
+            define_json(json_data) {
+                this.reset();
+                var fjson = json_data.features;
+                for (var i=0; i<fjson.length; i++) {
+                    this.define_feature(fjson[i]);
+                }
+                var cjson = json_data.configurations;
+                for (var i=0; i<cjson.length; i++) {
+                    this.define_configuration(cjson[i]);
+                }
+                var pjson = json_data.points;
+                for (var i=0; i<pjson.length; i++) {
+                    // keep points as arrays -- convert when needed
+                    var a = pjson[i];
+                    this.point_arrays.push(a.slice());
+                }
+            };
+            feature_vector(index) {
+                var a = this.point_arrays[i];
+                return this.feature_vector_from_array(a);
+            };
+            feature_vector_from_array(a) {
+                var result = {};
+                var features = this.features;
+                for (var feature_name in features) {
+                    var f = features[feature_name];
+                    result[f.name] = a[f.index];
+                }
+                return result;
+            }
+            define_feature(fdescr) {
+                var feature = new Feature(fdescr.name, fdescr.color, fdescr.index);
+                this.feature_names.push(feature.name);
+                this.features[feature.name] = feature;
+            };
+            define_configuration(cdescr) {
+                var config = new Configuration(cdescr.name, cdescr.projectors, cdescr.colorizer);
+                this.configuration_names.push(config.name);
+                this.configurations[config.name] = config;
+            };
+            reset() {
+                // (re) initialize all data structures.
+                this.feature_names = [];
+                this.features = {};
+                this.configuration_names = [];
+                this.configurations = {};
+                this.point_arrays = [];
+            };
             make_scaffolding() {
                 var s = this.settings;
                 var container = this.element;
@@ -177,7 +225,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     "background-color": "#eed",
                     "display": "grid",
                     "grid-template-columns": `auto 30% auto auto auto auto auto`,
-                    "grid-gap": `2`,
+                    "grid-gap": `2px`,
                 });
                 // include_check, name, x y z min max
                 this.reset_feature_table = function () {
@@ -207,7 +255,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     "background-color": "#eed",
                     "display": "grid",
                     "grid-template-columns": `auto 80%`,
-                    "grid-gap": `10`,
+                    "grid-gap": `10px`,
                 });
                 // select radio button, configuration name
                 this.reset_config_table = function () {
@@ -233,6 +281,22 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
         };
 
+        class Feature {
+            constructor(name, color, index) {
+                this.name = name;
+                this.color = color;
+                this.index = index;
+            };
+        };
+
+        class Configuration {
+            constructor(name, projectors, colorizer) {
+                this.name = name;
+                this.projectors = projectors;
+                this.colorizer = colorizer;
+            };
+        }
+
         var result = new ND_Scatter(options, element);
 
         return result;
@@ -244,6 +308,209 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         var scatter_plot = element.nd_scatter({});
         scatter_plot.make_scaffolding();
 
+        var iris20json = {
+            "features": [
+                {
+                    "name": "sepal length",
+                    "index": 0,
+                    "color": "brown"
+                },
+                {
+                    "name": "sepal width",
+                    "index": 1,
+                    "color": "purple"
+                },
+                {
+                    "name": "petal length",
+                    "index": 2,
+                    "color": "orange"
+                },
+                {
+                    "name": "petal width",
+                    "index": 3,
+                    "color": "seagreen"
+                }
+            ],
+            "configurations": [
+                {
+                    "projectors": {
+                        "sepal length": {
+                            "x": 0.5223716204076604,
+                            "y": 0.3723183633499691,
+                            "z": -0.7210168090620429
+                        },
+                        "sepal width": {
+                            "x": -0.2633549153139399,
+                            "y": 0.9255564941472947,
+                            "z": 0.2420328772139411
+                        },
+                        "petal length": {
+                            "x": 0.5812540055976481,
+                            "y": 0.021094776841246592,
+                            "z": 0.14089225848754244
+                        },
+                        "petal width": {
+                            "x": 0.5656110498826491,
+                            "y": 0.06541576907892803,
+                            "z": 0.6338014033558228
+                        }
+                    },
+                    "name": "3d PCA",
+                    "colorizer": {
+                        "index": 4,
+                        "mapping": {
+                            "Iris-virginica": "brown",
+                            "Iris-setosa": "purple",
+                            "Iris-versicolor": "orange"
+                        }
+                    }
+                }
+            ],
+            "points": [
+                [
+                    -0.29484181807955234,
+                    -0.587763531435416,
+                    0.6490272348640005,
+                    1.053536733088581,
+                    "Iris-virginica"
+                ],
+                [
+                    0.5533332750260068,
+                    -0.3563605663033627,
+                    1.0470871627887663,
+                    0.7905907930498337,
+                    "Iris-virginica"
+                ],
+                [
+                    -1.6276883929597161,
+                    -1.7447783570956819,
+                    -1.3981381087490836,
+                    -1.1815037572407716,
+                    "Iris-setosa"
+                ],
+                [
+                    -1.0218490407414595,
+                    0.8006542593569032,
+                    -1.284406700770579,
+                    -1.3129767272601454,
+                    "Iris-setosa"
+                ],
+                [
+                    -1.5065205225160652,
+                    1.2634601896210098,
+                    -1.5687352207168408,
+                    -1.3129767272601454,
+                    "Iris-setosa"
+                ],
+                [
+                    1.2803404976879151,
+                    0.10644536396074403,
+                    0.7627586428425047,
+                    1.4479556431467018,
+                    "Iris-virginica"
+                ],
+                [
+                    -0.9006811702978088,
+                    1.7262661198851155,
+                    -1.2275409967813267,
+                    -1.3129767272601454,
+                    "Iris-setosa"
+                ],
+                [
+                    0.5533332750260068,
+                    0.5692512942248498,
+                    0.5352958268854957,
+                    0.5276448530110863,
+                    "Iris-versicolor"
+                ],
+                [
+                    0.31099753413870407,
+                    -0.3563605663033627,
+                    0.5352958268854957,
+                    0.2646989129723388,
+                    "Iris-versicolor"
+                ],
+                [
+                    -0.4160096885232032,
+                    -1.0505694616995218,
+                    0.3646987149177388,
+                    0.001752972933591456,
+                    "Iris-versicolor"
+                ],
+                [
+                    -1.2641847816287624,
+                    0.10644536396074403,
+                    -1.2275409967813267,
+                    -1.3129767272601454,
+                    "Iris-setosa"
+                ],
+                [
+                    -1.0218490407414595,
+                    0.3378483290927974,
+                    -1.4550038127383362,
+                    -1.3129767272601454,
+                    "Iris-setosa"
+                ],
+                [
+                    -1.2641847816287624,
+                    -0.12495760117130933,
+                    -1.3412724047598314,
+                    -1.1815037572407716,
+                    "Iris-setosa"
+                ],
+                [
+                    -1.7488562634033669,
+                    -0.12495760117130933,
+                    -1.3981381087490836,
+                    -1.3129767272601454,
+                    "Iris-setosa"
+                ],
+                [
+                    0.432165404582356,
+                    -1.9761813222277342,
+                    0.4215644189069909,
+                    0.3961718829917126,
+                    "Iris-versicolor"
+                ],
+                [
+                    -0.4160096885232032,
+                    -1.5133753919636286,
+                    0.02350449098222449,
+                    -0.12971999708578205,
+                    "Iris-versicolor"
+                ],
+                [
+                    -0.4160096885232032,
+                    1.0320572244889565,
+                    -1.3981381087490836,
+                    -1.3129767272601454,
+                    "Iris-setosa"
+                ],
+                [
+                    -1.1430169111851105,
+                    -1.5133753919636286,
+                    -0.26082402896403717,
+                    -0.2611929671051558,
+                    "Iris-versicolor"
+                ],
+                [
+                    -1.7488562634033669,
+                    0.3378483290927974,
+                    -1.3981381087490836,
+                    -1.3129767272601454,
+                    "Iris-setosa"
+                ],
+                [
+                    2.2496834612371255,
+                    -0.587763531435416,
+                    1.6726099066705424,
+                    1.053536733088581,
+                    "Iris-virginica"
+                ]
+            ]
+        };
+
+        scatter_plot.define_json(iris20json);
     };
 
 })(jQuery);
