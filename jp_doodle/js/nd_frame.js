@@ -269,6 +269,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var M = this.max_vector;
                 return matrix.vscale(0.5, matrix.vadd(m, M));
             };
+            diagonal_length() {
+                var matrix = this.feature_to_model;
+                var m = this.min_vector;
+                var M = this.max_vector;
+                return matrix.vlength(matrix.vsub(m, M));
+            }
             reset() {
                 var f = this.dedicated_frame;
                 f.reset_frame();

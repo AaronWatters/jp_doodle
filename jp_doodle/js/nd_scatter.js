@@ -23,10 +23,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     header_size: "30px",
                     info_height: "200px",
                     gap: "10px",
+                    zoom: 0.5,
+                    point_radius: 7,
                 }, options);
                 this.element = element;
                 element.empty();
                 element.html("uninitialized nd_scatter plot widget.");
+                // trivial matrix for access to matrix/vector operations
+                this.matrix = $.fn.nd_frame.matrix({}, [], []);
             };
             define_json(json_data) {
                 this.reset();
@@ -38,13 +42,67 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 for (var i=0; i<cjson.length; i++) {
                     this.define_configuration(cjson[i]);
                 }
+                this.current_configuration_name = this.configuration_names[0];
                 var pjson = json_data.points;
                 for (var i=0; i<pjson.length; i++) {
-                    // keep points as arrays -- convert when needed
                     var a = pjson[i];
                     this.point_arrays.push(a.slice());
+                    this.point_vectors.push(this.feature_vector_from_array(a));
                 }
+                this.draw_configuration();
             };
+            draw_configuration() {
+                this.draw_scatter_canvas();
+            };
+            configuration() {
+                return this.configurations[this.current_configuration_name];
+            };
+            draw_scatter_canvas() {
+                var s = this.settings;
+                var that = this;
+                var configuration = this.configuration();
+                var scatter = this.scatter;
+                scatter.clear_canvas();
+                var w = s.scatter_size;
+                var xy_frame = scatter.frame_region(
+                    0, 0, w, w,
+                    -1, -1, 1, 1  // dummy values reset later.
+                );
+                this.xy_frame = xy_frame;  // is this needed?
+                var nd_frame = scatter.nd_frame({
+                    dedicated_frame: xy_frame,
+                    feature_axes: configuration.projectors,
+                    translation: this.center_xyz,
+                });
+                this.nd_frame = nd_frame;
+                // draw the points
+                var points = this.point_vectors;
+                var point_arrays = this.point_arrays;
+                var name = true;
+                for (var i=0; i<points.length; i++) {
+                    var point_vector = points[i];
+                    var point_array = point_arrays[i];
+                    var color = configuration.color(point_array);
+                    var circle = nd_frame.circle({
+                        location: point_vector,
+                        r: s.point_radius,   // xxxxx parameterize
+                        color: color,
+                        name: name,
+                    })
+                }
+                // fit (zoomed out) the frame and enable orbitting
+                var radius = nd_frame.diagonal_length();
+                this.center_xyz = nd_frame.center();
+                nd_frame.fit(s.zoom);
+                var after = function () {
+                    that.after_orbit();
+                }
+                nd_frame.orbit_all(radius, null, after);
+            };
+            after_orbit() {
+                // After orbit change adjust related displayed information.
+                // xxxxx do nothing yet
+            }
             feature_vector(index) {
                 var a = this.point_arrays[i];
                 return this.feature_vector_from_array(a);
@@ -57,14 +115,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     result[f.name] = a[f.index];
                 }
                 return result;
-            }
+            };
             define_feature(fdescr) {
-                var feature = new Feature(fdescr.name, fdescr.color, fdescr.index);
+                var feature = new Feature(fdescr.name, fdescr.color, fdescr.index, this);
                 this.feature_names.push(feature.name);
                 this.features[feature.name] = feature;
             };
             define_configuration(cdescr) {
-                var config = new Configuration(cdescr.name, cdescr.projectors, cdescr.colorizer);
+                var config = new Configuration(cdescr.name, cdescr.projectors, cdescr.colorizer, this);
                 this.configuration_names.push(config.name);
                 this.configurations[config.name] = config;
             };
@@ -75,8 +133,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.configuration_names = [];
                 this.configurations = {};
                 this.point_arrays = [];
+                this.point_vectors = [];
+                this.current_configuration_name = null;
+                this.xy_frame = null;
+                this.nd_frame = null;
+                // temporary default
+                this.center_xyz = {x:0, y:0, z:0};
             };
             make_scaffolding() {
+                var that = this;
                 var s = this.settings;
                 var container = this.element;
                 container.empty();
@@ -117,19 +182,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 //mode_area.html("Mode selections here.");
                 //this.mode_area = mode_area;
 
-                var add_mode = function(label) {
-                    var span = $('<span/>').appendTo(mode_area);
-                    span.css({
-                        "background-color": "#fee",
-                    });
-                    var cb = $('<input type="checkbox"/>').appendTo(span);
-                    $('<span> ' + label + ' </span>').appendTo(span);
-                    return cb
+                var add_mode = function(label, off) {
+                    return add_checkbox(label, mode_area, off, "#fee");
                 };
                 this.dots_cb = add_mode("dots");
                 this.projections_cb = add_mode("projections");
                 this.axes_cb = add_mode("axes");
-                this.lasso_cb = add_mode("lasso");
+                this.lasso_cb = add_mode("lasso", true);
         
                 var scatter = $("<div/>").appendTo(container);
                 scatter.css({
@@ -281,20 +340,55 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
         };
 
+        var add_checkbox = function (label, to_parent, off, background) {
+            var span = $('<span/>').appendTo(to_parent);
+            if (background) {
+                span.css({
+                    "background-color": "#fee",
+                });
+            }
+            var cb = $('<input type="checkbox"/>').appendTo(span);
+            $('<span> ' + label + ' </span>').appendTo(span);
+            cb.is_checked = function () {
+                return cb.is(":checked");
+            };
+            cb.uncheck = function(off) {
+                return cb.prop("checked", !off)
+            };
+            cb.uncheck(off);
+            return cb;
+        };
+
         class Feature {
-            constructor(name, color, index) {
+            constructor(name, color, index, nd_scatter) {
                 this.name = name;
                 this.color = color;
                 this.index = index;
+                this.nd_scatter = nd_scatter;
             };
         };
 
         class Configuration {
-            constructor(name, projectors, colorizer) {
+            constructor(name, projectors, colorizer, nd_scatter) {
                 this.name = name;
                 this.projectors = projectors;
                 this.colorizer = colorizer;
+                this.nd_scatter = nd_scatter;
             };
+            max_length() {
+                var result = 0;
+                for (var v in this.projectors) {
+                    var vector = this.projectors[v];
+                    var length = this.nd_scatter.matrix.vlength();
+                    result = Math.max(length, result);
+                }
+                return result;
+            };
+            color(point_array) {
+                var colorizer = this.colorizer;
+                var indicator = point_array[colorizer.index];
+                return colorizer.mapping[indicator];
+            }
         }
 
         var result = new ND_Scatter(options, element);
