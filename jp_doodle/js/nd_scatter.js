@@ -23,8 +23,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     header_size: "30px",
                     info_height: "200px",
                     gap: "10px",
-                    zoom: 0.5,
+                    zoom: 0.9,
                     point_radius: 7,
+                    feature_scale: 0.8,
+                    square_side: 16,
                 }, options);
                 this.element = element;
                 element.empty();
@@ -93,17 +95,22 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         fill: fill,
                     })
                 }
-                this.center_xyz = nd_frame.center();
+                //this.center_xyz = nd_frame.center();
+                var m = nd_frame.min_feature;
+                var M = nd_frame.max_feature;
+                var diff = matrix.vsub(M, m);
+                var centroid = matrix.vscale(0.5, matrix.vadd(m, M));
+                this.center_xyz = nd_frame.feature_vector_to_model_location(centroid);
+                var diag = nd_frame.diagonal_length();
                 if (this.axes_cb.is_checked()) {
                     // draw x, y, z axes
                     var aliases = configuration.aliases || {x: "x", y: "y", z: "z"};
-                    var diag = nd_frame.diagonal_length();
                     for (var model_coord in aliases) {
                         var alias = aliases[model_coord];
                         var unit = {}
                         unit[model_coord] = 1;
-                        var endpoint = matrix.vadd(this.center_xyz, matrix.vscale(diag/3.0, unit));
-                        var txtpoint = matrix.vadd(this.center_xyz, matrix.vscale(diag/2.0, unit));
+                        var endpoint = matrix.vadd(this.center_xyz, matrix.vscale(diag/6.0, unit));
+                        var txtpoint = matrix.vadd(this.center_xyz, matrix.vscale(diag/4.0, unit));
                         nd_frame.line({
                             location1: this.center_xyz, 
                             location2: endpoint,
@@ -117,6 +124,26 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                             background: "#ddd",
                             in_model: true,
                         })
+                    }
+                }
+                if (this.projections_cb.is_checked()) {
+                    // draw projectors for each feature
+                    for (var feature_name in this.features) {
+                        var feature = this.features[feature_name];
+                        var shift = diff[feature_name] || 1.0;
+                        var offset = {}
+                        offset[feature_name] = shift;
+                        var color = feature.color;
+                        var endpoint = matrix.vadd(centroid, matrix.vscale(s.feature_scale, offset));
+                        nd_frame.line({
+                            location1: endpoint,
+                            location2: centroid,
+                            color:color,
+                        });
+                        var side = s.square_side;
+                        var side2 = side * 0.5
+                        var head = nd_frame.rect({location: endpoint, w:side, h:side, color:color, dx:-side2, dy:-side2, 
+                            name:true, feature:feature_name});
                     }
                 }
                 // fit (zoomed out) the frame and enable orbitting
@@ -455,22 +482,22 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 {
                     "name": "sepal length",
                     "index": 0,
-                    "color": "brown"
+                    "color": "red"
                 },
                 {
                     "name": "sepal width",
                     "index": 1,
-                    "color": "purple"
+                    "color": "blue"
                 },
                 {
                     "name": "petal length",
                     "index": 2,
-                    "color": "orange"
+                    "color": "green"
                 },
                 {
                     "name": "petal width",
                     "index": 3,
-                    "color": "seagreen"
+                    "color": "cyan"
                 }
             ],
             "configurations": [

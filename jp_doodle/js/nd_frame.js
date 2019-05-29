@@ -200,7 +200,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 // convert from array as needed.
                 feature_vector = this.as_vector(feature_vector);
-                var matrix = this.feature_to_model;
+                var matrix = this.feature_to_frame;
                 var result = matrix.affine(feature_vector);
                 if (!invisible) {
                     // record statistics.
@@ -224,7 +224,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // fit the dedicated frame to show all drawn points
                 // preserve relative x/y scaling.
                 zoom = zoom || 1.0;
-                var matrix = this.feature_to_model;
+                var matrix = this.feature_to_frame;
                 var m = this.min_vector;
                 var M = this.max_vector;
                 var center = matrix.vscale(0.5, matrix.vadd(m, M));
@@ -269,13 +269,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 f.request_redraw();
             }
             center() {
-                var matrix = this.feature_to_model;
+                // 3d center of visible locations.
+                var matrix = this.feature_to_frame;
                 var m = this.min_vector;
                 var M = this.max_vector;
                 return matrix.vscale(0.5, matrix.vadd(m, M));
             };
             diagonal_length() {
-                var matrix = this.feature_to_model;
+                // length from min visible location to max visible location in model space.
+                var matrix = this.feature_to_frame;
                 var m = this.min_vector;
                 var M = this.max_vector;
                 return matrix.vlength(matrix.vsub(m, M));
@@ -308,8 +310,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var fa_matrix = $.fn.nd_frame.matrix(fa, fn, projector_var_order);
                 // xxxx No translation for features?
                 var feature_transform = fa_matrix.transpose().augment();
-                this.feature_to_model = model_transform.mmult(feature_transform)
-                // model_vector = self.feature_to_model.affine(feature_vector);
+                this.feature_transform = feature_transform;
+                this.feature_to_frame = model_transform.mmult(feature_transform)
+                // model_vector = self.feature_to_frame.affine(feature_vector);
                 // model inverse is computed as needed.
                 this._model_inverse = null;
                 // feature inverse is not well defined in general...
@@ -329,6 +332,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 frame_position.z = frame_position.z || 0;
                 return M.affine(frame_position);
             };
+            feature_vector_to_model_location(feature_vector) {
+                // convert feature vector to xyz model position
+                var M = this.feature_transform;
+                return M.affine(feature_vector);
+            }
             install_model_transform(model_transform) {
                 // Extract transform structure from transformed model.
                 var translation = model_transform.translation();
