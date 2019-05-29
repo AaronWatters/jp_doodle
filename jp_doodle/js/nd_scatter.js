@@ -40,6 +40,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 for (var i=0; i<fjson.length; i++) {
                     this.define_feature(fjson[i]);
                 }
+                this.current_feature_name = this.feature_names[0];
                 var cjson = json_data.configurations;
                 for (var i=0; i<cjson.length; i++) {
                     this.define_configuration(cjson[i]);
@@ -150,10 +151,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var radius = nd_frame.diagonal_length();
                 // Something goes wrong with orbit interaction with the commented code uncommented... xxxxx
                 // The code is intended to allow redraw without resetting the rotation.
-                if (false && this.model_transform) {
+                if (this.model_transform) {
                     // use existing tranform.
                     nd_frame.install_model_transform(this.model_transform);
-                    nd_frame.dedicated_frame.set_extrema(this.xy_extrema);
+                    //nd_frame.dedicated_frame.set_extrema(this.xy_extrema);
+                    nd_frame.fit(s.zoom);
                 } else {
                     nd_frame.fit(s.zoom);
                 }
