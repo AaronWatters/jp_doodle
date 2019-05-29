@@ -210,11 +210,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     this.max_vector = matrix.vmax(this.max_vector, result, this.model_axes);
                 }
                 return result;
+            };
+            frame_conversion(model_vector) {
+                // convert from xyz model location to 2d frame location. (no statistics recorded)
+                var matrix = this.model_transform;
+                return matrix.affine(model_vector);
             }
             view_extrema() {
                 // return extrema for the viewing frame
                 return this.dedicated_frame.extrema;
-            }
+            };
             fit(zoom) {
                 // fit the dedicated frame to show all drawn points
                 // preserve relative x/y scaling.
@@ -604,6 +609,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.nd_frame = nd_frame;
                 // store this object in place (do not copy)
                 this.in_place = true;
+                // by default convert from feature space not model space
+                this.in_model = opt.in_model || false;
                 nd_frame.changed = true;
                 // store option attributes
                 for (var desc in opt) {
@@ -620,8 +627,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     this[desc] = descriptors[desc];
                 }
             };
+            frame_conversion(location, nd_frame) {
+                if (this.in_model) {
+                    return nd_frame.frame_conversion(location);
+                } else {
+                    return nd_frame.coordinate_conversion(location);
+                }
+            }
             project(nd_frame) {
-                this.position = nd_frame.coordinate_conversion(this.location);
+                //this.position = nd_frame.coordinate_conversion(this.location);
+                this.position = this.frame_conversion(this.location, nd_frame);
             };
             position2d() {
                 return this.position;
@@ -656,8 +671,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         class ND_Line extends ND_Shape {
             _shape_name() { return "line"; }  // xxxx should be a class member?
             project(nd_frame) {
-                this.position1 = nd_frame.coordinate_conversion(this.location1);
-                this.position2 = nd_frame.coordinate_conversion(this.location2);
+                //this.position1 = nd_frame.coordinate_conversion(this.location1);
+                //this.position2 = nd_frame.coordinate_conversion(this.location2);
+                this.position1 = this.frame_conversion(this.location1, nd_frame);
+                this.position2 = this.frame_conversion(this.location2, nd_frame);
             };
             position2d() {
                 return this.position1;  // xxxx arbitrary choice; could use midpoint.
@@ -668,8 +685,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             _shape_name() { return "polygon"; }  // xxxx should be a class member?
             project(nd_frame) {
                 // xxx should convert cx, cy too...
+                var that = this;
                 var positional_xy = function(point) {
-                    var cvt = nd_frame.coordinate_conversion(point);
+                    //var cvt = nd_frame.coordinate_conversion(point);
+                    var cvt = that.coordinate_conversion(point, nd_frame);
                     return [cvt.x, cvt.y];
                 }
                 this.points = this.locations.map(positional_xy);

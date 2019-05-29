@@ -59,6 +59,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             draw_scatter_canvas() {
                 var s = this.settings;
+                var matrix = this.matrix;
                 var that = this;
                 var configuration = this.configuration();
                 var scatter = this.scatter;
@@ -72,13 +73,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var nd_frame = scatter.nd_frame({
                     dedicated_frame: xy_frame,
                     feature_axes: configuration.projectors,
-                    translation: this.center_xyz,
+                    //translation: this.center_xyz,
                 });
                 this.nd_frame = nd_frame;
                 // draw the points
                 var points = this.point_vectors;
                 var point_arrays = this.point_arrays;
-                var name = true;
+                var name = this.dots_cb.is_checked();
+                var fill = this.dots_cb.is_checked();
                 for (var i=0; i<points.length; i++) {
                     var point_vector = points[i];
                     var point_array = point_arrays[i];
@@ -88,12 +90,46 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         r: s.point_radius,   // xxxxx parameterize
                         color: color,
                         name: name,
+                        fill: fill,
                     })
+                }
+                this.center_xyz = nd_frame.center();
+                if (this.axes_cb.is_checked()) {
+                    // draw x, y, z axes
+                    var aliases = configuration.aliases || {x: "x", y: "y", z: "z"};
+                    var diag = nd_frame.diagonal_length();
+                    for (var model_coord in aliases) {
+                        var alias = aliases[model_coord];
+                        var unit = {}
+                        unit[model_coord] = 1;
+                        var endpoint = matrix.vadd(this.center_xyz, matrix.vscale(diag/3.0, unit));
+                        var txtpoint = matrix.vadd(this.center_xyz, matrix.vscale(diag/2.0, unit));
+                        nd_frame.line({
+                            location1: this.center_xyz, 
+                            location2: endpoint,
+                            in_model: true,
+                        });
+                        nd_frame.text({
+                            location: txtpoint,
+                            text: alias,
+                            align: "center",
+                            valign: "center",
+                            background: "#ddd",
+                            in_model: true,
+                        })
+                    }
                 }
                 // fit (zoomed out) the frame and enable orbitting
                 var radius = nd_frame.diagonal_length();
-                this.center_xyz = nd_frame.center();
-                nd_frame.fit(s.zoom);
+                // Something goes wrong with orbit interaction with the commented code uncommented... xxxxx
+                // The code is intended to allow redraw without resetting the rotation.
+                if (false && this.model_transform) {
+                    // use existing tranform.
+                    nd_frame.install_model_transform(this.model_transform);
+                    nd_frame.dedicated_frame.set_extrema(this.xy_extrema);
+                } else {
+                    nd_frame.fit(s.zoom);
+                }
                 var after = function () {
                     that.after_orbit();
                 }
@@ -101,7 +137,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             after_orbit() {
                 // After orbit change adjust related displayed information.
-                // xxxxx do nothing yet
+                // Save the model transform
+                this.model_transform = this.nd_frame.model_transform;
+                this.xy_extrema = $.extend({}, this.nd_frame.dedicated_frame.extrema);
             }
             feature_vector(index) {
                 var a = this.point_arrays[i];
@@ -122,7 +160,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.features[feature.name] = feature;
             };
             define_configuration(cdescr) {
-                var config = new Configuration(cdescr.name, cdescr.projectors, cdescr.colorizer, this);
+                var config = new Configuration(
+                    cdescr.name, cdescr.projectors, cdescr.colorizer, cdescr.aliases, this);
                 this.configuration_names.push(config.name);
                 this.configurations[config.name] = config;
             };
@@ -137,11 +176,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.current_configuration_name = null;
                 this.xy_frame = null;
                 this.nd_frame = null;
+                this.model_transform = null;
+                this.xy_extrema = null;
                 // temporary default
                 this.center_xyz = {x:0, y:0, z:0};
             };
             make_scaffolding() {
                 var that = this;
+                var redraw_scatter = function () {
+                    that.draw_scatter_canvas();
+                };
                 var s = this.settings;
                 var container = this.element;
                 container.empty();
@@ -183,7 +227,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 //this.mode_area = mode_area;
 
                 var add_mode = function(label, off) {
-                    return add_checkbox(label, mode_area, off, "#fee");
+                    return add_checkbox(label, mode_area, redraw_scatter, off, "#fee");
                 };
                 this.dots_cb = add_mode("dots");
                 this.projections_cb = add_mode("projections");
@@ -340,7 +384,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
         };
 
-        var add_checkbox = function (label, to_parent, off, background) {
+        var add_checkbox = function (label, to_parent, on_change, off, background) {
             var span = $('<span/>').appendTo(to_parent);
             if (background) {
                 span.css({
@@ -356,6 +400,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 return cb.prop("checked", !off)
             };
             cb.uncheck(off);
+            if (on_change) {
+                cb.change(on_change);
+            }
             return cb;
         };
 
@@ -369,10 +416,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         class Configuration {
-            constructor(name, projectors, colorizer, nd_scatter) {
+            constructor(name, projectors, colorizer, aliases, nd_scatter) {
                 this.name = name;
                 this.projectors = projectors;
                 this.colorizer = colorizer;
+                this.aliases = aliases;
                 this.nd_scatter = nd_scatter;
             };
             max_length() {
@@ -457,6 +505,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                             "Iris-setosa": "purple",
                             "Iris-versicolor": "orange"
                         }
+                    },
+                    "aliases": {
+                        "x": "PCA1",
+                        "y": "PCA2",
+                        "z": "PCA3"
                     }
                 }
             ],
