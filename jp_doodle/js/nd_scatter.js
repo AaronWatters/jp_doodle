@@ -130,6 +130,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 if (this.projections_cb.is_checked()) {
                     // draw projectors for each feature
                     for (var feature_name in this.features) {
+                        var lineWidth = 1;
+                        if (feature_name == this.current_feature_name) {
+                            lineWidth = 3;
+                        }
                         var feature = this.features[feature_name];
                         var shift = diff[feature_name] || 1.0;
                         var offset = {}
@@ -140,6 +144,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                             location1: endpoint,
                             location2: centroid,
                             color:color,
+                            lineWidth: lineWidth,
                         });
                         var side = s.square_side;
                         var side2 = side * 0.5
@@ -163,6 +168,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     that.after_orbit();
                 }
                 nd_frame.orbit_all(radius, null, after);
+            };
+            zoom_in() {
+                this.nd_frame.zoom(this.center_xyz, 1.2);
+            };
+            zoom_out() {
+                this.nd_frame.zoom(this.center_xyz, 0.8);
             };
             after_orbit() {
                 // After orbit change adjust related displayed information.
@@ -248,7 +259,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 mode_area.css({
                     "background-color": "#eea",
                     "display": "grid",
-                    "grid-template-columns": `auto auto auto auto`,
+                    "grid-template-columns": `auto auto auto auto auto auto`,
                     "grid-template-rows": `auto`,
                     "grid-gap": `${s.gap}`,
                 });
@@ -262,7 +273,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.projections_cb = add_mode("projections");
                 this.axes_cb = add_mode("axes");
                 this.lasso_cb = add_mode("lasso", true);
+
+                var zoom_out = $("<div> \u2296 </div>").appendTo(mode_area);
+                zoom_out.click(function () { that.zoom_out(); });
+                var zoom_in = $("<div> \u2295 </div>").appendTo(mode_area);
+                zoom_in.click(function () { that.zoom_in(); });
         
+                // scatter plot area
                 var scatter = $("<div/>").appendTo(container);
                 scatter.css({
                     "background-color": "#efe",
