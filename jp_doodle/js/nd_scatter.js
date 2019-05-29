@@ -56,9 +56,71 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             draw_configuration() {
                 this.draw_scatter_canvas();
+                this.draw_feature_canvas();
             };
             configuration() {
                 return this.configurations[this.current_configuration_name];
+            };
+            draw_feature_canvas() {
+                var s = this.settings;
+                var matrix = this.matrix;
+                var that = this;
+                var axis_canvas = this.axis_canvas;
+                axis_canvas.clear_canvas();
+                var w = s.axis_size;
+                var axis_frame = axis_canvas.frame_region(
+                    0, 0, w, w,
+                    -1.2, -1.2, 1.2, 1.2  // dummy values reset later.
+                );
+                // draw projectors non-current features
+                var origin = {x:0, y:0};
+                for (var feature_name in this.features) {
+                    if (feature_name != this.current_feature_name) {
+                        var feature = this.features[feature_name];
+                        var color = feature.color;
+                        // fix positions later...
+                        feature.line = axis_frame.line({
+                            position1: origin, 
+                            position2: origin, 
+                            color:color,
+                            name:true,
+                            events:false,
+                        });
+                    }
+                }
+                // draw selected feature on top.
+                var feature = this.features[this.current_feature_name];
+                var color = feature.color;
+                // fix positions later...
+                feature.line = axis_frame.line({
+                    position1: origin, 
+                    position2: origin, 
+                    color:color,
+                    name:true,
+                    events:false,
+                    lineWidth: 2,
+                });
+                this.sync_feature_lines();
+            };
+            sync_feature_lines() {
+                // set feature lines according to current configuration
+                var configuration = this.configuration();
+                for (var feature_name in this.features) {
+                    var feature = this.features[feature_name];
+                    var line = feature.line;
+                    var model_transform = this.nd_frame.model_transform;
+                    var proj = configuration.projectors[feature_name];
+                    var origin = model_transform.affine({});
+                    var projection = model_transform.affine(proj);
+                    var offset= model_transform.vsub(projection, origin);
+                    var length = model_transform.vlength(offset);
+                    if (length < 0.01) {
+                        length = 1.0;
+                        offset = {x:1, y:0};  // arbitrary...
+                    }
+                    offset = model_transform.vscale(1.0/length, offset);
+                    line.change({position2: offset});
+                }
             };
             draw_scatter_canvas() {
                 var s = this.settings;
@@ -72,7 +134,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     0, 0, w, w,
                     -1, -1, 1, 1  // dummy values reset later.
                 );
-                this.xy_frame = xy_frame;  // is this needed?
+                //this.xy_frame = xy_frame;  // is this needed?
                 var nd_frame = scatter.nd_frame({
                     dedicated_frame: xy_frame,
                     feature_axes: configuration.projectors,
@@ -153,9 +215,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     }
                 }
                 // fit (zoomed out) the frame and enable orbitting
-                var radius = nd_frame.diagonal_length();
-                // Something goes wrong with orbit interaction with the commented code uncommented... xxxxx
-                // The code is intended to allow redraw without resetting the rotation.
+                var radius = nd_frame.diagonal_length() * 0.5;
+                // This code is intended to allow redraw without resetting the rotation.
                 if (this.model_transform) {
                     // use existing tranform.
                     nd_frame.install_model_transform(this.model_transform);
@@ -179,7 +240,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // After orbit change adjust related displayed information.
                 // Save the model transform
                 this.model_transform = this.nd_frame.model_transform;
-                this.xy_extrema = $.extend({}, this.nd_frame.dedicated_frame.extrema);
+                this.sync_feature_lines();
+                //this.xy_extrema = $.extend({}, this.nd_frame.dedicated_frame.extrema);
             }
             feature_vector(index) {
                 var a = this.point_arrays[i];
@@ -214,7 +276,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.point_arrays = [];
                 this.point_vectors = [];
                 this.current_configuration_name = null;
-                this.xy_frame = null;
+                //this.xy_frame = null;
                 this.nd_frame = null;
                 this.model_transform = null;
                 this.xy_extrema = null;
@@ -458,6 +520,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.color = color;
                 this.index = index;
                 this.nd_scatter = nd_scatter;
+                this.line = null;
             };
         };
 
