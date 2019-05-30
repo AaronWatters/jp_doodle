@@ -282,6 +282,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var after = function () {
                     that.after_orbit();
                 }
+                // pan to put center_xyz in frame center
+                var frame_center = nd_frame.center();
+                var pan_shift = matrix.vsub(frame_center, this.center_xyz);
+                nd_frame.pan(pan_shift);
                 nd_frame.orbit_all(radius, null, after);
             };
             set_current_feature_event(to_feature_name) {
