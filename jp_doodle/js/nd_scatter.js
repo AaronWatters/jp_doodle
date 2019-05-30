@@ -64,6 +64,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             draw_feature_canvas() {
                 var s = this.settings;
+                //var matrix = this.matrix;
+                var current_feature_name = this.current_feature_name
+                var configuration = this.configuration();
                 var matrix = this.matrix;
                 var that = this;
                 var axis_canvas = this.axis_canvas;
@@ -73,12 +76,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     0, 0, w, w,
                     -1.2, -1.2, 1.2, 1.2  // dummy values reset later.
                 );
-                // draw event circle
+                // draw event circle and rectangle
+                var event_rect = axis_frame.frame_rect({x:-1.2, y:-1.2, w:2.4, h:2.4, color: "#ffd", name:true});
                 var event_circle = axis_frame.frame_circle({x:0, y:0, r:1, color: "#eed", name:true});
                 // draw projectors non-current features
                 var origin = {x:0, y:0};
                 for (var feature_name in this.features) {
-                    if (feature_name != this.current_feature_name) {
+                    if (feature_name != current_feature_name) {
                         var feature = this.features[feature_name];
                         var color = feature.color;
                         // fix positions later...
@@ -92,7 +96,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     }
                 }
                 // draw selected feature on top.
-                var feature = this.features[this.current_feature_name];
+                var feature = this.features[current_feature_name];
                 var color = feature.color;
                 // fix positions later...
                 feature.line = axis_frame.line({
@@ -104,9 +108,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     lineWidth: 3,
                 });
                 this.sync_feature_lines();
-                // attach events to adjust the active feature.
+                // attach canvas events to adjust the active feature.
                 var is_feature_event = function (event) {
-                    return (event.reference_frame == axis_frame) && (that.current_feature_name);
+                    return (event.reference_frame == axis_frame) && (current_feature_name);
                 };
                 var start_dragging_feature = function (event) {
                     if (is_feature_event(event)) {
@@ -119,7 +123,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 };
                 var drag_feature = function (event) {
                     if (is_feature_event(event) && (that.dragging_feature)) {
-                        var selected_feature = that.current_feature_name;
+                        var selected_feature = current_feature_name;
                         var nd_frame = that.nd_frame;
                         var center_point = that.center_xyz;
                         var model_transform = nd_frame.model_transform;
@@ -155,10 +159,42 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 axis_canvas.on("mouseup", stop_dragging_feature);
                 //axis_edit.on("mouseout", stop_dragging_feature);
                 axis_canvas.on("mousemove", drag_feature);
+                // set up the slider and output displays for current_feature
+                var proj = configuration.projectors[current_feature_name];
+                var length = matrix.vlength(proj);
+                this.projector_reference = proj;
+                this.axis_slider.slider({
+                    min: length / 20.0,
+                    max: length * 3,
+                    step: length / 20.0,
+                    value: length,
+                    slide: (function (event, ui) {
+                        that.slider_update(event, ui);
+                    })
+                });
             };
+            slider_update(event, ui) {
+                var value = ui.value;
+                var configuration = this.configuration();
+                var matrix = this.matrix;
+                var current_feature_name = this.current_feature_name;
+                var proj = configuration.projectors[current_feature_name];
+                var length = matrix.vlength(proj);
+                if (length < 0.02) {
+                    proj = this.projector_reference;
+                    length = matrix.vlength(proj);
+                }
+                if (length > 0.01) {
+                    var new_axis = matrix.vscale(value * 1.0 / length, proj);
+                    this.nd_frame.reset_axis(current_feature_name , new_axis, this.center_xyz);
+                    this.sync_feature_lines();
+                    this.draw_scatter_canvas();
+                }
+            }
             sync_feature_lines() {
                 // set feature lines according to current configuration
                 var configuration = this.configuration();
+                var matrix = this.matrix;
                 for (var feature_name in this.features) {
                     var feature = this.features[feature_name];
                     var line = feature.line;
@@ -175,6 +211,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     offset = model_transform.vscale(1.0/length, offset);
                     line.change({position2: offset});
                 }
+                var current_feature_name = this.current_feature_name;
+                this.feature_name_area.val(current_feature_name);
+                var proj = configuration.projectors[current_feature_name];
+                this.x_area.val((+proj.x).toFixed(2));
+                this.y_area.val((+proj.y).toFixed(2));
+                this.z_area.val((+proj.z).toFixed(2));
+                var length = matrix.vlength(proj);
+                this.slider_value_div.html(" " + (length.toFixed(2)));
             };
             draw_scatter_canvas() {
                 var s = this.settings;
@@ -492,8 +536,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 };
                 this.feature_name_area = add_3d_coord_area("feature", 10, "f1")
                 this.x_area = add_3d_coord_area("X", 4, 0);
-                this.x_area = add_3d_coord_area("Y", 4, 0);
-                this.x_area = add_3d_coord_area("Z", 4, 0);
+                this.y_area = add_3d_coord_area("Y", 4, 0);
+                this.z_area = add_3d_coord_area("Z", 4, 0);
 
                 this.axis_detail = axis_detail;
 
