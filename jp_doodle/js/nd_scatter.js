@@ -72,6 +72,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     0, 0, w, w,
                     -1.2, -1.2, 1.2, 1.2  // dummy values reset later.
                 );
+                // draw event circle
+                var event_circle = axis_frame.frame_circle({x:0, y:0, r:1, color: "#eed", name:true});
                 // draw projectors non-current features
                 var origin = {x:0, y:0};
                 for (var feature_name in this.features) {
@@ -101,6 +103,57 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     lineWidth: 2,
                 });
                 this.sync_feature_lines();
+                // attach events to adjust the active feature.
+                var is_feature_event = function (event) {
+                    return (event.reference_frame == axis_frame) && (that.current_feature_name);
+                };
+                var start_dragging_feature = function (event) {
+                    if (is_feature_event(event)) {
+                        that.dragging_feature = true;
+                        drag_feature(event);
+                    }
+                };
+                var stop_dragging_feature = function (event) {
+                    that.dragging_feature = false;
+                };
+                var drag_feature = function (event) {
+                    if (is_feature_event(event) && (that.dragging_feature)) {
+                        var selected_feature = that.current_feature_name;
+                        var nd_frame = that.nd_frame;
+                        var center_point = that.center_xyz;
+                        var model_transform = nd_frame.model_transform;
+                        var location = event.model_location;
+                        if (model_transform.vlength(location) > 1.0) {
+                            location = model_transform.vunit(location);
+                        }
+                        var hyp = Math.min(1.0, location.x ** 2 + location.y ** 2);
+                        var zscale = Math.sqrt(1.0 - hyp);
+                        location.z = 0;
+                        var inv_origin = nd_frame.frame_position_to_model_location({x:0, y:0, z:0});
+                        var inv_location = nd_frame.frame_position_to_model_location(location);
+                        var inv_z = nd_frame.frame_position_to_model_location({x:0, y:0, z:1});
+                        var inv_loc_offset = model_transform.vsub(inv_location, inv_origin);
+                        var inv_z_offset = model_transform.vsub(inv_z, inv_origin);
+                        var proj = nd_frame.feature_axes[selected_feature];
+                        if (model_transform.vdot(proj, inv_z_offset) < 0) {
+                            zscale = -zscale;  // stay on same hemisphere
+                        }
+                        var direction = model_transform.vadd(
+                            model_transform.vscale(zscale, inv_z_offset),
+                            inv_loc_offset
+                        );
+                        var plength = model_transform.vlength(proj);
+                        var dlength = model_transform.vlength(direction);
+                        var new_axis = model_transform.vscale(plength / dlength, direction);
+                        nd_frame.reset_axis(selected_feature, new_axis, center_point);
+                        that.sync_feature_lines();
+                        that.draw_scatter_canvas();
+                    }
+                };
+                axis_canvas.on("mousedown", start_dragging_feature);
+                axis_canvas.on("mouseup", stop_dragging_feature);
+                //axis_edit.on("mouseout", stop_dragging_feature);
+                axis_canvas.on("mousemove", drag_feature);
             };
             sync_feature_lines() {
                 // set feature lines according to current configuration
@@ -276,6 +329,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.point_arrays = [];
                 this.point_vectors = [];
                 this.current_configuration_name = null;
+                this.dragging_feature = false;
                 //this.xy_frame = null;
                 this.nd_frame = null;
                 this.model_transform = null;
