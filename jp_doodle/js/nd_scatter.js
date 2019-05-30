@@ -285,6 +285,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // pan to put center_xyz in frame center
                 var frame_center = nd_frame.center();
                 var pan_shift = matrix.vsub(frame_center, this.center_xyz);
+                pan_shift.z = 0;
                 nd_frame.pan(pan_shift);
                 nd_frame.orbit_all(radius, null, after);
             };
