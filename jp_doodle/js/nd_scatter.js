@@ -55,6 +55,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.draw_configuration();
             };
             draw_configuration() {
+                this.title_area.html(this.current_configuration_name);
                 this.draw_scatter_canvas();
                 this.draw_feature_canvas();
             };
@@ -100,7 +101,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     color:color,
                     name:true,
                     events:false,
-                    lineWidth: 2,
+                    lineWidth: 3,
                 });
                 this.sync_feature_lines();
                 // attach events to adjust the active feature.
@@ -278,6 +279,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     nd_frame.fit(s.zoom);
                 } else {
                     nd_frame.fit(s.zoom);
+                    // rotate the frame a bit initially
+                    nd_frame.orbit(this.center_xyz, radius, {x: -0.5, y: -0.8});
                 }
                 var after = function () {
                     that.after_orbit();
