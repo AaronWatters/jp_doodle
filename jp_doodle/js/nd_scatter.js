@@ -265,6 +265,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         var side2 = side * 0.5
                         var head = nd_frame.rect({location: endpoint, w:side, h:side, color:color, dx:-side2, dy:-side2, 
                             name:true, feature:feature_name});
+                        head.on("click", this.set_current_feature_event(feature_name));
                     }
                 }
                 // fit (zoomed out) the frame and enable orbitting
@@ -282,6 +283,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     that.after_orbit();
                 }
                 nd_frame.orbit_all(radius, null, after);
+            };
+            set_current_feature_event(to_feature_name) {
+                var that = this;
+                return function(event) {
+                    that.current_feature_name = to_feature_name;
+                    that.draw_feature_canvas();
+                    that.draw_scatter_canvas();
+                };
             };
             zoom_in() {
                 this.nd_frame.zoom(this.center_xyz, 1.2);
