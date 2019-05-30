@@ -113,6 +113,11 @@ XXXXX clean up events for forgotten objects
             target.reset_events();
             target.visible_canvas.clear_canvas();
             target.invisible_canvas.clear_canvas();
+
+            // remove all event listeners
+            target.visible_canvas.canvas.off();
+            target.invisible_canvas.canvas.off();   // not needed.
+            
             // no need to clear the test_canvas now
         };
 
@@ -208,6 +213,7 @@ XXXXX clean up events for forgotten objects
             //return;
             target.set_translate_scale(translate_scale);
             // reset the event callbacks
+            target.visible_canvas.canvas.off();
             for (var event_type in target.event_info.event_types) {
                 target.visible_canvas.canvas.on(event_type, target.generic_event_handler);
                 target.event_info.event_types[event_type] = true;
