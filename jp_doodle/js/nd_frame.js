@@ -588,6 +588,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 event_target.on("mousedown", start_orbitting);
                 event_target.on("mouseup", stop_orbitting);
                 event_target.on("mousemove", orbit_if_dragging);
+                event_target.on("click", stop_orbitting);
                 this.last_location = null;
                 this.event_target = event_target;
             };
