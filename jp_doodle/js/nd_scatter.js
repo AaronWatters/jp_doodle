@@ -430,7 +430,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     //"background-color": "#eed",
                     "display": "grid",
                     "grid-template-columns": `${s.scatter_size}px ${s.axis_size}px`,
-                    "grid-template-rows": `${s.header_size} ${s.scatter_size}px ${s.info_height}`,
+                    //"grid-template-rows": `${s.header_size} ${s.scatter_size}px ${s.info_height}`,
+                    "grid-template-rows": `${s.header_size} auto ${s.info_height}`,
                     "grid-gap": `${s.gap}`,
                 });
 
@@ -491,6 +492,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 };
                 scatter.dual_canvas_helper(canvas_config);
                 this.scatter = scatter;
+
+                // XXXX debug!
+                //scatter.invisible_canvas.show();
+                //scatter.test_canvas.show();
         
                 var sidebar = $("<div/>").appendTo(container);
                 sidebar.css({
