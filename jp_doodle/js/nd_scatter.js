@@ -221,6 +221,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.slider_value_div.html(" " + (length.toFixed(2)));
             };
             draw_scatter_canvas() {
+                // next: fixed rotation and depth-scaled circles/rects
                 var s = this.settings;
                 var matrix = this.matrix;
                 var that = this;
@@ -319,8 +320,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 if (this.model_transform) {
                     // use existing tranform.
                     nd_frame.install_model_transform(this.model_transform);
-                    //nd_frame.dedicated_frame.set_extrema(this.xy_extrema);
-                    nd_frame.fit(s.zoom);
+                    nd_frame.dedicated_frame.set_extrema(this.xy_extrema);
+                    //nd_frame.fit(s.zoom);
                 } else {
                     nd_frame.fit(s.zoom);
                     // rotate the frame a bit initially
@@ -330,10 +331,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     that.after_orbit();
                 }
                 // pan to put center_xyz in frame center
-                var frame_center = nd_frame.center();
-                var pan_shift = matrix.vsub(frame_center, this.center_xyz);
-                pan_shift.z = 0;
-                nd_frame.pan(pan_shift);
+                //var frame_center = nd_frame.center();
+                //var pan_shift = matrix.vsub(frame_center, this.center_xyz);
+                //var pan_shift = matrix.vsub(frame_center, this.center_xyz);
+                //pan_shift.z = 0;
+                //nd_frame.pan(pan_shift);
                 nd_frame.orbit_all(radius, null, after);
             };
             set_current_feature_event(to_feature_name) {
@@ -355,7 +357,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // Save the model transform
                 this.model_transform = this.nd_frame.model_transform;
                 this.sync_feature_lines();
-                //this.xy_extrema = $.extend({}, this.nd_frame.dedicated_frame.extrema);
+                this.xy_extrema = $.extend({}, this.nd_frame.dedicated_frame.extrema);
             }
             feature_vector(index) {
                 var a = this.point_arrays[i];
