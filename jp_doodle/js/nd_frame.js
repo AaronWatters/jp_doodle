@@ -211,6 +211,27 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 return result;
             };
+            depth_scale(minimum_value, maximum_value, vector, in_model) {
+                // scale between minimum and maximum based on vector depth (transformed z)
+                // used for object sizing by depth for psuedo depth perception.
+                var max_z = this.max_vector.z || 0;
+                var min_z = this.min_vector.z || 0;
+                var converted;
+                if (in_model) {
+                    converted = this.frame_conversion(vector);
+                } else {
+                    converted = this.coordinate_conversion(vector, true);
+                }
+                var z = converted.z || 0;
+                var extent = max_z - min_z;
+                if (extent < 0.01) {
+                    return minimum_value;
+                }
+                z = Math.max(z, min_z);
+                z = Math.min(z, max_z);
+                var lambda = (z - min_z) * 1.0 / extent;
+                return lambda * maximum_value + (1.0 - lambda) * minimum_value;
+            }
             frame_conversion(model_vector) {
                 // convert from xyz model location to 2d frame location. (no statistics recorded)
                 var matrix = this.model_transform;
@@ -252,16 +273,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     frame_maxx: upper.x, frame_maxy: upper.y,
                 };
                 dedicated_frame.set_extrema(extrema);
-                this.recalibrate_frame();
+                this.recalibrate_frame(false);
             };
-            recalibrate_frame() {
+            recalibrate_frame(except_orbit) {
                 // adjust data structures after the 2d frame changes geometry parameters.
                 var f = this.dedicated_frame;
                 // recalculate geometry for event rectangle, preserving any event bindings.
                 this.event_rectangle = f.event_region(this.event_rectangle);
                 // fix the orbitter if present (?)
                 var orbiter = this.orbiter;
-                if (orbiter) {
+                if ((!except_orbit) && (orbiter)) {
                     var radius = orbiter.radius;
                     this.orbit_off();
                     this.orbit_region(radius);
@@ -470,19 +491,21 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var rotation = model_transform.orbit_rotation_xyz(center3d, radius, shift2d);
                 var new_transform = rotation.mmult(model_transform);
                 this.install_model_transform(new_transform);
+                this.recalibrate_frame(true);
             };
             pan(shift2d) {
                 var model_transform = this.model_transform;
                 var rotation = model_transform.pan_transform_xyz(shift2d);
                 var new_transform = rotation.mmult(model_transform);
                 this.install_model_transform(new_transform);
+                this.recalibrate_frame(true);
             };
             zoom(center3d, factor) {
                 var model_transform = this.model_transform;
                 var rotation = model_transform.zoom_transform_xyz(center3d, factor);
                 var new_transform = rotation.mmult(model_transform);
                 this.install_model_transform(new_transform);
-                this.recalibrate_frame();
+                this.recalibrate_frame(false);
             };
             orbit_region(radius, center3d, min_x, min_y, width, height, after) {
                 // create and overlay frame with orbit control over region in target frame.
