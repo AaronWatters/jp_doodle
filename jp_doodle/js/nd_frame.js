@@ -482,6 +482,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var rotation = model_transform.zoom_transform_xyz(center3d, factor);
                 var new_transform = rotation.mmult(model_transform);
                 this.install_model_transform(new_transform);
+                this.recalibrate_frame();
             };
             orbit_region(radius, center3d, min_x, min_y, width, height, after) {
                 // create and overlay frame with orbit control over region in target frame.
