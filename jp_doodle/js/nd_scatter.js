@@ -107,6 +107,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     events:false,
                     lineWidth: 3,
                 });
+                this.feature_circle = axis_frame.circle({
+                    r: s.point_radius,
+                    position: origin,
+                    color: color,
+                    fill: false,
+                })
                 this.sync_feature_lines();
                 // attach canvas events to adjust the active feature.
                 var is_feature_event = function (event) {
@@ -195,6 +201,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // set feature lines according to current configuration
                 var configuration = this.configuration();
                 var matrix = this.matrix;
+                var current_feature_name = this.current_feature_name;
                 for (var feature_name in this.features) {
                     var feature = this.features[feature_name];
                     var line = feature.line;
@@ -210,8 +217,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     }
                     offset = model_transform.vscale(1.0/length, offset);
                     line.change({position2: offset});
+                    if (feature_name == current_feature_name) {
+                        var z = offset.z;
+                        this.feature_circle.position = offset;
+                        this.feature_circle.r = this.settings.point_radius * (1 + z);
+                    }
                 }
-                var current_feature_name = this.current_feature_name;
                 this.feature_name_area.val(current_feature_name);
                 var proj = configuration.projectors[current_feature_name];
                 this.x_area.val((+proj.x).toFixed(2));
@@ -221,7 +232,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.slider_value_div.html(" " + (length.toFixed(2)));
             };
             draw_scatter_canvas() {
-                // next: fixed rotation and depth-scaled circles/rects
                 var s = this.settings;
                 var matrix = this.matrix;
                 var that = this;
@@ -245,6 +255,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var point_arrays = this.point_arrays;
                 var name = this.dots_cb.is_checked();
                 var fill = this.dots_cb.is_checked();
+                this.dots = []
                 for (var i=0; i<points.length; i++) {
                     var point_vector = points[i];
                     var point_array = point_arrays[i];
@@ -255,8 +266,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         color: color,
                         name: name,
                         fill: fill,
-                    })
+                    });
+                    this.dots.push(circle);
                 }
+                this.adjust_dots();
                 //this.center_xyz = nd_frame.center();
                 var m = nd_frame.min_feature;
                 var M = nd_frame.max_feature;
@@ -367,6 +380,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 for (var feature_name in this.projection_heads) {
                     this.scale_projection_head_size(this.projection_heads[feature_name]);
                 }
+                this.adjust_dots();
             };
             scale_projection_head_size(projection_head) {
                 var square_side = this.settings.square_side;
@@ -376,6 +390,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 projection_head.change({
                     w: side, h:side, dx:-side2, dy:-side2
                 });
+            };
+            adjust_dots() {
+                var r = this.settings.point_radius;
+                var minr = r * 0.8;
+                var maxr = r * 1.5;
+                var nd_frame = this.nd_frame;
+                var dots = this.dots;
+                for (var i=0; i<dots.length; i++) {
+                    var circle = this.dots[i];
+                    var dr = nd_frame.depth_scale(minr, maxr, circle.location);
+                    circle.r = dr;
+                }
             }
             feature_vector(index) {
                 var a = this.point_arrays[i];
