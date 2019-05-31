@@ -55,6 +55,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.draw_configuration();
             };
             draw_configuration() {
+                this.reset_geometry();
                 this.title_area.html(this.current_configuration_name);
                 this.draw_scatter_canvas();
                 this.draw_feature_canvas();
@@ -220,7 +221,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     if (feature_name == current_feature_name) {
                         var z = offset.z;
                         this.feature_circle.position = offset;
-                        this.feature_circle.r = this.settings.point_radius * (1 + z);
+                        this.feature_circle.r = this.settings.point_radius * (1 + z * 0.7);
                     }
                 }
                 this.feature_name_area.val(current_feature_name);
@@ -321,10 +322,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                             color:color,
                             lineWidth: lineWidth,
                         });
-                        //var side = s.square_side;
-                        //var side = nd_frame.depth_scale(s.square_side * 0.5, s.square_side * 1.5, endpoint);
-                        //console.log("side "+side);
-                        //var side2 = side * 0.5
                         var head = nd_frame.rect({location: endpoint, color:color,
                             name:true, feature:feature_name});
                         this.scale_projection_head_size(head);
@@ -357,6 +354,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var orbit_center = this.center_xyz;
                 nd_frame.orbit_all(radius, orbit_center, after);
             };
+            reset_geometry() {
+                // invalidate cached geometric configurations
+                this.nd_frame = null;
+                this.model_transform = null;
+                this.xy_extrema = null;
+                this.center_xyz = null;
+            }
             set_current_feature_event(to_feature_name) {
                 var that = this;
                 return function(event) {
@@ -398,7 +402,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var nd_frame = this.nd_frame;
                 var dots = this.dots;
                 for (var i=0; i<dots.length; i++) {
-                    var circle = this.dots[i];
+                    var circle = dots[i];
                     var dr = nd_frame.depth_scale(minr, maxr, circle.location);
                     circle.r = dr;
                 }
@@ -437,12 +441,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.point_vectors = [];
                 this.current_configuration_name = null;
                 this.dragging_feature = false;
-                //this.xy_frame = null;
-                this.nd_frame = null;
-                this.model_transform = null;
-                this.xy_extrema = null;
-                // temporary default
-                this.center_xyz = {x:0, y:0, z:0};
+                this.reset_geometry()
             };
             make_scaffolding() {
                 var that = this;
