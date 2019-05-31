@@ -285,7 +285,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 if ((!except_orbit) && (orbiter)) {
                     var radius = orbiter.radius;
                     this.orbit_off();
-                    this.orbit_region(radius);
+                    // xxxxx maybe this should call orbit_region sometimes?
+                    this.orbit_all(radius);
                 }
                 f.request_redraw();
             }
