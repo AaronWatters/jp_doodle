@@ -57,11 +57,69 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             draw_configuration() {
                 this.reset_geometry();
                 this.title_area.html(this.current_configuration_name);
+                this.fill_feature_table();
                 this.draw_scatter_canvas();
                 this.draw_feature_canvas();
+                // fill the feature table again to update min/max values
+                this.fill_feature_table();
             };
             configuration() {
                 return this.configurations[this.current_configuration_name];
+            };
+            fill_feature_table() {
+                var s = this.settings;
+                //var matrix = this.matrix;
+                var current_feature_name = this.current_feature_name
+                var configuration = this.configuration();
+                var matrix = this.matrix;
+                var that = this;
+                this.reset_feature_table();
+                var feature_table = this.feature_table;
+                var add_numeric_column = function () {
+                    var div = $("<div>???</div>").appendTo(feature_table);
+                    div.report_value = function (v) {
+                        div.html("" + (+v).toFixed(2));
+                    };
+                    return div;
+                }
+                for (var feature_name in this.features) {
+                    var feature = this.features[feature_name];
+                    feature.checkbox = add_checkbox(feature_name, feature_table, null, (!feature.active))
+                    feature.checkbox.change(this.feature_checkbox_onchange(feature, feature.checkbox));
+                    feature.x_entry = add_numeric_column();
+                    feature.y_entry = add_numeric_column();
+                    feature.z_entry = add_numeric_column();
+                    feature.min_entry = add_numeric_column();
+                    feature.max_entry = add_numeric_column();
+                }
+                this.report_features();
+            };
+            report_features() {
+                for (var feature_name in this.features) {
+                    this.report_feature_parameters(feature_name);
+                }
+            }
+            report_feature_parameters (feature_name) {
+                var nd_frame = this.nd_frame;
+                var configuration = this.configuration();
+                var feature = this.features[feature_name];
+                var proj = configuration.projectors[feature_name];
+                feature.x_entry.report_value(proj.x);
+                feature.y_entry.report_value(proj.y);
+                feature.z_entry.report_value(proj.z);
+                if (nd_frame && nd_frame.min_feature && nd_frame.max_feature) {
+                    var m = nd_frame.min_feature[feature_name] || 0;
+                    var M = nd_frame.max_feature[feature_name] || 0;
+                    feature.min_entry.report_value(m);
+                    feature.max_entry.report_value(M);
+                }
+            };
+            feature_checkbox_onchange(feature, checkbox) {
+                var that = this;
+                return function () {
+                    feature.active = checkbox.is_checked();
+                    that.draw_configuration();
+                }
             };
             draw_feature_canvas() {
                 var s = this.settings;
@@ -231,6 +289,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.z_area.val((+proj.z).toFixed(2));
                 var length = matrix.vlength(proj);
                 this.slider_value_div.html(" " + (length.toFixed(2)));
+                this.report_feature_parameters(current_feature_name);
             };
             draw_scatter_canvas() {
                 var s = this.settings;
@@ -244,7 +303,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     0, 0, w, w,
                     -1, -1, 1, 1  // dummy values reset later.
                 );
-                //this.xy_frame = xy_frame;  // is this needed?
+                // only inclide active features in the feature_axes
                 var nd_frame = scatter.nd_frame({
                     dedicated_frame: xy_frame,
                     feature_axes: configuration.projectors,
@@ -600,15 +659,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 feature_table.css({
                     "background-color": "#eed",
                     "display": "grid",
-                    "grid-template-columns": `auto 30% auto auto auto auto auto`,
+                    "grid-template-columns": `auto auto auto auto auto auto`,
                     "grid-gap": `2px`,
                 });
                 // include_check, name, x y z min max
                 this.reset_feature_table = function () {
                     feature_table.empty();
                     // header row
-                    $("<div>\u2713</div>").appendTo(feature_table);
-                    $("<div>feature</div>").appendTo(feature_table);
+                    $("<div>\u2713 feature</div>").appendTo(feature_table);
+                    //$("<div>feature</div>").appendTo(feature_table);
                     $("<div>X</div>").appendTo(feature_table);
                     $("<div>Y</div>").appendTo(feature_table);
                     $("<div>Z</div>").appendTo(feature_table);
@@ -661,7 +720,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var span = $('<span/>').appendTo(to_parent);
             if (background) {
                 span.css({
-                    "background-color": "#fee",
+                    "background-color": background,
                 });
             }
             var cb = $('<input type="checkbox"/>').appendTo(span);
@@ -686,6 +745,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.index = index;
                 this.nd_scatter = nd_scatter;
                 this.line = null;
+                this.active = true;
             };
         };
 
