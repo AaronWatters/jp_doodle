@@ -288,6 +288,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         })
                     }
                 }
+                this.projection_heads = {};
                 if (this.projections_cb.is_checked()) {
                     // draw projectors for each feature
                     for (var feature_name in this.features) {
@@ -307,11 +308,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                             color:color,
                             lineWidth: lineWidth,
                         });
-                        var side = s.square_side;
-                        var side2 = side * 0.5
-                        var head = nd_frame.rect({location: endpoint, w:side, h:side, color:color, dx:-side2, dy:-side2, 
+                        //var side = s.square_side;
+                        //var side = nd_frame.depth_scale(s.square_side * 0.5, s.square_side * 1.5, endpoint);
+                        //console.log("side "+side);
+                        //var side2 = side * 0.5
+                        var head = nd_frame.rect({location: endpoint, color:color,
                             name:true, feature:feature_name});
+                        this.scale_projection_head_size(head);
                         head.on("click", this.set_current_feature_event(feature_name));
+                        this.projection_heads[feature_name] = head;
                     }
                 }
                 // fit (zoomed out) the frame and enable orbitting
@@ -336,7 +341,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 //var pan_shift = matrix.vsub(frame_center, this.center_xyz);
                 //pan_shift.z = 0;
                 //nd_frame.pan(pan_shift);
-                nd_frame.orbit_all(radius, null, after);
+                var orbit_center = this.center_xyz;
+                nd_frame.orbit_all(radius, orbit_center, after);
             };
             set_current_feature_event(to_feature_name) {
                 var that = this;
@@ -358,6 +364,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.model_transform = this.nd_frame.model_transform;
                 this.sync_feature_lines();
                 this.xy_extrema = $.extend({}, this.nd_frame.dedicated_frame.extrema);
+                for (var feature_name in this.projection_heads) {
+                    this.scale_projection_head_size(this.projection_heads[feature_name]);
+                }
+            };
+            scale_projection_head_size(projection_head) {
+                var square_side = this.settings.square_side;
+                var endpoint = projection_head.location;
+                var side = this.nd_frame.depth_scale(square_side * 0.8, square_side * 1.5, endpoint);
+                var side2 = 0.5 * side;
+                projection_head.change({
+                    w: side, h:side, dx:-side2, dy:-side2
+                });
             }
             feature_vector(index) {
                 var a = this.point_arrays[i];
