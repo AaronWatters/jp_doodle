@@ -7,6 +7,14 @@ Assumes the element has been initialized using dual_canvas_helper.
 Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
 */
+
+// next: 
+//   don't use reset_axis directly.
+//   attach projectors to feature objects.
+//   reset projectors in feature objects.
+//   construct nd_frame from those projectors.
+//   add a display for "screen normal xyz"
+
 "use strict";
 
 (function($) {
@@ -57,6 +65,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             draw_configuration() {
                 this.reset_geometry();
                 this.title_area.html(this.current_configuration_name);
+                this.load_configuration();
                 this.fill_feature_table();
                 this.draw_scatter_canvas();
                 this.draw_feature_canvas();
@@ -65,6 +74,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             configuration() {
                 return this.configurations[this.current_configuration_name];
+            };
+            load_configuration(configuration_name) {
+                var configuration = this.configuration();
+                var projectors = {};
+                for (var feature_name in configuration.projectors) {
+                    projectors[feature_name] = configuration.projectors[feature_name];
+                }
+                this.projectors = projectors;
             };
             fill_feature_table() {
                 var s = this.settings;
@@ -101,9 +118,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             report_feature_parameters (feature_name) {
                 var nd_frame = this.nd_frame;
-                var configuration = this.configuration();
+                //var configuration = this.configuration();
                 var feature = this.features[feature_name];
-                var proj = configuration.projectors[feature_name];
+                //var proj = configuration.projectors[feature_name];
+                var proj = this.projectors[feature_name];
                 feature.x_entry.report_value(proj.x);
                 feature.y_entry.report_value(proj.y);
                 feature.z_entry.report_value(proj.z);
@@ -215,7 +233,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         var plength = model_transform.vlength(proj);
                         var dlength = model_transform.vlength(direction);
                         var new_axis = model_transform.vscale(plength / dlength, direction);
-                        nd_frame.reset_axis(selected_feature, new_axis, center_point);
+                        //nd_frame.reset_axis(selected_feature, new_axis, center_point);
+                        that.reset_projector(selected_feature, new_axis, center_point);
                         that.sync_feature_lines();
                         that.draw_scatter_canvas();
                     }
@@ -225,7 +244,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 //axis_edit.on("mouseout", stop_dragging_feature);
                 axis_canvas.on("mousemove", drag_feature);
                 // set up the slider and output displays for current_feature
-                var proj = configuration.projectors[current_feature_name];
+                //var proj = configuration.projectors[current_feature_name];
+                var proj = this.projectors[current_feature_name]
                 var length = matrix.vlength(proj);
                 this.projector_reference = proj;
                 this.axis_slider.slider({
@@ -238,12 +258,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     })
                 });
             };
+            reset_projector(feature_name, projector, fixed_point) {
+                this.nd_frame.reset_axis(feature_name, projector, fixed_point);
+                this.projectors[feature_name] = projector;
+            }
             slider_update(event, ui) {
                 var value = ui.value;
-                var configuration = this.configuration();
+                //var configuration = this.configuration();
                 var matrix = this.matrix;
                 var current_feature_name = this.current_feature_name;
-                var proj = configuration.projectors[current_feature_name];
+                //var proj = configuration.projectors[current_feature_name];
+                var proj = this.projectors[current_feature_name];
                 var length = matrix.vlength(proj);
                 if (length < 0.02) {
                     proj = this.projector_reference;
@@ -251,21 +276,23 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 if (length > 0.01) {
                     var new_axis = matrix.vscale(value * 1.0 / length, proj);
-                    this.nd_frame.reset_axis(current_feature_name , new_axis, this.center_xyz);
+                    //this.nd_frame.reset_axis(current_feature_name , new_axis, this.center_xyz);
+                    this.reset_projector(current_feature_name, new_axis, this.center_xyz);
                     this.sync_feature_lines();
                     this.draw_scatter_canvas();
                 }
             }
             sync_feature_lines() {
                 // set feature lines according to current configuration
-                var configuration = this.configuration();
+                //var configuration = this.configuration();
                 var matrix = this.matrix;
                 var current_feature_name = this.current_feature_name;
                 for (var feature_name in this.features) {
                     var feature = this.features[feature_name];
                     var line = feature.line;
                     var model_transform = this.nd_frame.model_transform;
-                    var proj = configuration.projectors[feature_name];
+                    //var proj = configuration.projectors[feature_name];
+                    var proj = this.projectors[feature_name];
                     var origin = model_transform.affine({});
                     var projection = model_transform.affine(proj);
                     var offset= model_transform.vsub(projection, origin);
@@ -283,7 +310,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     }
                 }
                 this.feature_name_area.val(current_feature_name);
-                var proj = configuration.projectors[current_feature_name];
+                //var proj = configuration.projectors[current_feature_name];
+                var proj = this.projectors[current_feature_name];
                 this.x_area.val((+proj.x).toFixed(2));
                 this.y_area.val((+proj.y).toFixed(2));
                 this.z_area.val((+proj.z).toFixed(2));
@@ -303,10 +331,20 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     0, 0, w, w,
                     -1, -1, 1, 1  // dummy values reset later.
                 );
-                // only inclide active features in the feature_axes
+                // only include active features in the feature_axes
+                var projectors = {};
+                for (var feature_name in this.projectors) {
+                    var feature = this.features[feature_name];
+                    if (feature.active) {
+                        projectors[feature_name] = this.projectors[feature_name];
+                    } else {
+                        // zero projector if not active
+                        projectors[feature_name] = {};
+                    }
+                }
                 var nd_frame = scatter.nd_frame({
                     dedicated_frame: xy_frame,
-                    feature_axes: configuration.projectors,
+                    feature_axes: projectors,
                     //translation: this.center_xyz,
                 });
                 this.nd_frame = nd_frame;
