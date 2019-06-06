@@ -117,7 +117,7 @@ XXXXX clean up events for forgotten objects
             // remove all event listeners
             target.visible_canvas.canvas.off();
             target.invisible_canvas.canvas.off();   // not needed.
-            
+
             // no need to clear the test_canvas now
         };
 
@@ -402,7 +402,7 @@ XXXXX clean up events for forgotten objects
             if (object_info) {
                 // call the on_change callback if defined
                 if (object_info.on_change) {
-                    object_info.on_change(opt);
+                    opt = object_info.on_change(opt);
                 }
                 // in place update object description
                 $.extend(object_info, opt);
