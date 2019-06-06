@@ -148,6 +148,42 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 
                 this.reset();
             };
+            on_change(options) {
+                // fill in any missing numeric values in changed parameters.
+                this.changed = true;
+                var override = function(new_mapping, old_mapping) {
+                    var result = {};
+                    for (var v in old_mapping) {
+                        result[v] = old_mapping[v];
+                    }
+                    for (var v in new_mapping) {
+                        result[v] = new_mapping[v];
+                    }
+                    return result;
+                };
+                var override_axes = function(new_axes, old_axes) {
+                    var result = {};
+                    for (var v in old_axes) {
+                        result[v] = old_axes[v];
+                    }
+                    for (var v in new_axes) {
+                        var new_mapping = new_axes[v];
+                        var old_mapping = old_axes[v] || {};
+                        result[v] = override(new_mapping, old_mapping);
+                    }
+                    return result;
+                }
+                if (options.translation) {
+                    options.translation = override(options.translation, this.translation);
+                }
+                if (options.feature_axes) {
+                    options.feature_axes = override_axes(options.feature_axes, this.feature_axes);
+                }
+                if (options.model_axes) {
+                    options.model_axes = override_axes(options.model_axes, this.model_axes);
+                }
+                return options;
+            }
             prepare_for_redraw() {
                 if (!this.changed) {
                     // leave frame alone.
@@ -722,7 +758,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var that = this;
                 var positional_xy = function(point) {
                     //var cvt = nd_frame.coordinate_conversion(point);
-                    var cvt = that.coordinate_conversion(point, nd_frame);
+                    var cvt = that.frame_conversion(point, nd_frame);
                     return [cvt.x, cvt.y];
                 }
                 this.points = this.locations.map(positional_xy);
