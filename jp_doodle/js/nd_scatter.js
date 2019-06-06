@@ -397,8 +397,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // draw the points
                 var points = this.point_vectors;
                 var point_arrays = this.point_arrays;
-                var name = this.dots_cb.is_checked();
-                var fill = this.dots_cb.is_checked();
+                var name = this.dots_cb.is_checked() || this.lasso_callback.is_checked();
+                var fill = name;
                 this.dots = []
                 this.name_to_dot = {};
                 for (var i=0; i<points.length; i++) {
@@ -415,6 +415,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     this.dots.push(circle);
                     if (name) {
                         this.name_to_dot[circle.name] = circle;
+                        circle.point_array = point_array;
                     }
                 }
                 this.adjust_dots();
@@ -603,10 +604,32 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     that.lasso_callback(name_mapping);
                 };
                 this.scatter.do_lasso(lasso_callback, {}, true);
+                this.clear_info();
+                this.info_line("Lasso dots of interest.")
+                this.info_line("Dot location data will appear here..")
             };
             lasso_callback(name_mapping) {
-                //
-                this.lasso_cb.uncheck();
+                this.clear_info();
+                var L = [];
+                for (var n in name_mapping) {
+                    if (this.name_to_dot[n]) {
+                        var circle = name_mapping[n];
+                        circle.r = circle.r * 2;
+                        L.push(circle.point_array);
+                    }
+                }
+                this.info_line("Lasso selected " + L.length + " dots.");
+                // make header entry
+                if (L.length) {
+                    var header = L[0].map(x => null);
+                    for (var fn in this.features) {
+                        var f = this.features[fn];
+                        header[f.index] = f.name;
+                    }
+                    L.unshift(header);
+                }
+                this.info_pre(JSON.stringify(L, null, "\t"));
+                this.lasso_cb.uncheck(true);
             };
             make_scaffolding() {
                 var that = this;
@@ -817,9 +840,20 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     "background-color": "#ffe",
                     "grid-column": "1",
                     "grid-row": "3",
+                    "overflow": "auto",
                 });
                 info.html("other information here.");
+                this.info = info;
             };
+            clear_info() {
+                this.info.empty();
+            };
+            info_line(text) {
+                $("<div>" + text + "</div>").appendTo(this.info);
+            };
+            info_pre(text) {
+                $("<pre>" + text + "</pre>").appendTo(this.info);
+            }
         };
 
         var add_checkbox = function (label, to_parent, on_change, off, background) {
@@ -848,7 +882,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             constructor(name, color, index, nd_scatter) {
                 this.name = name;
                 this.color = color;
-                this.index = index;
+                this.index = +index;
                 this.nd_scatter = nd_scatter;
                 this.line = null;
                 this.active = true;
