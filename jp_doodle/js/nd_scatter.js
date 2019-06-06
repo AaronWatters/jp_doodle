@@ -71,6 +71,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.draw_feature_canvas();
                 // fill the feature table again to update min/max values
                 this.fill_feature_table();
+                this.fill_configuration_table();
             };
             configuration() {
                 return this.configurations[this.current_configuration_name];
@@ -83,12 +84,33 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 this.projectors = projectors;
             };
+            fill_configuration_table() {
+                var current_config_name = this.current_configuration_name;
+                var that = this;
+                var select_configuration = function (name) {
+                    return function () {
+                        that.current_configuration_name = name;
+                        that.draw_configuration();
+                    };
+                };
+                this.reset_config_table();
+                var config_table = this.config_table;
+                var config_names = this.configuration_names;
+                for (var i=0; i<config_names.length; i++) {
+                    var config_name = config_names[i];
+                    var config = this.configurations[config_name];
+                    config.checkbox = add_checkbox("", config_table, null, (config_name != current_config_name));
+                    config.checkbox.attr('readonly',true); 
+                    config.link = $('<a href="#">' + config_name + "</a>").appendTo(config_table);
+                    config.link.click(select_configuration(config_name));
+                }
+            };
             fill_feature_table() {
-                var s = this.settings;
+                //var s = this.settings;
                 //var matrix = this.matrix;
-                var current_feature_name = this.current_feature_name
-                var configuration = this.configuration();
-                var matrix = this.matrix;
+                //var current_feature_name = this.current_feature_name
+                //var configuration = this.configuration();
+                //var matrix = this.matrix;
                 var that = this;
                 this.reset_feature_table();
                 var feature_table = this.feature_table;
