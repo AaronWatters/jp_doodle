@@ -156,6 +156,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // draw event circle and rectangle
                 var event_rect = axis_frame.frame_rect({x:-1.2, y:-1.2, w:2.4, h:2.4, color: "#ffd", name:true});
                 var event_circle = axis_frame.frame_circle({x:0, y:0, r:1, color: "#eed", name:true});
+                // draw guide circles
+                var nc = 5;
+                for (var i=0; i<nc; i++) {
+                    var r = Math.sqrt(1.0 - i * (1.0/nc));
+                    axis_frame.frame_circle({x:0, y:0, r:r, color: "#bbd", name:false, fill:false});
+                }
                 // draw projectors non-current features
                 var origin = {x:0, y:0};
                 for (var feature_name in this.features) {
@@ -820,6 +826,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         element.empty();
         var scatter_plot = element.nd_scatter({});
+        element.scatter_plot = scatter_plot;  // for debugging
         scatter_plot.make_scaffolding();
 
         var iris20json = {
