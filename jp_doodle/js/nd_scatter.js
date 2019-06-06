@@ -400,6 +400,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var name = this.dots_cb.is_checked();
                 var fill = this.dots_cb.is_checked();
                 this.dots = []
+                this.name_to_dot = {};
                 for (var i=0; i<points.length; i++) {
                     var point_vector = points[i];
                     var point_array = point_arrays[i];
@@ -412,6 +413,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         fill: fill,
                     });
                     this.dots.push(circle);
+                    if (name) {
+                        this.name_to_dot[circle.name] = circle;
+                    }
                 }
                 this.adjust_dots();
                 //this.center_xyz = nd_frame.center();
@@ -498,6 +502,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 //nd_frame.pan(pan_shift);
                 var orbit_center = this.center_xyz;
                 nd_frame.orbit_all(radius, orbit_center, after);
+
+                // initiate lasso if lasso checkbox is checked
+                if (this.lasso_cb.is_checked()) {
+                    this.initialize_lasso();
+                }
             };
             reset_geometry() {
                 // invalidate cached geometric configurations
@@ -588,6 +597,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.dragging_feature = false;
                 this.reset_geometry()
             };
+            initialize_lasso() {
+                var that = this;
+                var lasso_callback = function (name_mapping) {
+                    that.lasso_callback(name_mapping);
+                };
+                this.scatter.do_lasso(lasso_callback, {}, true);
+            };
+            lasso_callback(name_mapping) {
+                //
+                this.lasso_cb.uncheck();
+            };
             make_scaffolding() {
                 var that = this;
                 var redraw_scatter = function () {
@@ -650,7 +670,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // scatter plot area
                 var scatter = $("<div/>").appendTo(container);
                 scatter.css({
-                    "background-color": "#efe",
+                    "background-color": "#fff",
                     "grid-column": "1",
                     "grid-row": "2",
                 });
@@ -738,7 +758,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
                 var feature_info = $("<div/>").appendTo(sidebar);
                 feature_info.css({
-                    "background-color": "#fef",
+                    "background-color": "#eee",
                     "overflow": "scroll",
                 });
                 var feature_table = $("<div/>").appendTo(feature_info);
@@ -788,13 +808,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.reset_config_table();
                 //feature_info.html("feature_info here.")
                 this.config_table = config_table;
-                this.save_config_button = $("<button>save new configuration</button>").appendTo(config_info);
+                //this.save_config_button = $("<button>save new configuration</button>").appendTo(config_info);
                 //this.config_info = config_info;
 
                 var info = $("<div/>").appendTo(container);
                 info.css({
                     "title": "info",
-                    "background-color": "#cce",
+                    "background-color": "#ffe",
                     "grid-column": "1",
                     "grid-row": "3",
                 });
