@@ -179,35 +179,39 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 for (var feature_name in this.features) {
                     if (feature_name != current_feature_name) {
                         var feature = this.features[feature_name];
-                        var color = feature.color;
-                        // fix positions later...
-                        feature.line = axis_frame.line({
-                            position1: origin, 
-                            position2: origin, 
-                            color:color,
-                            name:true,
-                            events:false,
-                        });
+                        if (feature.active) {
+                            var color = feature.color;
+                            // fix positions later...
+                            feature.line = axis_frame.line({
+                                position1: origin, 
+                                position2: origin, 
+                                color:color,
+                                name:true,
+                                events:false,
+                            });
+                        }
                     }
                 }
                 // draw selected feature on top.
                 var feature = this.features[current_feature_name];
                 var color = feature.color;
                 // fix positions later...
-                feature.line = axis_frame.line({
-                    position1: origin, 
-                    position2: origin, 
-                    color:color,
-                    name:true,
-                    events:false,
-                    lineWidth: 3,
-                });
-                this.feature_circle = axis_frame.circle({
-                    r: s.point_radius,
-                    position: origin,
-                    color: color,
-                    fill: false,
-                })
+                if (feature.active) {
+                    feature.line = axis_frame.line({
+                        position1: origin, 
+                        position2: origin, 
+                        color:color,
+                        name:true,
+                        events:false,
+                        lineWidth: 3,
+                    });
+                    this.feature_circle = axis_frame.circle({
+                        r: s.point_radius,
+                        position: origin,
+                        color: color,
+                        fill: false,
+                    })
+                }
                 this.sync_feature_lines();
                 // attach canvas events to adjust the active feature.
                 var is_feature_event = function (event) {
@@ -307,24 +311,26 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var current_feature_name = this.current_feature_name;
                 for (var feature_name in this.features) {
                     var feature = this.features[feature_name];
-                    var line = feature.line;
-                    var model_transform = this.nd_frame.model_transform;
-                    //var proj = configuration.projectors[feature_name];
-                    var proj = this.projectors[feature_name];
-                    var origin = model_transform.affine({});
-                    var projection = model_transform.affine(proj);
-                    var offset= model_transform.vsub(projection, origin);
-                    var length = model_transform.vlength(offset);
-                    if (length < 0.01) {
-                        length = 1.0;
-                        offset = {x:1, y:0};  // arbitrary...
-                    }
-                    offset = model_transform.vscale(1.0/length, offset);
-                    line.change({position2: offset});
-                    if (feature_name == current_feature_name) {
-                        var z = offset.z;
-                        this.feature_circle.position = offset;
-                        this.feature_circle.r = this.settings.point_radius * (1 + z * 0.7);
+                    if (feature.active) {
+                        var line = feature.line;
+                        var model_transform = this.nd_frame.model_transform;
+                        //var proj = configuration.projectors[feature_name];
+                        var proj = this.projectors[feature_name];
+                        var origin = model_transform.affine({});
+                        var projection = model_transform.affine(proj);
+                        var offset= model_transform.vsub(projection, origin);
+                        var length = model_transform.vlength(offset);
+                        if (length < 0.01) {
+                            length = 1.0;
+                            offset = {x:1, y:0};  // arbitrary...
+                        }
+                        offset = model_transform.vscale(1.0/length, offset);
+                        line.change({position2: offset});
+                        if (feature_name == current_feature_name) {
+                            var z = offset.z;
+                            this.feature_circle.position = offset;
+                            this.feature_circle.r = this.settings.point_radius * (1 + z * 0.7);
+                        }
                     }
                 }
                 this.feature_name_area.val(current_feature_name);
