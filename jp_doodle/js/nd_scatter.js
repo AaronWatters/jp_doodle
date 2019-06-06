@@ -99,9 +99,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     };
                     return div;
                 }
-                var add_feature_link = function (feature_name) {
+                var add_feature_link = function (feature_name, feature) {
                     var link = $('<a href="#">' + feature_name + "</a>").appendTo(feature_table);
-                    link.click(function () { that.draw_feature_canvas(feature_name); } );
+                    link.click(function () { 
+                        feature.active = true;
+                        that.current_feature_name = feature_name;
+                        that.draw_configuration();
+                    } );
                     return link;
                 }
                 for (var feature_name in this.features) {
@@ -109,7 +113,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     //feature.checkbox = add_checkbox(feature_name, feature_table, null, (!feature.active))
                     feature.checkbox = add_checkbox("", feature_table, null, (!feature.active));
                     feature.checkbox.change(this.feature_checkbox_onchange(feature, feature.checkbox));
-                    feature.link = add_feature_link(feature_name);
+                    feature.link = add_feature_link(feature_name, feature);
                     feature.x_entry = add_numeric_column();
                     feature.y_entry = add_numeric_column();
                     feature.z_entry = add_numeric_column();
