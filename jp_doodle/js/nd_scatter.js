@@ -432,22 +432,24 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                             lineWidth = 3;
                         }
                         var feature = this.features[feature_name];
-                        var shift = diff[feature_name] || 1.0;
-                        var offset = {}
-                        offset[feature_name] = shift;
-                        var color = feature.color;
-                        var endpoint = matrix.vadd(centroid, matrix.vscale(s.feature_scale, offset));
-                        nd_frame.line({
-                            location1: endpoint,
-                            location2: centroid,
-                            color:color,
-                            lineWidth: lineWidth,
-                        });
-                        var head = nd_frame.rect({location: endpoint, color:color,
-                            name:true, feature:feature_name});
-                        this.scale_projection_head_size(head);
-                        head.on("click", this.set_current_feature_event(feature_name));
-                        this.projection_heads[feature_name] = head;
+                        if (feature.active) {
+                            var shift = diff[feature_name] || 1.0;
+                            var offset = {}
+                            offset[feature_name] = shift;
+                            var color = feature.color;
+                            var endpoint = matrix.vadd(centroid, matrix.vscale(s.feature_scale, offset));
+                            nd_frame.line({
+                                location1: endpoint,
+                                location2: centroid,
+                                color:color,
+                                lineWidth: lineWidth,
+                            });
+                            var head = nd_frame.rect({location: endpoint, color:color,
+                                name:true, feature:feature_name});
+                            this.scale_projection_head_size(head);
+                            head.on("click", this.set_current_feature_event(feature_name));
+                            this.projection_heads[feature_name] = head;
+                        }
                     }
                 }
                 // fit (zoomed out) the frame and enable orbitting
@@ -618,9 +620,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.axes_cb = add_mode("axes");
                 this.lasso_cb = add_mode("lasso", true);
 
-                var zoom_out = $("<div> \u2296 </div>").appendTo(mode_area);
+                var zoom_out = $('<div><a href="#" title="zoom out"> \u2296 </a></div>').appendTo(mode_area);
                 zoom_out.click(function () { that.zoom_out(); });
-                var zoom_in = $("<div> \u2295 </div>").appendTo(mode_area);
+                var zoom_in = $('<div><a href="#" title="zoom in"> \u2295 </a></div>').appendTo(mode_area);
                 zoom_in.click(function () { that.zoom_in(); });
         
                 // scatter plot area
