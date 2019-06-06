@@ -99,10 +99,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     };
                     return div;
                 }
+                var add_feature_link = function (feature_name) {
+                    var link = $('<a href="#">' + feature_name + "</a>").appendTo(feature_table);
+                    link.click(function () { that.draw_feature_canvas(feature_name); } );
+                    return link;
+                }
                 for (var feature_name in this.features) {
                     var feature = this.features[feature_name];
-                    feature.checkbox = add_checkbox(feature_name, feature_table, null, (!feature.active))
+                    //feature.checkbox = add_checkbox(feature_name, feature_table, null, (!feature.active))
+                    feature.checkbox = add_checkbox("", feature_table, null, (!feature.active));
                     feature.checkbox.change(this.feature_checkbox_onchange(feature, feature.checkbox));
+                    feature.link = add_feature_link(feature_name);
                     feature.x_entry = add_numeric_column();
                     feature.y_entry = add_numeric_column();
                     feature.z_entry = add_numeric_column();
@@ -139,10 +146,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     that.draw_configuration();
                 }
             };
-            draw_feature_canvas() {
+            draw_feature_canvas(feature_name) {
                 var s = this.settings;
                 //var matrix = this.matrix;
-                var current_feature_name = this.current_feature_name
+                var current_feature_name = feature_name || this.current_feature_name;
+                this.current_feature_name = current_feature_name;
                 var configuration = this.configuration();
                 var matrix = this.matrix;
                 var that = this;
@@ -703,15 +711,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 feature_table.css({
                     "background-color": "#eed",
                     "display": "grid",
-                    "grid-template-columns": `auto auto auto auto auto auto`,
+                    "grid-template-columns": `auto auto auto auto auto auto auto`,
                     "grid-gap": `2px`,
                 });
                 // include_check, name, x y z min max
                 this.reset_feature_table = function () {
                     feature_table.empty();
                     // header row
-                    $("<div>\u2713 feature</div>").appendTo(feature_table);
-                    //$("<div>feature</div>").appendTo(feature_table);
+                    $("<div>\u2713</div>").appendTo(feature_table);
+                    $("<div>feature</div>").appendTo(feature_table);
                     $("<div>X</div>").appendTo(feature_table);
                     $("<div>Y</div>").appendTo(feature_table);
                     $("<div>Z</div>").appendTo(feature_table);
