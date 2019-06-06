@@ -67,6 +67,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.title_area.html(this.current_configuration_name);
                 this.load_configuration();
                 this.update_geometry();
+                this.standard_info();
             };
             update_geometry () {
                 this.fill_feature_table();
@@ -609,7 +610,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.scatter.do_lasso(lasso_callback, {}, true);
                 this.clear_info();
                 this.info_line("Lasso dots of interest.")
-                this.info_line("Dot location data will appear here..")
+                this.info_line("Dot feature data will appear here..")
             };
             lasso_callback(name_mapping) {
                 this.clear_info();
@@ -845,9 +846,19 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     "grid-row": "3",
                     "overflow": "auto",
                 });
-                info.html("other information here.");
+                info.html("Scatter plot scaffolding built.");
                 this.info = info;
+                //this.standard_info();
             };
+            standard_info() {
+                this.clear_info();
+                this.info_line("Multidimensional scatter plot:");
+                this.info_line("Drag to rotate scatter plot view.");
+                this.info_line("Click feature squares to select features.");
+                this.info_line("Adjust features with the slider or hemisphere.");
+                this.info_line("Click to select a configuration.");
+                this.info_line("Check 'lasso' to lasso dots.");
+            }
             clear_info() {
                 this.info.empty();
             };
