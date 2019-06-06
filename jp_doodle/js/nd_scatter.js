@@ -66,6 +66,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.reset_geometry();
                 this.title_area.html(this.current_configuration_name);
                 this.load_configuration();
+                this.update_geometry();
+            };
+            update_geometry () {
                 this.fill_feature_table();
                 this.draw_scatter_canvas();
                 this.draw_feature_canvas();
@@ -126,7 +129,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     link.click(function () { 
                         feature.active = true;
                         that.current_feature_name = feature_name;
-                        that.draw_configuration();
+                        that.update_geometry();
                     } );
                     return link;
                 }
@@ -169,7 +172,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var that = this;
                 return function () {
                     feature.active = checkbox.is_checked();
-                    that.draw_configuration();
+                    that.update_geometry();
                 }
             };
             draw_feature_canvas(feature_name) {
@@ -397,7 +400,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // draw the points
                 var points = this.point_vectors;
                 var point_arrays = this.point_arrays;
-                var name = this.dots_cb.is_checked() || this.lasso_callback.is_checked();
+                var name = this.dots_cb.is_checked() || this.lasso_cb.is_checked();
                 var fill = name;
                 this.dots = []
                 this.name_to_dot = {};
