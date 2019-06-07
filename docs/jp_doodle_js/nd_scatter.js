@@ -96,6 +96,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     return function () {
                         that.current_configuration_name = name;
                         that.draw_configuration();
+                        return false;
                     };
                 };
                 this.reset_config_table();
@@ -137,6 +138,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         feature.active = true;
                         that.current_feature_name = feature_name;
                         that.update_geometry();
+                        return false;
                     } );
                     return link;
                 }
@@ -698,9 +700,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.lasso_cb = add_mode("lasso", true);
 
                 var zoom_out = $('<div><a href="#" title="zoom out"> \u2296 </a></div>').appendTo(mode_area);
-                zoom_out.click(function () { that.zoom_out(); });
+                zoom_out.click(function () { that.zoom_out(); return false; });
                 var zoom_in = $('<div><a href="#" title="zoom in"> \u2295 </a></div>').appendTo(mode_area);
-                zoom_in.click(function () { that.zoom_in(); });
+                zoom_in.click(function () { that.zoom_in(); return false; });
         
                 // scatter plot area
                 var scatter = $("<div/>").appendTo(container);

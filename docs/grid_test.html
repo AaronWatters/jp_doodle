@@ -1,0 +1,60 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>debug test of nd-frame</title>
+
+
+    <link rel="stylesheet" href="../docs/jquery-ui-1.12.1/jquery-ui.css">
+    <script src="../docs/jquery-ui-1.12.1/external/jquery/jquery.js"></script>
+    <script src="../docs/jquery-ui-1.12.1/jquery-ui.js"></script>
+
+
+</head>
+
+<body>
+
+    <div id="target_container">
+        <div id="target_div"/>
+    </div>
+
+    <script>
+        var container = $('#target_div');
+        container.empty();
+        
+        container.css({
+            "display": "grid",
+            "grid-template-columns": "700px 200px",
+            "grid-template-rows": "700px 100px",
+            "grid-gap": "10px",
+        });
+        
+        var element = $("<div/>").appendTo(container);
+        element.css({
+            "title": "element",
+            "background-color": "#999",
+            "grid-column": "1",
+            "grid-row": "1",
+        });
+        element.html("scatter plot here.")
+
+        var sidebar = $("<div/>").appendTo(container);
+        sidebar.css({
+            "title": "sidebar",
+            "background-color": "yellow",
+            "grid-column": "2",
+            "grid-row": "1 / 3",
+        });
+        sidebar.html("axis and features here.");
+
+        var info = $("<div/>").appendTo(container);
+        info.css({
+            "title": "info",
+            "background-color": "pink",
+            "grid-column": "1",
+            "grid-row": "2",
+        });
+        info.html("other information here.");
+    </script>
+</body> 
+</html>

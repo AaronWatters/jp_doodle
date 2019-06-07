@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Multidimensional Frames -- jp_doodle demo</title>
+    <title>N-Dimensional Frames -- jp_doodle demo</title>
     <link rel="icon" type="image/png" href="images/clock.png">
     <link rel=stylesheet href="static/style.css">
 
@@ -22,6 +22,7 @@
     <script src="jp_doodle_js/array_explorer.js"></script>
     <script src="jp_doodle_js/canvas_2d_vector_field.js"></script>
     <script src="jp_doodle_js/nd_frame.js"></script>
+    <script src="jp_doodle_js/nd_scatter.js"></script>
 
     <script>
         $( function() {
@@ -44,7 +45,8 @@
 <span style="display: inline-block; margin: 10px;"><a href="070_images.html"><div> Images </div><div> <img src="images/Images.png" style="background-color:#cdf" width="50px"/> </div></a></span>
 <span style="display: inline-block; margin: 10px;"><a href="080_transitions.html"><div> Transitions </div><div> <img src="images/Transitions.png" style="background-color:#cdf" width="50px"/> </div></a></span>
 <span style="display: inline-block; margin: 10px;"><a href="090_frames.html"><div> Frames </div><div> <img src="images/Frame.png" style="background-color:#cdf" width="50px"/> </div></a></span>
-<span style="display: inline-block; margin: 10px;"><a href="095_nd_frames.html"><div> Multidimensional Frames </div><div> <img src="images/nd_frame.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+<span style="display: inline-block; margin: 10px;"><a href="095_nd_frames.html"><div> N-Dimensional Frames </div><div> <img src="images/nd_frame.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+<span style="display: inline-block; margin: 10px;"><a href="110_nd_scatter.html"><div> N-Dimensional Scatter Plot </div><div> <img src="images/nd_scatter.png" style="background-color:#cdf" width="50px"/> </div></a></span>
 <span style="display: inline-block; margin: 10px;"><a href="array_explorer.html"><div> Array explorer </div><div> <img src="images/ArrayChooser.png" style="background-color:#cdf" width="50px"/> </div></a></span>
 <span style="display: inline-block; margin: 10px;"><a href="color_chooser.html"><div> Color chooser </div><div> <img src="images/color_chooser.png" style="background-color:#cdf" width="50px"/> </div></a></span>
 <span style="display: inline-block; margin: 10px;"><a href="opacity.html"><div> Opacity Sliders </div><div> <img src="images/opacity.png" style="background-color:#cdf" width="50px"/> </div></a></span>
@@ -69,7 +71,7 @@
     to easily run the Jupyter notebooks of the package.
 </em></p>
 
-<h1>Multidimensional Frames</h1>
+<h1>N-Dimensional Frames</h1>
 <div>
     <p>
 Multidimensional frames allow data to be projected from higher
@@ -108,19 +110,20 @@ Shift-drag the mouse on the figure to translate the diagram.
             // Enable orbitting.
             var center3d = {x:0.1, y:-0.1, z:-0.25};
             var radius = 3;
-            nd_frame.orbit_region(center3d, radius, -4, -4, 8)
+            //nd_frame.orbit_region(center3d, radius, -4, -4, 8)
+            nd_frame.orbit_region(radius, center3d, -4, -4, 8, 8)
 
             // Give the frame a small initial rotation.
             var shift2d = {x:-0.3, y:-0.2};
             nd_frame.orbit(center3d, radius, shift2d);
 
             // Draw simple axes.
-            nd_frame.line({position1: {x:1.5}, position2: {x:-1.5}, color:"red", lineWidth:3});
-            nd_frame.line({position1: {y:1.5}, position2: {y:-1.5}, color:"blue", lineWidth:3});
-            nd_frame.line({position1: {z:1.5}, position2: {z:-1.5}, color:"green", lineWidth:3});
-            nd_frame.text({position: {x:1.9}, text: "X", font: "normal 30px Arial"});
-            nd_frame.text({position: {y:1.9}, text: "Y", font: "normal 30px Arial"});
-            nd_frame.text({position: {z:1.9}, text: "Z", font: "normal 30px Arial"});
+            nd_frame.line({location1: {x:1.5}, location2: {x:-1.5}, color:"red", lineWidth:3});
+            nd_frame.line({location1: {y:1.5}, location2: {y:-1.5}, color:"blue", lineWidth:3});
+            nd_frame.line({location1: {z:1.5}, location2: {z:-1.5}, color:"green", lineWidth:3});
+            nd_frame.text({location: {x:1.9}, text: "X", font: "normal 30px Arial"});
+            nd_frame.text({location: {y:1.9}, text: "Y", font: "normal 30px Arial"});
+            nd_frame.text({location: {z:1.9}, text: "Z", font: "normal 30px Arial"});
 
             // make a spiral thingy using a function that maps indices to spiral coordinates.
             var count = 50
@@ -134,9 +137,9 @@ Shift-drag the mouse on the figure to translate the diagram.
             for (var index=0; index<2*count; index++) {
                 var start = spiral_coordinates(index);
                 var end = spiral_coordinates(index + 0.5);
-                nd_frame.circle({position: start, r:3, color:"cyan"})
+                nd_frame.circle({location: start, r:3, color:"cyan"})
                 nd_frame.polygon({
-                        points: [start, end, {z: start.z}],
+                        locations: [start, end, {z: start.z}],
                         color: transparent_pink
                     });
             }
@@ -146,7 +149,7 @@ Shift-drag the mouse on the figure to translate the diagram.
             nd_frame.name_image_url("mandrill", mandrill_url);
             var mandrill = nd_frame.named_image({
                 name: "whole mandrill",
-                image_name: "mandrill", position: {z: -1.1}, w:100, h:100
+                image_name: "mandrill", location: {z: -1.1}, w:100, h:100
             });
 
             var zoom_in = function() {
@@ -185,19 +188,20 @@ var canvas_config = {
             // Enable orbitting.
             var center3d = {x:0.1, y:-0.1, z:-0.25};
             var radius = 3;
-            nd_frame.orbit_region(center3d, radius, -4, -4, 8)
+            //nd_frame.orbit_region(center3d, radius, -4, -4, 8)
+            nd_frame.orbit_region(radius, center3d, -4, -4, 8, 8)
 
             // Give the frame a small initial rotation.
             var shift2d = {x:-0.3, y:-0.2};
             nd_frame.orbit(center3d, radius, shift2d);
 
             // Draw simple axes.
-            nd_frame.line({position1: {x:1.5}, position2: {x:-1.5}, color:"red", lineWidth:3});
-            nd_frame.line({position1: {y:1.5}, position2: {y:-1.5}, color:"blue", lineWidth:3});
-            nd_frame.line({position1: {z:1.5}, position2: {z:-1.5}, color:"green", lineWidth:3});
-            nd_frame.text({position: {x:1.9}, text: "X", font: "normal 30px Arial"});
-            nd_frame.text({position: {y:1.9}, text: "Y", font: "normal 30px Arial"});
-            nd_frame.text({position: {z:1.9}, text: "Z", font: "normal 30px Arial"});
+            nd_frame.line({location1: {x:1.5}, location2: {x:-1.5}, color:"red", lineWidth:3});
+            nd_frame.line({location1: {y:1.5}, location2: {y:-1.5}, color:"blue", lineWidth:3});
+            nd_frame.line({location1: {z:1.5}, location2: {z:-1.5}, color:"green", lineWidth:3});
+            nd_frame.text({location: {x:1.9}, text: "X", font: "normal 30px Arial"});
+            nd_frame.text({location: {y:1.9}, text: "Y", font: "normal 30px Arial"});
+            nd_frame.text({location: {z:1.9}, text: "Z", font: "normal 30px Arial"});
 
             // make a spiral thingy using a function that maps indices to spiral coordinates.
             var count = 50
@@ -211,9 +215,9 @@ var canvas_config = {
             for (var index=0; index<2*count; index++) {
                 var start = spiral_coordinates(index);
                 var end = spiral_coordinates(index + 0.5);
-                nd_frame.circle({position: start, r:3, color:"cyan"})
+                nd_frame.circle({location: start, r:3, color:"cyan"})
                 nd_frame.polygon({
-                        points: [start, end, {z: start.z}],
+                        locations: [start, end, {z: start.z}],
                         color: transparent_pink
                     });
             }
@@ -223,7 +227,7 @@ var canvas_config = {
             nd_frame.name_image_url("mandrill", mandrill_url);
             var mandrill = nd_frame.named_image({
                 name: "whole mandrill",
-                image_name: "mandrill", position: {z: -1.1}, w:100, h:100
+                image_name: "mandrill", location: {z: -1.1}, w:100, h:100
             });
 
             var zoom_in = function() {
@@ -247,7 +251,7 @@ var canvas_config = {
     
         <div>
             <p>
-Note that the mandrill image does not rotate even though its position changes.
+Note that the mandrill image does not rotate even though its location changes.
 Images, circles, rectangles and text are drawn using the 2 dimensional context.
 </p>
 <p>
