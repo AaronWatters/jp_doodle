@@ -361,7 +361,7 @@ to change the parameters of the frame on the right.
     </td>
     <td>
         <h4><a href="https://aaronwatters.github.io/jp_doodle/095_nd_frames.html">
-        Multidimensional Frames
+        N-Dimensional Frames
         </a></h4>
         <div>
         <p>
@@ -374,6 +374,32 @@ before the presentation in 2 dimensions.
 Below we draw elements with 3 dimensional coordinates.
 Drag the mouse on the figure to rotate the diagram.
 Shift-drag the mouse on the figure to translate the diagram.
+</p>
+        </div>
+    </td>
+</tr>
+
+
+<tr>
+    <td>
+        <a href="https://aaronwatters.github.io/jp_doodle/110_nd_scatter.html">
+        <img width="200px" src="docs/images/nd_scatter.png">
+        </a>
+    </td>
+    <td>
+        <h4><a href="https://aaronwatters.github.io/jp_doodle/110_nd_scatter.html">
+        N-Dimensional Scatter Plot
+        </a></h4>
+        <div>
+        <p>
+The multidimensional scatter plot widget allows interactive
+exploration of dimensionality reduction projections that project
+many features into three dimensional summaries.
+</p>
+<p>
+The demonstration below shows the standard "iris" dataset
+projected from 4 dimensions into 3 dimensions using several
+projection methods.
 </p>
         </div>
     </td>
