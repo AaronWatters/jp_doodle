@@ -76,6 +76,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // fill the feature table again to update min/max values
                 this.fill_feature_table();
                 this.fill_configuration_table();
+                this.nd_frame.recalibrate_frame(true);
             };
             configuration() {
                 return this.configurations[this.current_configuration_name];
