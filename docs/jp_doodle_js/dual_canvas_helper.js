@@ -113,6 +113,11 @@ XXXXX clean up events for forgotten objects
             target.reset_events();
             target.visible_canvas.clear_canvas();
             target.invisible_canvas.clear_canvas();
+
+            // remove all event listeners
+            target.visible_canvas.canvas.off();
+            target.invisible_canvas.canvas.off();   // not needed.
+
             // no need to clear the test_canvas now
         };
 
@@ -208,6 +213,7 @@ XXXXX clean up events for forgotten objects
             //return;
             target.set_translate_scale(translate_scale);
             // reset the event callbacks
+            target.visible_canvas.canvas.off();
             for (var event_type in target.event_info.event_types) {
                 target.visible_canvas.canvas.on(event_type, target.generic_event_handler);
                 target.event_info.event_types[event_type] = true;
@@ -336,11 +342,12 @@ XXXXX clean up events for forgotten objects
             // By default append the new object.
             var object_index = object_list.length;
             var object_info = info;
-            if (!in_place) {
+            if ((!in_place) && (!info.in_place)) {
                 // make a shallow copy of the object
                 object_info = $.extend({}, info);
             }
-            object_info.draw_on_canvas = object_info.draw_on_canvas || draw_on_canvas;
+            //object_info.draw_on_canvas = object_info.draw_on_canvas || draw_on_canvas;
+            object_info.draw_on_canvas = draw_on_canvas || object_info.draw_on_canvas;
             if (name) {
                 // Set up color indexing
                 var pseudocolor_array = null;
@@ -366,24 +373,24 @@ XXXXX clean up events for forgotten objects
                 }
                 target.name_to_object_info[name] = object_info;
                 // For named objects also attach api conveniences
-                object_info.change = function(options) {
+                object_info.change = object_info.change || (function(options) {
                     target.change(object_info.name, options);
-                };
-                object_info.forget = function() {
+                });
+                object_info.forget = object_info.forget || (function() {
                     target.forget_objects([object_info.name]);
-                };
-                object_info.visible = function(visibility) {
+                });
+                object_info.visible = object_info.visible || (function(visibility) {
                     target.set_visibilities([object_info.name], visibility);
-                };
-                object_info.on = function(event_type, callback) {
+                });
+                object_info.on = object_info.on || (function(event_type, callback) {
                     target.on_canvas_event(event_type, callback, object_info.name);
-                };
-                object_info.off = function(event_type) {
+                });
+                object_info.off = object_info.off || (function(event_type) {
                     target.off_canvas_event(event_type, object_info.name);
-                };
-                object_info.transition = function(to_values, seconds_duration) {
+                });
+                object_info.transition = object_info.transition || (function(to_values, seconds_duration) {
                     target.transition(object_info.name, to_values, seconds_duration);
-                };
+                });
             }
             object_info.object_index = object_index;
             object_list[object_index] = object_info;
@@ -395,7 +402,7 @@ XXXXX clean up events for forgotten objects
             if (object_info) {
                 // call the on_change callback if defined
                 if (object_info.on_change) {
-                    object_info.on_change(opt);
+                    opt = object_info.on_change(opt);
                 }
                 // in place update object description
                 $.extend(object_info, opt);
@@ -771,6 +778,10 @@ XXXXX clean up events for forgotten objects
             }
         };
 
+        target.on = function(event_type, callback) {
+            return target.on_canvas_event(event_type, callback);
+        };
+
         target.off_canvas_event = function(event_type, for_name_or_info) {
             if (for_name_or_info) {
                 var object_info =  target.get_object_info(for_name_or_info);
@@ -790,6 +801,10 @@ XXXXX clean up events for forgotten objects
             } else {
                 target.event_info.default_event_handlers[event_type] = null;
             }
+        };
+
+        target.off = function(event_type) {
+            return target.off_canvas_event(event_type);
         };
 
         target.event_canvas_location = function(e) {
@@ -854,6 +869,7 @@ XXXXX clean up events for forgotten objects
                     // if the object has a frame, override the reference frame
                     if ((e.object_info) && (e.object_info.frame)) {
                         reference_frame = e.object_info.frame;
+                        e.reference_frame = reference_frame;
                     }
                     //var object_handlers = target.event_info.object_event_handlers[event_type];
                     //if ((e.object_info) && (object_handlers)) {
@@ -873,7 +889,7 @@ XXXXX clean up events for forgotten objects
                     if ((!object_handler) && (e.object_info) && (e.object_info.frame)) {
                         var fname = e.object_info.frame.name;
                         if ((n2t2h[fname]) && (n2t2h[fname][event_type])) {
-                            object_handler = n2t2h[event_type];
+                            object_handler = n2t2h[fname][event_type];
                         }
                     }
                 }
@@ -2053,7 +2069,7 @@ XXXXX clean up events for forgotten objects
         x_vector, 
         y_vector, 
         xy_offset,
-        name) 
+        name,) 
     {
         // View into canvas with shifted and scaled positions.
         // Do not adjust rectangle w/h or orientation, text parameters, or circle radius.
@@ -2079,11 +2095,15 @@ XXXXX clean up events for forgotten objects
 
         frame.duplicate = function () {
             // make a new frame with same geometry and same parent
-            return frame.parent_canvas.vector_frame(
+            result = frame.parent_canvas.vector_frame(
                 $.extend({}, frame.x_vector),
                 $.extend({}, frame.y_vector),
                 $.extend({}, frame.xy_offset)
             );
+            if (frame.extrema) {
+                result.extrema = frame.extrema;
+            }
+            return result;
         }
 
         frame.local_json_data = function () {
@@ -2111,11 +2131,54 @@ XXXXX clean up events for forgotten objects
 
         frame.set_region = function(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy) {
             // Convenience: map frame region into the canvas region
-            var scale_x = (maxx - minx) * 1.0 / (frame_maxx - frame_minx);
-            var scale_y = (maxy - miny) * 1.0 / (frame_maxy - frame_miny);
-            var translate_x = minx - frame_minx * scale_x;
-            var translate_y = miny - frame_miny * scale_y;
+            var extrema = {
+                minx: minx, miny: miny, maxx:maxx, maxy:maxy,
+                frame_minx: frame_minx, frame_miny: frame_miny, 
+                frame_maxx: frame_maxx, frame_maxy: frame_maxy,
+            };
+            frame.set_extrema(extrema);
+        };
+
+        frame.set_extrema = function(extrema) {
+            // set or amend extrema
+            var e = {};
+            if (frame.extrema) {
+                e = $.extend(e, frame.extrema);
+            }
+            e = $.extend(e, extrema);
+            frame.extrema = e;
+            var scale_x = (e.maxx - e.minx) * 1.0 / (e.frame_maxx - e.frame_minx);
+            var scale_y = (e.maxy - e.miny) * 1.0 / (e.frame_maxy - e.frame_miny);
+            var translate_x = e.minx - e.frame_minx * scale_x;
+            var translate_y = e.miny - e.frame_miny * scale_y;
             return frame.set_rframe(scale_x, scale_y, translate_x, translate_y);
+        };
+
+        frame.event_region = function(existing_rectangle, name, color, extrema) {
+            // return an "invisible" rectangle to capture events within the frame active region.
+            // the rectangle will hide any previously drawn elements.
+            var e = extrema || frame.extrema;
+            if (!e) {
+                throw new Error("event_region requires frame extrema to be specified.");
+            }
+            name = name || true;
+            color = color || "rgba(0,0,0,0)";
+            var options = {
+                x: e.frame_minx,
+                y: e.frame_miny,
+                w: e.maxx - e.minx,
+                h: e.maxy - e.miny,
+            };
+            // modify existing rectangle with possibley new geometry, preserving event bindings.
+            if (existing_rectangle) {
+                existing_rectangle.change(options);
+                return existing_rectangle;
+            } else {
+                options.name = name;
+                options.color = color;
+                invisible = frame.rect(options);
+                return invisible;
+            }
         }
 
         // Delegate appropriate methods to parent
@@ -2236,10 +2299,14 @@ XXXXX clean up events for forgotten objects
             frame[shape_name] = function(opt, wait) {
                 // Make sure the frame exists in parent.
                 frame.check_registration();
-                var s = $.extend({
-                    coordinate_conversion: frame.coordinate_conversion,
-                    frame: frame,
-                }, opt);
+                //var s = $.extend({
+                //    coordinate_conversion: frame.coordinate_conversion,
+                //    frame: frame,
+                //}, opt);
+                // modify options in place.
+                var s = opt;
+                s.coordinate_conversion = s.coordinate_conversion || frame.coordinate_conversion;
+                s.frame = s.frame || frame;
                 if (s.temporary) {
                     // short cut optimization, step around bookkeeping for temporary object.
                     return frame.parent_canvas.visible_canvas[shape_name](s);
