@@ -536,9 +536,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             zoom_in() {
                 this.nd_frame.zoom(this.center_xyz, 1.2);
+                this.after_orbit();
             };
             zoom_out() {
                 this.nd_frame.zoom(this.center_xyz, 0.8);
+                this.after_orbit();
             };
             after_orbit() {
                 // After orbit change adjust related displayed information.
