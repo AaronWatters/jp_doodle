@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>N-Dimensional Scatter Plot -- jp_doodle demo</title>
+    <link rel="icon" type="image/png" href="images/clock.png">
+    <link rel=stylesheet href="static/style.css">
+
+    <link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css">
+    <script src="jquery-ui-1.12.1/external/jquery/jquery.js"></script>
+    <script src="jquery-ui-1.12.1/jquery-ui.js"></script>
+
+    <link rel="stylesheet" href="codemirrorjs/codemirror.css">
+    <script src="codemirrorjs/codemirror.js"></script>
+    <script src="codemirrorjs/matchbrackets.js"></script>
+    <script src="codemirrorjs/continuecomment.js"></script>
+    <script src="codemirrorjs/comment.js"></script>
+    <script src="codemirrorjs/javascript.js"></script>
+    <style type="text/css">.CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black;}</style>
+    <script src="jp_doodle_js/canvas_2d_widget_helper.js"></script>
+    <script src="jp_doodle_js/dual_canvas_helper.js"></script>
+    <script src="jp_doodle_js/rectangle_collection.js"></script>
+    <script src="jp_doodle_js/array_explorer.js"></script>
+    <script src="jp_doodle_js/canvas_2d_vector_field.js"></script>
+    <script src="jp_doodle_js/nd_frame.js"></script>
+    <script src="jp_doodle_js/nd_scatter.js"></script>
+
+    <script>
+        $( function() {
+          $( "#discussion" ).accordion({collapsible : true, active : 'none'});
+          $( "#code_text" ).accordion({collapsible : true, active : 'none'});
+        } );
+    </script>
+</head>
+
+<body>
+<div class="top_menu">
+<div>
+<span style="display: inline-block; margin: 10px;"><a href="index.html"><div> Drawing </div><div> <img src="images/drawing.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+<span style="display: inline-block; margin: 10px;"><a href="010_events.html"><div> Events </div><div> <img src="images/events.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+<span style="display: inline-block; margin: 10px;"><a href="020_bindings.html"><div> Bindings </div><div> <img src="images/bindings.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+<span style="display: inline-block; margin: 10px;"><a href="030_animation.html"><div> Animation </div><div> <img src="images/clock.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+<span style="display: inline-block; margin: 10px;"><a href="040_lasso.html"><div> Lasso </div><div> <img src="images/lasso.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+<span style="display: inline-block; margin: 10px;"><a href="050_rectangles.html"><div> Rectangles </div><div> <img src="images/rectangle.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+<span style="display: inline-block; margin: 10px;"><a href="060_chart.html"><div> Chart </div><div> <img src="images/chart.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+<span style="display: inline-block; margin: 10px;"><a href="070_images.html"><div> Images </div><div> <img src="images/Images.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+<span style="display: inline-block; margin: 10px;"><a href="080_transitions.html"><div> Transitions </div><div> <img src="images/Transitions.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+<span style="display: inline-block; margin: 10px;"><a href="090_frames.html"><div> Frames </div><div> <img src="images/Frame.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+<span style="display: inline-block; margin: 10px;"><a href="095_nd_frames.html"><div> N-Dimensional Frames </div><div> <img src="images/nd_frame.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+<span style="display: inline-block; margin: 10px;"><a href="110_nd_scatter.html"><div> N-Dimensional Scatter Plot </div><div> <img src="images/nd_scatter.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+<span style="display: inline-block; margin: 10px;"><a href="array_explorer.html"><div> Array explorer </div><div> <img src="images/ArrayChooser.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+<span style="display: inline-block; margin: 10px;"><a href="color_chooser.html"><div> Color chooser </div><div> <img src="images/color_chooser.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+<span style="display: inline-block; margin: 10px;"><a href="opacity.html"><div> Opacity Sliders </div><div> <img src="images/opacity.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+<span style="display: inline-block; margin: 10px;"><a href="polygon.html"><div> Edit polygon </div><div> <img src="images/edit_poly.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+<span style="display: inline-block; margin: 10px;"><a href="vector_field.html"><div> Vector Field </div><div> <img src="images/vector_field.png" style="background-color:#cdf" width="50px"/> </div></a></span>
+</div>
+</div>
+
+<p><em>
+    This is an example page for the 
+    <code><a href="https://github.com/AaronWatters/jp_doodle">jp_doodle</a></em></code>
+    package. <br>
+
+    <p><b><code><a href="https://github.com/AaronWatters/jp_doodle">jp_doodle</a></em></code>
+        makes implementing special purpose interactive visualizations easy.</b></p>
+
+    Please see the Jupyter notebooks in the package for additional
+    discussion and documentation. <br>
+
+    Please use 
+    <a href="https://mybinder.org/v2/gh/AaronWatters/jp_doodle/master">Binder</a>
+    to easily run the Jupyter notebooks of the package.
+</em></p>
+
+<h1>N-Dimensional Scatter Plot</h1>
+<div>
+    <p>
+The multidimensional scatter plot widget allows interactive
+exploration of dimensionality reduction projections that project
+many features into three dimensional summaries.
+</p>
+<p>
+The demonstration below shows the standard "iris" dataset
+projected from 4 dimensions into 3 dimensions using several
+projection methods.
+</p>
+</div>
+
+<div id="target_container">
+    <div id="target_div"/>
+</div>
+
+<script>
+    var element = $('#target_div');
+    //$('<img src="http://sipi.usc.edu/database/preview/misc/4.2.03.png">').appendTo(element);
+    var scatter_plot = element.nd_scatter({});
+            element.scatter_plot = scatter_plot;  // for debugging
+            scatter_plot.make_scaffolding();
+            var do_plot = function(json_data) {
+                scatter_plot.define_json(json_data);
+            };
+            var on_load_failure = function() {
+                alert("Could not load local JSON data.\n" +
+                        "You may need to run a web server to avoid cross origin restrictions.")
+            };
+            $.getJSON("./static/iris.json", do_plot).fail(on_load_failure);
+</script>
+
+<div id="code_text">
+        <h3>Code</h3>
+    
+        <div><textarea id="code" name="code">
+var element = $('#target_div');
+var scatter_plot = element.nd_scatter({});
+            element.scatter_plot = scatter_plot;  // for debugging
+            scatter_plot.make_scaffolding();
+            var do_plot = function(json_data) {
+                scatter_plot.define_json(json_data);
+            };
+            var on_load_failure = function() {
+                alert("Could not load local JSON data.\n" +
+                        "You may need to run a web server to avoid cross origin restrictions.")
+            };
+            $.getJSON("./static/iris.json", do_plot).fail(on_load_failure);
+        </textarea></div>
+    
+    </div>
+
+<div id="discussion">
+        <h3>Discussion</h3>
+    
+        <div>
+            <p>
+The projection configurations were derived using scikit-learn.
+</p>
+        </div>
+    
+    </div>
+    
+    <script>
+            var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+              lineNumbers: true,
+              matchBrackets: true,
+              continueComments: "Enter",
+              extraKeys: {"Ctrl-Q": "toggleComment"}
+            });
+     </script>
+            
+</body>
+</html>
