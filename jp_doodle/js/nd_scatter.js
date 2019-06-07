@@ -103,8 +103,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 for (var i=0; i<config_names.length; i++) {
                     var config_name = config_names[i];
                     var config = this.configurations[config_name];
-                    config.checkbox = add_checkbox("", config_table, null, (config_name != current_config_name));
-                    config.checkbox.attr('readonly',true); 
+                    //config.checkbox = add_checkbox("", config_table, null, (config_name != current_config_name));
+                    //config.checkbox.attr('readonly',true); 
+                    if (config_name != current_config_name) {
+                        $("<div> </div>").appendTo(config_table);
+                    } else {
+                        $("<div>\u2713</div>").appendTo(config_table);
+                    }
                     config.link = $('<a href="#">' + config_name + "</a>").appendTo(config_table);
                     config.link.click(select_configuration(config_name));
                 }
