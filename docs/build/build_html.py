@@ -114,15 +114,17 @@ class HTML_Builder:
             title = info["TITLE"]
             screenshot = info["SCREENSHOT"]
             entry = (
-                '<span style="display: inline-block; margin: 10px;">' +
+                '<div>' +
                 '<a href="%s">' +
                 '<div> %s </div>' +
                 '<div> <img src="%s" style="background-color:#cdf" width="50px"/> </div>' +
                 '</a>' +
-                '</span>'
+                '</div>'
                 ) % (url, title, screenshot)
             entries.append(entry)
-        self.menu = "<div>\n%s\n</div>" % "\n".join(entries)
+        cols = " 125px" * 10
+        divs = "\n".join(entries)
+        self.menu = '<div style="display: grid; margin: 10px; grid-template-columns: %s">\n%s\n</div>' % (cols, divs)
 
     def file_content(self, info):
         result = self.here_substitutions(self.template_text, info)
