@@ -859,8 +859,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             standard_info() {
                 this.clear_info();
                 this.info_line("Multidimensional scatter plot:");
-                this.info_line("Drag to rotate scatter plot view.");
-                this.info_line("Click feature squares to select features.");
+                this.info_line("The scatter plot shows a 3 dimensional projection of higher dimansional features.");
+                this.info_line("Feature configuration and projection controls are to the right.");
+                this.info_line("Drag to rotate the scatter plot view.");
+                this.info_line("SHIFT-Drag to pan the scatter plot view.");
+                this.info_line("Click feature squares or names to select features.");
                 this.info_line("Adjust features with the slider or hemisphere.");
                 this.info_line("Click to select a configuration.");
                 this.info_line("Check 'lasso' to lasso dots.");
