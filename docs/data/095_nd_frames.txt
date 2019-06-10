@@ -1,5 +1,5 @@
 ***TITLE
-Multidimensional Frames
+N-Dimensional Frames
 ***SCREENSHOT
 images/nd_frame.png
 ***PROLOGUE

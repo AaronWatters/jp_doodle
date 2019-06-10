@@ -3,17 +3,17 @@
         {
             "name": "sepal length",
             "index": 0,
-            "color": "brown"
+            "color": "#18f"
         },
         {
             "name": "sepal width",
             "index": 1,
-            "color": "purple"
+            "color": "#818"
         },
         {
             "name": "petal length",
             "index": 2,
-            "color": "orange"
+            "color": "#881"
         },
         {
             "name": "petal width",

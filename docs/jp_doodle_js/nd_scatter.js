@@ -82,12 +82,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 return this.configurations[this.current_configuration_name];
             };
             load_configuration(configuration_name) {
+                this.current_configuration_name = configuration_name || this.current_configuration_name;
                 var configuration = this.configuration();
+                configuration.select_all_colors();
                 var projectors = {};
                 for (var feature_name in configuration.projectors) {
                     projectors[feature_name] = configuration.projectors[feature_name];
                 }
                 this.projectors = projectors;
+                this.fill_colorizer_info();
             };
             fill_configuration_table() {
                 var current_config_name = this.current_configuration_name;
@@ -115,6 +118,70 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     config.link = $('<a href="#">' + config_name + "</a>").appendTo(config_table);
                     config.link.click(select_configuration(config_name));
                 }
+            };
+            fill_colorizer_info() {
+                debugger;
+                var all_selected = true;  // until proven otherwise
+                var configuration = this.configuration();
+                var colorizer_info = this.colorizer_info;
+                colorizer_info.empty();
+                var that = this;
+                var colorizer_table = $("<div/>").appendTo(colorizer_info);
+                var indicator_to_checkbox = {};
+                colorizer_table.css({
+                    "background-color": "#efe",
+                    "display": "grid",
+                    "grid-template-columns": `auto 80%`,
+                    "grid-gap": `10px`,
+                });
+                // actions
+                var select_color = function(indicator, checkbox) {
+                    checkbox.uncheck(false);
+                    configuration.selected_color[indicator] = true;
+                };
+                var unselect_color = function(indicator, checkbox, all_checkbox) {
+                    checkbox.uncheck(true);
+                    all_checkbox.uncheck(true);
+                    configuration.selected_color[indicator] = false;
+                    all_selected = false;
+                };
+                var color_check_change = function(indicator, checkbox, all_checkbox) {
+                    return function () {
+                        if (checkbox.is_checked()) {
+                            select_color(indicator, checkbox);
+                        } else {
+                            unselect_color(indicator, checkbox, all_checkbox);
+                        }
+                        that.update_geometry();
+                    };
+                };
+                var select_all = function() {
+                    if (all_checkbox.is_checked()) {
+                        for (var indicator in indicator_to_checkbox) {
+                            var checkbox = indicator_to_checkbox[indicator];
+                            select_color(indicator, checkbox);
+                        }
+                        that.update_geometry();
+                    }
+                };
+                // header/all colors
+                var all_checkbox = add_checkbox("", colorizer_table, select_all);
+                $("<div><em>Select all</em></div>").appendTo(colorizer_table);
+                // individual colors
+                for (var indicator in configuration.selected_color) {
+                    var selected = configuration.selected_color[indicator];
+                    var color = configuration.colorizer.mapping[indicator];
+                    var checkbox = add_checkbox("", colorizer_table, null, selected, color);
+                    checkbox.change(color_check_change(indicator, checkbox, all_checkbox));
+                    $("<div>" + indicator + "</div>").appendTo(colorizer_table);
+                    if (selected) {
+                        select_color(indicator, checkbox);
+                    } else {
+                        unselect_color(indicator, checkbox, all_checked);
+                    }
+                    indicator_to_checkbox[indicator] = checkbox;
+                }
+                all_checkbox.uncheck(!all_selected);
             };
             fill_feature_table() {
                 //var s = this.settings;
@@ -145,7 +212,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 for (var feature_name in this.features) {
                     var feature = this.features[feature_name];
                     //feature.checkbox = add_checkbox(feature_name, feature_table, null, (!feature.active))
-                    feature.checkbox = add_checkbox("", feature_table, null, (!feature.active));
+                    var color = feature.color;
+                    feature.checkbox = add_checkbox("", feature_table, null, (!feature.active), color);
                     feature.checkbox.change(this.feature_checkbox_onchange(feature, feature.checkbox));
                     feature.link = add_feature_link(feature_name, feature);
                     feature.x_entry = add_numeric_column();
@@ -417,17 +485,20 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     var point_vector = points[i];
                     var point_array = point_arrays[i];
                     var color = configuration.color(point_array);
-                    var circle = nd_frame.circle({
-                        location: point_vector,
-                        r: s.point_radius,   // xxxxx parameterize
-                        color: color,
-                        name: name,
-                        fill: fill,
-                    });
-                    this.dots.push(circle);
-                    if (name) {
-                        this.name_to_dot[circle.name] = circle;
-                        circle.point_array = point_array;
+                    // only show selected colors
+                    if (color) {
+                        var circle = nd_frame.circle({
+                            location: point_vector,
+                            r: s.point_radius,   // xxxxx parameterize
+                            color: color,
+                            name: name,
+                            fill: fill,
+                        });
+                        this.dots.push(circle);
+                        if (name) {
+                            this.name_to_dot[circle.name] = circle;
+                            circle.point_array = point_array;
+                        }
                     }
                 }
                 this.adjust_dots();
@@ -668,7 +739,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     "grid-column": "1",
                     "grid-row": "1",
                     "display": "grid",
-                    "grid-template-columns": ` auto auto`,
+                    "grid-template-columns": `auto auto`,
                     "grid-template-rows": `auto`,
                     "grid-gap": `${s.gap}`,
                 });
@@ -731,7 +802,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     "grid-row": "1 / 4",
                     "display": "grid",
                     "grid-template-columns": `auto`,
-                    "grid-template-rows": `${s.axis_size}px auto auto auto`,
+                    "grid-template-rows": `${s.axis_size}px auto auto auto auto`,
                     "grid-gap": `${s.gap}`,
                 });
                 //sidebar.html("axis and features here.");
@@ -793,6 +864,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
                 this.axis_detail = axis_detail;
 
+                var colorizer_info = $("<div/>").appendTo(sidebar);
+                colorizer_info.css({
+                    "background-color": "#eef",
+                    "overflow": "scroll",
+                });
+                colorizer_info.html("colorizer info here.")
+                this.colorizer_info = colorizer_info;
+
                 var feature_info = $("<div/>").appendTo(sidebar);
                 feature_info.css({
                     "background-color": "#eee",
@@ -804,6 +883,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     "display": "grid",
                     "grid-template-columns": `auto auto auto auto auto auto auto`,
                     "grid-gap": `2px`,
+                    "overflow": "auto",
                 });
                 // include_check, name, x y z min max
                 this.reset_feature_table = function () {
@@ -863,7 +943,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             standard_info() {
                 this.clear_info();
                 this.info_line("Multidimensional scatter plot:");
-                this.info_line("The scatter plot shows a 3 dimensional projection of higher dimansional features.");
+                this.info_line("The scatter plot shows a 3 dimensional projection of higher dimensional features.");
                 this.info_line("Feature configuration and projection controls are to the right.");
                 this.info_line("Drag to rotate the scatter plot view.");
                 this.info_line("SHIFT-Drag to pan the scatter plot view.");
@@ -923,6 +1003,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.colorizer = colorizer;
                 this.aliases = aliases;
                 this.nd_scatter = nd_scatter;
+                this.select_all_colors();
             };
             max_length() {
                 var result = 0;
@@ -936,8 +1017,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             color(point_array) {
                 var colorizer = this.colorizer;
                 var indicator = point_array[colorizer.index];
+                if (!this.selected_color[indicator]) {
+                    return null;
+                }
                 return colorizer.mapping[indicator];
-            }
+            };
+            select_all_colors() {
+                this.selected_color = $.extend({}, this.colorizer.mapping);
+            };
         }
 
         var result = new ND_Scatter(options, element);
