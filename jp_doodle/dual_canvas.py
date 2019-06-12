@@ -15,7 +15,7 @@ required_javascript_modules = [
     doodle_files.vendor_path("js/dual_canvas_helper.js"),
 ]
 
-def load_requirements(widget=None, silent=True):
+def load_requirements(widget=None, silent=True, additional=()):
     """
     Load Javascript prerequisites into the notebook page context.
     """
@@ -25,7 +25,8 @@ def load_requirements(widget=None, silent=True):
     # Make sure jQuery and jQueryUI are loaded.
     widget.check_jquery()
     # load additional jQuery plugin code.
-    widget.load_js_files(required_javascript_modules)
+    all_requirements = list(required_javascript_modules) + list(additional)
+    widget.load_js_files(all_requirements)
     if not silent:
         widget.element.html("<div>Requirements for <b>dual_canvas</b> have been loaded.</div>")
         display(widget)

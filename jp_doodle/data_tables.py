@@ -1,5 +1,5 @@
 """
-Python wrapper for DataTables funcitonality using proxy widgets
+Python wrapper for DataTables functionality using proxy widgets
 
 For details please refer to: http://www.datatables.net
 """
