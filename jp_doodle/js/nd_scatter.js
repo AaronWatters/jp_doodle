@@ -166,7 +166,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 };
                 // header/all colors
                 var all_checkbox = add_checkbox("", colorizer_table, select_all);
-                $("<div><em>Select all</em></div>").appendTo(colorizer_table);
+                $("<div><em>All categories</em></div>").appendTo(colorizer_table);
                 // individual colors
                 for (var indicator in configuration.selected_color) {
                     var selected = configuration.selected_color[indicator];
