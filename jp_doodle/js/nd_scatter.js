@@ -662,13 +662,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             define_feature(fdescr) {
                 var feature = new Feature(fdescr.name, fdescr.color, fdescr.index, this);
-                this.feature_names.push(feature.name);
+                if (!this.features[feature.name]) {
+                    this.feature_names.push(feature.name);
+                }
                 this.features[feature.name] = feature;
             };
             define_configuration(cdescr) {
                 var config = new Configuration(
                     cdescr.name, cdescr.projectors, cdescr.colorizer, cdescr.aliases, this);
-                this.configuration_names.push(config.name);
+                if (!this.configurations[config.name]) {
+                    this.configuration_names.push(config.name);
+                }
                 this.configurations[config.name] = config;
             };
             reset() {
