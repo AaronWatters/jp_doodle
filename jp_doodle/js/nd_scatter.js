@@ -141,7 +141,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 };
                 var unselect_color = function(indicator, checkbox, all_checkbox) {
                     checkbox.uncheck(true);
-                    all_checkbox.uncheck(true);
+                    if (all_checkbox) {
+                        all_checkbox.uncheck(true);
+                    }
                     configuration.selected_color[indicator] = false;
                     all_selected = false;
                 };
@@ -156,13 +158,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     };
                 };
                 var select_all = function() {
-                    if (all_checkbox.is_checked()) {
-                        for (var indicator in indicator_to_checkbox) {
-                            var checkbox = indicator_to_checkbox[indicator];
+                    var checked = all_checkbox.is_checked()
+                    for (var indicator in indicator_to_checkbox) {
+                        var checkbox = indicator_to_checkbox[indicator];
+                        if (checked) {
                             select_color(indicator, checkbox);
+                        } else {
+                            unselect_color(indicator, checkbox);
                         }
-                        that.update_geometry();
                     }
+                    that.update_geometry();
                 };
                 // header/all colors
                 var all_checkbox = add_checkbox("", colorizer_table, select_all);
@@ -195,7 +200,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var add_numeric_column = function () {
                     var div = $("<div>???</div>").appendTo(feature_table);
                     div.report_value = function (v) {
-                        div.html("" + (+v).toFixed(2));
+                        div.html("" + (+v).toExponential(0));
                     };
                     return div;
                 }
