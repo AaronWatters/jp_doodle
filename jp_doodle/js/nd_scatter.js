@@ -214,6 +214,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     } );
                     return link;
                 }
+                var all_active = true;
                 for (var feature_name in this.features) {
                     var feature = this.features[feature_name];
                     //feature.checkbox = add_checkbox(feature_name, feature_table, null, (!feature.active))
@@ -226,8 +227,23 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     feature.z_entry = add_numeric_column();
                     feature.min_entry = add_numeric_column();
                     feature.max_entry = add_numeric_column();
+                    all_active = all_active && feature.active;
                 }
+                this.all_features_cb.uncheck(!all_active);
                 this.report_features();
+            };
+            all_feature_checkbox_onchange() {
+                var that = this;
+                return function () {
+                    debugger;
+                    var checked = that.all_features_cb.is_checked();
+                    for (var feature_name in that.features) {
+                        var feature = that.features[feature_name];
+                        feature.active = checked;
+                        feature.checkbox.uncheck(!checked);
+                    }
+                    that.update_geometry();
+                };
             };
             report_features() {
                 for (var feature_name in this.features) {
@@ -254,6 +270,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var that = this;
                 return function () {
                     feature.active = checkbox.is_checked();
+                    that.all_features_cb.uncheck();
                     that.update_geometry();
                 }
             };
@@ -898,7 +915,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.reset_feature_table = function () {
                     feature_table.empty();
                     // header row
-                    $("<div>\u2713</div>").appendTo(feature_table);
+                    //$("<div>\u2713</div>").appendTo(feature_table);
+                    that.all_features_cb = add_checkbox("", feature_table);
+                    that.all_features_cb.change(that.all_feature_checkbox_onchange());
                     $("<div>feature</div>").appendTo(feature_table);
                     $("<div>X</div>").appendTo(feature_table);
                     $("<div>Y</div>").appendTo(feature_table);
