@@ -230,7 +230,8 @@ def test_read_short_sample():
     names = "Intensity Molarity Solute Ph Gas Depth Horn Flask"
     for (i, n) in enumerate(names.split()):
         fmt.add_feature(n, i)
-    fmt.add_PCA(8, name="Intensity PCA")
+    colors = "red green blue".split()
+    fmt.add_PCA(8, name="Intensity PCA", colors=colors)
     return fmt
 
 if __name__ == "__main__":
