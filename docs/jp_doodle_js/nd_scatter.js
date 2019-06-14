@@ -76,6 +76,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // fill the feature table again to update min/max values
                 this.fill_feature_table();
                 this.fill_configuration_table();
+                // XXX ???
                 this.nd_frame.recalibrate_frame(true);
             };
             configuration() {
@@ -120,7 +121,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
             };
             fill_colorizer_info() {
-                debugger;
                 var all_selected = true;  // until proven otherwise
                 var configuration = this.configuration();
                 var colorizer_info = this.colorizer_info;
@@ -141,7 +141,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 };
                 var unselect_color = function(indicator, checkbox, all_checkbox) {
                     checkbox.uncheck(true);
-                    all_checkbox.uncheck(true);
+                    if (all_checkbox) {
+                        all_checkbox.uncheck(true);
+                    }
                     configuration.selected_color[indicator] = false;
                     all_selected = false;
                 };
@@ -156,17 +158,20 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     };
                 };
                 var select_all = function() {
-                    if (all_checkbox.is_checked()) {
-                        for (var indicator in indicator_to_checkbox) {
-                            var checkbox = indicator_to_checkbox[indicator];
+                    var checked = all_checkbox.is_checked()
+                    for (var indicator in indicator_to_checkbox) {
+                        var checkbox = indicator_to_checkbox[indicator];
+                        if (checked) {
                             select_color(indicator, checkbox);
+                        } else {
+                            unselect_color(indicator, checkbox);
                         }
-                        that.update_geometry();
                     }
+                    that.update_geometry();
                 };
                 // header/all colors
                 var all_checkbox = add_checkbox("", colorizer_table, select_all);
-                $("<div><em>Select all</em></div>").appendTo(colorizer_table);
+                $("<div><em>All categories</em></div>").appendTo(colorizer_table);
                 // individual colors
                 for (var indicator in configuration.selected_color) {
                     var selected = configuration.selected_color[indicator];
@@ -183,6 +188,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 all_checkbox.uncheck(!all_selected);
             };
+            short_number_string(v) {
+                v = +v;
+                var result = (v).toFixed(1);
+                if (result.length > 4) {
+                    result = (v).toExponential(0);
+                }
+                return result;
+            };
             fill_feature_table() {
                 //var s = this.settings;
                 //var matrix = this.matrix;
@@ -195,7 +208,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var add_numeric_column = function () {
                     var div = $("<div>???</div>").appendTo(feature_table);
                     div.report_value = function (v) {
-                        div.html("" + (+v).toFixed(2));
+                        //div.html("" + (+v).toExponential(0));
+                        div.html("" + that.short_number_string(v));
                     };
                     return div;
                 }
@@ -209,6 +223,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     } );
                     return link;
                 }
+                var all_active = true;
                 for (var feature_name in this.features) {
                     var feature = this.features[feature_name];
                     //feature.checkbox = add_checkbox(feature_name, feature_table, null, (!feature.active))
@@ -221,8 +236,21 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     feature.z_entry = add_numeric_column();
                     feature.min_entry = add_numeric_column();
                     feature.max_entry = add_numeric_column();
+                    all_active = all_active && feature.active;
                 }
+                this.all_features_cb.uncheck(!all_active);
                 this.report_features();
+            };
+            all_feature_checkbox_onchange() {
+                var that = this;
+                return function () {
+                    var checked = that.all_features_cb.is_checked();
+                    for (var feature_name in that.features) {
+                        var feature = that.features[feature_name];
+                        feature.activation(checked);
+                    }
+                    that.update_geometry();
+                };
             };
             report_features() {
                 for (var feature_name in this.features) {
@@ -248,7 +276,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             feature_checkbox_onchange(feature, checkbox) {
                 var that = this;
                 return function () {
-                    feature.active = checkbox.is_checked();
+                    //feature.active = checkbox.is_checked();
+                    feature.activation(checkbox.is_checked())
+                    that.all_features_cb.uncheck();
                     that.update_geometry();
                 }
             };
@@ -415,6 +445,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     var feature = this.features[feature_name];
                     if (feature.active) {
                         var line = feature.line;
+                        if (!line) {
+                            // feature has not been drawn?
+                            continue;
+                        }
                         var model_transform = this.nd_frame.model_transform;
                         //var proj = configuration.projectors[feature_name];
                         var proj = this.projectors[feature_name];
@@ -508,6 +542,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var diff = matrix.vsub(M, m);
                 var centroid = matrix.vscale(0.5, matrix.vadd(m, M));
                 this.center_xyz = nd_frame.feature_vector_to_model_location(centroid);
+                //this.center_frame = nd_frame.frame_conversion(centroid);
                 var diag = nd_frame.diagonal_length();
                 if (this.axes_cb.is_checked()) {
                     // draw x, y, z axes
@@ -567,9 +602,28 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // This code is intended to allow redraw without resetting the rotation.
                 if (this.model_transform) {
                     // use existing tranform.
+                    var dedicated_frame = nd_frame.dedicated_frame;
                     nd_frame.install_model_transform(this.model_transform);
-                    nd_frame.dedicated_frame.set_extrema(this.xy_extrema);
-                    //nd_frame.fit(s.zoom);
+                    var extrema = this.xy_extrema;
+                    // set extrema to determine offset shift
+                    //dedicated_frame.set_extrema(extrema);
+                    //nd_frame.dedicated_frame.set_extrema(this.xy_extrema);
+                    var frame_center = {
+                        x: 0.5 * (extrema.frame_maxx + extrema.frame_minx),
+                        y: 0.5 * (extrema.frame_maxy + extrema.frame_miny),
+                    };
+                    this.center_frame = nd_frame.coordinate_conversion(centroid);
+                    //var pan_shift = matrix.vsub(frame_center, this.center_xyz);
+                    var pan_shift = matrix.vsub(this.center_frame, frame_center);
+                    //pan_shift.z = 0;
+                    //nd_frame.pan(pan_shift);
+                    var shift_extrema = $.extend({}, extrema);
+                    shift_extrema.frame_maxx = extrema.frame_maxx + pan_shift.x;
+                    shift_extrema.frame_minx = extrema.frame_minx + pan_shift.x;
+                    shift_extrema.frame_maxy = extrema.frame_maxy + pan_shift.y;
+                    shift_extrema.frame_miny = extrema.frame_miny + pan_shift.y;
+                    dedicated_frame.set_extrema(shift_extrema);
+                    //this.center_xyz = nd_frame.feature_vector_to_model_location(centroid);
                 } else {
                     nd_frame.fit(s.zoom);
                     // rotate the frame a bit initially
@@ -581,11 +635,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // pan to put center_xyz in frame center
                 //var frame_center = nd_frame.center();
                 //var pan_shift = matrix.vsub(frame_center, this.center_xyz);
-                //var pan_shift = matrix.vsub(frame_center, this.center_xyz);
                 //pan_shift.z = 0;
                 //nd_frame.pan(pan_shift);
-                var orbit_center = this.center_xyz;
+                //var orbit_center = this.center_xyz;
+                var orbit_center = nd_frame.coordinate_conversion(centroid);
                 nd_frame.orbit_all(radius, orbit_center, after);
+
+                // store geometry parameters
+                this.after_orbit();
 
                 // initiate lasso if lasso checkbox is checked
                 if (this.lasso_cb.is_checked()) {
@@ -662,13 +719,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             define_feature(fdescr) {
                 var feature = new Feature(fdescr.name, fdescr.color, fdescr.index, this);
-                this.feature_names.push(feature.name);
+                if (!this.features[feature.name]) {
+                    this.feature_names.push(feature.name);
+                }
                 this.features[feature.name] = feature;
             };
             define_configuration(cdescr) {
                 var config = new Configuration(
                     cdescr.name, cdescr.projectors, cdescr.colorizer, cdescr.aliases, this);
-                this.configuration_names.push(config.name);
+                if (!this.configurations[config.name]) {
+                    this.configuration_names.push(config.name);
+                }
                 this.configurations[config.name] = config;
             };
             reset() {
@@ -889,7 +950,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.reset_feature_table = function () {
                     feature_table.empty();
                     // header row
-                    $("<div>\u2713</div>").appendTo(feature_table);
+                    //$("<div>\u2713</div>").appendTo(feature_table);
+                    that.all_features_cb = add_checkbox("", feature_table);
+                    that.all_features_cb.change(that.all_feature_checkbox_onchange());
                     $("<div>feature</div>").appendTo(feature_table);
                     $("<div>X</div>").appendTo(feature_table);
                     $("<div>Y</div>").appendTo(feature_table);
@@ -993,7 +1056,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.nd_scatter = nd_scatter;
                 this.line = null;
                 this.active = true;
+                this.checkbox = null;
             };
+            activation(active) {
+                this.active = active;
+                if (this.checkbox) {
+                    this.checkbox.uncheck(!active)
+                }
+                if (!active) {
+                    this.line = null;
+                }
+            }
         };
 
         class Configuration {

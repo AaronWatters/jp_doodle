@@ -148,6 +148,38 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 
                 this.reset();
             };
+            to_json(async_callback) {
+                // dump parameters as JSON compatible object
+                var json_ob = {};
+                json_ob.type = "ND_Frame";
+
+                json_ob.feature_names = this.feature_names;
+                json_ob.feature_axes = this.feature_axes;
+                json_ob.translation = this.translation;
+                json_ob.model_axes = this.model_axes;
+
+                json_ob.extrema = this.dedicated_frame.extrema;
+
+                if (async_callback) {
+                    async_callback(json_ob);
+                }
+
+                return json_ob;
+            };
+            from_json(jsonob) {
+                // load parameters as JSON compatible object
+                if (jsonob.type !== "ND_Frame") {
+                    throw new Error("type must be ND_Frame");
+                }
+
+                this.feature_names = jsonob.feature_names;
+                this.feature_axes = jsonob.feature_axes;
+                this.translation = jsonob.translation;
+                this.model_axes = jsonob.model_axes;
+                this.prepare_transform();
+
+                dedicated_frame.set_extrema(jsonob.extrema);
+            };
             on_change(options) {
                 // fill in any missing numeric values in changed parameters.
                 this.changed = true;
