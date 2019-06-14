@@ -613,7 +613,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     shift_extrema.frame_maxy = extrema.frame_maxy + pan_shift.y;
                     shift_extrema.frame_miny = extrema.frame_miny + pan_shift.y;
                     dedicated_frame.set_extrema(shift_extrema);
-                    this.center_xyz = nd_frame.feature_vector_to_model_location(centroid);
+                    //this.center_xyz = nd_frame.feature_vector_to_model_location(centroid);
                 } else {
                     nd_frame.fit(s.zoom);
                     // rotate the frame a bit initially
@@ -627,7 +627,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 //var pan_shift = matrix.vsub(frame_center, this.center_xyz);
                 //pan_shift.z = 0;
                 //nd_frame.pan(pan_shift);
-                var orbit_center = this.center_xyz;
+                //var orbit_center = this.center_xyz;
+                var orbit_center = nd_frame.coordinate_conversion(centroid);
                 nd_frame.orbit_all(radius, orbit_center, after);
 
                 // initiate lasso if lasso checkbox is checked
