@@ -121,7 +121,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
             };
             fill_colorizer_info() {
-                debugger;
                 var all_selected = true;  // until proven otherwise
                 var configuration = this.configuration();
                 var colorizer_info = this.colorizer_info;
@@ -189,6 +188,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 all_checkbox.uncheck(!all_selected);
             };
+            short_number_string(v) {
+                v = +v;
+                var result = (v).toFixed(1);
+                if (result.length > 4) {
+                    result = (v).toExponential(0);
+                }
+                return result;
+            };
             fill_feature_table() {
                 //var s = this.settings;
                 //var matrix = this.matrix;
@@ -201,7 +208,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var add_numeric_column = function () {
                     var div = $("<div>???</div>").appendTo(feature_table);
                     div.report_value = function (v) {
-                        div.html("" + (+v).toExponential(0));
+                        //div.html("" + (+v).toExponential(0));
+                        div.html("" + that.short_number_string(v));
                     };
                     return div;
                 }
@@ -236,7 +244,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             all_feature_checkbox_onchange() {
                 var that = this;
                 return function () {
-                    debugger;
                     var checked = that.all_features_cb.is_checked();
                     for (var feature_name in that.features) {
                         var feature = that.features[feature_name];
@@ -595,7 +602,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // This code is intended to allow redraw without resetting the rotation.
                 if (this.model_transform) {
                     // use existing tranform.
-                    debugger;
                     var dedicated_frame = nd_frame.dedicated_frame;
                     nd_frame.install_model_transform(this.model_transform);
                     var extrema = this.xy_extrema;
