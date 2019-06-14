@@ -240,8 +240,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     var checked = that.all_features_cb.is_checked();
                     for (var feature_name in that.features) {
                         var feature = that.features[feature_name];
-                        feature.active = checked;
-                        feature.checkbox.uncheck(!checked);
+                        feature.activation(checked);
                     }
                     that.update_geometry();
                 };
@@ -270,7 +269,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             feature_checkbox_onchange(feature, checkbox) {
                 var that = this;
                 return function () {
-                    feature.active = checkbox.is_checked();
+                    //feature.active = checkbox.is_checked();
+                    feature.activation(checkbox.is_checked())
                     that.all_features_cb.uncheck();
                     that.update_geometry();
                 }
@@ -438,6 +438,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     var feature = this.features[feature_name];
                     if (feature.active) {
                         var line = feature.line;
+                        if (!line) {
+                            // feature has not been drawn?
+                            continue;
+                        }
                         var model_transform = this.nd_frame.model_transform;
                         //var proj = configuration.projectors[feature_name];
                         var proj = this.projectors[feature_name];
@@ -630,6 +634,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 //var orbit_center = this.center_xyz;
                 var orbit_center = nd_frame.coordinate_conversion(centroid);
                 nd_frame.orbit_all(radius, orbit_center, after);
+
+                // store geometry parameters
+                this.after_orbit();
 
                 // initiate lasso if lasso checkbox is checked
                 if (this.lasso_cb.is_checked()) {
@@ -1043,7 +1050,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.nd_scatter = nd_scatter;
                 this.line = null;
                 this.active = true;
+                this.checkbox = null;
             };
+            activation(active) {
+                this.active = active;
+                if (this.checkbox) {
+                    this.checkbox.uncheck(!active)
+                }
+                if (!active) {
+                    this.line = null;
+                }
+            }
         };
 
         class Configuration {
