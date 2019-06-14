@@ -76,6 +76,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // fill the feature table again to update min/max values
                 this.fill_feature_table();
                 this.fill_configuration_table();
+                // XXX ???
                 this.nd_frame.recalibrate_frame(true);
             };
             configuration() {
@@ -530,6 +531,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var diff = matrix.vsub(M, m);
                 var centroid = matrix.vscale(0.5, matrix.vadd(m, M));
                 this.center_xyz = nd_frame.feature_vector_to_model_location(centroid);
+                //this.center_frame = nd_frame.frame_conversion(centroid);
                 var diag = nd_frame.diagonal_length();
                 if (this.axes_cb.is_checked()) {
                     // draw x, y, z axes
@@ -589,9 +591,29 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // This code is intended to allow redraw without resetting the rotation.
                 if (this.model_transform) {
                     // use existing tranform.
+                    debugger;
+                    var dedicated_frame = nd_frame.dedicated_frame;
                     nd_frame.install_model_transform(this.model_transform);
-                    nd_frame.dedicated_frame.set_extrema(this.xy_extrema);
-                    //nd_frame.fit(s.zoom);
+                    var extrema = this.xy_extrema;
+                    // set extrema to determine offset shift
+                    //dedicated_frame.set_extrema(extrema);
+                    //nd_frame.dedicated_frame.set_extrema(this.xy_extrema);
+                    var frame_center = {
+                        x: 0.5 * (extrema.frame_maxx + extrema.frame_minx),
+                        y: 0.5 * (extrema.frame_maxy + extrema.frame_miny),
+                    };
+                    this.center_frame = nd_frame.coordinate_conversion(centroid);
+                    //var pan_shift = matrix.vsub(frame_center, this.center_xyz);
+                    var pan_shift = matrix.vsub(this.center_frame, frame_center);
+                    //pan_shift.z = 0;
+                    //nd_frame.pan(pan_shift);
+                    var shift_extrema = $.extend({}, extrema);
+                    shift_extrema.frame_maxx = extrema.frame_maxx + pan_shift.x;
+                    shift_extrema.frame_minx = extrema.frame_minx + pan_shift.x;
+                    shift_extrema.frame_maxy = extrema.frame_maxy + pan_shift.y;
+                    shift_extrema.frame_miny = extrema.frame_miny + pan_shift.y;
+                    dedicated_frame.set_extrema(shift_extrema);
+                    this.center_xyz = nd_frame.feature_vector_to_model_location(centroid);
                 } else {
                     nd_frame.fit(s.zoom);
                     // rotate the frame a bit initially
@@ -602,7 +624,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 // pan to put center_xyz in frame center
                 //var frame_center = nd_frame.center();
-                //var pan_shift = matrix.vsub(frame_center, this.center_xyz);
                 //var pan_shift = matrix.vsub(frame_center, this.center_xyz);
                 //pan_shift.z = 0;
                 //nd_frame.pan(pan_shift);
