@@ -46,6 +46,69 @@ def garish_color(index0=None):
     next_index = (j+1) * ((index0 + 1789) % 79187)
     return "rgb(" + rgbc + ")"
 
+STAND_ALONE_HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Automatically generated multidimensional scatter plot as stand alone HTML -->
+
+    <title>%(title)s</title>
+
+    <style>
+    %(style)s
+    </style>
+
+    <script>
+
+    // Embedded Libraries
+    // ==================
+    %(javascript)s
+
+    // Plot data and parameters
+    // ========================
+    var json_data = %(json)s;
+
+    </script>
+
+</head>
+
+<body onload="draw_scatter_plot()">
+
+    <div id="target_container">
+        <div id="target_div"/>
+    </div>
+
+    <script>
+    // Driver script.
+    // ==============
+    function draw_scatter_plot() {
+        var element = $('#target_div');element.empty();element.empty();
+        var scatter_plot = element.nd_scatter({
+            scatter_size: %(size)s,
+        });
+        element.scatter_plot = scatter_plot;  // for debugging
+        scatter_plot.make_scaffolding();
+        scatter_plot.define_json(json_data);
+    }
+    </script>
+
+</body>
+</html>
+"""
+
+REQUIRED_CSS_STYLES = [
+    "js/jquery-ui-1.12.1/jquery-ui.css",
+]
+
+REQUIRED_JAVASCRIPT_LIBRARIES = [
+    "js/jquery-ui-1.12.1/external/jquery/jquery.js",
+    "js/jquery-ui-1.12.1/jquery-ui.js",
+    "js/canvas_2d_widget_helper.js",
+    "js/dual_canvas_helper.js",
+    "js/nd_frame.js",
+    "js/nd_scatter.js",
+]
+
 class FormatRows:
 
     def __init__(self, rows, prefix="Scatter plot", sanity_limit=10):
@@ -67,6 +130,31 @@ class FormatRows:
         result["configurations"] = [self.configurations[n] for n in self.configuration_names]
         result["points"] = [list(x) for x in self.rows]
         return result
+
+    def to_json(self, indent=4):
+        import json
+        ob = self.to_json_object()
+        return json.dumps(ob, indent=indent)
+
+    def to_stand_alone_html(self, title="Multidimensional frame", size=800, indent=4, to_filepath=None):
+        D = {}
+        D["title"] = title
+        D["json"] = self.to_json()
+        D["javascript"] = self.concat_files(REQUIRED_JAVASCRIPT_LIBRARIES)
+        D["style"] = self.concat_files(REQUIRED_CSS_STYLES)
+        D["size"] = size
+        html = STAND_ALONE_HTML_TEMPLATE % D
+        if to_filepath is not None:
+            open(to_filepath, "w").write(html)
+        return html
+
+    def concat_files(self, vendor_paths):
+        content_list = []
+        for path in vendor_paths:
+            full_path = doodle_files.vendor_path(path)
+            content = open(full_path).read()
+            content_list.append(content)
+        return "\n\n".join(content_list)
 
     def add_feature(self, name, index, color=None):
         self.features[name] = FeatureDescriptor(name, index, color)
@@ -250,6 +338,11 @@ def test_read_short_sample():
 
 if __name__ == "__main__":
     from pprint import pprint
+    import sys
     fmt = test_read_short_sample()
-    pprint (fmt.to_json_object())
+    if len(sys.argv) < 2:
+        pprint (fmt.to_json_object())
+    else:
+        fmt.to_stand_alone_html(to_filepath=sys.argv[1])
+        print("Wrote stand alone html to file " + repr(sys.argv[1]))
     
