@@ -84,6 +84,18 @@ class FormatRows:
         config = self.transformer_configuration(name, transformer, colorizer_index, abbreviation, colors)
         self.add_configuration(config)
 
+    def add_Factors(self, colorizer_index, name="Factor Analysis", abbreviation="FA", colors=None):
+        from sklearn.decomposition import FactorAnalysis
+        transformer = FactorAnalysis(n_components=3, random_state=0)
+        config = self.transformer_configuration(name, transformer, colorizer_index, abbreviation, colors)
+        self.add_configuration(config)
+
+    def add_ICA(self, colorizer_index, name="Independent Components", abbreviation="ICA", colors=None):
+        from sklearn.decomposition import FastICA
+        transformer = FastICA(n_components=3, random_state=0)
+        config = self.transformer_configuration(name, transformer, colorizer_index, abbreviation, colors)
+        self.add_configuration(config)
+
     def transformer_configuration(self, name, transformer, colorizer_index, abbreviation=None, colors=None):
         self.standardize()
         result = {}
@@ -232,6 +244,8 @@ def test_read_short_sample():
         fmt.add_feature(n, i)
     colors = "red green blue".split()
     fmt.add_PCA(8, name="Intensity PCA", colors=colors)
+    fmt.add_ICA(8)
+    fmt.add_Factors(8)
     return fmt
 
 if __name__ == "__main__":
