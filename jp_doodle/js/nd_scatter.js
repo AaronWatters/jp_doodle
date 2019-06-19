@@ -816,7 +816,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 mode_area.css({
                     "background-color": "#eea",
                     "display": "grid",
-                    "grid-template-columns": `auto auto auto auto auto auto`,
+                    "grid-template-columns": `auto auto auto auto auto auto auto`,
                     "grid-template-rows": `auto`,
                     "grid-gap": `${s.gap}`,
                 });
@@ -835,6 +835,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 zoom_out.click(function () { that.zoom_out(); return false; });
                 var zoom_in = $('<div><a href="#" title="zoom in"> \u2295 </a></div>').appendTo(mode_area);
                 zoom_in.click(function () { that.zoom_in(); return false; });
+                var reset_geometry = $('<div><a href="#" title="rescale"> * </a></div>').appendTo(mode_area);
+                reset_geometry.click(function () { 
+                    that.reset_geometry(); 
+                    that.draw_scatter_canvas();
+                    return false; 
+                });
         
                 // scatter plot area
                 var scatter = $("<div/>").appendTo(container);
