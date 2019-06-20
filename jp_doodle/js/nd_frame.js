@@ -148,6 +148,38 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 
                 this.reset();
             };
+            to_json(async_callback) {
+                // dump parameters as JSON compatible object
+                var json_ob = {};
+                json_ob.type = "ND_Frame";
+
+                json_ob.feature_names = this.feature_names;
+                json_ob.feature_axes = this.feature_axes;
+                json_ob.translation = this.translation;
+                json_ob.model_axes = this.model_axes;
+
+                json_ob.extrema = this.dedicated_frame.extrema;
+
+                if (async_callback) {
+                    async_callback(json_ob);
+                }
+
+                return json_ob;
+            };
+            from_json(jsonob) {
+                // load parameters as JSON compatible object
+                if (jsonob.type !== "ND_Frame") {
+                    throw new Error("type must be ND_Frame");
+                }
+
+                this.feature_names = jsonob.feature_names;
+                this.feature_axes = jsonob.feature_axes;
+                this.translation = jsonob.translation;
+                this.model_axes = jsonob.model_axes;
+                this.prepare_transform();
+
+                dedicated_frame.set_extrema(jsonob.extrema);
+            };
             on_change(options) {
                 // fill in any missing numeric values in changed parameters.
                 this.changed = true;
@@ -183,7 +215,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     options.model_axes = override_axes(options.model_axes, this.model_axes);
                 }
                 return options;
-            }
+            };
             prepare_for_redraw() {
                 if (!this.changed) {
                     // leave frame alone.
@@ -225,17 +257,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             request_redraw() {
                 this.changed = true;
                 this.dedicated_frame.request_redraw();
-            }
+            };
             redraw_frame() {
                 // Do nothing.
                 // the dedicated frame should also be on the object list and it redraws the objects.
             };
-            coordinate_conversion(feature_vector, invisible) {
-                if (!feature_vector) {
+            coordinate_conversion(fv, invisible) {
+                if (!fv) {
                     throw new Error("falsy vector entry not allowed");
                 }
                 // convert from array as needed.
-                feature_vector = this.as_vector(feature_vector);
+                var feature_vector = this.as_vector(fv);
                 var matrix = this.feature_to_frame;
                 var result = matrix.affine(feature_vector);
                 if (!invisible) {
