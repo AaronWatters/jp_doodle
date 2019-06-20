@@ -9,8 +9,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 */
 
 // next: 
-//   don't use reset_axis directly.
-//   attach projectors to feature objects.
+//   lasso format dropdown csv/json/html
+//   annotations attached to configurations
 //   reset projectors in feature objects.
 //   construct nd_frame from those projectors.
 //   add a display for "screen normal xyz"
@@ -479,6 +479,23 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.slider_value_div.html(" " + (length.toFixed(2)));
                 this.report_feature_parameters(current_feature_name);
             };
+            feature_names_sequence() {
+                // if features are all at the front then define a feature name list
+                // for convenience in defining annotations.
+                var feature_names = [];
+                for (var feature_name in this.features) {
+                    var feature = this.features[feature_name];
+                    feature_names[feature.index] = feature_name;
+                }
+                // check that there are no undefined entries
+                for (var i=0; i<feature_names.length; i++) {
+                    if (!feature_names[i]) {
+                        return null;
+                    }
+                }
+                // otherwise use feature names
+                return feature_names;
+            };
             draw_scatter_canvas() {
                 var s = this.settings;
                 var matrix = this.matrix;
@@ -506,8 +523,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     dedicated_frame: xy_frame,
                     feature_axes: projectors,
                     //translation: this.center_xyz,
+                    feature_names: this.feature_names_sequence(),
                 });
                 this.nd_frame = nd_frame;
+                // draw configured annotations
+                configuration.annotate(nd_frame);
                 // draw the points
                 var points = this.point_vectors;
                 var point_arrays = this.point_arrays;
@@ -726,7 +746,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             define_configuration(cdescr) {
                 var config = new Configuration(
-                    cdescr.name, cdescr.projectors, cdescr.colorizer, cdescr.aliases, this);
+                    cdescr.name, cdescr.projectors, cdescr.colorizer, cdescr.aliases, cdescr.annotations, this);
                 if (!this.configurations[config.name]) {
                     this.configuration_names.push(config.name);
                 }
@@ -1076,11 +1096,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         class Configuration {
-            constructor(name, projectors, colorizer, aliases, nd_scatter) {
+            constructor(name, projectors, colorizer, aliases, annotations, nd_scatter) {
                 this.name = name;
                 this.projectors = projectors;
                 this.colorizer = colorizer;
                 this.aliases = aliases;
+                this.annotations = annotations;
                 this.nd_scatter = nd_scatter;
                 this.select_all_colors();
             };
@@ -1104,6 +1125,19 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             select_all_colors() {
                 this.selected_color = $.extend({}, this.colorizer.mapping);
             };
+            annotate(nd_frame) {
+                var annotations = this.annotations;
+                if (annotations) {
+                    for (var i=0; i<annotations.length; i++) {
+                        var annotation = annotations[i];
+                        var atype = annotation.type;
+                        var method = nd_frame[atype];
+                        console.log("annotating " + atype + " with " + method);
+                        // https://www.w3schools.com/js/js_function_call.asp
+                        method.call(nd_frame, annotation);
+                    }
+                }
+            }
         }
 
         var result = new ND_Scatter(options, element);
@@ -1178,7 +1212,27 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         "x": "PCA1",
                         "y": "PCA2",
                         "z": "PCA3"
-                    }
+                    },
+                    "annotations": [
+                        {
+                            "type": "text",
+                            "text": "PL=3",
+                            "color": "red",
+                            "location": [0.95, 1.2, 3, 0.65],
+                            "background": "#ddf"
+                        },
+                        {
+                            "type": "polygon",
+                            "color": "#777",
+                            "fill": false,
+                            "locations": [
+                                [-1.9, -2.4, -1.6, -1.4],
+                                [3.8, -2.4, -1.6, -1.4],
+                                [3.8, 4.8, -1.6, -1.4],
+                                [-1.9, 4.8, -1.6, -1.4],
+                            ]
+                        }
+                    ],
                 }
             ],
             "points": [
