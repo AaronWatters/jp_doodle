@@ -188,11 +188,19 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 all_checkbox.uncheck(!all_selected);
             };
-            short_number_string(v) {
+            short_number_string(v, length) {
+                if ((typeof v) == 'string') {
+                    // don't reconvert strings
+                    return v;
+                }
+                length = length | 4;
+                if (length < 4) {
+                    throw new Error("short number format cannot have length smaller than 4");
+                }
                 v = +v;
-                var result = (v).toFixed(1);
-                if (result.length > 4) {
-                    result = (v).toExponential(0);
+                var result = (v).toFixed(length - 3);
+                if (result.length > length) {
+                    result = (v).toExponential(length - 4);
                 }
                 return result;
             };
@@ -531,7 +539,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // draw the points
                 var points = this.point_vectors;
                 var point_arrays = this.point_arrays;
-                var name = this.dots_cb.is_checked() || this.lasso_cb.is_checked();
+                //var name = this.dots_cb.is_checked() || this.lasso_cb.is_checked();
+                var name = this.dots_cb.is_checked() || (!!this.lasso_dropdown.chosen());
                 var fill = name;
                 this.dots = []
                 this.name_to_dot = {};
@@ -665,7 +674,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.after_orbit();
 
                 // initiate lasso if lasso checkbox is checked
-                if (this.lasso_cb.is_checked()) {
+                if (this.lasso_dropdown.chosen()) {
                     this.initialize_lasso();
                 }
             };
@@ -772,9 +781,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.scatter.do_lasso(lasso_callback, {}, true);
                 this.clear_info();
                 this.info_line("Lasso dots of interest.")
-                this.info_line("Dot feature data will appear here..")
+                this.info_line("Dot feature data will appear here in " + that.lasso_dropdown.chosen() + " format.")
             };
             lasso_callback(name_mapping) {
+                var that = this;
+                var fmt = this.lasso_dropdown.chosen();
+                this.lasso_dropdown.unchoose();
                 this.clear_info();
                 var L = [];
                 for (var n in name_mapping) {
@@ -785,17 +797,51 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     }
                 }
                 this.info_line("Lasso selected " + L.length + " dots.");
+                if (L.length < 1) {
+                    this.info_pre("Nothing to display.");
+                    return;
+                }
                 // make header entry
                 if (L.length) {
-                    var header = L[0].map(x => null);
+                    var header = L[0].map(x => "");
                     for (var fn in this.features) {
                         var f = this.features[fn];
                         header[f.index] = f.name;
                     }
                     L.unshift(header);
                 }
-                this.info_pre(JSON.stringify(L, null, "\t"));
-                this.lasso_cb.uncheck(true);
+                var fmtEntries = function (array, length) {
+                    return array.map(x => that.short_number_string(x, length));
+                };
+                if (fmt == "CSV") {
+                    // display CSV 
+                    var csvLine = function(array) {
+                        var entries = fmtEntries(array, 6);
+                        return entries.join(",")
+                    };
+                    var lines = L.map(x => csvLine(x));
+                    this.info_pre(lines.join("\n"));
+                } else if (fmt == "HTML") {
+                    // display HTML
+                    var table = $("<table border/>").appendTo(this.info);
+                    var table_row = function(tag, row_data) {
+                        row_data = fmtEntries(row_data, 4);
+                        var row = $("<tr>").appendTo(table);
+                        for (var i=0; i<row_data.length; i++) {
+                            var entry = row_data[i];
+                            var container = $(tag).appendTo(row);
+                            container.html("" + entry);
+                        }
+                        return row;
+                    }
+                    table_row("<th/>", L[0]);
+                    for (var i=1; i<L.length; i++) {
+                        table_row("<td/>", L[i])
+                    }
+                } else {
+                    // display JSON
+                    this.info_pre(JSON.stringify(L, null, "\t"));
+                }
             };
             make_scaffolding() {
                 var that = this;
@@ -849,7 +895,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.dots_cb = add_mode("dots");
                 this.projections_cb = add_mode("projections");
                 this.axes_cb = add_mode("axes");
-                this.lasso_cb = add_mode("lasso", true);
+                //this.lasso_cb = add_mode("lasso", true);
+                this.lasso_dropdown = add_dropdown("*Lasso*", ["JSON", "CSV", "HTML"], mode_area)
+                this.lasso_dropdown.change(redraw_scatter);
 
                 var zoom_out = $('<div><a href="#" title="zoom out"> \u2296 </a></div>').appendTo(mode_area);
                 zoom_out.click(function () { that.zoom_out(); return false; });
@@ -1074,6 +1122,33 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return cb;
         };
 
+        var add_dropdown = function (default_text, other_texts, to_parent) {
+            var result = $("<select/>").appendTo(to_parent);
+            var default_option = $("<option selected>" + default_text + "</option>").appendTo(result);
+            for (var i=0; i<other_texts.length; i++) {
+                var txt = other_texts[i];
+                $("<option>" + txt + "</option>").appendTo(result);
+            }
+            result.selected_text = function() {
+                // https://stackoverflow.com/questions/10659097/jquery-get-selected-option-from-dropdown
+                return result.find(":selected").text();
+            };
+            result.chosen = function () {
+                // return any non-default chosen option
+                var txt = result.selected_text();
+                if (txt == default_text) {
+                    return null;
+                }
+                return txt;
+            };
+            result.unchoose = function () {
+                //default_option.prop(":selected", true);
+                //default_option.attr("selected", "selected");
+                result.val(default_text);
+            };
+            return result;
+        };
+
         class Feature {
             constructor(name, color, index, nd_scatter) {
                 this.name = name;
@@ -1132,7 +1207,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         var annotation = annotations[i];
                         var atype = annotation.type;
                         var method = nd_frame[atype];
-                        console.log("annotating " + atype + " with " + method);
+                        //console.log("annotating " + atype + " with " + method);
                         // https://www.w3schools.com/js/js_function_call.asp
                         method.call(nd_frame, annotation);
                     }
