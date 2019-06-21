@@ -215,7 +215,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     options.model_axes = override_axes(options.model_axes, this.model_axes);
                 }
                 return options;
-            }
+            };
             prepare_for_redraw() {
                 if (!this.changed) {
                     // leave frame alone.
@@ -257,17 +257,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             request_redraw() {
                 this.changed = true;
                 this.dedicated_frame.request_redraw();
-            }
+            };
             redraw_frame() {
                 // Do nothing.
                 // the dedicated frame should also be on the object list and it redraws the objects.
             };
-            coordinate_conversion(feature_vector, invisible) {
-                if (!feature_vector) {
+            coordinate_conversion(fv, invisible) {
+                if (!fv) {
                     throw new Error("falsy vector entry not allowed");
                 }
                 // convert from array as needed.
-                feature_vector = this.as_vector(feature_vector);
+                var feature_vector = this.as_vector(fv);
                 var matrix = this.feature_to_frame;
                 var result = matrix.affine(feature_vector);
                 if (!invisible) {
