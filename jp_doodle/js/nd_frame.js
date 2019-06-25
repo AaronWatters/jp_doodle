@@ -302,6 +302,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             frame_conversion(model_vector) {
                 // convert from xyz model location to 2d frame location. (no statistics recorded)
+                model_vector = this.as_vector(model_vector, projector_var_order);
                 var matrix = this.model_transform;
                 return matrix.affine(model_vector);
             }
