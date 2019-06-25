@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# ipython for now
+*.ipynb
+
 # C extensions
 *.so
 
