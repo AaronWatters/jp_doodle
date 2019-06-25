@@ -6,6 +6,7 @@ from jp_doodle import doodle_files, dual_canvas
 import jp_proxy_widget
 import csv
 from IPython.display import display, HTML
+from jp_doodle.dual_canvas import clean_dict
 
 nd_frame_js = doodle_files.vendor_path("js/nd_frame.js")
 
@@ -13,4 +14,82 @@ def load_requirements(widget=None, silent=True, additional=()):
     all_files = [nd_frame_js] + list(additional)
     return dual_canvas.load_requirements(widget, silent, additional=all_files)
 
-# Not finished...
+
+default_axes = {
+    "x": {"x": 1},
+    "y": {"y": 1},
+    "z": {"z": 1},
+}
+
+class ND_Frame:
+
+    _name_counter = 0
+
+    def __init__(
+        self,
+        in_canvas,
+        dedicated_frame,
+        feature_names=["x", "y", "z"],
+        feature_axes=default_axes,
+    ):
+        self._internal_name = "ND_Frame_" + str(ND_Frame._name_counter)
+        load_requirements(in_canvas)
+        ND_Frame._name_counter += 1
+        self.in_canvas = in_canvas
+        self.dedicated_frame = dedicated_frame
+        self.feature_names = feature_names
+        in_canvas.js_init("""
+        debugger;
+            var frame = element[frame_name];
+            element[internal_name] = element.nd_frame({
+                dedicated_frame: frame,
+                feature_names: feature_names,
+                feature_axes: feature_axes,
+            });
+        """,
+        frame_name=dedicated_frame.attribute_name,
+        feature_names=feature_names,
+        feature_axes=feature_axes,
+        internal_name=self._internal_name)
+        self.element = in_canvas.element[self._internal_name]
+
+    def fit(self, zoom):
+        "Fit the 2d frame to the 3d data."
+        self.element.fit(zoom)
+
+    def line(self, location1, location2, color="black", lineWidth=None, **other_args):
+        "Draw a line segment on the canvas frame."
+        s = clean_dict(location1=location1, location2=location2, color=color, lineWidth=lineWidth)
+        s.update(other_args)
+        #name = self.check_name(s, "line")
+        self.call_method("line", s)
+        #return self.wrap_name(name)
+
+    def call_method(self, method_name, *arguments):
+        """call method for target frame (for subclassing)"""
+        self.element[method_name](*arguments)
+
+    def reset(self):
+        self.element.reset()
+
+    def show(self):
+        display(self.in_canvas)
+
+def swatch3d(
+    model_height=2.0,
+    cx=0,
+    cy=0,
+    pixel_height=500):
+    dc_config = {
+        "width": pixel_height,
+        "height": pixel_height,
+    }
+    canvas = dual_canvas.DualCanvasWidget(width=pixel_height, height=pixel_height, config=dc_config)
+    radius = model_height * 0.5
+    frame = canvas.frame_region(
+        0, 0, pixel_height, pixel_height,
+        cx-radius, cy-radius, cx+radius, cy+radius)
+    result = ND_Frame(canvas, frame)
+    result.show()
+    return result
+
