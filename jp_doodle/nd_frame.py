@@ -77,6 +77,45 @@ class ND_Frame(dual_canvas.CanvasOperationsMixin):
         self.call_method("line", s)
         return self.wrap_name(name)
 
+    def text(self, location, text, color="black", degrees=0, align="left", font=None, **other_args):
+        "Draw some text on the canvas frame."
+        s = clean_dict(location=location, text=text, color=color, degrees=degrees, align=align)
+        if font:
+            s["font"] = font
+        s.update(other_args)
+        name = self.check_name(s, "text")
+        self.call_method("text", s)
+        return self.wrap_name(name)
+
+    def rect(self, location, w, h, color="black", degrees=0, fill=True, method_name="rect", **other_args):
+        "Draw a rectangle on the canvas frame."
+        s = clean_dict(location=location, w=w, h=h, color=color, degrees=degrees, fill=fill)
+        s.update(other_args)
+        name = self.check_name(s, method_name)
+        self.call_method(method_name, s)
+        return self.wrap_name(name)
+
+    def frame_rect(self, location, w, h, color="black", degrees=0, fill=True, **other_args):
+        "Draw a rectangle on the canvas frame adjusted by frame transform."
+        return self.rect(location, w, h, color, degrees, fill, method_name="frame_rect", **other_args)
+
+    def polyline(self, locations, color="black", **other_args):
+        return self.polygon(locations, color, close=False, fill=False, **other_args)
+
+    def polygon(self, locations, color="black", close=True, fill=True, **other_args):
+        "Draw a polygon or polyline on the canvas frame"
+        # convert tuples to lists automagically
+        lpoints = []
+        for p in locations:
+            if type(p) != dict:
+                p = list(p)
+            lpoints.append(p)
+        s = clean_dict(locations=lpoints, color=color, close=close, fill=fill)
+        s.update(other_args)
+        name = self.check_name(s, "polygon")
+        self.call_method("polygon", s)
+        return self.wrap_name(name)
+
     def orbit_all(self, radius, center3d=None):
         self.call_method("orbit_all", radius, center3d)
 
