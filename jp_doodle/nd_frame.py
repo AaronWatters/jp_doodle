@@ -21,9 +21,7 @@ default_axes = {
     "z": {"z": 1},
 }
 
-class ND_Frame:
-
-    _name_counter = 0
+class ND_Frame(dual_canvas.CanvasOperationsMixin):
 
     def __init__(
         self,
@@ -32,9 +30,8 @@ class ND_Frame:
         feature_names=["x", "y", "z"],
         feature_axes=default_axes,
     ):
-        self._internal_name = "ND_Frame_" + str(ND_Frame._name_counter)
+        self._internal_name = self.fresh_name("ND_Frame")
         load_requirements(in_canvas)
-        ND_Frame._name_counter += 1
         self.in_canvas = in_canvas
         self.dedicated_frame = dedicated_frame
         self.feature_names = feature_names
@@ -53,6 +50,9 @@ class ND_Frame:
         internal_name=self._internal_name)
         self.element = in_canvas.element[self._internal_name]
 
+    def get_canvas(self):
+        return self.in_canvas
+
     def fit(self, zoom):
         "Fit the 2d frame to the 3d data."
         self.element.fit(zoom)
@@ -61,9 +61,12 @@ class ND_Frame:
         "Draw a line segment on the canvas frame."
         s = clean_dict(location1=location1, location2=location2, color=color, lineWidth=lineWidth)
         s.update(other_args)
-        #name = self.check_name(s, "line")
+        name = self.check_name(s, "line")
         self.call_method("line", s)
-        #return self.wrap_name(name)
+        return self.wrap_name(name)
+
+    def orbit_all(self, radius, center3d=None):
+        self.call_method("orbit_all", radius, center3d)
 
     def call_method(self, method_name, *arguments):
         """call method for target frame (for subclassing)"""
