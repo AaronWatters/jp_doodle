@@ -744,6 +744,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             position2d() {
                 return this.position;
             };
+            on_change(options) {
+                this.nd_frame.changed = true;
+                return options;
+            };
             // delegated methods on and off are added automatically.
         };
 
