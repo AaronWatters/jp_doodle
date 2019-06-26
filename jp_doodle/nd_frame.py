@@ -57,6 +57,18 @@ class ND_Frame(dual_canvas.CanvasOperationsMixin):
         "Fit the 2d frame to the 3d data."
         self.element.fit(zoom)
 
+    def circle(self, location, r, color="black", fill=True, method_name="circle", **other_args):
+        "Draw a circle or arc on the canvas frame."
+        s = clean_dict(location=location, r=r, color=color, fill=fill)
+        s.update(other_args)
+        name = self.check_name(s, method_name)
+        self.call_method(method_name, s)
+        return self.wrap_name(name)
+
+    def frame_circle(self, location, r, color="black", fill=True, **other_args):
+        "Draw a circle or arc on the canvas frame with radius adjusted to the frame."
+        return self.circle(location, r, color, fill, method_name="frame_circle", **other_args)
+
     def line(self, location1, location2, color="black", lineWidth=None, **other_args):
         "Draw a line segment on the canvas frame."
         s = clean_dict(location1=location1, location2=location2, color=color, lineWidth=lineWidth)
