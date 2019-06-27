@@ -544,8 +544,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var fill = name;
                 this.dots = []
                 this.name_to_dot = {};
+                var point_sum = {};
                 for (var i=0; i<points.length; i++) {
                     var point_vector = points[i];
+                    point_sum = matrix.vadd(point_sum, point_vector);
                     var point_array = point_arrays[i];
                     var color = configuration.color(point_array);
                     // only show selected colors
@@ -570,6 +572,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var M = nd_frame.max_feature;
                 var diff = matrix.vsub(M, m);
                 var centroid = matrix.vscale(0.5, matrix.vadd(m, M));
+                // if points are showing then use the average of point locations as centroid
+                if (points.length > 0) {
+                    centroid = matrix.vscale(1.0/points.length, point_sum);
+                }
                 this.center_xyz = nd_frame.feature_vector_to_model_location(centroid);
                 //this.center_frame = nd_frame.frame_conversion(centroid);
                 var diag = nd_frame.diagonal_length();
