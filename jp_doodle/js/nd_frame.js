@@ -238,8 +238,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     return (a_value - b_value);
                 }
                 object_list.sort(comparison);
+                // the event rectangle should match the dedicated extrema
+                var er = this.event_rectangle;
+                var extrema = this.dedicated_frame.extrema;
+                er.x = extrema.frame_minx;
+                er.y = extrema.frame_miny;
                 // the event rectangle should always be the first element drawn.
-                object_list.unshift(this.event_rectangle);
+                object_list.unshift(er);
                 // reset the frame object list in place in sorted order.
                 // XXXX any "other" objects in the frame will be lost.
                 var frame_object_list =  [];
