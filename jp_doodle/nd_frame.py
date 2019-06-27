@@ -130,10 +130,12 @@ class ND_Frame(dual_canvas.CanvasOperationsMixin):
         display(self.in_canvas)
 
 def swatch3d(
+    pixels=500,
     model_height=2.0,
     cx=0,
     cy=0,
-    pixel_height=500):
+    ):
+    pixel_height = pixels
     dc_config = {
         "width": pixel_height,
         "height": pixel_height,
