@@ -634,36 +634,36 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 // fit (zoomed out) the frame and enable orbitting
                 var radius = nd_frame.diagonal_length() * 0.5;
-                // This code is intended to allow redraw without resetting the rotation.
-                if (this.model_transform) {
-                    // use existing tranform.
-                    var dedicated_frame = nd_frame.dedicated_frame;
-                    nd_frame.install_model_transform(this.model_transform);
-                    var extrema = this.xy_extrema;
-                    // set extrema to determine offset shift
-                    //dedicated_frame.set_extrema(extrema);
-                    //nd_frame.dedicated_frame.set_extrema(this.xy_extrema);
-                    var frame_center = {
-                        x: 0.5 * (extrema.frame_maxx + extrema.frame_minx),
-                        y: 0.5 * (extrema.frame_maxy + extrema.frame_miny),
-                    };
-                    this.center_frame = nd_frame.coordinate_conversion(centroid);
-                    //var pan_shift = matrix.vsub(frame_center, this.center_xyz);
-                    var pan_shift = matrix.vsub(this.center_frame, frame_center);
-                    //pan_shift.z = 0;
-                    //nd_frame.pan(pan_shift);
-                    var shift_extrema = $.extend({}, extrema);
-                    shift_extrema.frame_maxx = extrema.frame_maxx + pan_shift.x;
-                    shift_extrema.frame_minx = extrema.frame_minx + pan_shift.x;
-                    shift_extrema.frame_maxy = extrema.frame_maxy + pan_shift.y;
-                    shift_extrema.frame_miny = extrema.frame_miny + pan_shift.y;
-                    dedicated_frame.set_extrema(shift_extrema);
-                    //this.center_xyz = nd_frame.feature_vector_to_model_location(centroid);
-                } else {
+                // initialize transform information if needed.
+                if (!this.model_transform) {
                     nd_frame.fit(s.zoom);
                     // rotate the frame a bit initially
                     nd_frame.orbit(this.center_xyz, radius, {x: -0.5, y: -0.8});
+                    this.after_orbit();
                 }
+                // This code is intended to allow redraw without resetting the rotation.
+                // use existing tranform.
+                var dedicated_frame = nd_frame.dedicated_frame;
+                nd_frame.install_model_transform(this.model_transform);
+                var extrema = this.xy_extrema;
+                // set extrema to determine offset shift
+                //dedicated_frame.set_extrema(extrema);
+                //nd_frame.dedicated_frame.set_extrema(this.xy_extrema);
+                var frame_center = {
+                    x: 0.5 * (extrema.frame_maxx + extrema.frame_minx),
+                    y: 0.5 * (extrema.frame_maxy + extrema.frame_miny),
+                };
+                this.center_frame = nd_frame.coordinate_conversion(centroid);
+                //var pan_shift = matrix.vsub(frame_center, this.center_xyz);
+                var pan_shift = matrix.vsub(this.center_frame, frame_center);
+                //pan_shift.z = 0;
+                //nd_frame.pan(pan_shift);
+                var shift_extrema = $.extend({}, extrema);
+                shift_extrema.frame_maxx = extrema.frame_maxx + pan_shift.x;
+                shift_extrema.frame_minx = extrema.frame_minx + pan_shift.x;
+                shift_extrema.frame_maxy = extrema.frame_maxy + pan_shift.y;
+                shift_extrema.frame_miny = extrema.frame_miny + pan_shift.y;
+                dedicated_frame.set_extrema(shift_extrema);
                 var after = function () {
                     that.after_orbit();
                 }
@@ -831,7 +831,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     // display HTML
                     var table = $("<table border/>").appendTo(this.info);
                     var table_row = function(tag, row_data) {
-                        row_data = fmtEntries(row_data, 4);
+                        row_data = fmtEntries(row_data, 6);
                         var row = $("<tr>").appendTo(table);
                         for (var i=0; i<row_data.length; i++) {
                             var entry = row_data[i];
