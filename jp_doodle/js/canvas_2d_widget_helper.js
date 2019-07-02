@@ -189,6 +189,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 target.add_point_stats(fcenter.x + s.r, fcenter.y + s.r);
                 target.add_point_stats(fcenter.x - s.r, fcenter.y - s.r);
             }
+            // sample pixel for lasso testing
+            s.sample_pixel = target.canvas_to_pixel(fcenter.x, fcenter.y, true);
             return s;
         };
 
@@ -243,6 +245,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 target.add_point_stats(fp1.x, fp1.y);
                 target.add_point_stats(fp2.x, fp2.y);
             }
+            // sample pixel for lasso testing
+            s.sample_pixel = target.canvas_to_pixel(fp1.x, fp1.y, true);
             return s;
         };
 
@@ -327,16 +331,22 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var cvt = coordinate_conversion(s);
             var c = Math.cos(radians);
             var s = Math.sin(radians);
+            var sumx = 0;
+            var sumy = 0
             var add_offset = function (dx, dy) {
                 var x1 = cvt.x + (dx * c - dy * s);
                 var y1 = cvt.y + (dx * s + dy * c);
                 target.add_point_stats(x1, y1);
+                sumx += x1;
+                sumy += y1;
             };
             //target.add_point_stats(cvt.x, cvt.y);
             add_offset(dx, dy);
             add_offset(w+dx, dy);
             add_offset(dx, h+dy);
             add_offset(w+dx, h+dy);
+            // sample pixel for lasso testing
+            s.sample_pixel = target.canvas_to_pixel(0.25 * sumx, 0.25 * sumy, true);
         }
 
         target.translate_and_rotate = function(s) {
@@ -536,6 +546,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             if (target.canvas_stats) {
                 target.add_point_stats(p0f.x, p0f.y);
             }
+            // sample pixel for lasso testing
+            s.sample_pixel = target.canvas_to_pixel(p0f.x, p0f.y, true);
             context.moveTo(p0c.x, p0c.y);
             for (var i=1; i<points.length; i++) {
                 var point = points[i];
@@ -652,12 +664,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return result;
         };
 
-        target.canvas_to_pixel = function (cx, cy) {
+        target.canvas_to_pixel = function (cx, cy, rounded) {
             // convert canvas position to pixel position
             // first untranslate then unscale
             var ts = target.canvas_translate_scale;
             var px = (cx + ts.x) * ts.w;
             var py = (cy + ts.y) * ts.h;
+            if (rounded) {
+                px = Math.round(px);
+                py = Math.round(py);
+            }
             return {x: px, y: py};
         };
 
