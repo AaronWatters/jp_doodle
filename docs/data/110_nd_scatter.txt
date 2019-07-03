@@ -1,0 +1,31 @@
+***TITLE
+N-Dimensional Scatter Plot
+***SCREENSHOT
+images/nd_scatter.png
+***PROLOGUE
+<p>
+The multidimensional scatter plot widget allows interactive
+exploration of dimensionality reduction projections that project
+many features into three dimensional summaries.
+</p>
+<p>
+The demonstration below shows the standard "iris" dataset
+projected from 4 dimensions into 3 dimensions using several
+projection methods.
+</p>
+***CODE
+            var scatter_plot = element.nd_scatter({});
+            element.scatter_plot = scatter_plot;  // for debugging
+            scatter_plot.make_scaffolding();
+            var do_plot = function(json_data) {
+                scatter_plot.define_json(json_data);
+            };
+            var on_load_failure = function() {
+                alert("Could not load local JSON data.\n" +
+                        "You may need to run a web server to avoid cross origin restrictions.")
+            };
+            $.getJSON("./static/iris.json", do_plot).fail(on_load_failure);
+***DISCUSSION
+<p>
+The projection configurations were derived using scikit-learn.
+</p>
