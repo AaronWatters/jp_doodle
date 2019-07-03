@@ -837,7 +837,7 @@ XXXXX clean up events for forgotten objects
                     canvas_name = null;
                 }
             }
-            if (canvas_name) {
+            if ((canvas_name) && (event)) {
                 event.canvas_name = canvas_name;
                 event.color_index = color_index;
                 event.object_info = object_info;
@@ -1085,6 +1085,7 @@ XXXXX clean up events for forgotten objects
             var shading_pixels = target.invisible_canvas.pixels().data;
             // scan pixels to find named objects
             var name_to_shaded_objects = {};
+            var shaded_object_evidence = {};
             for (var i=0; i<shaded_pixels.length; i += 4) {
                 var shading_color_array = shading_pixels.slice(i, i+3);
                 // var shading_color_index = target.color_array_to_index(shading_color_array);
@@ -1097,11 +1098,27 @@ XXXXX clean up events for forgotten objects
                     if (shaded_object_name) {
                         var shaded_object_info = target.name_to_object_info[shaded_object_name];
                         if (shaded_object_info) {
-                            name_to_shaded_objects[shaded_object_name] = shaded_object_info;
+                            var pixel_offset = i / 4;
+                            var pixel_y = Math.trunc(pixel_offset / shaded_info.width);
+                            var pixel_x = pixel_offset % shaded_info.width;
+                            //name_to_shaded_objects[shaded_object_name] = shaded_object_info;
+                            if (!shaded_object_evidence[shaded_object_name]) {
+                                shaded_object_evidence[shaded_object_name] = {x: pixel_x, y: pixel_y, info: shaded_object_info};
+                            }
                         }
                     }
                 }
             }
+            // Validate objects
+            object_info.hide = true;
+            target.redraw();
+            for (var name in shaded_object_evidence) {
+                var evidence = shaded_object_evidence[name];
+                if (target.object_name_at_position(null, evidence.x, evidence.y) == name) {
+                    name_to_shaded_objects[name] = evidence.info;
+                }
+            }
+            object_info.hide = false;
             // Restore previous visibility state for shading object and implicitly request a redraw.
             target.set_visibilities([shading_name], !shader_hidden_before)
             // Add named objects with sample pixel locations that are inside the region
@@ -1118,11 +1135,11 @@ XXXXX clean up events for forgotten objects
             }
             var name_to_info = target.name_to_object_info;
             for (var name in name_to_info) {
-                var object_info = name_to_info[name];
-                var sample_pixel = object_info.sample_pixel;
-                if ((name) && (sample_pixel)) {
+                var info = name_to_info[name];
+                var sample_pixel = info.sample_pixel;
+                if ((info != object_info) && (name) && (sample_pixel)) {
                     if (pixel_in_shadow(sample_pixel.x, sample_pixel.y)) {
-                        name_to_shaded_objects[name] = object_info;
+                        name_to_shaded_objects[name] = info;
                     }
                 }
             }
