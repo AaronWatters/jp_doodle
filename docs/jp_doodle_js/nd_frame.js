@@ -238,8 +238,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     return (a_value - b_value);
                 }
                 object_list.sort(comparison);
+                // the event rectangle should match the dedicated extrema
+                var er = this.event_rectangle;
+                var extrema = this.dedicated_frame.extrema;
+                er.x = extrema.frame_minx;
+                er.y = extrema.frame_miny;
                 // the event rectangle should always be the first element drawn.
-                object_list.unshift(this.event_rectangle);
+                object_list.unshift(er);
                 // reset the frame object list in place in sorted order.
                 // XXXX any "other" objects in the frame will be lost.
                 var frame_object_list =  [];
@@ -302,6 +307,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             frame_conversion(model_vector) {
                 // convert from xyz model location to 2d frame location. (no statistics recorded)
+                model_vector = this.as_vector(model_vector, projector_var_order);
                 var matrix = this.model_transform;
                 return matrix.affine(model_vector);
             }
@@ -742,6 +748,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             position2d() {
                 return this.position;
+            };
+            on_change(options) {
+                this.nd_frame.changed = true;
+                return options;
             };
             // delegated methods on and off are added automatically.
         };

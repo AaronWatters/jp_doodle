@@ -837,7 +837,7 @@ XXXXX clean up events for forgotten objects
                     canvas_name = null;
                 }
             }
-            if (canvas_name) {
+            if ((canvas_name) && (event)) {
                 event.canvas_name = canvas_name;
                 event.color_index = color_index;
                 event.object_info = object_info;
@@ -1066,6 +1066,7 @@ XXXXX clean up events for forgotten objects
             // xxx This could be optimized: it is a brute force scan of the whole canvas 2x right now.
             // xxx This method will not find shaded objects that are obscured by other objects.
             // XXXX need to use the test_canvas here!!!
+            // XXXX rework to remove duplicated code someday...
             var object_info = target.get_object_info(shading_name_or_info);
             var shading_name = object_info.name;
             if (!object_info) {
@@ -1076,13 +1077,15 @@ XXXXX clean up events for forgotten objects
             // get a hidden canvas pixel snapshot with the object hidden
             object_info.hide = true;
             target.redraw();
-            var shaded_pixels = target.invisible_canvas.pixels().data;
+            var shaded_info = target.invisible_canvas.pixels();
+            var shaded_pixels = shaded_info.data;
             // get a hidden canvas pixel snapshot with the object visible
             object_info.hide = false;
             target.redraw();
             var shading_pixels = target.invisible_canvas.pixels().data;
             // scan pixels to find named objects
             var name_to_shaded_objects = {};
+            var shaded_object_evidence = {};
             for (var i=0; i<shaded_pixels.length; i += 4) {
                 var shading_color_array = shading_pixels.slice(i, i+3);
                 // var shading_color_index = target.color_array_to_index(shading_color_array);
@@ -1095,13 +1098,51 @@ XXXXX clean up events for forgotten objects
                     if (shaded_object_name) {
                         var shaded_object_info = target.name_to_object_info[shaded_object_name];
                         if (shaded_object_info) {
-                            name_to_shaded_objects[shaded_object_name] = shaded_object_info;
+                            var pixel_offset = i / 4;
+                            var pixel_y = Math.trunc(pixel_offset / shaded_info.width);
+                            var pixel_x = pixel_offset % shaded_info.width;
+                            //name_to_shaded_objects[shaded_object_name] = shaded_object_info;
+                            if (!shaded_object_evidence[shaded_object_name]) {
+                                shaded_object_evidence[shaded_object_name] = {x: pixel_x, y: pixel_y, info: shaded_object_info};
+                            }
                         }
                     }
                 }
             }
+            // Validate objects
+            object_info.hide = true;
+            target.redraw();
+            for (var name in shaded_object_evidence) {
+                var evidence = shaded_object_evidence[name];
+                if (target.object_name_at_position(null, evidence.x, evidence.y) == name) {
+                    name_to_shaded_objects[name] = evidence.info;
+                }
+            }
+            object_info.hide = false;
             // Restore previous visibility state for shading object and implicitly request a redraw.
             target.set_visibilities([shading_name], !shader_hidden_before)
+            // Add named objects with sample pixel locations that are inside the region
+            var pixel_in_shadow = function (px, py) {
+                // xxxxx this assumes y goes up...
+                var row = shaded_info.height - 1 - py;
+                if ((row >= 0) && (row < shaded_info.height) && (px >= 0) && (px < shaded_info.width)) {
+                    var index = 4 * (shaded_info.width * row + px);
+                    var shading_color_array = shading_pixels.slice(index, index+3);
+                    var shading_color = target.array_to_color(shading_color_array);
+                    return (shading_color == pseudocolor);
+                }
+                return false; // default
+            }
+            var name_to_info = target.name_to_object_info;
+            for (var name in name_to_info) {
+                var info = name_to_info[name];
+                var sample_pixel = info.sample_pixel;
+                if ((info != object_info) && (name) && (sample_pixel)) {
+                    if (pixel_in_shadow(sample_pixel.x, sample_pixel.y)) {
+                        name_to_shaded_objects[name] = info;
+                    }
+                }
+            }
             return name_to_shaded_objects;
         };
 
