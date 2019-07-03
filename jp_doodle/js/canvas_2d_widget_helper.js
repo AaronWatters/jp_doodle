@@ -329,13 +329,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             //var cvt = coordinate_conversion(x, y);
             var cvt = coordinate_conversion(s);
-            var c = Math.cos(radians);
-            var s = Math.sin(radians);
+            var cs = Math.cos(radians);
+            var sn = Math.sin(radians);
             var sumx = 0;
             var sumy = 0
             var add_offset = function (dx, dy) {
-                var x1 = cvt.x + (dx * c - dy * s);
-                var y1 = cvt.y + (dx * s + dy * c);
+                var x1 = cvt.x + (dx * cs - dy * sn);
+                var y1 = cvt.y + (dx * sn + dy * cs);
                 target.add_point_stats(x1, y1);
                 sumx += x1;
                 sumy += y1;
