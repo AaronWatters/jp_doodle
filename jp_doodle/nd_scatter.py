@@ -111,7 +111,8 @@ REQUIRED_JAVASCRIPT_LIBRARIES = [
 
 class FormatRows:
 
-    def __init__(self, rows, prefix="Scatter plot", sanity_limit=10):
+    def __init__(self, rows, prefix="Scatter plot", sanity_limit=10, colorizer_index=None):
+        self.colorizer_index = colorizer_index
         self.rows = rows
         self.sanity_limit = sanity_limit
         self.features = {}
@@ -166,25 +167,46 @@ class FormatRows:
         self.configuration_names.append(name)
         self.configurations[name] = description
 
-    def add_PCA(self, colorizer_index, name="Principal Components", abbreviation="PCA", colors=None):
+    def feature_order(self):
+        sorter = [(f.index, f.name) for f in self.features.values()]
+        sorter = sorted(sorter)
+        return [x[1] for x in sorter]
+
+    def add_orthogonal(self, feature_names=None, colorizer_index=None, name="Orthogonal", colors=None, vectors=None):
+        if feature_names is None:
+            feature_names = self.feature_order()
+        if vectors is None:
+            vectors = [(1,0,0),(0,1,0),(0,0,1)]
+        transformer = FixedTransform(vectors)
+        config = self.transformer_configuration(name, transformer, colorizer_index, None, colors)
+        self.add_configuration(config)
+
+    def add_PCA(self, colorizer_index=None, name="Principal Components", abbreviation="PCA", colors=None):
         from sklearn.decomposition import PCA
         transformer = PCA(n_components=3)
         config = self.transformer_configuration(name, transformer, colorizer_index, abbreviation, colors)
         self.add_configuration(config)
 
-    def add_Factors(self, colorizer_index, name="Factor Analysis", abbreviation="FA", colors=None):
+    def add_Factors(self, colorizer_index=None, name="Factor Analysis", abbreviation="FA", colors=None):
         from sklearn.decomposition import FactorAnalysis
         transformer = FactorAnalysis(n_components=3, random_state=0)
         config = self.transformer_configuration(name, transformer, colorizer_index, abbreviation, colors)
         self.add_configuration(config)
 
-    def add_ICA(self, colorizer_index, name="Independent Components", abbreviation="ICA", colors=None):
+    def add_ICA(self, colorizer_index=None, name="Independent Components", abbreviation="ICA", colors=None):
         from sklearn.decomposition import FastICA
         transformer = FastICA(n_components=3, random_state=0)
         config = self.transformer_configuration(name, transformer, colorizer_index, abbreviation, colors)
         self.add_configuration(config)
 
-    def transformer_configuration(self, name, transformer, colorizer_index, abbreviation=None, colors=None):
+    def add_wheel(self, feature_name, colorizer_index=None, name="Wheel", abbreviation="Wh", colors=None):
+        self.standardize()
+        designated_index = self.feature_array_order.index(feature_name)
+        transformer = WheelTransform(designated_index)
+        config = self.transformer_configuration(name, transformer, colorizer_index, abbreviation, colors)
+        self.add_configuration(config)
+
+    def transformer_configuration(self, name, transformer, colorizer_index=None, abbreviation=None, colors=None):
         self.standardize()
         result = {}
         result["name"] = name
@@ -201,6 +223,7 @@ class FormatRows:
         projectors = {}
         for (i, name) in enumerate(self.feature_array_order):
             unscaled = components[:,i]
+            print("unscaled", name, unscaled)
             scaled = (1.0 / scale[i]) * unscaled
             projectors[name] = xyz_dict(scaled)
         result["projectors"] = projectors
@@ -222,9 +245,45 @@ class FormatRows:
         self.mean = std.mean_
         self.scale = std.scale_
 
-    def colorizer_mapping(self, index, colors=None):
+    def add_column(self, values):
+        rows = self.rows
+        assert len(rows) == len(values), "Values length must match rows."
+        newrows = [list(r) + [v] for (r,v) in zip(rows, values)]
+        self.rows = newrows
+        return len(rows[0])  # the index of the new column
+
+    def add_colorizer(self, values, colors=None):
+        index = self.colorizer_index = self.add_column(values)
+        if colors:
+            # cache the colorizer mapping
+            _ = self.colorizer_mapping(index, colors)
+
+    def named_percentiles(self, from_feature_name, group_names, colors=None):
+        from bisect import bisect_left
+        n = len(group_names)
+        assert n > 1, "must have more than one group"
+        if colors is not None:
+            assert len(colors) == n, "colors should match groups."
+        f = self.features[from_feature_name]
+        index = f.index
+        rows = self.rows
+        values = [r[index] for r in rows]
+        svalues = list(sorted(values))
+        nv = len(values)
+        ngroup = nv * (1.0 / n)
+        group_indices = [
+            int(bisect_left(svalues, v)/ngroup) for v in values]
+        percentile_names = [group_names[index] for index in group_indices]
+        self.add_colorizer(percentile_names, colors)
+
+    def colorizer_mapping(self, index=None, colors=None):
+        if index is None:
+            index = self.colorizer_index
+        assert index is not None, "Colorizer index must be specified."
         if colors is None and self._colorizers.get(index) is not None:
             return self._colorizers[index]
+        #print ("rows", self.rows)
+        #print ("index", self.colorizer_index)
         values = list(sorted(set(row[index] for row in self.rows)))
         if self.sanity_limit and self.sanity_limit > 0:
             assert len(values) < self.sanity_limit, "too many values in colorizer " + repr((index, len(values)))
@@ -241,6 +300,55 @@ class FormatRows:
         self._colorizers[index] = colorizer
         return colorizer
 
+class WheelTransform:
+    """
+    Assign designated feature to x-axis.
+    Distribute the other features in a circle on YZ plane.
+    Similar API to sklearn.decomposition.PCA (but fit is trivial)
+    """
+
+    def __init__(self, designated_index=0, n_components=3):
+        self.designated_index = designated_index
+        self.n_components = n_components
+
+    def fit_transform(self, data_array):
+        "Compute and store the _components array."
+        designated_index = self.designated_index
+        (rows, cols) = data_array.shape
+        n_components = self.n_components
+        components = np.zeros((n_components, cols))
+        dtheta = np.pi / (cols + 1)
+        for i in range(cols):
+            if (i == designated_index):
+                proj = (1, 0, 0)
+            else:
+                theta = dtheta * i
+                proj = (0, np.sin(theta), np.cos(theta))
+            components[:,i] = np.array(proj)
+        self.components_ = components
+        return None
+
+class FixedTransform:
+    """
+    Assign constant vectors to axes.
+    Similar API to sklearn.decomposition.PCA (but fit is trivial)
+    """
+    
+    def __init__(self, projection_vectors, n_components=3):
+        self.n_components = n_components
+        self.projection_vectors = np.array(projection_vectors, dtype=np.float)
+
+    def fit_transform(self, data_array):
+        "Compute and store the _components array."
+        (rows, cols) = data_array.shape
+        n_components = self.n_components
+        components = np.zeros((n_components, cols))
+        projection_vectors = self.projection_vectors
+        for i in range(cols):
+            j = i % len(projection_vectors)
+            components[:,i] = projection_vectors[j]
+        self.components_ = components
+        return None
 
 class FeatureDescriptor(object):
     def __init__(self, name, index, color=None):
