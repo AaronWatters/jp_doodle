@@ -120,6 +120,15 @@ class FormatRows:
         self.configurations = {}
         self._standardized = False
         self._colorizers = {}
+        self.annotations = []
+
+    def line(self, location1, location2, color, **other_atts):
+        descr = other_atts.copy()
+        descr["type"] = "line"
+        descr["location1"] = location1
+        descr["location2"] = location2
+        descr["color"] = color
+        self.annotations.append(descr)
 
     def as_widget(self, **config):
         return ND_Scatter_Widget(self.to_json_object(), config=config)
@@ -128,6 +137,8 @@ class FormatRows:
         result = {}
         result["features"] = [self.features[n].to_json_object() for n in sorted(self.features.keys())]
         #result["configurations"] = [self.configurations[n].to_json_object() for n in self.configuration_names]
+        for configuration in self.configurations.values():
+            configuration["annotations"] = self.annotations
         result["configurations"] = [self.configurations[n] for n in self.configuration_names]
         result["points"] = [list(x) for x in self.rows]
         return result
