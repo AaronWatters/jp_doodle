@@ -121,8 +121,8 @@ class FormatRows:
         self._standardized = False
         self._colorizers = {}
 
-    def as_widget(self):
-        return ND_Scatter_Widget(self.to_json_object())
+    def as_widget(self, **config):
+        return ND_Scatter_Widget(self.to_json_object(), config=config)
 
     def to_json_object(self):
         result = {}
@@ -172,14 +172,18 @@ class FormatRows:
         sorter = sorted(sorter)
         return [x[1] for x in sorter]
 
-    def add_orthogonal(self, feature_names=None, colorizer_index=None, name="Orthogonal", colors=None, vectors=None):
-        if feature_names is None:
-            feature_names = self.feature_order()
+    def add_orthogonal(self, colorizer_index=None, name="Orthogonal", colors=None, vectors=None):
+        #if feature_names is None:
+        #    feature_names = self.feature_order()
         if vectors is None:
             vectors = [(1,0,0),(0,1,0),(0,0,1)]
         transformer = FixedTransform(vectors)
         config = self.transformer_configuration(name, transformer, colorizer_index, None, colors)
         self.add_configuration(config)
+
+    def add_tetrahedral(self, colorizer_index=None, name="Tetrahedral", colors=None, vectors=None):
+        vectors = [(1,1,1), (1,-1,-1), (-1,1,-1), (-1,-1,1) ]
+        return self.add_orthogonal(colorizer_index, name, colors, vectors)
 
     def add_PCA(self, colorizer_index=None, name="Principal Components", abbreviation="PCA", colors=None):
         from sklearn.decomposition import PCA
@@ -223,7 +227,7 @@ class FormatRows:
         projectors = {}
         for (i, name) in enumerate(self.feature_array_order):
             unscaled = components[:,i]
-            print("unscaled", name, unscaled)
+            #print("unscaled", name, unscaled)
             scaled = (1.0 / scale[i]) * unscaled
             projectors[name] = xyz_dict(scaled)
         result["projectors"] = projectors
