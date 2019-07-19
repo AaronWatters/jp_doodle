@@ -123,12 +123,15 @@ class FormatRows:
         self.annotations = []
 
     def line(self, location1, location2, color, **other_atts):
-        descr = other_atts.copy()
-        descr["type"] = "line"
-        descr["location1"] = location1
-        descr["location2"] = location2
-        descr["color"] = color
-        self.annotations.append(descr)
+        self.add_annotation(
+            type="line",
+            location1=location1,
+            location2=location2,
+            color=color,
+            **other_atts)
+
+    def add_annotation(self, **descriptor):
+        self.annotations.append(descriptor)
 
     def as_widget(self, **config):
         return ND_Scatter_Widget(self.to_json_object(), config=config)
