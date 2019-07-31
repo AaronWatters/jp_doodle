@@ -562,6 +562,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.request_redraw();
             };
             orbit(center3d, radius, shift2d) {
+                center3d = this.as_vector(center3d, projector_var_order);
+                shift2d = this.as_vector(shift2d, ["x", "y"])
                 var model_transform = this.model_transform;
                 var rotation = model_transform.orbit_rotation_xyz(center3d, radius, shift2d);
                 var new_transform = rotation.mmult(model_transform);
@@ -602,6 +604,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.orbit_off();
                 var in_place = true;
                 center3d = center3d || this.center();
+                center3d = this.as_vector(center3d, projector_var_order);
                 // min_x, min_y, width, height are not relevant
                 this.orbiter = new ND_Orbiter(
                     this, center3d, radius, 0, 0, 0, 0, in_place, after
