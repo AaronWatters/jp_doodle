@@ -119,6 +119,9 @@ class ND_Frame(dual_canvas.CanvasOperationsMixin):
     def orbit_all(self, radius, center3d=None):
         self.call_method("orbit_all", radius, center3d)
 
+    def orbit(self, center3d, radius, shift2d):
+        self.call_method("orbit", center3d, radius, shift2d)
+
     def call_method(self, method_name, *arguments):
         """call method for target frame (for subclassing)"""
         self.element[method_name](*arguments)
