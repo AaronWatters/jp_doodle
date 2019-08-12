@@ -158,7 +158,15 @@ class VolumeImageViewer:
         self.axis_to_slice = {}
         self.draw()
 
-    def draw(self):
+    def change_image(self, new_image):
+        shape = self.image.shape
+        new_shape = new_image.shape
+        assert shape == new_shape, "Changing image shape is not allowed: " + repr((shape, new_shape))
+        self.image = new_image
+        with self.canvas.delay_redraw():
+            self.draw(reset=True)
+
+    def draw(self, reset=False):
         axis_to_slice = self.axis_to_slice
         self.draw_scheduled = False
         canvas = self.canvas
@@ -191,7 +199,7 @@ class VolumeImageViewer:
             C = 255 * B
             name = "image_" + repr(axis)
             # change the image only if the slice has changed
-            if axis_to_slice.get(axis) != z:
+            if reset or axis_to_slice.get(axis) != z:
                 canvas.name_image_array(name, C, low_color=yellow, high_color=blue)
             #frame.reset_frame()
             frame.named_image(name, 0, nrows, w, h)
