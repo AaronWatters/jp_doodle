@@ -473,6 +473,9 @@ class FrameInterface(CanvasOperationsMixin):
     def reset_frame(self):
         self.element.reset_frame()
 
+    def set_region(self, minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy):
+        self.element.set_region(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy)
+
 
 class SnapshotCanvas(DualCanvasWidget):
 
