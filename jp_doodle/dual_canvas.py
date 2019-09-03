@@ -384,12 +384,17 @@ class TopLevelCanvasMixin(CanvasOperationsMixin):
             callback(pixels);
         """, callback=converter_callback, x=x, y=y, w=w, h=h)
 
-    def save_pixels_to_png_async(self, file_path, x=None, y=None, w=None, h=None, after=None):
+    def save_pixels_to_png_async(self, file_path, x=None, y=None, w=None, h=None, after=None, error=None):
         import scipy.misc as sm
         def save_callback(image_array):
-            sm.imsave(file_path, image_array)
-            if after:
-                after()
+            try:
+                sm.imsave(file_path, image_array)
+                if after:
+                    after()
+            except Exception as e:
+                if error:
+                    error(e)
+                raise e
         self.pixels_array_async(save_callback, x, y, w, h)
 
     def in_dialog(self):
@@ -553,11 +558,14 @@ class SnapshotCanvas(DualCanvasWidget):
     def snapshot_callback(self, *ignored_arguments):
         filename = self.snapshot_filename
         try:
-            self.save_pixels_to_png_async(filename, after=self.after_save)
+            self.save_pixels_to_png_async(filename, after=self.after_save, error=self.save_error)
         except Exception as e:
             self.element["print"]("Snapshot exception: " + repr(e))
         else:
             self.element["print"]("New snapshot: " + repr(filename))
+
+    def save_error(self, e):
+        self.element["print"]("Snapshot save exception: " + repr(e))
 
     def after_save(self, *ignored_arguments):
         """change the snapshot image src to force a reload"""
