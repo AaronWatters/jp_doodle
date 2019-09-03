@@ -16,6 +16,15 @@ setup(
     author="Aaron Watters",
     author_email="awatters@flatironinstitute.org",
     url=url,
-    install_requires=["jp_proxy_widget", "requests", "matplotlib", "numpy", "scipy", "pillow", "psutil"],
+    install_requires=[
+        "jp_proxy_widget", 
+        "requests", 
+        "matplotlib", 
+        "numpy", 
+        "scipy", 
+        "pillow", 
+        "psutil",
+        "imageio",
+        ],
     license="MIT"
 )

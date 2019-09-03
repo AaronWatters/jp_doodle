@@ -9,6 +9,7 @@ import os
 import shutil
 import time
 import ipywidgets as widgets
+from imageio import imsave
 
 required_javascript_modules = [
     doodle_files.vendor_path("js/canvas_2d_widget_helper.js"),
@@ -385,10 +386,10 @@ class TopLevelCanvasMixin(CanvasOperationsMixin):
         """, callback=converter_callback, x=x, y=y, w=w, h=h)
 
     def save_pixels_to_png_async(self, file_path, x=None, y=None, w=None, h=None, after=None, error=None):
-        import scipy.misc as sm
+        #import scipy.misc as sm
         def save_callback(image_array):
             try:
-                sm.imsave(file_path, image_array)
+                imsave(file_path, image_array)
                 if after:
                     after()
             except Exception as e:
@@ -580,7 +581,8 @@ class SnapshotCanvas(DualCanvasWidget):
         """, identity=identity, nonce=nonce, filename=filename)
         #self.snapshot_widget.selected_index = 0
         self.set_snapshot_text(filename + " saved.  Save widget state to keep in notebook.")
-        self.tabs.selected_index = 1
+        if self.tabs is not None:
+            self.tabs.selected_index = 1
 
     def fresh_id(self):
         SnapshotCanvas.snapshot_counter += 1
