@@ -63,6 +63,9 @@
     <p><b><code><a href="https://github.com/AaronWatters/jp_doodle">jp_doodle</a></em></code>
         makes implementing special purpose interactive visualizations easy.</b></p>
 
+    These example pages use stand alone Javascript, but the code used to implement them
+    can be transliterated to Python and implemented using Jupyter widgets (modulo some subtleties). <br>
+
     Please see the Jupyter notebooks in the package for additional
     discussion and documentation. <br>
 
@@ -163,6 +166,18 @@ Shift-drag the mouse on the figure to translate the diagram.
             var zout_button = $("<button>zoom_out</button>").appendTo(element);
             zout_button.click(zoom_out);
 
+            var rotating = false;
+            var toggle_rotation = function () {
+                rotating = !rotating;
+                if (rotating) {
+                    nd_frame.rotate_degrees([0, 0, 0], 3, [-.3, 0.1], 5);
+                } else {
+                    nd_frame.rotation_off();
+                }
+            };
+            var r_button = $("<button>toggle rotation</button>").appendTo(element);
+            r_button.click(toggle_rotation);
+
             $("<div>Please drag to rotate or shift-drag to translate the figure.</div>").appendTo(element);
 </script>
 
@@ -240,6 +255,18 @@ var canvas_config = {
             };
             var zout_button = $("<button>zoom_out</button>").appendTo(element);
             zout_button.click(zoom_out);
+
+            var rotating = false;
+            var toggle_rotation = function () {
+                rotating = !rotating;
+                if (rotating) {
+                    nd_frame.rotate_degrees([0, 0, 0], 3, [-.3, 0.1], 5);
+                } else {
+                    nd_frame.rotation_off();
+                }
+            };
+            var r_button = $("<button>toggle rotation</button>").appendTo(element);
+            r_button.click(toggle_rotation);
 
             $("<div>Please drag to rotate or shift-drag to translate the figure.</div>").appendTo(element);
         </textarea></div>
