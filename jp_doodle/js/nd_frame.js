@@ -563,7 +563,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             orbit(center3d, radius, shift2d) {
                 center3d = this.as_vector(center3d, projector_var_order);
-                shift2d = this.as_vector(shift2d, ["x", "y"])
+                shift2d = this.as_vector(shift2d, ["x", "y"]);
                 var model_transform = this.model_transform;
                 var rotation = model_transform.orbit_rotation_xyz(center3d, radius, shift2d);
                 var new_transform = rotation.mmult(model_transform);
@@ -609,7 +609,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.orbiter = new ND_Orbiter(
                     this, center3d, radius, 0, 0, 0, 0, in_place, after
                 );
-            }
+            };
             orbit_off() {
                 // turn off any active orbit controls.
                 var orbiter = this.orbiter;
@@ -617,7 +617,32 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     orbiter.off();
                 }
                 this.orbiter = null;
-            }
+            };
+            rotation_off() {
+                var rotator = this.rotator;
+                if (rotator) {
+                   rotator.stop();
+                }
+                this.rotator = null;
+            };
+            rotate_shift(center3d, radius, shift2dPerSecond) {
+                this.rotation_off();
+                this.rotator = new ND_Rotator(this, center3d, radius, shift2dPerSecond);
+                this.rotator.go();
+            };
+            rotate_degrees(center3d, radius, direction2d, degreesPerSecond) {
+                direction2d = nd_frame.as_vector(direction2d, ["x", "y"]);
+                if (Math.abs(degreesPerSecond) > 45.0) {
+                    throw new Error("degrees should be in -45..45");
+                }
+                var theta = degreesPerSecond * (Math.PI / 180.0);
+                var c = Math.cos(theta);
+                var s = Math.sin(theta);
+                var n = this.model_transform.vlength(direction2d);
+                var scale = radius * s / (c * n);
+                var shift2dPerSecond = this.model_transform.vscale(scale, direction2d);
+                this.rotate_shift(center3d, radius, shift2dPerSecond);
+            };
             // delegated methods
             name_image_url(...args) {
                 this.dedicated_frame.name_image_url(...args);
@@ -639,6 +664,44 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.dedicated_frame.forget_objects(objects_or_infos);
             };
         };
+
+        class ND_Rotator {
+            constructor(nd_frame, center3d, radius, shift2dPerSecond) {
+                this.nd_frame = nd_frame;
+                this.center3d = center3d;
+                this.radius = radius;
+                this.shift2dPerSecond = nd_frame.as_vector(shift2dPerSecond, ["x", "y"]);
+                this.lastTimeMS = (new Date()).getTime();
+                this.stopped = true;
+            };
+            do_rotation() {
+                var now = (new Date()).getTime();
+                var elapsed = now - this.lastTimeMS;
+                this.lastTimeMS = now;
+                var nd_frame = this.nd_frame;
+                var scale = elapsed / 1000.0;
+                var shift = nd_frame.model_transform.vscale(scale, this.shift2dPerSecond);
+                console.log("shift="+shift.x+","+shift.y);
+                this.nd_frame.orbit(this.center3d, this.radius, shift);
+            };
+            go() {
+                var that = this;
+                if (!that.stopped) {
+                    throw new Error("Rotator started too many times.");
+                }
+                var animate = function () {
+                    if (!that.stopped) {
+                        that.do_rotation();
+                        window.requestAnimationFrame(animate);
+                    }
+                };
+                that.stopped = false;
+                animate();
+            };
+            stop() {
+                this.stopped = true;
+            }
+        }
 
         class ND_Orbiter {
             constructor(nd_frame, center3d, radius, min_x, min_y, width, height, in_place, after) {
