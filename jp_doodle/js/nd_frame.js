@@ -631,7 +631,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.rotator.go();
             };
             rotate_degrees(center3d, radius, direction2d, degreesPerSecond) {
-                direction2d = nd_frame.as_vector(direction2d, ["x", "y"]);
+                direction2d = this.as_vector(direction2d, ["x", "y"]);
                 if (Math.abs(degreesPerSecond) > 45.0) {
                     throw new Error("degrees should be in -45..45");
                 }
