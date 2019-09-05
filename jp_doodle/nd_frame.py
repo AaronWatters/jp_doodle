@@ -120,7 +120,16 @@ class ND_Frame(dual_canvas.CanvasOperationsMixin):
         self.call_method("orbit_all", radius, center3d)
 
     def orbit(self, center3d, radius, shift2d):
-        self.call_method("orbit", center3d, radius, shift2d)
+        self.call_method("orbit", list(center3d), float(radius), list(shift2d))
+
+    def orbit_off(self):
+        self.call_method("orbit_off")
+
+    def rotate_degrees(self, center3d, radius, direction2d, degreesPerSecond):
+        self.call_method("rotate_degrees", list(center3d), float(radius), list(direction2d), float(degreesPerSecond))
+
+    def rotation_off(self):
+        self.call_method("rotation_off")
 
     def call_method(self, method_name, *arguments):
         """call method for target frame (for subclassing)"""
