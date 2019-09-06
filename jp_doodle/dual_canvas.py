@@ -9,7 +9,7 @@ import os
 import shutil
 import time
 import ipywidgets as widgets
-from imageio import imsave
+from imageio import imsave, imread
 
 required_javascript_modules = [
     doodle_files.vendor_path("js/canvas_2d_widget_helper.js"),
@@ -494,8 +494,6 @@ class SnapshotCanvas(DualCanvasWidget):
         super(SnapshotCanvas, self).__init__(width, height, config, *pargs, **kwargs)
         self.snapshot_filename = filename
         self.check_file()
-        self.snapshot_id = self.fresh_id()
-        self.snapshot_text_id = self.fresh_id()
         self.snapshot_widget = self._make_snapshot_widget()
         self.tabs = None
 
@@ -514,9 +512,7 @@ class SnapshotCanvas(DualCanvasWidget):
         return self.tabs
 
     def set_snapshot_text(self, text):
-        self.js_init("""
-        $("#"+text_id).html("<div>" + text + "</div>");
-        """, text=text, text_id=self.snapshot_text_id)
+        self.snapshot_label_widget.value = text
 
     def display_all(self, widget_title="Canvas", button_text="Take Snapshot", snapshotTitle="Snapshot"):
         tabs = self.snapshot_tabs(widget_title, button_text, snapshotTitle)
@@ -533,16 +529,26 @@ class SnapshotCanvas(DualCanvasWidget):
     def _make_snapshot_widget(self):
         if self.snapshot_widget is not None:
             raise ValueError("do not make more than one snapshot widget per canvas.")
-        identity = self.snapshot_id
-        html_text = '<img src="%s?id=%s" id="%s"/>' % (self.snapshot_filename, identity, identity)
-        html_text += '\n <div id="%s">%s</div>' % (self.snapshot_text_id, self.snapshot_filename)
-        snapshot_widget = widgets.HTML(value=html_text)
-        #snapshot_widget = widgets.Accordion(children=[html_widget])
-        #snapshot_widget.set_title(0, title)
-        #snapshot_widget.selected_index = None  # hide initially when widget is active
-        self.snapshot_widget = snapshot_widget
+        (img_data, w, h) = self.img_data()
+        im = self.image_widget = widgets.Image(
+            value=img_data,
+            format="png",
+            width=w,
+            height=h,
+        )
+        lb = self.snapshot_label_widget = widgets.Label(
+            value=self.snapshot_filename + repr((w,h))
+        )
+        self.snapshot_widget = widgets.VBox(children=[im, lb])
         self.set_snapshot_text("No snapshot yet taken this session.")
-        return snapshot_widget
+        return self.snapshot_widget
+
+    def img_data(self):
+        filename = self.snapshot_filename
+        img_data = open(filename, "rb").read()
+        im = imread(filename)
+        (h, w) = im.shape[:2]
+        return (img_data, w, h)
 
     def snapshot_button(self, text=None):
         fn = self.snapshot_filename
@@ -569,25 +575,16 @@ class SnapshotCanvas(DualCanvasWidget):
         self.element["print"]("Snapshot save exception: " + repr(e))
 
     def after_save(self, *ignored_arguments):
-        """change the snapshot image src to force a reload"""
-        nonce = self.fresh_id()
-        identity = self.snapshot_id
         filename = self.snapshot_filename
-        self.js_init("""
-        var img = $("#" + identity);
-        var src = img.attr("src");
-        img.attr("src", src + "?nonce=" + nonce);
-        // element.print("saved " + img.attr("src") + " please save widget state.");
-        """, identity=identity, nonce=nonce, filename=filename)
-        #self.snapshot_widget.selected_index = 0
-        self.set_snapshot_text(filename + " saved.  Save widget state to keep in notebook.")
+        (img_data, w, h) = self.img_data()
+        im = self.image_widget
+        im.value = img_data
+        im.width = w
+        im.height = h
+        self.set_snapshot_text(repr(filename) + " saved.  Save widget state to keep in notebook.")
         if self.tabs is not None:
             self.tabs.selected_index = 1
 
-    def fresh_id(self):
-        SnapshotCanvas.snapshot_counter += 1
-        ms = int(time.time() * 1000)
-        return "snapshot_id_%s_%s" % (SnapshotCanvas.snapshot_counter, ms)
 
 class GeometryWrapper:
 
