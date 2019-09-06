@@ -385,6 +385,16 @@ class TopLevelCanvasMixin(CanvasOperationsMixin):
             callback(pixels);
         """, callback=converter_callback, x=x, y=y, w=w, h=h)
 
+    def on_rendered(self, callable, *positional, **keyword):
+        """
+        After the widget has rendered, call the callable.
+        This can be used to initialize an animation after the widget is visible, for example.
+        xxxx this should probably be added to jp_proxy_widget.
+        """
+        def call_it():
+            return callable(*positional, **keyword)
+        self.js_init("call_it();", call_it=call_it)
+
     def save_pixels_to_png_async(self, file_path, x=None, y=None, w=None, h=None, after=None, error=None):
         #import scipy.misc as sm
         def save_callback(image_array):
