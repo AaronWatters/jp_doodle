@@ -15,11 +15,15 @@ describe("nd_frame affine tests", () => {
     });
     
     it("vscales", () => {
-        var vv = {u: {x: -10}};
-        //console.log("x = " + jQuery.fn.nd_frame.matrix);
-        var m = jQuery.fn.nd_frame.matrix(vv);
+        var m = jQuery.fn.nd_frame.matrix_op;
         var v = m.vscale(2, {x: 10, y:5})
         expect(v).toEqual({x: 20, y:10});
+    });
+
+    it("converts arrays to vectors", () => {
+        var m = jQuery.fn.nd_frame.matrix_op;
+        var v = m.as_vector([20, 10], ["a", "b"])
+        expect(v).toEqual({a: 20, b:10});
     });
 
     it("vadds", () => {
