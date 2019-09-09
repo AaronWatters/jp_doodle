@@ -473,26 +473,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             as_vector(descriptor, name_order) {
                 // convert model array descriptor to mapping representation.
                 name_order = name_order || this.feature_names;
-                let n = name_order.length;
-                var mapping = {};
-                if (Array.isArray(descriptor)) {
-                    if (descriptor.length != n) {
-                        throw new Error("array descriptor length should match names length.")
-                    }
-                    for (var i=0; i<n; i++) {
-                        mapping[name_order[i]] = descriptor[i]
-                    }
-                } else {
-                    // copy for valid features (xxx don't check for extra slots?)
-                    for (var i=0; i<n; i++) {
-                        var vname = name_order[i];
-                        var d = descriptor[vname];
-                        if (d) {
-                            mapping[vname] = d;
-                        }
-                    }
-                }
-                return mapping;
+                return $.fn.nd_frame.matrix_op.as_vector(descriptor, name_order);
             };
             axis_scale(axis3d, shift2d) {
                 // shift the axis vector by the 2d mouse move shift2d.
@@ -975,6 +956,29 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 result.push("</table>")
                 return result.join(sep);
             };
+            as_vector(descriptor, name_order) {
+                // convert model array descriptor to mapping representation.
+                let n = name_order.length;
+                var mapping = {};
+                if (Array.isArray(descriptor)) {
+                    if (descriptor.length != n) {
+                        throw new Error("array descriptor length should match names length.")
+                    }
+                    for (var i=0; i<n; i++) {
+                        mapping[name_order[i]] = descriptor[i]
+                    }
+                } else {
+                    // copy for valid features (xxx don't check for extra slots?)
+                    for (var i=0; i<n; i++) {
+                        var vname = name_order[i];
+                        var d = descriptor[vname];
+                        if (d) {
+                            mapping[vname] = d;
+                        }
+                    }
+                }
+                return mapping;
+            };
             default_value(x) {
                 if (x) {
                     return x;
@@ -1441,6 +1445,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         return new Matrix(variable_to_vector, vi_order, vj_order, translator);
     };
+
+    // Trivial matrix for access to math operations
+    $.fn.nd_frame.matrix_op = $.fn.nd_frame.matrix({x: {x: 1}});
 
     $.fn.nd_frame.example = function(element) {
         
