@@ -12,6 +12,67 @@ describe("gd_graph tests", () => {
         expect(n.gradient).toEqual({x:0, y:0});
     });
 
+    it("computes linear extrapolation link penalties for farish points", () => {
+        var g = jQuery.fn.gd_graph({
+            link_radius: 2,
+            link_height: 2,
+        });
+        var xy = g.xy([13, 4]);
+        var xy2 = g.xy([13, 12]);
+        var pg = g.link_penalty(xy, xy2, 4);
+        expect(pg[0]).toEqual(64);
+        expect(pg[1]).toEqual(g.xy([0, -8]))
+    });
+
+    it("computes quadratic link penalties for nearish points", () => {
+        var g = jQuery.fn.gd_graph({
+            link_radius: 2,
+            link_height: 2,
+        });
+        var xy = g.xy([13, 4]);
+        var xy2 = g.xy([13, 7]);
+        var pg = g.link_penalty(xy, xy2, 4);
+        expect(pg[0]).toEqual(8);
+        expect(pg[1]).toEqual(g.xy([0, -4]))
+    });
+
+    it("computes trivial link penalties for close points", () => {
+        var g = jQuery.fn.gd_graph({
+            link_radius: 2,
+            link_height: 2,
+        });
+        var xy = g.xy([13, 4]);
+        var pg = g.link_penalty(xy, xy, 334);
+        expect(pg[0]).toEqual(0);
+        expect(pg[1]).toEqual(g.xy([0, 0]))
+    });
+
+    it("computes trivial separation penalties for remote points", () => {
+        var g = jQuery.fn.gd_graph({
+            separator_radius: 2,
+            separation_height: 2,
+            epsilon: 0.00001,
+        });
+        var xy = g.xy([13, 4]);
+        var xy2 = g.xy([4, 4]);
+        var pg = g.separation_penalty(xy, xy2);
+        expect(pg[0]).toEqual(0);
+        expect(pg[1]).toEqual(g.xy([0, 0]))
+    });
+
+    it("computes separation penalties for close points", () => {
+        var g = jQuery.fn.gd_graph({
+            separator_radius: 2,
+            separation_height: 2,
+            epsilon: 0.00001,
+        });
+        var xy = g.xy([3, 4]);
+        var xy2 = g.xy([4, 4]);
+        var pg = g.separation_penalty(xy, xy2);
+        expect(pg[0]).toEqual(0.5);
+        expect(pg[1]).toEqual(g.xy([1, 0]))
+    });
+
     it("computes separation penalties for same point", () => {
         var g = jQuery.fn.gd_graph({
             separator_radius: 2,

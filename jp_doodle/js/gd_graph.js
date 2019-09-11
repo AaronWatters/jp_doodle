@@ -86,10 +86,40 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     var value = s * (offset ** 2);
                     var slope = 2 * s * offset;
                     var gradient = m.vscale((slope / d), diff);
-                    console.log("sp", offset, s, value)
                     return [value, gradient];
                 }
                 return [0, this.xy([0, 0])];  // default
+            };
+
+            link_penalty(xy1, xy2, abs_weight) {
+                var m = this.matrix_op;
+                var st = this.settings;
+                var diff = m.vdiff(xy1, xy2);
+                var d = m.vlength(diff);
+                var lr = st.link_radius;
+                var s = st.link_scale;
+                var violation = (d - lr);
+                var wviolation = violation * abs_weight;
+                var value, gradient;
+                if (violation < 0 || d < st.epsilon)  {
+                    // no violation if close enough: flat
+                    value = 0;
+                    gradient = this.xy([0,0]);
+                } else if (violation < lr) {
+                    // quadratic region inside near circle
+                    value = s * (wviolation ** 2);
+                    var slope = 2 * s * wviolation;
+                    gradient = m.vscale(slope * 1.0 / d, diff)
+                } else {
+                    // linear interpolation everywhere else
+                    var wlr = lr * abs_weight;
+                    var start = s * (wlr ** 2);
+                    var slope = 2 * s * wlr;
+                    gradient = m.vscale(slope * 1.0 / d, diff);
+                    console.log("linear", start, slope, violation, lr);
+                    value = start + slope * (violation - lr);
+                }
+                return [value, gradient];
             };
 
             grid_spiral_coordinates(index, jitter) {
