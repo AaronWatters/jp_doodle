@@ -38,7 +38,24 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.edge_key_to_descriptor = {};
                 this.group_to_nodemap = {};
                 this.matrix_op = jQuery.fn.nd_frame.matrix_op;
+                this.calibrate();
             };
+
+            calibrate() {
+                var s = this.settings;
+                s.origin_scale = s.origin_height * 1.0 / (s.origin_radius ** 2)
+                s.link_scale = s.link_height * 1.0 / (s.link_radius ** 2)
+                s.separation_scale = s.separation_height * 1.0 / (s.separator_radius ** 2)
+            }
+
+            get_or_make_node(name) {
+                var node = this.node_name_to_descriptor[name];
+                if (!node) {
+                    node = new GD_Node(name, this);
+                    this.node_name_to_descriptor[name] = node;
+                }
+                return node;
+            }
 
             xy(xy) {
                 return this.matrix_op.as_vector(xy, ["x", "y"]);
@@ -74,15 +91,49 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     } else {
                         throw new Error("bad side: "+side);
                     }
+                    if (jitter) {
+                        i = i + Math.sin(index) * jitter;
+                        j = j + Math.cos(index) * jitter;
+                    }
                 }
                 return this.xy([i, j]);
             }
         };
 
-        class ND_Shape {
-            constructor(nd_frame, opt) {
+        class GD_Node {
+            constructor(name, in_graph) {
+                this.in_graph = in_graph;
+                this.name = name;
+                this.position = null;
+                this.group = null;
+                this.key_to_edge = {};
+                this.reset_bookkeeping();
             };
-        }
+            reset_bookkeeping() {
+                this.gradient = this.in_graph.xy([0,0]);
+                this.neighbor_to_increment = {};
+                this.edge_key_to_increment = {};
+                this.origin_increment = [0, this.in_graph.xy([0,0])];
+                this.penalty = 0;
+            };
+            sum_penalty() {
+                var penalty = 0.0;
+                var gradient = this.in_graph.xy([0,0]);
+                var m = this.in_graph.matrix_op;
+                var add_incr = function(incr) {
+                    penalty += incr[0];
+                    gradient = m.vadd(gradient, incr[1]);
+                };
+                add_incr(this.origin_increment);
+                var n2i = this.neighbor_to_increment;
+                for (var n in n2i) {
+                    add_incr(n2i[n]);
+                }
+                this.gradient = gradient;
+                this.penalty = penalty;
+                return [penalty, gradient];
+            };
+        };
 
         return new GD_Graph(options, element);
     };

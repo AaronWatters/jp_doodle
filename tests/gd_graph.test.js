@@ -4,6 +4,23 @@ import jp_doodle_is_loaded from "../dist/index";
 
 describe("gd_graph tests", () => {
 
+    it("makes a node initially with no penalty", () => {
+        var g = jQuery.fn.gd_graph();
+        var n = g.get_or_make_node("xxx");
+        expect(n.name).toEqual("xxx");
+        expect(n.penalty).toEqual(0.0);
+        expect(n.gradient).toEqual({x:0, y:0});
+    });
+
+    it("calibrates", () => {
+        var g = jQuery.fn.gd_graph({
+            origin_height: 32,
+            origin_radius: 4
+        });
+        var origin_scale = g.settings.origin_scale;
+        expect(origin_scale).toEqual(2);
+    });
+
     it("spirals", () => {
         var G = jQuery.fn.gd_graph();
         expect(G.grid_spiral_coordinates(0)).toEqual({x:0, y:0});
