@@ -55,11 +55,42 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     this.node_name_to_descriptor[name] = node;
                 }
                 return node;
-            }
+            };
 
             xy(xy) {
                 return this.matrix_op.as_vector(xy, ["x", "y"]);
-            }
+            };
+
+            origin_penalty(xy) {
+                var m = this.matrix_op;
+                var d = m.vlength(xy);
+                var s = this.settings.origin_scale;
+                var value = s * (d ** 2);
+                var gradient = m.vscale(2 * s, xy);
+                return [value, gradient];
+            };
+
+            separation_penalty(point1, point2) {
+                var m = this.matrix_op;
+                var st = this.settings;
+                var diff = m.vdiff(point2, point1);
+                var d = m.vlength(diff);
+                if (d < st.epsilon) {
+                    // arbitrary
+                    diff = this.xy([st.epsilon, 0]);
+                    d = st.epsilon;
+                }
+                var offset = st.separator_radius - d;
+                if (offset > 0) {
+                    var s = st.separation_scale;
+                    var value = s * (offset ** 2);
+                    var slope = 2 * s * offset;
+                    var gradient = m.vscale((slope / d), diff);
+                    console.log("sp", offset, s, value)
+                    return [value, gradient];
+                }
+                return [0, this.xy([0, 0])];  // default
+            };
 
             grid_spiral_coordinates(index, jitter) {
                 var i = 0;
@@ -97,7 +128,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     }
                 }
                 return this.xy([i, j]);
-            }
+            };
         };
 
         class GD_Node {

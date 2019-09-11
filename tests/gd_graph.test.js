@@ -12,13 +12,39 @@ describe("gd_graph tests", () => {
         expect(n.gradient).toEqual({x:0, y:0});
     });
 
+    it("computes separation penalties for same point", () => {
+        var g = jQuery.fn.gd_graph({
+            separator_radius: 2,
+            separation_height: 2,
+            epsilon: 1,
+        });
+        var xy = g.xy([3, 4]);
+        var pg = g.separation_penalty(xy, xy);
+        expect(pg[0]).toEqual(0.5);
+        expect(pg[1]).toEqual(g.xy([1, 0]))
+    });
+
+    it("computes origin penalties", () => {
+        var g = jQuery.fn.gd_graph({
+            origin_height: 16,
+            origin_radius: 4
+        });
+        var xy = g.xy([3, 4]); // length = 5
+        var pg = g.origin_penalty(xy);
+        expect(pg[0]).toEqual(25);
+        expect(pg[1]).toEqual(g.xy([6, 8]))
+    });
+
     it("calibrates", () => {
         var g = jQuery.fn.gd_graph({
             origin_height: 32,
-            origin_radius: 4
+            origin_radius: 4,
+            separation_height: 2,
+            separator_radius: 2,
         });
         var origin_scale = g.settings.origin_scale;
         expect(origin_scale).toEqual(2);
+        expect(g.settings.separation_scale).toEqual(0.5);
     });
 
     it("spirals", () => {
