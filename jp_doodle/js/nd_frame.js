@@ -1029,6 +1029,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 addv1v2(v2, v1);
                 return result;
             };
+            vdiff(v1, v2) {
+                return this.vadd(v1, this.vscale(-1, v2))
+            }
             vmin(v1, v2, sample, fn) {
                 if (!v1) {
                     return v2;
