@@ -492,6 +492,9 @@ class FrameInterface(CanvasOperationsMixin):
     def set_region(self, minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy):
         self.element.set_region(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy)
 
+    def in_dialog(self):
+        self.from_widget.in_dialog()
+
 
 class SnapshotCanvas(DualCanvasWidget):
 
@@ -624,4 +627,21 @@ class GeometryWrapper:
     def transition(self, seconds_duration=1, **to_values):
         return self.on_canvas.transition(self.name, to_values, seconds_duration)
 
-    
+def swatch(
+    pixels=500,
+    model_height=2.0,
+    cx=0,
+    cy=0,
+    ):
+    pixel_height = pixels
+    dc_config = {
+        "width": pixel_height,
+        "height": pixel_height,
+    }
+    canvas = dual_canvas.DualCanvasWidget(width=pixel_height, height=pixel_height, config=dc_config)
+    radius = model_height * 0.5
+    frame = canvas.frame_region(
+        0, 0, pixel_height, pixel_height,
+        cx-radius, cy-radius, cx+radius, cy+radius)
+    display(canvas)
+    return frame
