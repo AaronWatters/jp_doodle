@@ -1,4 +1,8 @@
 
+"""
+Quick and servicable histogram using jp_doodle.
+"""
+
 from jp_doodle import dual_canvas
 
 def histogram(values, width=200, height=200, color="blue", slots=10):
@@ -42,9 +46,11 @@ class Histogram:
             0, 0, width, height,
             m, 0, M, Mb
         )
+        frame.enable_tooltip(tooltip_attribute="tip")
         for (index, count) in enumerate(buckets):
             x = index * delta + m
-            frame.frame_rect(x, 0, delta, count, color=color)
+            tip = "<div>%5.2f ..</div> <div>%5.2f :</div> <div>%d</div>" % (x, x+delta, count)
+            frame.frame_rect(x, 0, delta, count, color=color, name=True, tip=tip)
         frame.lower_left_axes(
             max_tick_count=7, min_x=m, max_x=M, 
             min_y=0, max_y=Mb, 
