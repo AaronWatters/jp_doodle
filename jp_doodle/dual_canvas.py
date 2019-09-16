@@ -41,6 +41,7 @@ class CanvasOperationsMixin(object):
     # xxxx Not all methods may make sense for all subclasses.
 
     name_counter = 0
+    tooltip_default = None
 
     def get_canvas(self):
         raise NotImplementedError("must implement at subclass")
@@ -317,6 +318,73 @@ class CanvasOperationsMixin(object):
         Install serialized json objects into the canvas or frame.
         """
         return self.element.deserialize_json_objects(object_list)
+
+    def enable_tooltip(
+        self,
+        width="140px",
+        height="auto",
+        background="white",
+        font="12px san-serif",
+        tooltip_attribute="tooltip",   # if "canvas_name" then show the name by default
+        on_events="mousemove",
+        shift_left=10,
+        shift_top=10,
+        visible_opacity=0.8,
+        ):
+        """
+        Enable a tooltip to open over named elements which have a tooltip attribute.
+        """
+        # Based on the tooltip implementation in array_explorer.
+        canvas = self.get_canvas()
+        canvas.js_init("""
+            debugger;
+            let tooltip = $("<div>tooltip here</div>").appendTo(element);
+            tooltip.css({
+                position: "absolute",
+                width: width,
+                height: height,
+                background: background,
+                font: font,
+                opacity: 0,  // initially invisible.
+            });
+            element.jp_doodle_tooltip = tooltip;
+            var event_handler = function(event) {
+                debugger;
+                var name = event.canvas_name;
+                var tooltip_text = null;
+                if (name) {
+                    tooltip_text = event.object_info[tooltip_attribute]
+                }
+                if (tooltip_text) {
+                    var element_offset = element.visible_canvas.offset();
+                    var canvas_location = element.event_model_location(event);
+                    var pixel_offset = element.event_pixel_location(event);
+                    tooltip.offset({
+                        left: pixel_offset.x + element_offset.left + shift_left,
+                        top: pixel_offset.y + element_offset.top + shift_top,
+                    });
+                    tooltip.css({opacity: visible_opacity});
+                    tooltip.html("<div>" + tooltip_text + "</div>");
+                }
+            };
+            element.jp_doodle_tooltip_handler = event_handler;
+            for (var i=0; i<event_types.length; i++) {
+                var event_type = event_types[i];
+                element.on_canvas_event(event_type, event_handler);
+            }
+            element.on_canvas_event("mouseout", function(event) {
+                tooltip.css({opacity: 0});
+            })
+            """, 
+            width=width, 
+            height=height, 
+            background=background, 
+            font=font,
+            shift_top=shift_top,
+            shift_left=shift_left,
+            visible_opacity=visible_opacity,
+            tooltip_attribute=tooltip_attribute,
+            event_types=on_events.split())
 
 
 def clean_dict(**kwargs):
