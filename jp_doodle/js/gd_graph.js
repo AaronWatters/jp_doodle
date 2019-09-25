@@ -320,6 +320,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.gradient = increment[1];
                 return increment;
             };
+            node_increment(nodename) {
+                var m = this.in_graph.matrix_op;
+                if (nodename == this.nodename1) {
+                    return [this.penalty, m.vscale(1.0, this.gradient)];
+                } else if (nodename == this.nodename2) {
+                    return [this.penalty, m.vscale(-1.0, this.gradient)];
+                } else {
+                    throw new Error("no such nodename in edge: "+nodename+" :: "+this.key);
+                }
+            };
             other_name(name) {
                 var nn1 = this.nodename1;
                 var nn2 = this.nodename2;
