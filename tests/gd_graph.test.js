@@ -4,6 +4,17 @@ import jp_doodle_is_loaded from "../dist/index";
 
 describe("gd_graph tests", () => {
 
+    it("sets positions and gets neighbors", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 5});
+        g.add_edge(1,2,-5);
+        g.add_edge(3,2,7);
+        var n1 = g.get_node(1).set_position({x:0, y:0});
+        var n2 = g.get_node(2).set_position({x:0, y:5});
+        var n3 = g.get_node(3).set_position({x:0, y:-5});
+        expect(n1.position).toEqual({x:0, y:0});
+        expect(g.neighbors(n2.group)).toEqual({"1": n1, "2": n2});
+    });
+
     it("makes a ngraph with an edge initially no penalty", () => {
         var g = jQuery.fn.gd_graph();
         var e = g.add_edge(1,2,-5);

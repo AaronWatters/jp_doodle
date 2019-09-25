@@ -85,6 +85,26 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 return this.matrix_op.as_vector(xy, ["x", "y"]);
             };
 
+            neighbors(group) {
+                // find all neighboring nodes to group as name: node mapping.
+                var i = group.x;
+                var j = group.y;
+                var g2nm = this.group_to_nodemap;
+                var result = {};
+                for (var ii=i-1; ii<=i+1; ii++) {
+                    for (var jj=j-1; jj<=j+1; jj++) {
+                        var index = this.group_name(ii, jj);
+                        var block = g2nm[index];
+                        if (block) {
+                            for (var name in block) {
+                                result[name] = block[name];
+                            }
+                        }
+                    }
+                }
+                return result;
+            };
+
             group(position, node) {
                 var g2nm = this.group_to_nodemap;
                 var group = this.group_index(position);
@@ -113,9 +133,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     var ivalue = Math.floor(value / radius);
                     result[coord] = ivalue;
                 }
-                result.index = "i" + result.x + ":" + result.y;
+                result.index = this.group_name(result.x, result.y);
                 return result;
             };
+
+            group_name(x, y) {
+                return "i" + x + ":" + y;
+            }
 
             origin_penalty(xy) {
                 var m = this.matrix_op;
@@ -228,6 +252,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             add_edge(edge) {
                 this.key_to_edge[edge.key] = edge;
+            };
+            set_position(position) {
+                // set position but don't compute penalties
+                if (this.group) {
+                    this.in_graph.ungroup(this);
+                }
+                this.in_graph.group(position, this);
+                this.position = position;
+                return this;
             };
             reset_bookkeeping() {
                 this.gradient = this.in_graph.xy([0,0]);
