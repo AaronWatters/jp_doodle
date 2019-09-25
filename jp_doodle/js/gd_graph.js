@@ -85,6 +85,38 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 return this.matrix_op.as_vector(xy, ["x", "y"]);
             };
 
+            group(position, node) {
+                var g2nm = this.group_to_nodemap;
+                var group = this.group_index(position);
+                node.group = group;
+                var nm = g2nm[group.index];
+                if (!nm) {
+                    nm = {};
+                    g2nm[group.index] = nm;
+                }
+                nm[node.name] = node;
+                return group;
+            };
+
+            ungroup(node) {
+                var group = node.group;
+                var nm = this.group_to_nodemap[group.index];
+                delete nm[node.name];
+                node.group = null;
+            };
+
+            group_index(point) {
+                var result = {};
+                var radius = 1.0 * this.settings.separator_radius;
+                for (var coord in point) {
+                    var value = point[coord];
+                    var ivalue = Math.floor(value / radius);
+                    result[coord] = ivalue;
+                }
+                result.index = "i" + result.x + ":" + result.y;
+                return result;
+            };
+
             origin_penalty(xy) {
                 var m = this.matrix_op;
                 var d = m.vlength(xy);

@@ -14,6 +14,31 @@ describe("gd_graph tests", () => {
         expect(e.other_name(2)).toEqual(1);
     });
 
+    it("groups and ungroups a node", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 3});
+        var n = g.get_or_make_node("xxx");
+        g.group({x:-5, y:9}, n);
+        expect(n.group.x).toEqual(-2);
+        expect(g.group_to_nodemap["i-2:3"]["xxx"]).toEqual(n)
+        g.ungroup(n);
+        expect(n.group).toEqual(null);
+        expect(g.group_to_nodemap["i-2:3"]).toEqual({})
+    });
+
+    it("computes group indices", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 3});
+        var grp = g.group_index({x:-5, y:9})
+        expect(grp.x).toEqual(-2);
+        expect(grp.y).toEqual(3);
+        expect(grp.index).toEqual("i-2:3");
+    });
+
+    it("computes a positive edge penalty for nodes too far separated", () => {
+        var g = jQuery.fn.gd_graph();
+        var e = g.add_edge(1,2,-5);
+        // not finished
+    });
+
     it("makes a node initially with no penalty", () => {
         var g = jQuery.fn.gd_graph();
         var n = g.get_or_make_node("xxx");
