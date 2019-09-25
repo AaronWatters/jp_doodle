@@ -58,7 +58,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
 
             get_node(name) {
-                return this.node_name_to_descriptor[name];
+                var result = this.node_name_to_descriptor[name];
+                if (!result) { 
+                    throw new Error("no such node with name "+name);
+                }
+                return result;
             };
 
             add_edge(node_name1, node_name2, weight, skip_duplicate) {
@@ -309,11 +313,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             compute_penalty() {
                 var in_graph = this.in_graph;
-                var n1 = in_graph.get_node(self.nodename1);
-                var n2 = in_graph.get_node(self.nodename2);
+                var n1 = in_graph.get_node(this.nodename1);
+                var n2 = in_graph.get_node(this.nodename2);
                 var increment = in_graph.link_penalty(n1.position, n2.position, this.abs_weight);
                 this.penalty = increment[0];
                 this.gradient = increment[1];
+                return increment;
             };
             other_name(name) {
                 var nn1 = this.nodename1;

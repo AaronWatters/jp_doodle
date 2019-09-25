@@ -45,9 +45,21 @@ describe("gd_graph tests", () => {
     });
 
     it("computes a positive edge penalty for nodes too far separated", () => {
-        var g = jQuery.fn.gd_graph();
+        var g = jQuery.fn.gd_graph({separator_radius: 3});
         var e = g.add_edge(1,2,-5);
-        // not finished
+        var n1 = g.get_node(1).set_position({x:0, y:0});
+        var n2 = g.get_node(2).set_position({x:0, y:5});
+        e.compute_penalty();
+        expect(e.penalty).toBeGreaterThan(0);
+    });
+    
+    it("computes a zero edge penalty for close nodes", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 3});
+        var e = g.add_edge(1,2,-5);
+        var n1 = g.get_node(1).set_position({x:0, y:0});
+        var n2 = g.get_node(2).set_position({x:0, y:1});
+        e.compute_penalty();
+        expect(e.penalty).toEqual(0);
     });
 
     it("makes a node initially with no penalty", () => {
