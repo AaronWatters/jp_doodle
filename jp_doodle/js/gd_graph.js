@@ -57,6 +57,30 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 return node;
             };
 
+            get_node(name) {
+                return this.node_name_to_descriptor[name];
+            };
+
+            add_edge(node_name1, node_name2, weight, skip_duplicate) {
+                if (node_name1 == node_name2) {
+                    // error?
+                    return null;
+                }
+                var e = new GD_Edge(node_name1, node_name2, weight, this);
+                var k = e.key;
+                var e2d = this.edge_key_to_descriptor;
+                if (e2d[k]) {
+                    if (skip_duplicate) {
+                        return;
+                    }
+                    throw new Error("duplicate edge not permitted: " + k);
+                }
+                e2d[k] = e;
+                this.get_or_make_node(node_name1);
+                this.get_or_make_node(node_name2);
+                return e;
+            };
+
             xy(xy) {
                 return this.matrix_op.as_vector(xy, ["x", "y"]);
             };
@@ -116,7 +140,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     var start = s * (wlr ** 2);
                     var slope = 2 * s * wlr;
                     gradient = m.vscale(slope * 1.0 / d, diff);
-                    console.log("linear", start, slope, violation, lr);
+                    //console.log("linear", start, slope, violation, lr);
                     value = start + slope * (violation - lr);
                 }
                 return [value, gradient];
@@ -170,6 +194,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.key_to_edge = {};
                 this.reset_bookkeeping();
             };
+            add_edge(edge) {
+                this.key_to_edge[edge.key] = edge;
+            };
             reset_bookkeeping() {
                 this.gradient = this.in_graph.xy([0,0]);
                 this.neighbor_to_increment = {};
@@ -190,9 +217,50 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 for (var n in n2i) {
                     add_incr(n2i[n]);
                 }
+                var k2i = this.edge_key_to_increment;
+                for (var k in k2i) {
+                    add_incr(k2i[k]);
+                }
                 this.gradient = gradient;
                 this.penalty = penalty;
                 return [penalty, gradient];
+            };
+        };
+
+        class GD_Edge {
+            constructor(nodename1, nodename2, weight, in_graph) {
+                this.nodename1 = nodename1;
+                this.nodename2 = nodename2;
+                this.in_graph = in_graph;
+                this.weight = weight;
+                this.abs_weight = Math.abs(weight);
+                this.penalty = 0;
+                this.gradient = in_graph.xy([0,0]);
+                if (nodename1 < nodename2) {
+                    this.key = "e:" + nodename1 + ":" + nodename2;
+                } else {
+                    this.key = "e:" + nodename2 + ":" + nodename1;
+                }
+            };
+            compute_penalty() {
+                var in_graph = this.in_graph;
+                var n1 = in_graph.get_node(self.nodename1);
+                var n2 = in_graph.get_node(self.nodename2);
+                var increment = in_graph.link_penalty(n1.position, n2.position, this.abs_weight);
+                this.penalty = increment[0];
+                this.gradient = increment[1];
+            };
+            other_name(name) {
+                var nn1 = this.nodename1;
+                var nn2 = this.nodename2;
+                if (name == nn1) {
+                    return nn2;
+                } else {
+                    if (name != nn2) {
+                        throw new Error("bad node name for edge " + this.key + " : " + name);
+                    }
+                    return nn1;
+                }
             };
         };
 

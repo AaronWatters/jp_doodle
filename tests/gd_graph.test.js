@@ -4,6 +4,16 @@ import jp_doodle_is_loaded from "../dist/index";
 
 describe("gd_graph tests", () => {
 
+    it("makes a ngraph with an edge initially no penalty", () => {
+        var g = jQuery.fn.gd_graph();
+        var e = g.add_edge(1,2,-5);
+        expect(e.weight).toEqual(-5);
+        expect(e.abs_weight).toEqual(5);
+        expect(e.penalty).toEqual(0.0);
+        expect(e.gradient).toEqual({x:0, y:0});
+        expect(e.other_name(2)).toEqual(1);
+    });
+
     it("makes a node initially with no penalty", () => {
         var g = jQuery.fn.gd_graph();
         var n = g.get_or_make_node("xxx");
