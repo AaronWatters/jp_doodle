@@ -440,6 +440,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 return {penalty: G.penalty, touched: all_penalties};
             };
+            abs_weight() {
+                // total of abs weights for edges
+                var result = 0.0;
+                for (var key in this.key_to_edge) {
+                    result += this.key_to_edge[key].abs_weight;
+                }
+                return result;
+            }
         };
 
         class GD_Edge {

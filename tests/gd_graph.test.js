@@ -142,6 +142,7 @@ describe("gd_graph tests", () => {
         var n2 = g.get_node(2).set_position({x:0, y:5});
         var n3 = g.get_node(3).set_position({x:0, y:-5});
         expect(n1.position).toEqual({x:0, y:0});
+        expect(n2.abs_weight()).toEqual(12);
         expect(g.neighbors(n2.group)).toEqual({"1": n1, "2": n2});
         // check edge
         var edge = null;
