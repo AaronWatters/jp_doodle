@@ -80,8 +80,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     throw new Error("duplicate edge not permitted: " + k);
                 }
                 e2d[k] = e;
-                this.get_or_make_node(node_name1);
-                this.get_or_make_node(node_name2);
+                var n1 = this.get_or_make_node(node_name1);
+                n1.add_edge(e);
+                var n2 = this.get_or_make_node(node_name2);
+                n2.add_edge(e);
                 return e;
             };
 
@@ -176,6 +178,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
 
             link_penalty(xy1, xy2, abs_weight) {
+                //c.l("link_penalty", xy1, xy2, abs_weight);
                 var m = this.matrix_op;
                 var st = this.settings;
                 var diff = m.vdiff(xy1, xy2);
@@ -186,23 +189,24 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var wviolation = violation * abs_weight;
                 var value, gradient;
                 if (violation < 0 || d < st.epsilon)  {
-                    // no violation if close enough: flat
+                    //c.l("no violation if close enough: flat", violation, d, st.epsilon);
                     value = 0;
                     gradient = this.xy([0,0]);
                 } else if (violation < lr) {
-                    // quadratic region inside near circle
+                    //c.l("quadratic region inside near circle", violation, lr);
                     value = s * (wviolation ** 2);
                     var slope = 2 * s * wviolation;
                     gradient = m.vscale(slope * 1.0 / d, diff)
                 } else {
-                    // linear interpolation everywhere else
+                    //c.l("linear interpolation everywhere else", violation, lr);
                     var wlr = lr * abs_weight;
                     var start = s * (wlr ** 2);
                     var slope = 2 * s * wlr;
                     gradient = m.vscale(slope * 1.0 / d, diff);
-                    //console.log("linear", start, slope, violation, lr);
+                    ////c.l("linear", start, slope, violation, lr);
                     value = start + slope * (violation - lr);
                 }
+                //c.l("... computed", value, gradient)
                 return [value, gradient];
             };
 
@@ -262,7 +266,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 if (this.group) {
                     this.in_graph.ungroup(this);
                 }
-                this.in_graph.group(position, this);
+                this.group = this.in_graph.group(position, this);
                 this.position = position;
                 return this;
             };
@@ -274,6 +278,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.penalty = 0;
             };
             sum_penalty() {
+                // Sum penalties using precomputed component values.
                 var penalty = 0.0;
                 var gradient = this.in_graph.xy([0,0]);
                 var m = this.in_graph.matrix_op;
@@ -293,6 +298,46 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.gradient = gradient;
                 this.penalty = penalty;
                 return [penalty, gradient];
+            };
+            compute_components() {
+                // Initialize precomputed penalty components using new position
+                // Assume edge penalties have already been computed.
+                // xxxx -- it doesn't make sense to reset position unless edge penalties are recomputed.
+                //if (position) {
+                //    this.set_position(position);
+                //}
+                var position = this.position;
+                var G = this.in_graph;
+                var name = this.name;
+                //c.l("compute components", name, position);
+                var n2i = {}; // neighbor_to_increment
+                var neighbors = G.neighbors(this.group);
+                for (var nname in neighbors) {
+                    if (name != nname) {
+                        var neighbor = neighbors[nname];
+                        var nposition = neighbor.position;
+                        var pen_grad = G.separation_penalty(position, nposition);
+                        //c.l("neighbor increment", name, nname, pen_grad);
+                        var pen = pen_grad[0];
+                        if (pen > 0) {
+                            var grad = pen_grad[1];
+                            n2i[nname] = pen_grad;
+                        }
+                    }
+                }
+                var e2i = {}; // edge_key_to_increment
+                var k2e = this.key_to_edge;
+                for (var key in k2e) {
+                    var edge = k2e[key];
+                    // don't recompute penalty here.
+                    e2i[key] = edge.node_increment(name);
+                    //c.l("edge increment", name, key, e2i[key]);
+                }
+                this.origin_increment = G.origin_penalty(position);
+                //c.l("origin incement", name, this.origin_increment)
+                this.neighbor_to_increment = n2i;
+                this.edge_key_to_increment = e2i;
+                return true;
             };
         };
 
@@ -376,13 +421,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             pop(_default) {
                 if (this.is_empty()) {
-                    //console.log("pop returning default " + _default)
+                    ////c.l("pop returning default " + _default)
                     if (_default === undefined) {
                         return null;
                     }
                     return _default;
                 }
-                //console.log("pop returning item ", this.frontindex, this.backindex, this.index_mapping[this.frontindex+1]);
+                ////c.l("pop returning item ", this.frontindex, this.backindex, this.index_mapping[this.frontindex+1]);
                 this.frontindex += 1;
                 var item = this.index_mapping[this.frontindex];
                 if (this.frontindex >= this.backindex) {

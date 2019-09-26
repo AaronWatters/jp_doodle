@@ -4,15 +4,43 @@ import jp_doodle_is_loaded from "../dist/index";
 
 describe("gd_graph tests", () => {
 
+    it("sums penalties", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1});
+        var e1 = g.add_edge(1,2,-5);
+        var e2 = g.add_edge(3,2,7);
+        var n1 = g.get_node(1).set_position({x:0, y:0});
+        var n2 = g.get_node(2).set_position({x:0, y:5});
+        var n3 = g.get_node(3).set_position({x:0, y:-5});
+        // must compute edge penalties first!
+        e1.compute_penalty();
+        e2.compute_penalty();
+        expect(e1.penalty).toBeGreaterThan(0);
+        expect(e2.penalty).toBeGreaterThan(0);
+        n2.compute_components(); 
+        var p_g = n2.sum_penalty(); 
+        expect(n2.position).toEqual({x:0, y:5});
+        expect(p_g[0]).toBeGreaterThan(0);
+        expect(p_g[1].x).toEqual(0);
+        expect(p_g[1].y).toBeGreaterThan(0);
+    });
+
     it("sets positions and gets neighbors", () => {
         var g = jQuery.fn.gd_graph({separator_radius: 5});
-        g.add_edge(1,2,-5);
+        var e1 = g.add_edge(1,2,-5);
         g.add_edge(3,2,7);
         var n1 = g.get_node(1).set_position({x:0, y:0});
         var n2 = g.get_node(2).set_position({x:0, y:5});
         var n3 = g.get_node(3).set_position({x:0, y:-5});
         expect(n1.position).toEqual({x:0, y:0});
         expect(g.neighbors(n2.group)).toEqual({"1": n1, "2": n2});
+        // check edge
+        var edge = null;
+        for (var key in n1.key_to_edge) {
+            expect(edge).toEqual(null);
+            edge = n1.key_to_edge[key];
+        }
+        expect(edge).toEqual(e1);
+        expect(edge.other_name(1)).toEqual(2)
     });
 
     it("makes a ngraph with an edge initially no penalty", () => {
