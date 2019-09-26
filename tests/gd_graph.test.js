@@ -4,6 +4,22 @@ import jp_doodle_is_loaded from "../dist/index";
 
 describe("gd_graph tests", () => {
 
+    it("removes external penalties", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 4, link_radius: 2, origin_radius:1000.0});
+        var n1 = g.get_or_make_node(1).set_position({x:0, y:0});
+        var n2 = g.get_or_make_node(2).set_position({x:3, y:0});
+        var e1 = g.add_edge(1,2,-5);
+        // must compute edge penalties first!
+        e1.compute_penalty();
+        n1.compute_components(); 
+        var p_g1 = n1.sum_penalty(); 
+        n1.apply_external_penalties();
+        n1.remove_external_penalties()
+        expect(n2.neighbor_to_increment[1]).toBeFalsy();
+        var k = e1.key;
+        expect(n2.edge_key_to_increment[k]).toBeFalsy();
+    });
+
     it("applies external penalties", () => {
         var g = jQuery.fn.gd_graph({separator_radius: 4, link_radius: 2, origin_radius:1000.0});
         var n1 = g.get_or_make_node(1).set_position({x:0, y:0});

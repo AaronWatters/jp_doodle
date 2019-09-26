@@ -368,6 +368,29 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 return old_penalties;
             };
+            remove_external_penalties() {
+                // remove entries propagated to related nodes.
+                var old_penalties = {};
+                var G = this.in_graph;
+                var n2i = this.neighbor_to_increment;
+                var k2e = this.key_to_edge;
+                var k2i = this.edge_key_to_increment;
+                var name = this.name;
+                for (var nname in n2i) {
+                    // remove nearness penalty for neighbor
+                    var neighbor = G.get_node(nname);
+                    old_penalties[nname] = neighbor.penalty || 0.0;
+                    delete neighbor.neighbor_to_increment[name];
+                }
+                for (var key in k2i) {
+                    // remove edge penalty for connected node
+                    var edge = k2e[key];
+                    var othername = edge.other_name(name);
+                    var othernode = G.get_node(othername);
+                    delete othernode.edge_key_to_increment[key]
+                }
+                return old_penalties;
+            }
         };
 
         class GD_Edge {
