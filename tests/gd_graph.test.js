@@ -4,6 +4,52 @@ import jp_doodle_is_loaded from "../dist/index";
 
 describe("gd_graph tests", () => {
 
+    it("doesn't probe if not needed", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 0, link_radius: 0, origin_radius:1000.0});
+        var n1 = g.get_or_make_node(1).set_position({x:0, y:0});
+        var n2 = g.get_or_make_node(2).set_position({x:0, y:0});
+        var e1 = g.add_edge(1,2,-5);
+        var k = e1.key;
+        g.initialize_penalties();
+        var penalty_before = g.penalty;
+        expect(penalty_before).toEqual(0);
+        var result = n1.probe();
+        var penalty_after = g.penalty;
+        expect(penalty_before).toEqual(penalty_after);
+        //console.log(result);
+        expect(result.change).toEqual(0);
+    });
+
+    it("probes a node inward", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 3.1, link_radius: 3.1, origin_radius:1000.0});
+        var n1 = g.get_or_make_node(1).set_position({x:0, y:0});
+        var n2 = g.get_or_make_node(2).set_position({x:3, y:0});
+        var e1 = g.add_edge(1,2,-5);
+        var k = e1.key;
+        g.initialize_penalties();
+        var penalty_before = g.penalty;
+        var result = n1.probe();
+        var penalty_after = g.penalty;
+        expect(penalty_before).toBeGreaterThan(penalty_after);
+        //console.log(result);
+        expect(result.change).toBeGreaterThan(0);
+    });
+
+    it("probes a node outward", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 10, link_radius: 2, origin_radius:1000.0});
+        var n1 = g.get_or_make_node(1).set_position({x:0, y:0});
+        var n2 = g.get_or_make_node(2).set_position({x:3, y:0});
+        var e1 = g.add_edge(1,2,-5);
+        var k = e1.key;
+        g.initialize_penalties();
+        var penalty_before = g.penalty;
+        var result = n1.probe();
+        var penalty_after = g.penalty;
+        expect(penalty_before).toBeGreaterThan(penalty_after);
+        //console.log(result);
+        expect(result.change).toBeGreaterThan(0);
+    });
+
     it("repositions a node", () => {
         var g = jQuery.fn.gd_graph({separator_radius: 10, link_radius: 2, origin_radius:1000.0});
         var n1 = g.get_or_make_node(1).set_position({x:0, y:0});

@@ -447,6 +447,76 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     result += this.key_to_edge[key].abs_weight;
                 }
                 return result;
+            };
+            probe() {
+                // Try to follow gradient to a lower penalty.
+                var in_graph = this.in_graph;
+                var settings = in_graph.settings;
+                var epsilon = settings.epsilon;
+                var g = this.gradient;
+                var m = in_graph.matrix_op;
+                var n = m.vlength(g);
+                var change = 0.0;
+                var touched = {};
+                // only do work if gradient is non-trivial
+                if (n > epsilon) {
+                    var shift_magnitude = settings.separator_radius * 0.3;   // ??? magic number
+                    var shift = m.vscale(-shift_magnitude / n, g);
+                    var probe_limit = settings.probe_limit;
+                    var count = 0;
+                    var probe_callback = settings.probe_callback;
+                    var probe_shrink = settings.probe_shrink;
+                    var probe_expand = settings.probe_expand;
+                    var best_penalty = in_graph.penalty;
+                    var best_position = this.position;
+                    var initial_position = this.position;
+                    var test_position = m.vadd(initial_position, shift);
+                    var test_result = this.reposition(test_position);
+                    if (test_result.penalty < best_penalty) {
+                        //console.log("probing outward");
+                        // keep probing outward while improving...
+                        while ((test_result.penalty < best_penalty) && (count < probe_limit)) {
+                            count += 1;
+                            best_position = test_position;
+                            best_penalty = test_result.penalty;
+                            shift = m.vscale(probe_expand, shift);
+                            //console.log("... shift out", count, shift);
+                            test_position = m.vadd(initial_position, shift);
+                            test_result = this.reposition(test_position)
+                        }
+                        // reset all datastructures back to the best position
+                        test_result = this.reposition(best_position);
+                        touched = test_result.touched;
+                        change = m.vlength(m.vsub(best_position, initial_position))
+                        if (probe_callback) {
+                            probe_callback(this, in_graph, best_position, initial_position, touched);
+                        }
+                    } else {
+                        //console.log("probing inward");
+                        // keep probing inward until improving...
+                        while ((test_result.penalty >= best_penalty) && (count < probe_limit)) {
+                            count += 1;
+                            shift = m.vscale(probe_shrink, shift);
+                            //console.log("... shift in", count, shift);
+                            test_position = m.vadd(initial_position, shift);
+                            test_result = this.reposition(test_position)
+                        }
+                        if (test_result.penalty < best_penalty) {
+                            best_position = test_position;
+                            touched = test_result.touched;
+                            change = m.vlength(m.vsub(best_position, initial_position))
+                            if (probe_callback) {
+                                probe_callback(this, in_graph, best_position, initial_position, touched);
+                            }
+                        } else {
+                            // reposition back to initial position (failed)
+                            self.reposition(initial_position);
+                        }
+                    }
+                } else {
+                    //console.log("gradient too short: skipping.")
+                }
+                return {change: change, touched: touched};
             }
         };
 
