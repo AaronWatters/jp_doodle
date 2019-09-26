@@ -4,6 +4,57 @@ import jp_doodle_is_loaded from "../dist/index";
 
 describe("gd_graph tests", () => {
 
+    it("pushes towards the origin", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1, origin_radius:100.0});
+        var n1 = g.get_or_make_node(1).set_position({x:0, y:0});
+        var n2 = g.get_or_make_node(2).set_position({x:500, y:0});
+        n1.compute_components(); 
+        var p_g1 = n1.sum_penalty(); 
+        n2.compute_components(); 
+        var p_g2 = n2.sum_penalty(); 
+        expect(p_g1[0]).toEqual(0);
+        expect(p_g1[1].y).toEqual(0);
+        expect(p_g1[1].x).toEqual(0);
+        expect(p_g2[0]).toBeGreaterThan(0);
+        expect(p_g2[1].y).toEqual(0);
+        expect(p_g2[1].x).toBeGreaterThan(0);
+    });
+
+    it("pushes too close nodes apart", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 20, link_radius: 1, origin_radius:100.0});
+        var n1 = g.get_or_make_node(1).set_position({x:0, y:0});
+        var n2 = g.get_or_make_node(2).set_position({x:1, y:0});
+        n1.compute_components(); 
+        var p_g1 = n1.sum_penalty(); 
+        n2.compute_components(); 
+        var p_g2 = n2.sum_penalty(); 
+        expect(p_g1[0]).toBeGreaterThan(0);
+        expect(p_g1[1].y).toEqual(0);
+        expect(p_g1[1].x).toBeGreaterThan(0);
+        expect(p_g2[0]).toBeGreaterThan(0);
+        expect(p_g2[1].y).toEqual(0);
+        expect(p_g2[1].x).toBeLessThan(0);
+    });
+
+    it("pushes too far linked nodes together", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1, origin_radius:1000.0});
+        var n1 = g.get_or_make_node(1).set_position({x:-2, y:0});
+        var n2 = g.get_or_make_node(2).set_position({x:2, y:0});
+        var e1 = g.add_edge(1,2,-5);
+        // must compute edge penalties first!
+        e1.compute_penalty();
+        n1.compute_components(); 
+        var p_g1 = n1.sum_penalty(); 
+        n2.compute_components(); 
+        var p_g2 = n2.sum_penalty(); 
+        expect(p_g1[0]).toBeGreaterThan(0);
+        expect(p_g1[1].y).toEqual(0);
+        expect(p_g1[1].x).toBeLessThan(0);
+        expect(p_g2[0]).toBeGreaterThan(0);
+        expect(p_g2[1].y).toEqual(0);
+        expect(p_g2[1].x).toBeGreaterThan(0);
+    });
+
     it("sums penalties", () => {
         var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1});
         var e1 = g.add_edge(1,2,-5);
