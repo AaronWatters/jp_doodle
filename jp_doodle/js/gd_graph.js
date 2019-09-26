@@ -339,6 +339,35 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.edge_key_to_increment = e2i;
                 return true;
             };
+            apply_external_penalties() {
+                // Copy related precomputed local penalties to neighbors and connected nodes.
+                var old_penalties = {};
+                var G = this.in_graph;
+                var matrix_op = G.matrix_op;
+                var n2i = this.neighbor_to_increment;
+                var name = this.name;
+                for (var nname in n2i) {
+                    // propagate nearness penalty to too close neighbor
+                    var neighbor = G.get_node(nname);
+                    old_penalties[nname] = neighbor.penalty || 0.0;
+                    var pen_grad = n2i[nname];
+                    var reversed_pen_grad = [pen_grad[0], matrix_op.vscale(-1, pen_grad[1])];
+                    neighbor.neighbor_to_increment[name] = reversed_pen_grad;
+                }
+                var k2e = this.key_to_edge;
+                var k2i = this.edge_key_to_increment;
+                for (var key in k2i) {
+                    // propagate edge penalty to too far connected node
+                    var edge = k2e[key];
+                    var othername = edge.other_name(name);
+                    var othernode = G.get_node(othername);
+                    old_penalties[othername] = othernode.penalty || 0.0;
+                    var pen_grad = k2i[key];
+                    var reversed_pen_grad = [pen_grad[0], matrix_op.vscale(-1, pen_grad[1])];
+                    othernode.edge_key_to_increment[key] = reversed_pen_grad;
+                }
+                return old_penalties;
+            };
         };
 
         class GD_Edge {
