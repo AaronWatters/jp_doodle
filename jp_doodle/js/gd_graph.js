@@ -41,12 +41,32 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.calibrate();
             };
 
+            penalize(penalty_increment) {
+                this.penalty += penalty_increment;
+            };
+
             calibrate() {
                 var s = this.settings;
                 s.origin_scale = s.origin_height * 1.0 / (s.origin_radius ** 2)
                 s.link_scale = s.link_height * 1.0 / (s.link_radius ** 2)
                 s.separation_scale = s.separation_height * 1.0 / (s.separator_radius ** 2)
-            }
+            };
+
+            initialize_penalties() {
+                // set up all penalty bookkeeping data structures;
+                for (var key in this.edge_key_to_descriptor) {
+                    this.edge_key_to_descriptor[key].compute_penalty();   // first edges
+                }
+                // then nodes
+                var total_penalty = 0.0;
+                for (var name in this.node_name_to_descriptor) {
+                    var node = this.node_name_to_descriptor[name];
+                    node.compute_components();
+                    node.sum_penalty();
+                    total_penalty += node.penalty;
+                }
+                this.penalty = total_penalty
+            };
 
             get_or_make_node(name) {
                 var node = this.node_name_to_descriptor[name];
@@ -178,7 +198,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
 
             link_penalty(xy1, xy2, abs_weight) {
-                //c.l("link_penalty", xy1, xy2, abs_weight);
+                //console.log("link_penalty", xy1, xy2, abs_weight);
                 var m = this.matrix_op;
                 var st = this.settings;
                 var diff = m.vdiff(xy1, xy2);
@@ -206,7 +226,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     ////c.l("linear", start, slope, violation, lr);
                     value = start + slope * (violation - lr);
                 }
-                //c.l("... computed", value, gradient)
+                //console.log("... computed", value, gradient)
                 return [value, gradient];
             };
 
@@ -390,7 +410,36 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     delete othernode.edge_key_to_increment[key]
                 }
                 return old_penalties;
-            }
+            };
+
+            reposition(position) {
+                // reset position and update all bookkeeping.
+                var G = this.in_graph;
+                var name = this.name;
+                var all_penalties = {};
+                all_penalties[name] = this.penalty;
+                if (this.position) {
+                    var old_penalties = this.remove_external_penalties();
+                    all_penalties = {...all_penalties, ...old_penalties};
+                }
+                this.set_position(position);
+                // recalibrate edges
+                for (var key in this.key_to_edge) {
+                    this.key_to_edge[key].compute_penalty();
+                }
+                this.compute_components();
+                var new_nodes = this.apply_external_penalties();
+                all_penalties = {...all_penalties, ...new_nodes};
+                // Adjust penalties for all effected nodes
+                for (var node_name in all_penalties) {
+                    var old_penalty = all_penalties[node_name];
+                    var node = G.get_node(node_name);
+                    node.sum_penalty();
+                    var new_penalty = node.penalty;
+                    G.penalize(new_penalty - old_penalty);
+                }
+                return {penalty: G.penalty, touched: all_penalties};
+            };
         };
 
         class GD_Edge {

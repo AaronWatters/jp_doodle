@@ -4,6 +4,34 @@ import jp_doodle_is_loaded from "../dist/index";
 
 describe("gd_graph tests", () => {
 
+    it("repositions a node", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 10, link_radius: 2, origin_radius:1000.0});
+        var n1 = g.get_or_make_node(1).set_position({x:0, y:0});
+        var n2 = g.get_or_make_node(2).set_position({x:3, y:0});
+        var e1 = g.add_edge(1,2,-5);
+        var k = e1.key;
+        g.initialize_penalties();
+        var initial_link_p = n1.edge_key_to_increment[k][0];
+        n1.reposition({x: -1, y:0});  // further away: link penalty should increase.
+        var after_link_p = n1.edge_key_to_increment[k][0];
+        expect(initial_link_p).toBeLessThan(after_link_p);
+        expect(g.penalty).toEqual(n1.penalty + n2.penalty);
+        expect(n1.neighbor_to_increment[2][0]).toEqual(n2.neighbor_to_increment[1][0]);
+        expect(n1.edge_key_to_increment[k][0]).toEqual(n2.edge_key_to_increment[k][0])
+    });
+
+    it("initializes penalties", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 4, link_radius: 2, origin_radius:1000.0});
+        var n1 = g.get_or_make_node(1).set_position({x:0, y:0});
+        var n2 = g.get_or_make_node(2).set_position({x:3, y:0});
+        var e1 = g.add_edge(1,2,-5);
+        g.initialize_penalties();
+        expect(g.penalty).toEqual(n1.penalty + n2.penalty);
+        expect(n1.neighbor_to_increment[2][0]).toEqual(n2.neighbor_to_increment[1][0]);
+        var k = e1.key;
+        expect(n1.edge_key_to_increment[k][0]).toEqual(n2.edge_key_to_increment[k][0])
+    });
+
     it("removes external penalties", () => {
         var g = jQuery.fn.gd_graph({separator_radius: 4, link_radius: 2, origin_radius:1000.0});
         var n1 = g.get_or_make_node(1).set_position({x:0, y:0});
