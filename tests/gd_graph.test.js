@@ -4,6 +4,19 @@ import jp_doodle_is_loaded from "../dist/index";
 
 describe("gd_graph tests", () => {
 
+    it("zooms a graph", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1});
+        var e1 = g.add_edge(1,2,-5);
+        var e2 = g.add_edge(3,2,7);
+        var n1 = g.get_node(1).set_position({x:0, y:0});
+        var n2 = g.get_node(2).set_position({x:5, y:5});
+        var n3 = g.get_node(3).set_position({x:0, y:-5});
+        var z = g.zoomGraph(5, true);
+        expect(z.settings.separator_radius).toEqual(10);
+        expect(z.settings.probe_limit).toEqual(g.settings.probe_limit);
+        expect(z.get_node(2)).not.toEqual(null);
+    });
+
     it("relax runs 2 steps", () => {
         var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1});
         var e1 = g.add_edge(1,2,-5);

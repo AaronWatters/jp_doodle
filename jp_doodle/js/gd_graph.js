@@ -73,9 +73,15 @@ import { ENGINE_METHOD_NONE } from "constants";
             get_or_make_node(name) {
                 var node = this.node_name_to_descriptor[name];
                 if (!node) {
-                    node = new GD_Node(name, this);
-                    this.node_name_to_descriptor[name] = node;
+                    node = this.add_node(name);
                 }
+                return node;
+            };
+
+            add_node(name) {
+                //console.log("adding node", name);
+                var node = new GD_Node(name, this);
+                this.node_name_to_descriptor[name] = node;
                 return node;
             };
 
@@ -101,18 +107,22 @@ import { ENGINE_METHOD_NONE } from "constants";
                     return null;
                 }
                 var e = new GD_Edge(node_name1, node_name2, weight, this);
+                return this.record_edge(e);
+            }
+
+            record_edge(e) {
                 var k = e.key;
                 var e2d = this.edge_key_to_descriptor;
                 if (e2d[k]) {
                     if (skip_duplicate) {
-                        return;
+                        return null;
                     }
                     throw new Error("duplicate edge not permitted: " + k);
                 }
                 e2d[k] = e;
-                var n1 = this.get_or_make_node(node_name1);
+                var n1 = this.get_or_make_node(e.nodename1);
                 n1.add_edge(e);
-                var n2 = this.get_or_make_node(node_name2);
+                var n2 = this.get_or_make_node(e.nodename2);
                 n2.add_edge(e);
                 return e;
             };
@@ -243,6 +253,26 @@ import { ENGINE_METHOD_NONE } from "constants";
             relaxer(node_names, min_change) {
                 return new GD_Relaxer(this, node_names, min_change);
             }
+
+            zoomGraph(factor, copy) {
+                factor = factor || 2.0;
+                var settings0 = this.settings;
+                var settings = $.extend({}, settings0);
+                settings.separator_radius = settings0.separator_radius * factor;
+                settings.link_radius = settings0.link_radius * factor;
+                var result = new GD_Graph(settings);
+                result.root = this.root || self;
+                if (copy) {
+                    for (var node_name in self.node_name_to_descriptor) {
+                        result.add_node(node_name);
+                    }
+                    for (var edge_key in this.edge_key_to_descriptor) {
+                        var clone = this.edge_key_to_descriptor[edge_key].clone(result);
+                        result.record_edge(clone);
+                    }
+                }
+                return result;
+            };
 
             grid_spiral_coordinates(index, jitter) {
                 var i = 0;
@@ -550,6 +580,9 @@ import { ENGINE_METHOD_NONE } from "constants";
                 } else {
                     this.key = "e:" + nodename2 + ":" + nodename1;
                 }
+            };
+            clone(in_graph) {
+                return new GD_Edge(this.nodename1, this.nodename2, this.weight, in_graph);
             };
             compute_penalty() {
                 var in_graph = this.in_graph;
