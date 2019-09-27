@@ -4,6 +4,34 @@ import jp_doodle_is_loaded from "../dist/index";
 
 describe("gd_graph tests", () => {
 
+    it("relax runs 2 steps", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1});
+        var e1 = g.add_edge(1,2,-5);
+        var e2 = g.add_edge(3,2,7);
+        var n1 = g.get_node(1).set_position({x:0, y:0});
+        var n2 = g.get_node(2).set_position({x:5, y:5});
+        var n3 = g.get_node(3).set_position({x:0, y:-5});
+        g.initialize_penalties();
+        var penalty_before = g.penalty;
+        var r = g.relaxer();
+        var r_node = r.run(2);
+        expect(r_node).not.toEqual(null);
+        var penalty_after = g.penalty;
+        expect(penalty_before).toBeGreaterThan(penalty_after);
+    });
+
+    it("relax runs 0 steps if graph is empty", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1});
+        g.initialize_penalties();
+        var penalty_before = g.penalty;
+        expect(penalty_before).toEqual(0)
+        var r = g.relaxer();
+        var r_node = r.run(2);
+        expect(r_node).toEqual(null);
+        var penalty_after = g.penalty;
+        expect(penalty_before).toEqual(penalty_after);
+    });
+
     it("relaxes one step", () => {
         var g = jQuery.fn.gd_graph({separator_radius: 10, link_radius: 2, min_change:0.00001});
         var n1 = g.get_or_make_node(1).set_position({x:1, y:0});
@@ -15,7 +43,7 @@ describe("gd_graph tests", () => {
         var r_node = r.step();
         expect(r_node).not.toEqual(null);
         var penalty_after = g.penalty;
-        expect(penalty_before).toEqual(penalty_after);
+        expect(penalty_before).toBeGreaterThan(penalty_after);
     });
 
     it("doesn't probe if not needed", () => {

@@ -617,9 +617,19 @@ import { ENGINE_METHOD_NONE } from "constants";
                 }
                 return nodename;
             };
-            run(limit) {
+            run(limit, min_change) {
                 // keep stepping up to limit or node queue is empty.
                 var count = 0;
+                while ((!limit) || (count < limit)) {
+                    count += 1;
+                    var nodename = this.step(min_change);
+                    if (nodename === null) {
+                        console.log("relaxer ran out of nodes.");
+                        return nodename;
+                    }
+                }
+                console.log("relaxer exceeded limit", limit);
+                return nodename;
             }
         };
 
