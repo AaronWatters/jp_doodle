@@ -4,6 +4,20 @@ import jp_doodle_is_loaded from "../dist/index";
 
 describe("gd_graph tests", () => {
 
+    it("relaxes one step", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 10, link_radius: 2, min_change:0.00001});
+        var n1 = g.get_or_make_node(1).set_position({x:1, y:0});
+        var n2 = g.get_or_make_node(2).set_position({x:0, y:0});
+        var e1 = g.add_edge(1,2,-5);
+        g.initialize_penalties();
+        var penalty_before = g.penalty;
+        var r = g.relaxer();
+        var r_node = r.step();
+        expect(r_node).not.toEqual(null);
+        var penalty_after = g.penalty;
+        expect(penalty_before).toEqual(penalty_after);
+    });
+
     it("doesn't probe if not needed", () => {
         var g = jQuery.fn.gd_graph({separator_radius: 0, link_radius: 0, origin_radius:1000.0});
         var n1 = g.get_or_make_node(1).set_position({x:0, y:0});

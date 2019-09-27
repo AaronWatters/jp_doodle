@@ -9,6 +9,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 */
 "use strict";
 
+import { ENGINE_METHOD_NONE } from "constants";
+
 
 (function($) {
 
@@ -84,6 +86,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 return result;
             };
+
+            node_names() {
+                var result = [];
+                for (var name in this.node_name_to_descriptor) {
+                    result.push(name);
+                }
+                return result;
+            }
 
             add_edge(node_name1, node_name2, weight, skip_duplicate) {
                 if (node_name1 == node_name2) {
@@ -229,6 +239,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 //console.log("... computed", value, gradient)
                 return [value, gradient];
             };
+
+            relaxer(node_names, min_change) {
+                return new GD_Relaxer(this, node_names, min_change);
+            }
 
             grid_spiral_coordinates(index, jitter) {
                 var i = 0;
@@ -472,6 +486,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     var initial_position = this.position;
                     var test_position = m.vadd(initial_position, shift);
                     var test_result = this.reposition(test_position);
+                    //console.log("probing", this.name, g);
                     if (test_result.penalty < best_penalty) {
                         //console.log("probing outward");
                         // keep probing outward while improving...
@@ -510,7 +525,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                             }
                         } else {
                             // reposition back to initial position (failed)
-                            self.reposition(initial_position);
+                            //.log("... failed", count, shift);
+                            this.reposition(initial_position);
                         }
                     }
                 } else {
@@ -568,12 +584,52 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
         };
 
+        class GD_Relaxer {
+            // Gradient descent controller for reducing graph penalty.
+            constructor(graph, node_names, min_change) {
+                node_names = node_names || graph.node_names();
+                this.min_change = min_change || graph.settings.min_change;
+                this.graph = graph;
+                this.qset = $.fn.gd_graph.qset(node_names);
+            };
+            step(min_change) {
+                // Move one node and update effected nodes.
+                if ((typeof min_change) != "number") {
+                    min_change = this.min_change;
+                }
+                var graph = this.graph;
+                var qset = this.qset;
+                var node_name = qset.pop();
+                if (!node_name) {
+                    return null;  // No node to optimize
+                }
+                var node = graph.get_node(node_name);
+                var before = graph.penalty;
+                var probe = node.probe();
+                var change = before - graph.penalty;
+                if (change > min_change) {
+                    // also look at all touched nodes
+                    for (var nodename in probe.touched) {
+                        qset.push(nodename);
+                    }
+                } else {
+                    // not enough change: don't queue touched nodes
+                }
+                return nodename;
+            };
+            run(limit) {
+                // keep stepping up to limit or node queue is empty.
+                var count = 0;
+            }
+        };
+
         return new GD_Graph(options, element);
     };
 
-    $.fn.gd_graph.qset = function() {
+    $.fn.gd_graph.qset = function(sequence) {
 
         class QSet {
+            // A priority queue which does not record duplicate inserts.
             constructor(sequence) {
                 this.init();
                 if (sequence) {
@@ -586,7 +642,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.index_mapping = {};
                 this.set_mapping = {};
                 this.frontindex = this.backindex = 0;
-            }
+            };
+            length() {
+                return this.backindex - this.frontindex;
+            };
             is_empty() {
                 return this.frontindex >= this.backindex;
             };
@@ -619,12 +678,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
         };
 
-        return new QSet();
+        return new QSet(sequence);
     };
 
     $.fn.gd_graph.unionizer = function() {
 
         class Unionizer {
+            // Set merge utility.
 
             constructor() {
                 this.mapping = {};
