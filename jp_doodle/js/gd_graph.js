@@ -36,7 +36,7 @@ import { ENGINE_METHOD_NONE } from "constants";
                     min_change: 0.1,
                 }, options);
                 this.settings = settings;
-                this.root = null;
+                this.top_graph = null;
                 this.penalty = 0.0;
                 this.node_name_to_descriptor = {};
                 this.edge_key_to_descriptor = {};
@@ -277,7 +277,11 @@ import { ENGINE_METHOD_NONE } from "constants";
 
             edge_count() {
                 return Object.keys(this.edge_key_to_descriptor).length;
-            }
+            };
+
+            node_count() {
+                return Object.keys(this.node_name_to_descriptor).length;
+            };
 
             ordered_nodes() {
                 // sequence of nodes sorted by increasing total absolute weight of connected edges.
@@ -290,11 +294,75 @@ import { ENGINE_METHOD_NONE } from "constants";
                 return result;
             };
 
-            collapse_spokes(nlevel) {
+            layout_spokes(level, skeletize, top_graph) {
+                // bottom up layout strategy for graph -- first layout simplified graph with spokes collapsed.
+                top_graph = top_graph || this.top_graph;
+                var nlevel = level + 1;
+                var m = this.matrix_op;
+                var collapsed = this.collapse_spokes(nlevel, top_graph);
+                // layout collapsed graph
+                var Gs = collapsed.result;
+                var D = collapsed.node_name_to_owner_name;
+                if (Gs.edge_count() < 1) {
+                    Gs.rectangular_layout();
+                } else {
+                    if (skeletize) {
+                        Gs = Gs.skeleton();
+                    }
+                    Gs.layout_spokes(nlevel, skeletize, top_graph);
+                }
+                // apply collapsed graph layout to current graph
+                var nn2d = this.node_name_to_descriptor;
+                var Gsnn2d = Gs.node_name_to_descriptor;
+                var scale = this.settings.link_radius * 0.5;
+                var count = 0;
+                for (var nodename in D) {
+                    var owner = D[nodename];
+                    count += 1;
+                    var node = nn2d[nodename];
+                    var ownernode = Gsnn2d[owner];
+                    var shift = m.vscale(scale, this.node_offsetter(count));
+                    var position = m.vadd(shift, ownernode.position);
+                    node.set_position(position)
+                }
+                this.initialize_penalties();
+                var R = this.relaxer();
+                var limit = null;
+                // heuristic for big graphs -- set a limit
+                var nnodes = this.node_count()
+                if (nnodes > 100) {
+                    limit = 5 * nnodes * Math.log(nnodes);
+                }
+                R.run(limit);
+                return this;
+            };
+
+            node_offsetter(index) {
+                // heuristic for offsetting nodes from owner node positions.
+                var g = this.grid_spiral_coordinates((index % 10) + 1, 0.3);
+                g.x += Math.sin(index);
+                g.y += Math.cos(index);
+            }
+
+            rectangular_layout() {
+                var d = this.settings.link_radius * 0.5;
+                var jitter = 0.2;
+                var nodes = this.ordered_nodes();
+                var m = this.matrix_op;
+                for (var i=0; i<nodes.length; i++) {
+                    var node = nodes[i];
+                    var xy = this.grid_spiral_coordinates(i, jitter);
+                    var pos = m.vscale(d, xy);
+                    node.set_position(pos);
+                }
+                return this;
+            }
+
+            collapse_spokes(nlevel, top_graph) {
                 // generate a derived graph which collapses weak nodes into strong nodes.
                 nlevel = nlevel || 1;
                 var sorted_nodes = this.ordered_nodes();
-                var root = this.root || this;
+                top_graph = top_graph || this.top_graph || this;
                 var nn2d = this.node_name_to_descriptor;
                 var node_name_to_owner_name = {};
                 var owners = {};
@@ -320,7 +388,7 @@ import { ENGINE_METHOD_NONE } from "constants";
                 // combine edge weights for collapsed nodes in absolute value
                 var owner_pairs = {};
                 //var edge_count = 0;
-                var owner_edge_count = 0;
+                //var owner_edge_count = 0;
                 for (var k in this.edge_key_to_descriptor) {
                     //edge_count += 1;
                     var edge = this.edge_key_to_descriptor[k];
@@ -332,18 +400,20 @@ import { ENGINE_METHOD_NONE } from "constants";
                         if (owner_pair) {
                             owner_pair.weight += edge.abs_weight;
                         } else {
-                            owner_edge_count += 1;
+                            //owner_edge_count += 1;
                             owner_pairs[key] = {weight: edge.abs_weight, owner1: owner1, owner2: owner2};
                         }
                     }
                 }
                 // construct collapsed graph
-                var factor = 1.0
-                if (owner_edge_count > 0) {
-                    factor = root.edge_count() * (1.0 / owner_edge_count);
+                var factor = 1.0;
+                var owner_count = Object.keys(node_name_to_owner_name).length;
+                //console.log("top_graph is", top_graph);
+                if (owner_count > 0) {
+                    factor = top_graph.node_count() * (1.0 / owner_count);
                 }
                 factor = Math.max(factor, nlevel);
-                var result = this.zoomGraph(factor);
+                var result = this.zoomGraph(factor, false, top_graph);
                 // set owner nodes
                 for (var owner in owners) {
                     result.get_or_make_node(owner);
@@ -353,20 +423,20 @@ import { ENGINE_METHOD_NONE } from "constants";
                     var pair = owner_pairs[key];
                     result.add_edge(pair.owner1, pair.owner2, pair.weight);
                 }
-                return result;
+                return {result: result, node_name_to_owner_name: node_name_to_owner_name};
             };
 
             skeleton(edge_count) {
                 /*
-                Make a graph S from self with the same nodes and possibly fewer edges from self
-                where two nodes that are reachable in self are also reachable
-                in S and every edge with at least edge_count in self has
+                Make a graph S from graph with the same nodes and possibly fewer edges from graph
+                where two nodes that are reachable in graph are also reachable
+                in S and every edge with at least edge_count in graph has
                 at least edge_count in S
-                (or the maximum number of edges in self if fewer).  Use the edges with the 
+                (or the maximum number of edges in graph if fewer).  Use the edges with the 
                 highest absolute weight.
                 */
                 edge_count = edge_count || 1;
-                var result = this.zoomGraph(1.0);
+                var result = this.zoomGraph(1.0, false, this);
                 //var e2d = this.edge_key_to_descriptor;
                 var n2d = this.node_name_to_descriptor;
                 var edges_sorted = this.edge_priority();
@@ -412,16 +482,16 @@ import { ENGINE_METHOD_NONE } from "constants";
                 toOtherGraph.record_edge(edge.clone(toOtherGraph));
             };
 
-            zoomGraph(factor, copy) {
+            zoomGraph(factor, copy, top_graph) {
                 factor = factor || 2.0;
                 var settings0 = this.settings;
                 var settings = $.extend({}, settings0);
                 settings.separator_radius = settings0.separator_radius * factor;
                 settings.link_radius = settings0.link_radius * factor;
                 var result = new GD_Graph(settings);
-                result.root = this.root || self;
+                result.top_graph = top_graph || this.top_graph || this;
                 if (copy) {
-                    for (var node_name in self.node_name_to_descriptor) {
+                    for (var node_name in this.node_name_to_descriptor) {
                         result.add_node(node_name);
                     }
                     for (var edge_key in this.edge_key_to_descriptor) {

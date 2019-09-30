@@ -4,6 +4,19 @@ import jp_doodle_is_loaded from "../dist/index";
 
 describe("gd_graph tests", () => {
 
+    it("does spoke layouts", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1});
+        var e1 = g.add_edge(0,1,3);
+        var e2 = g.add_edge(2,3,-14);
+        var e3 = g.add_edge(1,2,7);
+        var n2 = g.get_node(2);
+        var n3 = g.get_node(3);
+        g.layout_spokes();
+        var m = g.matrix_op
+        var d23 = m.vlength(m.vdiff(n2.position, n3.position));
+        expect(d23).toBeGreaterThan(0.5);
+    });
+
     it("prioritizes edges", () => {
         var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1});
         var e1 = g.add_edge(0,1,3);
@@ -18,7 +31,7 @@ describe("gd_graph tests", () => {
         var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1});
         var e1 = g.add_edge(0,1,3);
         var e2 = g.add_edge(2,3,-14);
-        var cg = g.collapse_spokes(3);
+        var cg = g.collapse_spokes(3).result;
         expect(cg.edge_count()).toEqual(0);
         expect(cg.ordered_nodes().length).toEqual(2);
     });
