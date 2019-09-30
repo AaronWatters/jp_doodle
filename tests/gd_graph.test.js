@@ -4,6 +4,23 @@ import jp_doodle_is_loaded from "../dist/index";
 
 describe("gd_graph tests", () => {
 
+    it("does larger spoke layouts", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 6, link_radius: 3});
+        var e1 = g.add_edge(0,1,3);
+        var e2 = g.add_edge(2,3,-14);
+        var e3 = g.add_edge(1,2,7);
+        for (var i=0; i<20; i++) {
+            g.add_edge(i, i+1, 1, true);
+            g.add_edge(i, (i % 5), 1, true);
+        }
+        var n2 = g.get_node(12);
+        var n3 = g.get_node(13);
+        g.layout_spokes();
+        var m = g.matrix_op
+        var d23 = m.vlength(m.vdiff(n2.position, n3.position));
+        expect(d23).toBeGreaterThan(0.2);
+    });
+
     it("does spoke layouts", () => {
         var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1});
         var e1 = g.add_edge(0,1,3);

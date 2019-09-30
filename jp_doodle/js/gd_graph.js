@@ -109,10 +109,10 @@ import { ENGINE_METHOD_NONE } from "constants";
                     return null;
                 }
                 var e = new GD_Edge(node_name1, node_name2, weight, this);
-                return this.record_edge(e);
+                return this.record_edge(e, skip_duplicate);
             }
 
-            record_edge(e) {
+            record_edge(e, skip_duplicate) {
                 var k = e.key;
                 var e2d = this.edge_key_to_descriptor;
                 if (e2d[k]) {
