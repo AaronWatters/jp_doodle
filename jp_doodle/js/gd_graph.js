@@ -15,6 +15,8 @@ import { ENGINE_METHOD_NONE } from "constants";
 (function($) {
 
     $.fn.gd_graph = function (options, element) {
+        // Undirected weighted graph with 2D layout heuristic.
+
         //element = element || this;  not needed?
 
         class GD_Graph {
@@ -566,6 +568,15 @@ import { ENGINE_METHOD_NONE } from "constants";
             }
         };
 
+        function edge_key(nodename1, nodename2) {
+            // unordered edge key
+            if (nodename1 < nodename2) {
+                return "e:" + nodename1 + ":" + nodename2;
+            } else {
+                return "e:" + nodename2 + ":" + nodename1;
+            }
+        };
+
         class GD_Edge {
             constructor(nodename1, nodename2, weight, in_graph) {
                 this.nodename1 = nodename1;
@@ -575,11 +586,7 @@ import { ENGINE_METHOD_NONE } from "constants";
                 this.abs_weight = Math.abs(weight);
                 this.penalty = 0;
                 this.gradient = in_graph.xy([0,0]);
-                if (nodename1 < nodename2) {
-                    this.key = "e:" + nodename1 + ":" + nodename2;
-                } else {
-                    this.key = "e:" + nodename2 + ":" + nodename1;
-                }
+                this.key = edge_key(nodename1, nodename2);
             };
             clone(in_graph) {
                 return new GD_Edge(this.nodename1, this.nodename2, this.weight, in_graph);
