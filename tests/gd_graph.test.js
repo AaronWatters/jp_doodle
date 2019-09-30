@@ -4,6 +4,19 @@ import jp_doodle_is_loaded from "../dist/index";
 
 describe("gd_graph tests", () => {
 
+    it("orders nodes", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1});
+        g.add_edge(0,1,3);
+        g.add_edge(2,3,-4);
+        g.add_edge(1,2,7);
+        var n0 = g.get_node(0); // 3
+        var n1 = g.get_node(1); // 10
+        var n2 = g.get_node(2); // 11
+        var n3 = g.get_node(3); // 4
+        var nodes = g.ordered_nodes();
+        expect(nodes).toEqual([n0, n3, n1, n2])
+    });
+
     it("makes a skeleton", () => {
         var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1});
         g.add_edge(0,1,3);

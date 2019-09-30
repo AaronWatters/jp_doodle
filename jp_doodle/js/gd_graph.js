@@ -263,7 +263,7 @@ import { ENGINE_METHOD_NONE } from "constants";
                 for (var k in e2d) {
                     result.push(e2d[k]);
                 }
-                result.sort(function (a, b) { return b.abs_weight - a.abs_weight});
+                result.sort(function (a, b) { return b.abs_weight - a.abs_weight; });
                 return result;
             };
 
@@ -273,7 +273,23 @@ import { ENGINE_METHOD_NONE } from "constants";
                     return true;
                 }
                 return false;
+            };
+
+            ordered_nodes() {
+                // sequence of nodes sorted by total absolute weight of connected edges.
+                var n2d = this.node_name_to_descriptor;
+                var result = []
+                for (var node_name in n2d) {
+                    result.push(n2d[node_name]);
+                }
+                result.sort(function (a, b) { return a.abs_weight() - b.abs_weight(); });
+                return result;
             }
+
+            collapse_spokes(nlevel) {
+                // generate a derived graph which collapses weak nodes into strong nodes.
+
+            };
 
             skeleton(edge_count) {
                 /*
