@@ -276,7 +276,7 @@ import { ENGINE_METHOD_NONE } from "constants";
             };
 
             ordered_nodes() {
-                // sequence of nodes sorted by total absolute weight of connected edges.
+                // sequence of nodes sorted by increasing total absolute weight of connected edges.
                 var n2d = this.node_name_to_descriptor;
                 var result = []
                 for (var node_name in n2d) {
@@ -284,7 +284,7 @@ import { ENGINE_METHOD_NONE } from "constants";
                 }
                 result.sort(function (a, b) { return a.abs_weight() - b.abs_weight(); });
                 return result;
-            }
+            };
 
             collapse_spokes(nlevel) {
                 // generate a derived graph which collapses weak nodes into strong nodes.
@@ -577,6 +577,15 @@ import { ENGINE_METHOD_NONE } from "constants";
                     G.penalize(new_penalty - old_penalty);
                 }
                 return {penalty: G.penalty, touched: all_penalties};
+            };
+            edge_priority() {
+                // incident edges sorted by decreasing absolute weight
+                var result = [];
+                for (var key in this.key_to_edge) {
+                    result.push(this.key_to_edge[key]);
+                }
+                result.sort(function (a, b) { return b.abs_weight - a.abs_weight; })
+                return result;
             };
             abs_weight() {
                 // total of abs weights for edges
