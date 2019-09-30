@@ -657,12 +657,12 @@ import { ENGINE_METHOD_NONE } from "constants";
                     count += 1;
                     var nodename = this.step(min_change);
                     if (nodename === null) {
-                        console.log("relaxer ran out of nodes.");
-                        return nodename;
+                        //console.log("relaxer ran out of nodes.");
+                        return {count: count, nodename: nodename};
                     }
                 }
-                console.log("relaxer exceeded limit", limit);
-                return nodename;
+                //console.log("relaxer exceeded limit", limit);
+                return {count: count, nodename: nodename};
             }
         };
 

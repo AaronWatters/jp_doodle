@@ -27,8 +27,9 @@ describe("gd_graph tests", () => {
         g.initialize_penalties();
         var penalty_before = g.penalty;
         var r = g.relaxer();
-        var r_node = r.run(2);
-        expect(r_node).not.toEqual(null);
+        var r_out = r.run(2);
+        expect(r_out.nodename).not.toEqual(null);
+        expect(r_out.count).toEqual(2);
         var penalty_after = g.penalty;
         expect(penalty_before).toBeGreaterThan(penalty_after);
     });
@@ -39,8 +40,9 @@ describe("gd_graph tests", () => {
         var penalty_before = g.penalty;
         expect(penalty_before).toEqual(0)
         var r = g.relaxer();
-        var r_node = r.run(2);
-        expect(r_node).toEqual(null);
+        var r_out = r.run(2);
+        expect(r_out.nodename).toEqual(null);
+        expect(r_out.count).toEqual(1);
         var penalty_after = g.penalty;
         expect(penalty_before).toEqual(penalty_after);
     });
