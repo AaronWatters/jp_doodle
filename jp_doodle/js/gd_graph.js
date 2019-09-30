@@ -254,6 +254,25 @@ import { ENGINE_METHOD_NONE } from "constants";
 
             relaxer(node_names, min_change) {
                 return new GD_Relaxer(this, node_names, min_change);
+            };
+
+            edge_priority() {
+                // list of edges sorted by decreasing absolute weight
+                var result = [];
+                var e2d = this.edge_key_to_descriptor;
+                for (var k in e2d) {
+                    result.push(e2d[k]);
+                }
+                result.sort(function (a, b) { return b.abs_weight - a.abs_weight});
+                return result;
+            }
+
+            skeleton(edge_count) {
+                edge_count = edge_count || 1;
+                var result = this.zoomGraph(1.0);
+                var e2d = this.edge_key_to_descriptor;
+                var n2d = this.node_name_to_descriptor;
+                // ...
             }
 
             zoomGraph(factor, copy) {

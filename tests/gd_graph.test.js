@@ -4,6 +4,16 @@ import jp_doodle_is_loaded from "../dist/index";
 
 describe("gd_graph tests", () => {
 
+    it("prioritizes edges", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1});
+        var e1 = g.add_edge(1,2,-5);
+        var e2 = g.add_edge(3,2,-7);
+        var p = g.edge_priority();
+        expect(p.length).toBe(2);
+        expect(p[0]).toBe(e2);
+        expect(p[1]).toBe(e1);
+    });
+
     it("zooms a graph", () => {
         var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1});
         var e1 = g.add_edge(1,2,-5);
