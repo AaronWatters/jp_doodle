@@ -275,6 +275,10 @@ import { ENGINE_METHOD_NONE } from "constants";
                 return false;
             };
 
+            edge_count() {
+                return Object.keys(this.edge_key_to_descriptor).length;
+            }
+
             ordered_nodes() {
                 // sequence of nodes sorted by increasing total absolute weight of connected edges.
                 var n2d = this.node_name_to_descriptor;
@@ -288,7 +292,68 @@ import { ENGINE_METHOD_NONE } from "constants";
 
             collapse_spokes(nlevel) {
                 // generate a derived graph which collapses weak nodes into strong nodes.
-
+                nlevel = nlevel || 1;
+                var sorted_nodes = this.ordered_nodes();
+                var root = this.root || this;
+                var nn2d = this.node_name_to_descriptor;
+                var node_name_to_owner_name = {};
+                var owners = {};
+                // pick a strongest connected owner for each node
+                for (var i=0; i<sorted_nodes.length; i++) {
+                    var node = sorted_nodes[i];
+                    var node_name = node.name;
+                    var owner_name = node_name;   // default
+                    // look for strongest connecting edge (not to owned node)
+                    var sorted_edges = node.edge_priority();
+                    for (var j=0; j<sorted_edges.length; j++) {
+                        var edge = sorted_edges[j];
+                        var other_name = edge.other_name(node_name);
+                        if ((owners[other_name]) || (!node_name_to_owner_name[other_name])) {
+                            // other is either an owner or not owned -- assign as owner to this node
+                            owner_name = other_name;
+                            break;
+                        }
+                    }
+                    owners[owner_name] = node;
+                    node_name_to_owner_name[node_name] = owner_name;
+                }
+                // combine edge weights for collapsed nodes in absolute value
+                var owner_pairs = {};
+                //var edge_count = 0;
+                var owner_edge_count = 0;
+                for (var k in this.edge_key_to_descriptor) {
+                    //edge_count += 1;
+                    var edge = this.edge_key_to_descriptor[k];
+                    var owner1 = node_name_to_owner_name[edge.nodename1];
+                    var owner2 = node_name_to_owner_name[edge.nodename2];
+                    if (owner1 != owner2) {
+                        var key = edge_key(owner1, owner2);
+                        var owner_pair = owner_pairs[key];
+                        if (owner_pair) {
+                            owner_pair.weight += edge.abs_weight;
+                        } else {
+                            owner_edge_count += 1;
+                            owner_pairs[key] = {weight: edge.abs_weight, owner1: owner1, owner2: owner2};
+                        }
+                    }
+                }
+                // construct collapsed graph
+                var factor = 1.0
+                if (owner_edge_count > 0) {
+                    factor = root.edge_count() * (1.0 / owner_edge_count);
+                }
+                factor = Math.max(factor, nlevel);
+                var result = this.zoomGraph(factor);
+                // set owner nodes
+                for (var owner in owners) {
+                    result.get_or_make_node(owner);
+                }
+                // set collapsed edges
+                for (var key in owner_pairs) {
+                    var pair = owner_pairs[key];
+                    result.add_edge(pair.owner1, pair.owner2, pair.weight);
+                }
+                return result;
             };
 
             skeleton(edge_count) {

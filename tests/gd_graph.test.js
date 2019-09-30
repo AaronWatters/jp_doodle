@@ -14,6 +14,15 @@ describe("gd_graph tests", () => {
         expect(edges).toEqual([e2, e3])
     });
 
+    it("collapses spokes", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1});
+        var e1 = g.add_edge(0,1,3);
+        var e2 = g.add_edge(2,3,-14);
+        var cg = g.collapse_spokes(3);
+        expect(cg.edge_count()).toEqual(0);
+        expect(cg.ordered_nodes().length).toEqual(2);
+    });
+
     it("orders nodes", () => {
         var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1});
         g.add_edge(0,1,3);
