@@ -265,15 +265,71 @@ import { ENGINE_METHOD_NONE } from "constants";
                 }
                 result.sort(function (a, b) { return b.abs_weight - a.abs_weight});
                 return result;
+            };
+
+            has_edge(nodename1, nodename2) {
+                var key = edge_key(nodename1, nodename2);
+                if (this.edge_key_to_descriptor[key]) {
+                    return true;
+                }
+                return false;
             }
 
             skeleton(edge_count) {
+                /*
+                Make a graph S from self with the same nodes and possibly fewer edges from self
+                where two nodes that are reachable in self are also reachable
+                in S and every edge with at least edge_count in self has
+                at least edge_count in S
+                (or the maximum number of edges in self if fewer).  Use the edges with the 
+                highest absolute weight.
+                */
                 edge_count = edge_count || 1;
                 var result = this.zoomGraph(1.0);
-                var e2d = this.edge_key_to_descriptor;
+                //var e2d = this.edge_key_to_descriptor;
                 var n2d = this.node_name_to_descriptor;
-                // ...
-            }
+                var edges_sorted = this.edge_priority();
+                var node_edge_count = {};
+                var used_edges = {};
+                var U = $.fn.gd_graph.unionizer ();
+                // add heaviest edges up to edge_count for each node
+                for (var i=0; i<edges_sorted.length; i++) {
+                    var edge = edges_sorted[i];
+                    var n1 = edge.nodename1;
+                    var n2 = edge.nodename2;
+                    var c1 = node_edge_count[n1] || 0;
+                    var c2 = node_edge_count[n2] || 0;
+                    if ((c1 < edge_count) || (c2 < edge_count)) {
+                        used_edges[edge.key] = edge;
+                        node_edge_count[n1] = c1 + 1;
+                        node_edge_count[n2] = c2 + 1;
+                        U.join(n1, n2);
+                    }
+                }
+                // add edges to connect connected components
+                for (var i=0; i<edges_sorted.length; i++) {
+                    var edge = edges_sorted[i];
+                    var n1 = edge.nodename1;
+                    var n2 = edge.nodename2;
+                    if (U.representative(n1) != U.representative(n2)) {
+                        used_edges[edge.key] = edge;
+                        U.join(n1, n2);
+                    }
+                }
+                // copy nodes.
+                for (var node_name in n2d) {
+                    result.add_node(node_name);
+                }
+                // copy used edges
+                for (var k in used_edges) {
+                    result.copy_edge(used_edges[k], result);
+                }
+                return result;
+            };
+
+            copy_edge(edge, toOtherGraph) {
+                toOtherGraph.record_edge(edge.clone(toOtherGraph));
+            };
 
             zoomGraph(factor, copy) {
                 factor = factor || 2.0;
@@ -288,8 +344,9 @@ import { ENGINE_METHOD_NONE } from "constants";
                         result.add_node(node_name);
                     }
                     for (var edge_key in this.edge_key_to_descriptor) {
-                        var clone = this.edge_key_to_descriptor[edge_key].clone(result);
-                        result.record_edge(clone);
+                        //var clone = this.edge_key_to_descriptor[edge_key].clone(result);
+                        //result.record_edge(clone);
+                        this.copy_edge(this.edge_key_to_descriptor[edge_key], result);
                     }
                 }
                 return result;

@@ -4,6 +4,21 @@ import jp_doodle_is_loaded from "../dist/index";
 
 describe("gd_graph tests", () => {
 
+    it("makes a skeleton", () => {
+        var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1});
+        g.add_edge(0,1,3);
+        g.add_edge(2,3,-3);
+        g.add_edge(1,2,2);
+        g.add_edge(0,3,1);
+        var sk = g.skeleton();
+        expect(sk.has_edge(0,1)).toBe(true);
+        expect(sk.has_edge(1,2)).toBe(true);
+        expect(sk.has_edge(2,3)).toBe(true);
+        expect(sk.has_edge(0,3)).toBe(false);
+        expect(sk.edge_priority().length).toBe(3);
+        expect(sk.node_names().length).toBe(4);
+    });
+
     it("prioritizes edges", () => {
         var g = jQuery.fn.gd_graph({separator_radius: 2, link_radius: 1});
         var e1 = g.add_edge(1,2,-5);
