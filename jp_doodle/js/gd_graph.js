@@ -913,10 +913,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
         };
 
-        function display_node(node, in_frame, update) {
-            var shape = node.settings.shape || "circle";
+        function display_node(node, illustration, update) {
+            var in_frame = illustration.frame;
+            var shape = node.settings.shape || illustration.settings.node_shape || "circle";
             var params = {};
-            params.color = node.settings.color || "green";
+            params.color = node.settings.color || illustration.settings.node_color || "green";
             params.x = node.position.x;
             params.y = node.position.y;
             var r = node.settings.r || 3;
@@ -927,6 +928,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 params.dy = -r;
                 params.w = 2*r;
                 params.h = 2*r;
+            } else if (shape == "text") {
+                params.text = "" + node.name;
+                params.font = node.settings.font || illustration.settings.node_font || "normal 10px Arial";
+                params.background = node.settings.background || illustration.settings.node_background || "yellow";
+                params.align = "center";
+                params.valign = "center";
             } else {
                 throw new Error("unsupported glyph type: " + shape);
             }
@@ -938,9 +945,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
         };
 
-        function display_edge(edge, in_frame, update) {
+        function display_edge(edge, illustration, update) {
+            var in_frame = illustration.frame;
             var params = {};
-            params.color = edge.settings.color || "blue";
+            params.color = edge.settings.color || illustration.settings.edge_color || "blue";
             var graph = edge.in_graph;
             var node1 = graph.get_node(edge.nodename1);
             var node2 = graph.get_node(edge.nodename2);
@@ -961,6 +969,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.for_graph = for_graph;
                 this.on_canvas = on_canvas;
                 this.settings = $.extend({
+                    node_shape: "text",  // or "cirle" or "rect"
+                    node_color: "red",
+                    node_background: "#f9d",
+                    node_font: "italic 12px Arial",
+                    edge_color: "#f93",
                     display_edge: display_edge,
                     display_node: display_node,
                     size: 500,
@@ -982,14 +995,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var display_edge = this.settings.display_edge;
                 for (var k in k2e) {
                     var edge = k2e[k];
-                    display_edge(edge, this.frame, false);
+                    var display = edge.display || display_edge;
+                    display(edge, this, false);
                 }
                 // draw nodes (on top of edges)
                 var n2n = graph.node_name_to_descriptor;
                 var display_node = this.settings.display_node;
                 for (var name in n2n) {
                     var node = n2n[name];
-                    display_node(node, this.frame, false);
+                    var display = node.display || display_node;
+                    display(node, this, false);
                 }
             };
             update(name_to_change) {
@@ -998,7 +1013,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var display_node = this.settings.display_node;
                 for (var name in name_to_change) {
                     var node = graph.get_node(name);
-                    display_node(node, this.frame, true);
+                    display = node.display || display_node;
+                    display_node(node, this, true);
                     var k2e = node.key_to_edge;
                     for (var k in k2e) {
                         key_to_edge[k] = k2e[k];
@@ -1007,7 +1023,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var display_edge = this.settings.display_edge;
                 for (var k in key_to_edge) {
                     var edge = key_to_edge[k];
-                    display_edge(edge, this.frame, true);
+                    var display = edge.display || display_edge;
+                    display(edge, this, true);
                 }
                 var fp = this.frame_region_parameters();
                 this.frame.set_region(
@@ -1185,15 +1202,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
     $.fn.gd_graph.example = function(element) {
         debugger;
-        var g = jQuery.fn.gd_graph({separator_radius: 6, link_radius: 1, min_change: 99});
-        var s = 20;
-        for (var i=0; i<10; i++) {
+        var g = jQuery.fn.gd_graph({separator_radius: 6, link_radius: 1, min_change: 999});
+        var s = 7;
+        for (var i=0; i<s; i++) {
             var i10 = i * s;
-            g.add_edge(i10, i10+s-1, true);
+            g.add_edge(i10, i10+s-1, 2, true);
             g.add_edge(i, (s-1)*s+i, true);
-            for (var j=i10; j<i10+s; j++) {
-                g.add_edge(j, j+1, true);
-                g.add_edge(j, j+s, true)
+            for (var j=i10; j<i10+s-1; j++) {
+                g.add_edge(j, j+1, 1, true);
+                g.add_edge(j, j+s, 3, true)
             }
         }
         g.layout_spokes();
@@ -1209,7 +1226,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         var illustration = g.illustrate(element, {size:1000});
         illustration.draw_in_region();
-        illustration.animate_until(100 * 1000, 40);
+        illustration.animate_until(100 * 1000, s*s);
     };
 
 })(jQuery);
