@@ -9,9 +9,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 */
 "use strict";
 
-import { ENGINE_METHOD_NONE } from "constants";
-
-
 (function($) {
 
     $.fn.gd_graph = function (options, element) {
@@ -342,6 +339,7 @@ import { ENGINE_METHOD_NONE } from "constants";
                 var g = this.grid_spiral_coordinates((index % 10) + 1, 0.3);
                 g.x += Math.sin(index);
                 g.y += Math.cos(index);
+                return g;
             }
 
             rectangular_layout() {
@@ -484,7 +482,7 @@ import { ENGINE_METHOD_NONE } from "constants";
 
             zoomGraph(factor, copy, top_graph) {
                 factor = factor || 2.0;
-                var settings0 = this.settings;
+                var settings0 = top_graph.settings;
                 var settings = $.extend({}, settings0);
                 settings.separator_radius = settings0.separator_radius * factor;
                 settings.link_radius = settings0.link_radius * factor;
@@ -540,10 +538,15 @@ import { ENGINE_METHOD_NONE } from "constants";
                 }
                 return this.xy([i, j]);
             };
+
+            illustrate(on_canvas, options) {
+                return new GD_Illustration(this, on_canvas, options);
+            };
         };
 
         class GD_Node {
-            constructor(name, in_graph) {
+            constructor(name, in_graph, options) {
+                this.settings = $.extend({}, options);
                 this.in_graph = in_graph;
                 this.name = name;
                 this.position = null;
@@ -814,7 +817,8 @@ import { ENGINE_METHOD_NONE } from "constants";
         };
 
         class GD_Edge {
-            constructor(nodename1, nodename2, weight, in_graph) {
+            constructor(nodename1, nodename2, weight, in_graph, options) {
+                this.settings = $.extend({}, options);
                 this.nodename1 = nodename1;
                 this.nodename2 = nodename2;
                 this.in_graph = in_graph;
@@ -891,7 +895,7 @@ import { ENGINE_METHOD_NONE } from "constants";
                 } else {
                     // not enough change: don't queue touched nodes
                 }
-                return nodename;
+                return {nodename: nodename, touched: probe.touched};;
             };
             run(limit, min_change) {
                 // keep stepping up to limit or node queue is empty.
@@ -906,6 +910,167 @@ import { ENGINE_METHOD_NONE } from "constants";
                 }
                 //console.log("relaxer exceeded limit", limit);
                 return {count: count, nodename: nodename};
+            }
+        };
+
+        function display_node(node, in_frame, update) {
+            var shape = node.settings.shape || "circle";
+            var params = {};
+            params.color = node.settings.color || "green";
+            params.x = node.position.x;
+            params.y = node.position.y;
+            var r = node.settings.r || 3;
+            if (shape == "circle") {
+                params.r = r;
+            } else if (shape == "rect") {
+                params.dx = -r;
+                params.dy = -r;
+                params.w = 2*r;
+                params.h = 2*r;
+            } else {
+                throw new Error("unsupported glyph type: " + shape);
+            }
+            if (update) {
+                node.settings.glyph.change(params);
+            } else {
+                params.name = true;
+                node.settings.glyph = in_frame[shape](params);
+            }
+        };
+
+        function display_edge(edge, in_frame, update) {
+            var params = {};
+            params.color = edge.settings.color || "blue";
+            var graph = edge.in_graph;
+            var node1 = graph.get_node(edge.nodename1);
+            var node2 = graph.get_node(edge.nodename2);
+            params.x1 = node1.position.x;
+            params.y1 = node1.position.y;
+            params.x2 = node2.position.x;
+            params.y2 = node2.position.y;
+            if (update) {
+                edge.settings.glyph.change(params);
+            } else {
+                params.name = true;
+                edge.settings.glyph = in_frame.line(params);
+            }
+        };
+
+        class GD_Illustration {
+            constructor(for_graph, on_canvas, options) {
+                this.for_graph = for_graph;
+                this.on_canvas = on_canvas;
+                this.settings = $.extend({
+                    display_edge: display_edge,
+                    display_node: display_node,
+                    size: 500,
+                    margin: 20,
+                }, options);
+                this.relaxer = null;
+            };
+            draw_in_region() {
+                // initialize drawing in fresh frame.
+                this.on_canvas.reset_canvas();
+                var fp = this.frame_region_parameters();
+                this.frame = this.on_canvas.frame_region(
+                    fp.minx, fp.miny, fp.maxx, fp.maxy, 
+                    fp.frame_minx, fp.frame_miny, fp.frame_maxx, fp.frame_maxy
+                );
+                var graph = this.for_graph;
+                // draw edges
+                var k2e = graph.edge_key_to_descriptor;
+                var display_edge = this.settings.display_edge;
+                for (var k in k2e) {
+                    var edge = k2e[k];
+                    display_edge(edge, this.frame, false);
+                }
+                // draw nodes (on top of edges)
+                var n2n = graph.node_name_to_descriptor;
+                var display_node = this.settings.display_node;
+                for (var name in n2n) {
+                    var node = n2n[name];
+                    display_node(node, this.frame, false);
+                }
+            };
+            update(name_to_change) {
+                var graph = this.for_graph;
+                var key_to_edge = {};
+                var display_node = this.settings.display_node;
+                for (var name in name_to_change) {
+                    var node = graph.get_node(name);
+                    display_node(node, this.frame, true);
+                    var k2e = node.key_to_edge;
+                    for (var k in k2e) {
+                        key_to_edge[k] = k2e[k];
+                    }
+                }
+                var display_edge = this.settings.display_edge;
+                for (var k in key_to_edge) {
+                    var edge = key_to_edge[k];
+                    display_edge(edge, this.frame, true);
+                }
+                var fp = this.frame_region_parameters();
+                this.frame.set_region(
+                    fp.minx, fp.miny, fp.maxx, fp.maxy, 
+                    fp.frame_minx, fp.frame_miny, fp.frame_maxx, fp.frame_maxy
+                );
+            };
+            animation_step(iterations) {
+                iterations = iterations || 1;
+                for (var i=0; i<iterations; i++) {
+                    var relaxation = this.relaxer.step(0);
+                    this.update(relaxation.touched);
+                }
+                return relaxation;
+            };
+            animate_until(milliseconds, iterations) {
+                var that = this;
+                that.relaxer = that.for_graph.relaxer();
+                var start = Date.now();
+                var step = function () {
+                    var elapsed = Date.now() - start;
+                    that.animation_step(iterations);
+                    if (elapsed < milliseconds) {
+                        requestAnimationFrame(step);
+                    }
+                };
+                step();
+            };
+            frame_region_parameters() {
+                var graph = this.for_graph;
+                var ops = graph.matrix_op;
+                var result = {};
+                var s = this.settings;
+                result.minx = s.margin;
+                result.miny = s.margin;
+                result.maxx = s.size - 2 * s.margin;
+                result.maxy = result.maxx;
+                var n2n = graph.node_name_to_descriptor;
+                var m = null;
+                var M = null;
+                var count = 0;
+                for (var name in n2n) {
+                    count += 1;
+                    var p = n2n[name].position;
+                    m = ops.vmin(p, m, p);
+                    M = ops.vmax(p, M, p);
+                }
+                if (count == 0) {  // arbitrary...
+                    m = {x:0, y:0};
+                    M = {x:1, y:1};
+                }
+                if (count == 1) {
+                    M = ops.vadd(m,  {x:1, y:1});
+                    m = ops.vadd(m,  {x:-1, y:-1});
+                }
+                var diff = ops.vsub(M, m);
+                var mid = ops.vadd(ops.vscale(0.5, diff), m);
+                var maxdiff2 = Math.max(diff.x, diff.y) * 0.5;
+                result.frame_minx = mid.x - maxdiff2;
+                result.frame_miny = mid.y - maxdiff2;
+                result.frame_maxx = mid.x + maxdiff2;
+                result.frame_maxy = mid.y + maxdiff2;
+                return result;
             }
         };
 
@@ -1019,6 +1184,32 @@ import { ENGINE_METHOD_NONE } from "constants";
     };
 
     $.fn.gd_graph.example = function(element) {
+        debugger;
+        var g = jQuery.fn.gd_graph({separator_radius: 6, link_radius: 1, min_change: 99});
+        var s = 20;
+        for (var i=0; i<10; i++) {
+            var i10 = i * s;
+            g.add_edge(i10, i10+s-1, true);
+            g.add_edge(i, (s-1)*s+i, true);
+            for (var j=i10; j<i10+s; j++) {
+                g.add_edge(j, j+1, true);
+                g.add_edge(j, j+s, true)
+            }
+        }
+        g.layout_spokes();
+
+        element.empty();
+        element.css("background-color", "cornsilk");
+        var config = {
+            width: 1000,
+            height: 1000,
+            y_up: true,
+        }
+        element.dual_canvas_helper(config);
+
+        var illustration = g.illustrate(element, {size:1000});
+        illustration.draw_in_region();
+        illustration.animate_until(100 * 1000, 40);
     };
 
 })(jQuery);
