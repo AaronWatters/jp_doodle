@@ -1339,11 +1339,20 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         }
         element.dual_canvas_helper(config);
 
-        var illustration = g.illustrate(element, {size:1000});
+        var illustration = g.illustrate(element, {
+            size:1000,
+            animation_milliseconds: 10000,
+            autoRelax: true,
+        });
         illustration.draw_in_region();
         illustration.animate_until(100 * 1000, s);
 
         illustration.enable_dragging();
+
+        var t = $("<button>Toggle auto relax</button>").appendTo(element);
+        t.click(function() {
+            illustration.settings.autoRelax = !illustration.settings.autoRelax;
+        });
     };
 
 })(jQuery);
