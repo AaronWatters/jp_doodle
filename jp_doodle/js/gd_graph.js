@@ -920,7 +920,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             params.color = node.settings.color || illustration.settings.node_color || "green";
             params.x = node.position.x;
             params.y = node.position.y;
-            var r = node.settings.r || 3;
+            var r = node.settings.r || illustration.settings.node_radius || 3;
             if (shape == "circle") {
                 params.r = r;
             } else if (shape == "rect") {
@@ -949,6 +949,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var in_frame = illustration.frame;
             var params = {};
             params.color = edge.settings.color || illustration.settings.edge_color || "blue";
+            params.lineWidth = edge.settings.lineWidth || illustration.settings.edgeLineWidth || 1;
+            params.lineDash = edge.settings.lineDash || illustration.settings.edgeLineDash;
             var graph = edge.in_graph;
             var node1 = graph.get_node(edge.nodename1);
             var node2 = graph.get_node(edge.nodename2);
@@ -974,6 +976,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     node_background: "#f9d",
                     node_font: "italic 12px Arial",
                     edge_color: "#f93",
+                    edgeLineDash: null,
+                    edgeLineWidth: 1.5,
                     display_edge: display_edge,
                     display_node: display_node,
                     size: 500,
@@ -1206,11 +1210,28 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         var s = 7;
         for (var i=0; i<s; i++) {
             var i10 = i * s;
-            g.add_edge(i10, i10+s-1, 2, true);
-            g.add_edge(i, (s-1)*s+i, true);
+            var e1 = g.add_edge(i10, i10+s-1, 2, true);
+            e1.settings.color = "#0f9";
+            var e2 = g.add_edge(i, (s-1)*s+i, 1, true);
+            e2.settings.color = "#27f"
+            e2.settings.lineWidth = 0.5;
             for (var j=i10; j<i10+s-1; j++) {
                 g.add_edge(j, j+1, 1, true);
-                g.add_edge(j, j+s, 3, true)
+                var e3 = g.add_edge(j, j+s, 3, true)
+                e3.settings.lineWidth = 3;
+                e3.settings.color = "black";
+                e3.settings.lineDash = [3,5];
+            }
+        }
+        for (var i=s*(s-1)/2; i<s*s; i++) {
+            var settings = g.get_node(i).settings;
+            settings.r = 15;
+            settings.color = "red";
+            settings.shape = "circle";
+            if (i%2) {
+                settings.shape = "rect";
+                settings.color = "blue";
+                settings.r = 5;
             }
         }
         g.layout_spokes();
