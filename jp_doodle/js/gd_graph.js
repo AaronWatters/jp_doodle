@@ -546,7 +546,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         class GD_Node {
             constructor(name, in_graph, options) {
-                this.settings = $.extend({}, options);
+                this.settings = $.extend({
+                    fixed: false,   // if true then don't move this node from assigned position.
+                }, options);
                 this.in_graph = in_graph;
                 this.name = name;
                 this.position = null;
@@ -743,8 +745,19 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var n = m.vlength(g);
                 var change = 0.0;
                 var touched = {};
-                // only do work if gradient is non-trivial
-                if (n > epsilon) {
+                var name = this.name;
+                //touched[name] = 0;   // default.
+                // only do work if gradient is non-trivial and the node is moveable.
+                if (this.settings.fixed) {
+                    // add all connected nodes to touched, but don't move this node
+                    for (var key in this.key_to_edge) {
+                        var edge = this.key_to_edge[key];
+                        var othername = edge.other_name(name)
+                        touched[othername] = 0;
+                    }
+                }
+                else if (n > epsilon) {
+                    // follow non-trivial gradient
                     var shift_magnitude = settings.separator_radius * 0.3;   // ??? magic number
                     var shift = m.vscale(-shift_magnitude / n, g);
                     var probe_limit = settings.probe_limit;
@@ -872,6 +885,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.graph = graph;
                 this.qset = $.fn.gd_graph.qset(node_names);
             };
+            add(node_name) {
+                this.qset.push(node_name);
+            };
             step(min_change) {
                 // Move one node and update effected nodes.
                 if ((typeof min_change) != "number") {
@@ -887,7 +903,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var before = graph.penalty;
                 var probe = node.probe();
                 var change = before - graph.penalty;
-                if (change > min_change) {
+                if (change >= min_change) {
                     // also look at all touched nodes
                     for (var nodename in probe.touched) {
                         qset.push(nodename);
@@ -941,6 +957,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 node.settings.glyph.change(params);
             } else {
                 params.name = true;
+                params.graph_node = node;
                 node.settings.glyph = in_frame[shape](params);
             }
         };
@@ -982,8 +999,62 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     display_node: display_node,
                     size: 500,
                     margin: 20,
+                    animation_milliseconds: 100000,
                 }, options);
+                // animation control values.
                 this.relaxer = null;
+                this.stop_time = null;
+                // node dragging
+                this.dragging_node = null;
+            };
+            enable_dragging () {
+                // allow dragging of nodes.
+                var that = this;
+                var graph = that.for_graph;
+                var n2n = graph.node_name_to_descriptor;
+                var on_mouse_down = function (event) {
+                    var info = event.object_info;
+                    if ((!info) || (!info.graph_node)) {
+                        console.error("no object info?", event);
+                        return
+                    }
+                    var node = info.graph_node;
+                    node.settings.fixed = true;
+                    that.dragging_node = node;
+                };
+                var on_mouse_move = function (event) {
+                    var node = that.dragging_node;
+                    if (node) {
+                        var loc = that.frame.event_model_location(event);
+                        node.settings.glyph.change({x: loc.x, y: loc.y});
+                        //node.position = loc;
+                        node.reposition(loc);
+                        if (that.relaxer) {
+                            that.relaxer.add(node.name);
+                        }
+                        that.animate_until(that.settings.animation_milliseconds);
+                        var changed = {};
+                        changed[node.name] = 0;
+                        that.update(changed);
+                    }
+                }
+                var on_mouse_up = function (event) {
+                    var node = that.dragging_node;
+                    if (node) {
+                        node.settings.fixed = false;
+                        if (that.relaxer) {
+                            that.relaxer.add(node.name);
+                        }
+                    }
+                    that.dragging_node = null
+                    that.animate_until(that.settings.animation_milliseconds);
+                }
+                for (var name in n2n) {
+                    var node = n2n[name];
+                    node.settings.glyph.on("mousedown", on_mouse_down);
+                }
+                that.on_canvas.on("mousemove", on_mouse_move);
+                that.on_canvas.on("mouseup", on_mouse_up);
             };
             draw_in_region() {
                 // initialize drawing in fresh frame.
@@ -1037,22 +1108,40 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 );
             };
             animation_step(iterations) {
+                if (!this.relaxer) {
+                    console.error("animation step, but relaxer not defined!");
+                    return;
+                }
                 iterations = iterations || 1;
                 for (var i=0; i<iterations; i++) {
                     var relaxation = this.relaxer.step(0);
-                    this.update(relaxation.touched);
+                    if (relaxation) {
+                        this.update(relaxation.touched);
+                    }
                 }
                 return relaxation;
             };
             animate_until(milliseconds, iterations) {
                 var that = this;
+                var end_time = Date.now() + milliseconds;
+                if (that.relaxer) {
+                    // we are already running: update the stop time
+                    that.stop_time = Math.max(that.stop_time, end_time);
+                    return;
+                }
                 that.relaxer = that.for_graph.relaxer();
-                var start = Date.now();
                 var step = function () {
-                    var elapsed = Date.now() - start;
+                    if (!that.relaxer) {
+                        console.error("animation callback, but relaxer not defined!");
+                        return;
+                    }
+                    var now = Date.now();
                     that.animation_step(iterations);
-                    if (elapsed < milliseconds) {
+                    if (now < end_time) {
                         requestAnimationFrame(step);
+                    } else {
+                        // we are done.
+                        that.relaxer = null;
                     }
                 };
                 step();
@@ -1207,7 +1296,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
     $.fn.gd_graph.example = function(element) {
         debugger;
         var g = jQuery.fn.gd_graph({separator_radius: 6, link_radius: 1, min_change: 999});
-        var s = 7;
+        var s = 11;
         for (var i=0; i<s; i++) {
             var i10 = i * s;
             var e1 = g.add_edge(i10, i10+s-1, 2, true);
@@ -1225,13 +1314,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         }
         for (var i=s*(s-1)/2; i<s*s; i++) {
             var settings = g.get_node(i).settings;
-            settings.r = 15;
+            settings.r = 5;
             settings.color = "red";
             settings.shape = "circle";
             if (i%2) {
                 settings.shape = "rect";
                 settings.color = "blue";
-                settings.r = 5;
+                settings.r = 8;
             }
         }
         g.layout_spokes();
@@ -1241,13 +1330,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         var config = {
             width: 1000,
             height: 1000,
-            y_up: true,
         }
         element.dual_canvas_helper(config);
 
         var illustration = g.illustrate(element, {size:1000});
         illustration.draw_in_region();
-        illustration.animate_until(100 * 1000, s*s);
+        illustration.animate_until(100 * 1000, s);
+
+        illustration.enable_dragging();
     };
 
 })(jQuery);
