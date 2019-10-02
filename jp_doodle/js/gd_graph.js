@@ -482,12 +482,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
             zoomGraph(factor, copy, top_graph) {
                 factor = factor || 2.0;
+                top_graph = top_graph || this.top_graph || this;
                 var settings0 = top_graph.settings;
                 var settings = $.extend({}, settings0);
                 settings.separator_radius = settings0.separator_radius * factor;
                 settings.link_radius = settings0.link_radius * factor;
                 var result = new GD_Graph(settings);
-                result.top_graph = top_graph || this.top_graph || this;
+                result.top_graph = top_graph;
                 if (copy) {
                     for (var node_name in this.node_name_to_descriptor) {
                         result.add_node(node_name);
@@ -1000,6 +1001,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     size: 500,
                     margin: 20,
                     animation_milliseconds: 100000,
+                    autoRelax: false,   // If true then relax network after adjusting nodes.
                 }, options);
                 // animation control values.
                 this.relaxer = null;
@@ -1032,7 +1034,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         if (that.relaxer) {
                             that.relaxer.add(node.name);
                         }
-                        that.animate_until(that.settings.animation_milliseconds);
+                        if (that.settings.autoRelax) {
+                            that.animate_until(that.settings.animation_milliseconds);
+                        }
                         var changed = {};
                         changed[node.name] = 0;
                         that.update(changed);
@@ -1047,7 +1051,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         }
                     }
                     that.dragging_node = null
-                    that.animate_until(that.settings.animation_milliseconds);
+                    if (that.settings.autoRelax) {
+                        that.animate_until(that.settings.animation_milliseconds);
+                    }
                 }
                 for (var name in n2n) {
                     var node = n2n[name];
