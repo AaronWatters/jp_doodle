@@ -220,7 +220,7 @@ XXXXX clean up events for forgotten objects
             }
             target.request_redraw();
             return stats;
-        }
+        };
 
         target.set_translate_scale = function (translate_scale) {
             if (!translate_scale) {
@@ -256,7 +256,81 @@ XXXXX clean up events for forgotten objects
                     object_info.prepare_for_redraw();
                 }
             }
-        }
+        };
+
+        // stuff for assemblies (like stars, arrows...)
+        target.assembly_draw_functions = {};
+        target.assembly_target = null;
+
+        target.define_assembly = function (name, draw_on_target) {
+            if (target.assembly_draw_functions[name]) {
+                throw new Error("cannot redefine assembly: " + name);
+            }
+            target.assembly_draw_functions[name] = draw_on_target;
+        };
+
+        target.assembly = function(options) {
+            var settings = $.extend({
+                shape_name: "assembly",
+                assembly: null, // must be defined.
+            }, options);
+            var draw_function = target.assembly_draw_functions[settings.assembly];
+            if (!draw_function) {
+                throw new Error("no such assembly defined: ", settings.assembly);
+            }
+            var draw_on_canvas = function (canvas, s) {
+                target.assembly_target = canvas;
+                target.assembler.reset();
+                target.assembly.options = options;
+                var info = draw_function(target.assembler, s);
+                // draw accumulated objects on the canvas now
+                //var objects = target.assembler.object_list;
+                //for (var i=0; i<objects.length; i++) {
+                //    var object_info = objects[i];
+                //    target.draw_object_info(object_info)
+                //}
+                target.assembly_target = null;
+                $.extend(s, info);   // as is done in assign_shape_factory.
+            };
+            settings = target.store_object_info(settings, draw_on_canvas);
+            target.request_redraw();
+            return settings;
+        };
+
+        target.assembler = {};
+
+        target.assembler.reset = function () {
+            //target.assembler.object_list = [];
+            target.assembler.options = null;
+        };
+
+        var assign_assembler_factory = function(shape_name) {
+            target.assembler[shape_name] = function(opt) {
+                // configure the shape using the options on the assembly target, and store the configuration.
+                var settings = $.extend({}, opt);
+                var assembly_options = target.assembly.options;
+                settings.frame = assembly_options.frame;
+                settings.coordinate_conversion = assembly_options.coordinate_conversion;
+                settings.assembly_component = true;
+                var method = target.assembly_target[shape_name];
+                if (!method) {
+                    throw new Error("no such assembly method: " + shape_name);
+                }
+                //c.l("drawing info", settings);
+                //c.l("drawing on", target.assembly_target)
+                var info = method(settings);
+                //c.l("factory info", info)
+                //target.assembler.object_list.push(info);
+            }
+        };
+        assign_assembler_factory("circle");
+        assign_assembler_factory("line");
+        assign_assembler_factory("text");
+        assign_assembler_factory("rect");
+        assign_assembler_factory("frame_rect");
+        assign_assembler_factory("frame_circle");
+        assign_assembler_factory("polygon");
+        assign_assembler_factory("named_image");
 
         target.objects_drawn = function (object_list) {
             // Don't draw anything on the test canvas now.
@@ -272,7 +346,7 @@ XXXXX clean up events for forgotten objects
                         frame.redraw_frame();
                         //if (frame.is_empty()) {
                             // forget empty frames
-                            //console.log("forgetting empty frame " + object_info.name)
+                            ////c.l("forgetting empty frame " + object_info.name)
                             //object_index = null;
                         //}
                     } else {
@@ -317,13 +391,13 @@ XXXXX clean up events for forgotten objects
         // enable or disable auto redraw on animation frame.
         // Temporary disable prevents redraws during large or slow scene updates as an optimization for better speed and visual effect.
         target.allow_auto_redraw = function(enabled) {
-            //console.log("allow_auto_redraw", enabled);
+            ////c.l("allow_auto_redraw", enabled);
             var disabled_before = target.disable_auto_redraw;
             target.disable_auto_redraw = !enabled;
             // if it was previously disabled and there is a redraw pending then request a redraw
             if ((enabled) && (disabled_before) && (target.redraw_pending)) {
                 target.redraw_pending = false;
-                //console.log("requesting redraw afer delay")
+                ////c.l("requesting redraw afer delay")
                 target.request_redraw();
             }
         };
@@ -348,6 +422,7 @@ XXXXX clean up events for forgotten objects
             }
             //object_info.draw_on_canvas = object_info.draw_on_canvas || draw_on_canvas;
             object_info.draw_on_canvas = draw_on_canvas || object_info.draw_on_canvas;
+            //c.l("store object info", object_info);
             if (name) {
                 // Set up color indexing
                 var pseudocolor_array = null;
@@ -392,8 +467,11 @@ XXXXX clean up events for forgotten objects
                     target.transition(object_info.name, to_values, seconds_duration);
                 });
             }
-            object_info.object_index = object_index;
-            object_list[object_index] = object_info;
+            // store the object unless it is an assembly component
+            if (!object_info.assembly_component){
+                object_info.object_index = object_index;
+                object_list[object_index] = object_info;
+            }
             return object_info;
         };
 
@@ -484,6 +562,7 @@ XXXXX clean up events for forgotten objects
                 // do not draw hidden objects
                 return;
             }
+            //c.l("object_info", object_info)
             var draw_fn = object_info.draw_on_canvas;
             var draw_info = draw_fn(target.visible_canvas, object_info);
             // store additional information attached during the draw operation
@@ -908,12 +987,12 @@ XXXXX clean up events for forgotten objects
             // "normal" event handling
             //process_event(e);
             // mouseover and mouseout simulation:
-            //console.log("check emulations: ", [e.type, e.canvas_name,  ((!last_event) || last_event.canvas_name)]); //debug only.
+            ////c.l("check emulations: ", [e.type, e.canvas_name,  ((!last_event) || last_event.canvas_name)]); //debug only.
             //if ((last_event) && (e.type == "mousemove") && (last_event.canvas_name != e.canvas_name)) {
             //if (e.type == "mousemove") {
-                //console.log("doing transition emulations " + last_event.canvas_name)
+                ////c.l("doing transition emulations " + last_event.canvas_name)
                 if ((last_event) && (last_event.canvas_name) && ((!e.canvas_name) || (e.canvas_name!=last_event.canvas_name))) {
-                    //console.log("emulating mouseout");
+                    ////c.l("emulating mouseout");
                     var mouseout_event = $.extend({}, e);
                     mouseout_event.type = "mouseout";
                     mouseout_event.canvas_name = last_event.canvas_name;
@@ -1211,7 +1290,7 @@ XXXXX clean up events for forgotten objects
         target.active_transitions = {};
 
         target.do_transitions = function () {
-            //console.log("doing transitions");
+            ////c.l("doing transitions");
             var active = target.active_transitions;
             var remaining = {};
             var redraw = false;
@@ -1220,16 +1299,16 @@ XXXXX clean up events for forgotten objects
                 transition.interpolate();
                 if (transition.finished()) {
                     // xxxx any termination actions?
-                    //console.log("done transitioning " + name);
+                    ////c.l("done transitioning " + name);
                     redraw = true;  // redraw for final interpolation
                 } else {
-                    //console.log("continuing transitions for " + name);
+                    ////c.l("continuing transitions for " + name);
                     remaining[name] = transition;
                     redraw = true;
                 }
             }
             if (redraw) {
-                //console.log("requesting redraw for continuing transitions");
+                ////c.l("requesting redraw for continuing transitions");
                 target.request_redraw();
             }
             target.active_transitions = remaining;
@@ -1268,7 +1347,7 @@ XXXXX clean up events for forgotten objects
             if (transition.interpolator) {
                 target.active_transitions[object_name] = transition;
             }
-            //console.log("requesting redraw for transition " + object_name)
+            ////c.l("requesting redraw for transition " + object_name)
             target.request_redraw();
             return transition;
         };
@@ -1333,7 +1412,7 @@ XXXXX clean up events for forgotten objects
         };
 
         target.linear_numeric_interpolator = function(old_value, new_value) {
-            //console.log("interpolating number from ", old_value, " to ", new_value);
+            ////c.l("interpolating number from ", old_value, " to ", new_value);
             return function(lmd) {
                 if (lmd <= 0) {
                     return old_value;
@@ -1426,7 +1505,7 @@ XXXXX clean up events for forgotten objects
         };
 
         target.color_interpolator = function(old_string, new_string) {
-            //console.log("interpolating color from ", old_string, " to ", new_string)
+            ////c.l("interpolating color from ", old_string, " to ", new_string)
             old_string = old_string || "black";
             // byte values for color strings
             var old_array = target.color_string_to_array(old_string);
@@ -1443,15 +1522,15 @@ XXXXX clean up events for forgotten objects
                     mixed.push((1 - lmd) * old_array[i] + lmd * new_array[i]);
                 }
                 // round to integers
-                //console.log("interpolating " + old_string + " " + old_array + " " + new_string + " " + new_array, " at " + lmd);
-                //console.log("mixed before " + mixed);
+                ////c.l("interpolating " + old_string + " " + old_array + " " + new_string + " " + new_array, " at " + lmd);
+                ////c.l("mixed before " + mixed);
                 var alpha = mixed[3];
                 mixed = mixed.map(x => Math.round(x));
-                //console.log("mixed after " + mixed);
+                ////c.l("mixed after " + mixed);
                 // last entry should be in [0..1]
                 mixed[3] = alpha/255.0;
                 var result =  "rgba(" + mixed.join(",") + ")";
-                //console.log("result=" + result);
+                ////c.l("result=" + result);
                 return result;
             }
         }
@@ -2228,6 +2307,7 @@ XXXXX clean up events for forgotten objects
         };
 
         // delegate_to_parent("change"); -- change will apply to frame
+        delegate_to_parent("define_assembly");
         delegate_to_parent("forget_objects");
         delegate_to_parent("set_visibilities");
         // delegate_to_parent("transition");  -- transition will apply to frame
@@ -2364,6 +2444,7 @@ XXXXX clean up events for forgotten objects
         override_positions("frame_circle");
         override_positions("polygon");
         override_positions("named_image");
+        override_positions("assembly");
 
         // define axes w.r.t the frame
         parent_canvas.dual_canvas_helper.add_geometry_logic(frame);

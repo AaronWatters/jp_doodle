@@ -12,6 +12,47 @@ describe("misc dual_canvas tests", () => {
         expect(elt.color_index_at(elt.invisible_canvas,10,10,1,1)).toEqual(null);
     });
 
+    it("makes an assembly in a frame and draws it", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        var f = elt.rframe(1,2,3,4,"frame");
+        var calltest = jest.fn();
+        var draw_x = function(assembler, settings) {
+            var x = settings.x;
+            var y = settings.y;
+            assembler.line({x1: x-1, y1: y-1, x2: x+1, y2: y+1});
+            assembler.line({x1: x-1, y1: y+1, x2: x+1, y2: y-1});
+            calltest();
+        };
+        f.define_assembly("X", draw_x);
+        f.assembly({assembly: "X", x: 10, y: 11});
+        expect(elt.object_list[0]).toBeTruthy();
+        //console.log("info", elt.object_list[0]);
+        elt.redraw();
+        expect(calltest).toHaveBeenCalled();
+    });
+
+    it("makes an assembly and draws it", () => {
+        mockCanvas(window);
+        var elt = jQuery("<b>test</b>");
+        elt.dual_canvas_helper();
+        var calltest = jest.fn();
+        var draw_x = function(assembler, settings) {
+            var x = settings.x;
+            var y = settings.y;
+            assembler.line({x1: x-1, y1: y-1, x2: x+1, y2: y+1});
+            assembler.line({x1: x-1, y1: y+1, x2: x+1, y2: y-1});
+            calltest();
+        };
+        elt.define_assembly("X", draw_x);
+        elt.assembly({assembly: "X", x: 10, y: 11});
+        expect(elt.object_list[0]).toBeTruthy();
+        //console.log("info", elt.object_list[0]);
+        elt.redraw();
+        expect(calltest).toHaveBeenCalled();
+    });
+
     it("computes event locations", () => {
         mockCanvas(window);
         var elt = jQuery("<b>test</b>");
