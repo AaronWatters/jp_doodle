@@ -994,6 +994,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 edge.settings.glyph.change(params);
             } else {
                 params.name = true;
+                params.graph_edge = edge;
                 edge.settings.glyph = in_frame.line(params);
             }
         };
