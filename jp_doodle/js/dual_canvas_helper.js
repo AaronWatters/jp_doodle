@@ -263,10 +263,24 @@ XXXXX clean up events for forgotten objects
         target.assembly_target = null;
 
         target.define_assembly = function (name, draw_on_target) {
-            if (target.assembly_draw_functions[name]) {
-                throw new Error("cannot redefine assembly: " + name);
-            }
             target.assembly_draw_functions[name] = draw_on_target;
+        };
+
+        target.install_assembly = function(name, draw_on_target, canvas) {
+            // attach assembly creator as canvas.name.
+            canvas = canvas || target;
+            if (draw_on_target) {
+                target.define_assembly(name, draw_on_target);
+            }
+            if (!target.assembly_draw_functions[name]) {
+                throw new Error("unknown assembly " + name);
+            }
+            canvas[name] = function(options) {
+                var settings = $.extend({
+                    assembly: name,
+                }, options)
+                return canvas.assembly(settings);
+            };
         };
 
         target.assembly = function(options) {
@@ -2300,6 +2314,13 @@ XXXXX clean up events for forgotten objects
                 return invisible;
             }
         }
+
+        frame.install_assembly = function(name, draw_on_target) {
+            // attach assembly creator to frame as frame.name.
+            frame.parent_canvas.install_assembly(
+                name, draw_on_target, frame
+            );
+        };
 
         // Delegate appropriate methods to parent
         var delegate_to_parent = function(name) {
