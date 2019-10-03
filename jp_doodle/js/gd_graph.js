@@ -291,8 +291,22 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 return result;
             };
 
+            layout_skeleton(edge_count) {
+                var Gs = this.skeleton(edge_count);
+                Gs.layout_spokes();
+                // copy positions from skeleton layout
+                var n2d = this.node_name_to_descriptor;
+                var sn2d = Gs.node_name_to_descriptor;
+                for (var name in n2d) {
+                    n2d[name].set_position(sn2d[name].position);
+                }
+                // set up bookkeeping
+                this.initialize_penalties();
+            }
+
             layout_spokes(level, skeletize, top_graph) {
                 // bottom up layout strategy for graph -- first layout simplified graph with spokes collapsed.
+                level = level || 0;
                 top_graph = top_graph || this.top_graph;
                 var nlevel = level + 1;
                 var m = this.matrix_op;
@@ -990,7 +1004,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.on_canvas = on_canvas;
                 this.settings = $.extend({
                     node_shape: "text",  // or "cirle" or "rect"
-                    node_color: "red",
+                    node_color: "black",
                     node_background: "#f9d",
                     node_font: "italic 12px Arial",
                     edge_color: "#f93",
@@ -1019,6 +1033,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     if ((!info) || (!info.graph_node)) {
                         console.error("no object info?", event);
                         return
+                    }
+                    // disable animation if autoRelax is off
+                    if (!that.settings.autoRelax) {
+                        that.relaxer = null;
                     }
                     var node = info.graph_node;
                     node.settings.fixed = true;
@@ -1301,7 +1319,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
     $.fn.gd_graph.example = function(element) {
         debugger;
-        var g = jQuery.fn.gd_graph({separator_radius: 6, link_radius: 1, min_change: 999});
+        var g = jQuery.fn.gd_graph({separator_radius: 6, link_radius: 1, min_change: 199});
         var s = 11;
         for (var i=0; i<s; i++) {
             var i10 = i * s;
@@ -1330,6 +1348,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
         }
         g.layout_spokes();
+        //g.layout_skeleton(2);
 
         element.empty();
         element.css("background-color", "cornsilk");
@@ -1342,16 +1361,27 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         var illustration = g.illustrate(element, {
             size:1000,
             animation_milliseconds: 10000,
-            autoRelax: true,
+            autoRelax: false,
         });
         illustration.draw_in_region();
-        illustration.animate_until(100 * 1000, s);
+        // animate relaxation for 20 seconds.
+        illustration.animate_until(20 * 1000, s);
 
         illustration.enable_dragging();
 
         var t = $("<button>Toggle auto relax</button>").appendTo(element);
+        var t_label = function() {
+            if (illustration.settings.autoRelax) {
+                t.text("Autorelax on");
+            } else {
+                t.text("Autorelax off");
+            }
+        };
+        t_label()
         t.click(function() {
             illustration.settings.autoRelax = !illustration.settings.autoRelax;
+            illustration.relaxer = null;
+            t_label();
         });
     };
 
