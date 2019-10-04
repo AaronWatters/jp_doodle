@@ -337,14 +337,15 @@ XXXXX clean up events for forgotten objects
                 //target.assembler.object_list.push(info);
             }
         };
-        assign_assembler_factory("circle");
-        assign_assembler_factory("line");
-        assign_assembler_factory("text");
-        assign_assembler_factory("rect");
-        assign_assembler_factory("frame_rect");
-        assign_assembler_factory("frame_circle");
-        assign_assembler_factory("polygon");
-        assign_assembler_factory("named_image");
+        
+        $.fn.dual_canvas_helper.draw_op_names = (
+            "circle line text rect frame_rect frame_circle polygon " +
+            "named_image assembly").split(" ");
+
+        for (var i=0; i<$.fn.dual_canvas_helper.draw_op_names.length; i++) {
+            var name = $.fn.dual_canvas_helper.draw_op_names[i];
+            assign_assembler_factory(name);
+        }
 
         target.objects_drawn = function (object_list) {
             // Don't draw anything on the test canvas now.
@@ -2457,15 +2458,11 @@ XXXXX clean up events for forgotten objects
                 return method(s, wait);
             }
         };
-        override_positions("circle");
-        override_positions("line");
-        override_positions("text");
-        override_positions("rect");
-        override_positions("frame_rect");
-        override_positions("frame_circle");
-        override_positions("polygon");
-        override_positions("named_image");
-        override_positions("assembly");
+
+        for (var i=0; i<$.fn.dual_canvas_helper.draw_op_names.length; i++) {
+            var name = $.fn.dual_canvas_helper.draw_op_names[i];
+            override_positions(name);
+        }
 
         // define axes w.r.t the frame
         parent_canvas.dual_canvas_helper.add_geometry_logic(frame);
