@@ -742,13 +742,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return Math.sqrt(target.vdot(vector, vector));
         };
         target.vdistance = function(v1, v2) {
-            return target.vlength(
-                target.vadd(
-                    target.vscale(-1, v1),
-                    v2
-                )
-            );
-        }
+            return target.vlength(target.vsub(v1, v2));
+        };
+        target.vsub = function(v1, v2) {
+            return target.vadd(v1, target.vscale(-1.0, v2));
+        };
         target.vint = function(vector) {
             var result = {};
             for (var slot in vector){
