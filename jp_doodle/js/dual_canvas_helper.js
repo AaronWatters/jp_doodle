@@ -344,8 +344,17 @@ XXXXX clean up events for forgotten objects
 
         for (var i=0; i<$.fn.dual_canvas_helper.draw_op_names.length; i++) {
             var name = $.fn.dual_canvas_helper.draw_op_names[i];
-            assign_assembler_factory(name);
+            if (name != "assembly") {
+                assign_assembler_factory(name);
+            }
         }
+
+        target.assembler.assembly = function(opt) {
+            // assemble the object immediately.
+            var draw_function = target.assembly_draw_functions[opt.assembly];
+            var info = draw_function(target.assembler, opt);
+            return info;
+        };
 
         target.objects_drawn = function (object_list) {
             // Don't draw anything on the test canvas now.
