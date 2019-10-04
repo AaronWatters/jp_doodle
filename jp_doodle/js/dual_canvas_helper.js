@@ -1559,8 +1559,134 @@ XXXXX clean up events for forgotten objects
             }
         }
 
+        // Useful standard assemblies (composite glyphs)
+
+        var draw_star = function(assembler, options) {
+            var settings = $.extend({
+                points: 5,
+                radius: 10,
+                point_factor: 1.2,
+                degrees: 0,
+            }, options);
+            var x = settings.x;
+            var y = settings.y;
+            var theta = Math.PI * (90.0 + settings.degrees) / 180.0;
+            var dtheta = Math.PI / settings.points;
+            var coords = [];
+            var outer_radius = settings.point_factor * settings.radius;
+            for (var i=0; i<settings.points; i++) {
+                coords.push([x + Math.cos(theta) * outer_radius, y + Math.sin(theta) * outer_radius]);
+                theta += dtheta;
+                coords.push([x + Math.cos(theta) * settings.radius, y + Math.sin(theta) * settings.radius]);
+                theta += dtheta;
+            }
+            var polygon_config = $.extend({}, settings);
+            polygon_config.points = coords;
+            assembler.polygon(polygon_config);
+            if (settings.text) {
+                var text_config = $.extend({
+                    valign: "center",
+                    align: "center",
+                }, settings);
+                text_config.color = settings.text_color || settings.color;
+                assembler.text(text_config)
+            }
+        };
+        var draw_arrow = function(assembler, options) {
+            // arrow with head at x2, y2
+            var settings = $.extend({
+                head_angle: 45,
+                head_offset: 0,
+                head_length: 5,
+                epsilon: 1e-5,
+                symmetric: false,
+            }, options);
+            // draw the body
+            assembler.line(settings);
+            var p1 = {x: settings.x1, y: settings.y1};
+            var p2 = {x: settings.x2, y: settings.y2};
+            var diff = element.vsub(p1, p2);
+            var len = element.vlength(diff);
+            if (len > settings.epsilon) {
+                // draw the head
+                var to_p1 = element.vscale(1.0 / len, diff);
+                var normal = {x: to_p1.y, y: -to_p1.x};
+                var theta = settings.head_angle * (Math.PI / 180.0);
+                var direction = element.vadd(
+                    element.vscale(Math.cos(theta), to_p1),
+                    element.vscale(Math.sin(theta), normal)
+                );
+                var offset = element.vscale(settings.head_length, direction);
+                var head_offset = Math.min(settings.head_offset, len * 0.33);  // don't offset too close to p1.
+                var start = element.vadd(
+                    element.vscale(-len + settings.head_offset, to_p1),
+                    p1
+                );
+                var params = $.extend({}, settings);
+                $.extend(params, {x1: start.x, y1: start.y, x2: start.x + offset.x, y2: start.y + offset.y})
+                assembler.line(params);
+                if (settings.symmetric) {
+                    theta = - theta;
+                    var direction = element.vadd(
+                        element.vscale(Math.cos(theta), to_p1),
+                        element.vscale(Math.sin(theta), normal)
+                    );
+                    var offset = element.vscale(settings.head_length, direction);
+                    params = $.extend({}, settings);
+                    $.extend(params, {x1: start.x, y1: start.y, x2: start.x + offset.x, y2: start.y + offset.y})
+                    assembler.line(params);
+                }
+            }
+        };
+        var draw_double_arrow = function(assembler, options) {
+            // use "arrow" assembly to draw arrows on both ends of line
+            var settings = $.extend({
+                line_offset: 1.5,
+                head_angle: 45,
+                head_offset: 0,
+                head_length: 5,
+                epsilon: 1e-5,
+                symmetric: false,
+            }, options);
+            var p1 = {x: settings.x1, y: settings.y1};
+            var p2 = {x: settings.x2, y: settings.y2};
+            var diff = element.vsub(p1, p2);
+            var len = element.vlength(diff);
+            if (len > settings.epsilon) {
+                var to_p1 = element.vscale(1.0 / len, diff);
+                var normal = {x: to_p1.y, y: -to_p1.x};
+                var offset = element.vscale(settings.line_offset, normal);
+                var f = $.extend({}, settings);
+                f.x1 = settings.x1 + offset.x;
+                f.y1 = settings.y1 + offset.y;
+                f.x2 = settings.x2 + offset.x;
+                f.y2 = settings.y2 + offset.y;
+                f.assembly = "arrow";
+                assembler.assembly(f)
+                var b = $.extend({}, settings);
+                b.x1 = settings.x2 - offset.x;
+                b.y1 = settings.y2 - offset.y;
+                b.x2 = settings.x1 - offset.x;
+                b.y2 = settings.y1 - offset.y;
+                b.color = settings.back_color || settings.color;
+                b.head_angle = settings.back_angle || settings.head_angle;
+                b.head_offset = settings.back_offset || settings.head_offset;
+                b.assembly = "arrow";
+                assembler.assembly(b)
+            }
+        };
+
+        target.install_standard_assemblies = function(frame) {
+            frame = frame || target;
+            frame.install_assembly("star", draw_star);
+            frame.install_assembly("arrow", draw_arrow);
+            frame.install_assembly("double_arrow", draw_double_arrow);
+        };
+
+        // Configure the dual canvas.
         target.canvas_2d_widget_helper.add_vector_ops(target);
         target.dual_canvas_helper.add_geometry_logic(target);
+        target.install_standard_assemblies();
         target.reset_canvas();
 
         return target;
@@ -2483,6 +2609,10 @@ XXXXX clean up events for forgotten objects
         
         // Add the frame object to the parent canvas in place
         parent_canvas.store_object_info(frame, null, true);
+
+        // Configure the frame
+        parent_canvas.install_standard_assemblies(frame);
+        
         return frame;
     }
 
