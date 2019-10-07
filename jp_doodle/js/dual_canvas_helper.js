@@ -339,6 +339,10 @@ XXXXX clean up events for forgotten objects
                 if ((assembly_options.is_mask) && (info.draw_mask)) {
                     info.draw_mask(target.assembly_target, info);
                 }
+                // store any sample pixel in assembly
+                if (info.sample_pixel) {
+                    assembly_options.sample_pixel = info.sample_pixel;
+                }
             }
         };
         
