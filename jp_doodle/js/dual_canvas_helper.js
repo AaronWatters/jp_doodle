@@ -295,7 +295,7 @@ XXXXX clean up events for forgotten objects
             var draw_on_canvas = function (canvas, s) {
                 target.assembly_target = canvas;
                 target.assembler.reset();
-                target.assembly.options = options;
+                target.assembly.options = s;
                 var info = draw_function(target.assembler, s);
                 // draw accumulated objects on the canvas now
                 //var objects = target.assembler.object_list;
@@ -330,11 +330,15 @@ XXXXX clean up events for forgotten objects
                 if (!method) {
                     throw new Error("no such assembly method: " + shape_name);
                 }
-                //c.l("drawing info", settings);
-                //c.l("drawing on", target.assembly_target)
+                if (assembly_options.is_mask) {
+                    settings.pseudocolor = assembly_options.pseudocolor;
+                    settings.color = assembly_options.pseudocolor;
+                }
                 var info = method(settings);
-                //c.l("factory info", info)
-                //target.assembler.object_list.push(info);
+                // draw the mask over the drawn object if draw_mask is defined (wasteful!)
+                if ((assembly_options.is_mask) && (info.draw_mask)) {
+                    info.draw_mask(target.assembly_target, info);
+                }
             }
         };
         
@@ -604,7 +608,7 @@ XXXXX clean up events for forgotten objects
                 return;
             }
             var draw_fn = object_info.draw_on_canvas;
-            var info2 = $.extend({}, object_info);
+            var info2 = $.extend({is_mask: true}, object_info);
             if (object_info.draw_mask) {
                 // convert visible object to invisible mask object (text becomes rectangle, eg)
                 draw_fn = object_info.draw_mask;
