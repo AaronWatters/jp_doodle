@@ -273,7 +273,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 that.add_button("indicated by", sb, function() { that.indicated_by(); });
                 that.add_button("sources only", sb, function() { that.sources_only(); });
                 that.add_button("connected", sb, function() { that.connected(); });
-                that.add_button("wiggle", sb, function() { that.wiggle(); });
                 that.add_button("undo", sb, function() { that.undo(); });
                 // create lassos
                 var sl = that.side_lassos;
@@ -284,6 +283,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 that.add_button("relax (slow)", ly, function() { that.relax_layout(); });
                 that.add_button("skeleton (faster)", ly, function() { that.skeleton_layout(); });
                 that.add_button("grid (fastest)", ly, function() { that.grid_layout(); });
+                that.add_button("<em>wiggle</em>", ly, function() { that.wiggle(); });
                 // create list actions
                 var ls = that.side_lists
                 that.add_button("nodes", ls, function() { that.list_nodes(); });
@@ -300,7 +300,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var update_slider = function () {
                     s.canvas_size = that.canvas_slider.slider( "value" );
                     that.set_element_size()
-                    that.canvas_size_display.html("" + s.canvas_size);
+                    that.canvas_size_display.html("side=" + s.canvas_size);
                 };
                 update_slider();
                 that.canvas_slider.on( "slidechange", update_slider );
@@ -366,6 +366,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     size: size,
                     animation_milliseconds: 10000,
                     autoRelax: false,
+                    node_background: "#dff",
                     display_edge: function(e, i, u) { that.draw_edge(e, i, u); },
                 })
                 illustration.draw_in_region();
@@ -377,7 +378,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var min_weight = this.from_graph.min_weight;
                 var max_weight = this.from_graph.max_weight;
                 if (min_weight < max_weight) {
-                    var step = (max_weight - min_weight) * 0.05;
+                    var step = (max_weight - min_weight) * 0.02;
                     var values = v.threshold_slider.slider("values");
                     if (values[0] <= min_weight) {
                         values[0] = -step;
@@ -390,7 +391,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         max: max_weight,
                         step: step,
                         values: values,
-                    })
+                    });
                 }
             };
             draw_edge(edge, illustration, update) {
