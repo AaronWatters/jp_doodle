@@ -876,6 +876,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     reverse = "forward";
                 }
                 var other = this[reverse] || {weight: 0};
+                this[reverse] = other;
                 this[direction] = config;
                 this.abs_weight = Math.abs(weight) + Math.abs(other.weight) + Math.abs(this.weight);
                 return this;
@@ -1049,6 +1050,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.stop_time = null;
                 // node dragging
                 this.dragging_node = null;
+                // calibration
+                this.radius = null;
             };
             enable_dragging () {
                 // allow dragging of nodes.
@@ -1227,6 +1230,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var diff = ops.vsub(M, m);
                 var mid = ops.vadd(ops.vscale(0.5, diff), m);
                 var maxdiff2 = Math.max(diff.x, diff.y) * 0.5;
+                this.radius = maxdiff2;   // used for drawing calibration.
                 result.frame_minx = mid.x - maxdiff2;
                 result.frame_miny = mid.y - maxdiff2;
                 result.frame_maxx = mid.x + maxdiff2;
