@@ -30,8 +30,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     sidebar_size: 150,
                     gap: 10,
                     min_color: "#00f",
-                    min_threshold_color: "#555",
-                    max_threshold_color: "#666",
+                    min_threshold_color: "#aaa",
+                    max_threshold_color: "#bbb",
                     max_color: "orange",
                     default_layout: LAYOUT_SKELETON,
                     separator_radius: 6,
@@ -325,6 +325,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var button_div = $("<div/>").appendTo(container);
                 var button = $('<a href="#">' + text + "</a>").appendTo(button_div);
                 button.click(click_callback);
+                return button;
             };
 
             set_title(text) {
@@ -358,6 +359,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     height: size,
                 };
                 canvas_element.dual_canvas_helper(config);
+                // get color interpolators
+                this.low_interpolator = canvas_element.color_interpolator(vs.min_color, vs.min_threshold_color);
+                this.high_interpolator = canvas_element.color_interpolator(vs.max_threshold_color, vs.max_color);
                 var illustration = this.to_graph.illustrate(canvas_element, {
                     size: size,
                     animation_milliseconds: 10000,
@@ -368,14 +372,35 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 //illustration.animate_until(20 * 1000);
                 illustration.enable_dragging();
                 v.current_illustrations = illustration;
+                // update thresholding
+                var from_graph = this.from_graph;
+                var min_weight = this.from_graph.min_weight;
+                var max_weight = this.from_graph.max_weight;
+                if (min_weight < max_weight) {
+                    var step = (max_weight - min_weight) * 0.05;
+                    var values = v.threshold_slider.slider("values");
+                    if (values[0] <= min_weight) {
+                        values[0] = -step;
+                    }
+                    if (values[1] >= max_weight) {
+                        values[1] = step;
+                    }
+                    v.threshold_slider.slider({
+                        min: min_weight,
+                        max: max_weight,
+                        step: step,
+                        values: values,
+                    })
+                }
             };
             draw_edge(edge, illustration, update) {
-                debugger;
+                var that = this;
                 var params = {}
                 params.color = edge.settings.color || illustration.settings.edge_color || "blue";
                 params.lineWidth = edge.settings.lineWidth || illustration.settings.edgeLineWidth || 1;
                 params.lineDash = edge.settings.lineDash || illustration.settings.edgeLineDash;
                 var graph = edge.in_graph;
+                var from_graph = this.from_graph;
                 var node1 = graph.get_node(edge.nodename1);
                 var node2 = graph.get_node(edge.nodename2);
                 params.x1 = node1.position.x;
@@ -392,16 +417,33 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         return 90;
                     }
                     return 45;
+                };
+                var interpolated_color = function(interpolator, value, minimum, maximum) {
+                    if ((minimum >= maximum) || (value > maximum)) {
+                        return interpolator(1.0);
+                    }
+                    if (value < minimum) {
+                        return interpolator(0);
+                    }
+                    var lambda = (value - minimum) * (1.0 / (maximum - minimum));
+                    return interpolator(lambda);
+                };
+                var get_color = function(value) {
+                    debugger;
+                    if (value < 0) {
+                        return interpolated_color(that.low_interpolator, value, from_graph.min_weight, 0);
+                    }
+                    return interpolated_color(that.high_interpolator, value, 0, from_graph.max_weight);
                 }
                 if (params.forward) {
                     // configure forward link
-                    params.color = "red";
+                    params.color = get_color(forward_weight);
                     params.head_angle = head_angle(forward_weight);
                 }
                 if (params.backward) {
                     // configure backward link
-                    params.back_color = "blue";
-                    params.head_angle = head_angle(backward_weight);
+                    params.back_color =get_color(backward_weight);
+                    params.back_angle = head_angle(backward_weight);
                 }
                 var tick = illustration.radius * 0.005;
                 params.head_length = tick * 5;
@@ -466,6 +508,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.settings = $.extend({}, options);
                 this.name_to_node = {};
                 this.key_to_edge = {};
+                this.min_weight = 0;
+                this.max_weight = 0;
             };
             node(name, options) {
                 var n = new DirectedNode(name, options);
@@ -485,6 +529,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     e.settings = $.extend(e.settings, e2.settings);
                 };
                 this.key_to_edge[k] = e;
+                this.min_weight = Math.min(this.min_weight, weight);
+                this.max_weight = Math.max(this.max_weight, weight);
             };
          };
          class DirectedNode {
@@ -515,16 +561,24 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             default_layout: "relax",
         });
         N.set_title("A Very Interesting Network.")
+        
         N.node(0);
         N.edge(0, 1);
         N.edge(1, 0);
         N.edge(1, 2);
         N.edge(2, 3);
         for (var i=4; i<16; i++) {
-            N.edge(i, i+1, 0.5);
-            N.edge(i+1, i, -1.5);
+            N.edge(i, i+1, 0.1);
+            N.edge(i+1, i, -0.25);
             N.edge(0, i, 1.23, {color: "green"})
         }
+        
+        N.edge(100, 101, -0.1);
+        N.edge(101, 100, +0.1);
+        N.edge(200, 201, +1);
+        N.edge(201, 200, -1);
+        N.node(5000);
+
         N.display_all();
     };
 
