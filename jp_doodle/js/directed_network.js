@@ -387,8 +387,25 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var backward_weight = edge.backward.weight;
                 params.forward = (forward_weight != 0);
                 params.backward = (backward_weight != 0);
+                var head_angle = function(w) {
+                    if (w < 0) {
+                        return 90;
+                    }
+                    return 45;
+                }
+                if (params.forward) {
+                    // configure forward link
+                    params.color = "red";
+                    params.head_angle = head_angle(forward_weight);
+                }
+                if (params.backward) {
+                    // configure backward link
+                    params.back_color = "blue";
+                    params.head_angle = head_angle(backward_weight);
+                }
                 var tick = illustration.radius * 0.005;
                 params.head_length = tick * 5;
+                params.head_offset = tick * 10;
                 if (params.forward && params.backward) {
                     params.line_offset = tick;
                 }
@@ -494,7 +511,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
     };
 
     $.fn.directed_network.example = function(element) {
-        var N = element.directed_network();
+        var N = element.directed_network({
+            default_layout: "relax",
+        });
         N.set_title("A Very Interesting Network.")
         N.node(0);
         N.edge(0, 1);
@@ -503,7 +522,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         N.edge(2, 3);
         for (var i=4; i<16; i++) {
             N.edge(i, i+1, 0.5);
-            N.edge(i+1, i, +1.5);
+            N.edge(i+1, i, -1.5);
             N.edge(0, i, 1.23, {color: "green"})
         }
         N.display_all();
