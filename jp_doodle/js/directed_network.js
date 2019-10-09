@@ -36,7 +36,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     default_layout: LAYOUT_SKELETON,
                     separator_radius: 6,
                     link_radius: 1,
-                    min_change: 9,
+                    min_change: 1,
                     undo_limit: 10,
                 }, options);
                 this.element = element;
@@ -44,6 +44,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.undo_stack = [];
                 this.full_context = null;
                 this.make_scaffolding();
+                this.current_illustrations = null;
             };
 
             display_all() {
@@ -87,8 +88,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
 
             edge(source_name, destination_name, weight, options) {
+                weight = weight || 1;
                 this.data_graph.edge(source_name, destination_name, weight, options);
             };
+
+            wiggle() {
+                // run animation
+                this.current_illustrations.animate_until(20000);
+            }
 
             set_element_size() {
                 var s = this.settings;
@@ -266,6 +273,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 that.add_button("indicated by", sb, function() { that.indicated_by(); });
                 that.add_button("sources only", sb, function() { that.sources_only(); });
                 that.add_button("connected", sb, function() { that.connected(); });
+                that.add_button("wiggle", sb, function() { that.wiggle(); });
                 that.add_button("undo", sb, function() { that.undo(); });
                 // create lassos
                 var sl = that.side_lassos;
@@ -357,9 +365,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 })
                 illustration.draw_in_region();
                 //illustration.animate_until(20 * 1000);
-                //illustration.enable_dragging();
+                illustration.enable_dragging();
+                v.current_illustrations = illustration;
             };
             layout(mode) {
+                debugger;
                 mode = mode || this.for_visualization.settings.default_layout;
                 if (mode == LAYOUT_RELAX) {
                     this.to_graph.layout_spokes();
@@ -458,6 +468,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         N.edge(1, 0);
         N.edge(1, 2);
         N.edge(2, 3);
+        for (var i=4; i<16; i++) {
+            N.edge(i, i+1, 0.5);
+            N.edge(i+1, i, +1.5);
+            N.edge(0, i, 1.23, {color: "green"})
+        }
         N.display_all();
     };
 
