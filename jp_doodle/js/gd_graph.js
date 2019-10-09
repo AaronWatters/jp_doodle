@@ -114,7 +114,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var e2d = this.edge_key_to_descriptor;
                 if (e2d[k]) {
                     if (skip_duplicate) {
-                        return null;
+                        return e2d[k];
                     }
                     throw new Error("duplicate edge not permitted: " + k);
                 }
@@ -367,6 +367,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     var pos = m.vscale(d, xy);
                     node.set_position(pos);
                 }
+                this.initialize_penalties();
                 return this;
             }
 
@@ -846,6 +847,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         class GD_Edge {
             constructor(nodename1, nodename2, weight, in_graph, options) {
+                weight = weight || 0;
                 this.settings = $.extend({}, options);
                 this.nodename1 = nodename1;
                 this.nodename2 = nodename2;
@@ -855,6 +857,28 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.penalty = 0;
                 this.gradient = in_graph.xy([0,0]);
                 this.key = edge_key(nodename1, nodename2);
+            };
+            arrow(nodenameA, nodenameB, weight, config) {
+                // directional configuration
+                config = config || {}
+                config.weight = weight;
+                var direction = "forward";
+                var reverse = "backward";
+                if (nodenameA == this.nodename1) {
+                    if (nodenameB != this.nodename2)  {
+                        throw new Error("bad nodenames " + [nodenameA,nodenameB]);
+                    }
+                } else {
+                    if ((nodenameA != this.nodename2) || (nodenameB != this.nodename1)) {
+                        throw new Error("bad nodenames " + [nodenameA,nodenameB]);
+                    }
+                    direction = "backward";
+                    reverse = "forward";
+                }
+                var other = this[reverse] || {weight: 0};
+                this[direction] = config;
+                this.abs_weight = Math.abs(weight) + Math.abs(other.weight) + Math.abs(this.weight);
+                return this;
             };
             clone(in_graph) {
                 return new GD_Edge(this.nodename1, this.nodename2, this.weight, in_graph);
