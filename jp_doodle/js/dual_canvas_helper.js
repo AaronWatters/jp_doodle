@@ -1613,21 +1613,21 @@ XXXXX clean up events for forgotten objects
             assembler.line(settings);
             var p1 = {x: settings.x1, y: settings.y1};
             var p2 = {x: settings.x2, y: settings.y2};
-            var diff = element.vsub(p1, p2);
-            var len = element.vlength(diff);
+            var diff = target.vsub(p1, p2);
+            var len = target.vlength(diff);
             if (len > settings.epsilon) {
                 // draw the head
-                var to_p1 = element.vscale(1.0 / len, diff);
+                var to_p1 = target.vscale(1.0 / len, diff);
                 var normal = {x: to_p1.y, y: -to_p1.x};
                 var theta = settings.head_angle * (Math.PI / 180.0);
-                var direction = element.vadd(
-                    element.vscale(Math.cos(theta), to_p1),
-                    element.vscale(Math.sin(theta), normal)
+                var direction = target.vadd(
+                    target.vscale(Math.cos(theta), to_p1),
+                    target.vscale(Math.sin(theta), normal)
                 );
-                var offset = element.vscale(settings.head_length, direction);
+                var offset = target.vscale(settings.head_length, direction);
                 var head_offset = Math.min(settings.head_offset, len * 0.33);  // don't offset too close to p1.
-                var start = element.vadd(
-                    element.vscale(-len + settings.head_offset, to_p1),
+                var start = target.vadd(
+                    target.vscale(-len + settings.head_offset, to_p1),
                     p1
                 );
                 var params = $.extend({}, settings);
@@ -1635,11 +1635,11 @@ XXXXX clean up events for forgotten objects
                 assembler.line(params);
                 if (settings.symmetric) {
                     theta = - theta;
-                    var direction = element.vadd(
-                        element.vscale(Math.cos(theta), to_p1),
-                        element.vscale(Math.sin(theta), normal)
+                    var direction = target.vadd(
+                        target.vscale(Math.cos(theta), to_p1),
+                        target.vscale(Math.sin(theta), normal)
                     );
-                    var offset = element.vscale(settings.head_length, direction);
+                    var offset = target.vscale(settings.head_length, direction);
                     params = $.extend({}, settings);
                     $.extend(params, {x1: start.x, y1: start.y, x2: start.x + offset.x, y2: start.y + offset.y})
                     assembler.line(params);
@@ -1655,32 +1655,38 @@ XXXXX clean up events for forgotten objects
                 head_length: 5,
                 epsilon: 1e-5,
                 symmetric: false,
+                forward: true,
+                backward: true,
             }, options);
             var p1 = {x: settings.x1, y: settings.y1};
             var p2 = {x: settings.x2, y: settings.y2};
-            var diff = element.vsub(p1, p2);
-            var len = element.vlength(diff);
+            var diff = target.vsub(p1, p2);
+            var len = target.vlength(diff);
             if (len > settings.epsilon) {
-                var to_p1 = element.vscale(1.0 / len, diff);
+                var to_p1 = target.vscale(1.0 / len, diff);
                 var normal = {x: to_p1.y, y: -to_p1.x};
-                var offset = element.vscale(settings.line_offset, normal);
-                var f = $.extend({}, settings);
-                f.x1 = settings.x1 + offset.x;
-                f.y1 = settings.y1 + offset.y;
-                f.x2 = settings.x2 + offset.x;
-                f.y2 = settings.y2 + offset.y;
-                f.assembly = "arrow";
-                assembler.assembly(f)
-                var b = $.extend({}, settings);
-                b.x1 = settings.x2 - offset.x;
-                b.y1 = settings.y2 - offset.y;
-                b.x2 = settings.x1 - offset.x;
-                b.y2 = settings.y1 - offset.y;
-                b.color = settings.back_color || settings.color;
-                b.head_angle = settings.back_angle || settings.head_angle;
-                b.head_offset = settings.back_offset || settings.head_offset;
-                b.assembly = "arrow";
-                assembler.assembly(b)
+                var offset = target.vscale(settings.line_offset, normal);
+                if (settings.forward) {
+                    var f = $.extend({}, settings);
+                    f.x1 = settings.x1 + offset.x;
+                    f.y1 = settings.y1 + offset.y;
+                    f.x2 = settings.x2 + offset.x;
+                    f.y2 = settings.y2 + offset.y;
+                    f.assembly = "arrow";
+                    assembler.assembly(f)
+                }
+                if (settings.backward) {
+                    var b = $.extend({}, settings);
+                    b.x1 = settings.x2 - offset.x;
+                    b.y1 = settings.y2 - offset.y;
+                    b.x2 = settings.x1 - offset.x;
+                    b.y2 = settings.y1 - offset.y;
+                    b.color = settings.back_color || settings.color;
+                    b.head_angle = settings.back_angle || settings.head_angle;
+                    b.head_offset = settings.back_offset || settings.head_offset;
+                    b.assembly = "arrow";
+                    assembler.assembly(b)
+                }
             }
         };
 
