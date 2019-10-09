@@ -881,7 +881,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 return this;
             };
             clone(in_graph) {
-                return new GD_Edge(this.nodename1, this.nodename2, this.weight, in_graph);
+                var result = new GD_Edge(this.nodename1, this.nodename2, this.weight, in_graph);
+                result.abs_weight = this.abs_weight;
+                return result;
             };
             compute_penalty() {
                 var in_graph = this.in_graph;
