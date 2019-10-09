@@ -344,7 +344,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             display() {
                 // show this context in the visualization.
-                debugger;
+                var that = this;
                 var v = this.for_visualization;
                 var vs = v.settings;
                 var canvas_container = v.canvas_div;
@@ -362,11 +362,44 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     size: size,
                     animation_milliseconds: 10000,
                     autoRelax: false,
+                    display_edge: function(e, i, u) { that.draw_edge(e, i, u); },
                 })
                 illustration.draw_in_region();
                 //illustration.animate_until(20 * 1000);
                 illustration.enable_dragging();
                 v.current_illustrations = illustration;
+            };
+            draw_edge(edge, illustration, update) {
+                debugger;
+                var params = {}
+                params.color = edge.settings.color || illustration.settings.edge_color || "blue";
+                params.lineWidth = edge.settings.lineWidth || illustration.settings.edgeLineWidth || 1;
+                params.lineDash = edge.settings.lineDash || illustration.settings.edgeLineDash;
+                var graph = edge.in_graph;
+                var node1 = graph.get_node(edge.nodename1);
+                var node2 = graph.get_node(edge.nodename2);
+                params.x1 = node1.position.x;
+                params.y1 = node1.position.y;
+                params.x2 = node2.position.x;
+                params.y2 = node2.position.y;
+                params.line_offset = 0.0;
+                var forward_weight = edge.forward.weight;
+                var backward_weight = edge.backward.weight;
+                params.forward = (forward_weight != 0);
+                params.backward = (backward_weight != 0);
+                var tick = illustration.radius * 0.005;
+                params.head_length = tick * 5;
+                if (params.forward && params.backward) {
+                    params.line_offset = tick;
+                }
+                var in_frame = illustration.frame;
+                if (update) {
+                    edge.settings.glyph.change(params);
+                } else {
+                    params.name = true;
+                    params.graph_edge = edge;
+                    edge.settings.glyph = in_frame.double_arrow(params);
+                }
             };
             layout(mode) {
                 debugger;
