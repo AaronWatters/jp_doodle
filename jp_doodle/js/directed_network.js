@@ -47,7 +47,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.current_illustrations = null;
             };
 
-            display_all() {
+            display_all(force_layout) {
                 // show all nodes and edges in the data graph
                 var dg = this.data_graph;
                 var k2e = $.extend({}, dg.key_to_edge);
@@ -60,7 +60,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     p[name] = position;
                 }
                 var context = new NetworkDisplayContext(this, dg, p, k2e);
-                if (!positioned) {
+                if ((force_layout) || (!positioned)) {
                     context.layout();
                 }
                 this.display_context(context);
@@ -74,14 +74,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 context.display();
             };
 
-            redisplay_top_context() {
+            current_context () {
                 var st = this.undo_stack;
-                var ln = st.length;
-                if (ln > 0) {
-                    var context = st[ln - 1];
+                return st[st.length - 1];
+            };
+
+            redisplay_top_context() {
+                var context = this.current_context();
+                if (context) {
                     context.display();
                 }
-            }
+            };
 
             node(name, options) {
                 this.data_graph.node(name, options);
@@ -95,7 +98,38 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             wiggle() {
                 // run animation
                 this.current_illustrations.animate_until(20000);
-            }
+            };
+
+            trim() {
+                // create a new context with nodes having no visible descendants removed.
+                var context = this.current_context();
+                this.display_context(context.trim());
+            };
+
+            connected() {
+                // create a new context with nodes with no visible connections removed.
+                var context = this.current_context();
+                this.display_context(context.connected());
+            };
+
+            undo() {
+                // return to previous context (or reset)
+                debugger;
+                var st = this.undo_stack;
+                st.pop();
+                if (st.length > 0) {
+                    this.redisplay_top_context();
+                } else {
+                    // display all nodes and recompute layout
+                    this.display_all(true);
+                }
+            };
+
+            reset() {
+                // reinitialize data structures.
+                this.undo_stack = [];
+                this.display_all(true);
+            };
 
             set_element_size() {
                 var s = this.settings;
@@ -162,7 +196,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 that.canvas_div = $("<div/>").appendTo(that.right_display);
                 that.canvas_div.width(s.canvas_size);
                 that.canvas_div.height(s.canvas_size);
-                that.canvas_div.css({"background-color": "#eee"});
+                that.canvas_div.css({"background-color": "white"});
                 that.canvas_div.html("canvas here.");
                 // selection area: threshold, color swatches, match
                 that.selection_div = $("<div/>").appendTo(that.right_display);
@@ -247,7 +281,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     "grid-gap": `${s.gap}`,
                 });
                 //that.match_div.html("match input here");
-                that.add_button("Match pattern:", that.match_div, function() {that.match_pattern();});
+                that.add_button("Match glob patterns:", that.match_div, function() {that.match_pattern();});
                 var match_input_div = $("<div/>").appendTo(that.match_div);
                 this.match_input = $('<input type="text" value="*" size="70"/>').appendTo(match_input_div);
                 // misc info at the bottom.
@@ -267,13 +301,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 that.info_display.height(s.info_height);
                 // create side buttons
                 var sb = that.side_buttons;
-                that.add_button("reset", sb, function() { that.reset(); });
+                that.add_button("<em>reset</em>", sb, function() { that.reset(); });
+                that.add_button("trim leaves", sb, function() { that.trim(); });
+                that.add_button("connected", sb, function() { that.connected(); });
                 that.add_button("expand", sb, function() { that.expand(); });
                 that.add_button("points at", sb, function() { that.points_at(); });
                 that.add_button("indicated by", sb, function() { that.indicated_by(); });
                 that.add_button("sources only", sb, function() { that.sources_only(); });
-                that.add_button("connected", sb, function() { that.connected(); });
-                that.add_button("undo", sb, function() { that.undo(); });
+                that.add_button("<em>undo</em>", sb, function() { that.undo(); });
                 // create lassos
                 var sl = that.side_lassos;
                 that.add_button("focus", sl, function() { that.lasso_focus(); });
@@ -283,6 +318,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 that.add_button("relax (slow)", ly, function() { that.relax_layout(); });
                 that.add_button("skeleton (faster)", ly, function() { that.skeleton_layout(); });
                 that.add_button("grid (fastest)", ly, function() { that.grid_layout(); });
+                that.add_button("redraw", ly, function() { that.redisplay_top_context(); });
                 that.add_button("<em>wiggle</em>", ly, function() { that.wiggle(); });
                 // create list actions
                 var ls = that.side_lists
@@ -332,7 +368,56 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.title_div.html(text);
             }
 
+            glob_matcher(pattern) {
+                // expose glob matcher for testing.
+                return new SimpleGlobMatcher(pattern);
+            }
+
         };
+
+        class SimpleGlobMatcher {
+            "Match glob strings only supporting * wildcard.  Case insensitive."
+            // I got annoyed with regular expressions....
+            constructor(pattern) {
+                pattern = pattern.toUpperCase();
+                while (pattern.includes("**")) {
+                    pattern = pattern.replace("**", "*");
+                }
+                this.substrings = pattern.split("*");
+            };
+            whole_string_match(string) {
+                string = "" + string;
+                string = string.toUpperCase();
+                return this.recursive_match(0, 0, string);
+            };
+            recursive_match(substring_index, string_index, string) {
+                var substrings = this.substrings;
+                var nsubstrings = substrings.length;
+                var lstring = string.length;
+                if ((substring_index >= nsubstrings) && (string_index >= lstring)) {
+                    // base case:
+                    return true;  // all patterns match
+                }
+                if ((substring_index < nsubstrings) && (string_index <= lstring)) {
+                    var substring = substrings[substring_index];
+                    var nsubstring = substring.length;
+                    if ((string_index + nsubstring) <= lstring) {
+                        var test_match = string.substr(string_index, nsubstring);
+                        if (test_match == substring) {
+                            var next_substring_index = substring_index + 1;
+                            var next_string_index = string_index + nsubstring;
+                            // try to match all tails
+                            for (var start=next_string_index; start <= lstring; start++) {
+                                if (this.recursive_match(next_substring_index, start, string)) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+                return false;
+            };
+        }
 
         class NetworkDisplayContext {
             // container for selected nodes with positions and active edges
@@ -342,6 +427,55 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.active_positions = active_positions;
                 this.active_key_to_edge = active_key_to_edge;
                 this.to_graph = this.undirected_graph();
+                // compute statistics
+                this.sources = {};  // visible as source (others may be source in graph)
+                this.destinations = {};   //  visible as destination
+                this.isolated = {};  // no visible connections.
+                this.leaves = {};
+                for (var k in active_key_to_edge) {
+                    var e = active_key_to_edge[k];
+                    this.sources[e.source_name] = e;
+                    this.destinations[e.destination_name] = e;
+                }
+                for (var name in this.destinations) {
+                    if (!this.sources[name]) {
+                        this.leaves[name] = this.destinations[name] || true;
+                    }
+                }
+                for (var name in active_positions) {
+                    if ((!this.sources[name]) && (!this.destinations[name])) {
+                        this.isolated[name] = active_positions[name] || true;
+                        this.leaves[name] = active_positions[name] || true;
+                    }
+                }
+            };
+            restriction(include_node_map, exclude_node_map) {
+                // context with included nodes but not excluded nodes
+                exclude_node_map = exclude_node_map || {};
+                var pos = this.update_positions();
+                var keep_pos = {};
+                var k2e = this.active_key_to_edge;
+                var keep_k2e = {};
+                for (var name in pos) {
+                    if ((include_node_map[name]) && (!exclude_node_map[name])) {
+                        keep_pos[name] = pos[name];
+                    }
+                }
+                for (var k in k2e) {
+                    var e = k2e[k];
+                    if ((keep_pos[e.destination_name]) && (keep_pos[e.source_name])) {
+                        keep_k2e[k] = e;
+                    }
+                }
+                return new NetworkDisplayContext(
+                    this.for_visualization, this.from_graph, keep_pos, keep_k2e
+                );
+            };
+            trim() {
+                return this.restriction(this.active_positions, this.leaves);
+            };
+            connected() {
+                return this.restriction(this.active_positions, this.isolated);
             };
             display() {
                 // show this context in the visualization.
@@ -430,7 +564,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     return interpolator(lambda);
                 };
                 var get_color = function(value) {
-                    debugger;
                     if (value < 0) {
                         return interpolated_color(that.low_interpolator, value, from_graph.min_weight, 0);
                     }
@@ -462,7 +595,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
             };
             layout(mode) {
-                debugger;
                 mode = mode || this.for_visualization.settings.default_layout;
                 if (mode == LAYOUT_RELAX) {
                     this.to_graph.layout_spokes();
@@ -476,7 +608,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 else {
                     throw new Error("bad layout mode: " + layout);
                 }
-            }
+                return this.update_positions();
+            };
+            update_positions() {
+                // update positions
+                var to_graph = this.to_graph;
+                var positions = {};
+                for (var name in this.active_positions) {
+                    positions[name] = to_graph.get_node(name).position;
+                }
+                this.active_positions = positions;
+                return positions;
+            };
             undirected_graph() {
                 // make an undirected graph representing the selected nodes and edges.
                 var vs = this.for_visualization.settings;
@@ -568,10 +711,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         N.edge(1, 0);
         N.edge(1, 2);
         N.edge(2, 3);
+
         for (var i=4; i<16; i++) {
             N.edge(i, i+1, 0.1);
             N.edge(i+1, i, -0.25);
-            N.edge(0, i, 1.23, {color: "green"})
+            N.edge(0, i, 1.23, {color: "green"});
+            N.edge(i+600, i+603, 2);
+            N.edge(i+600, 555, 2);
         }
         
         N.edge(100, 101, -0.1);
