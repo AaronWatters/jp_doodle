@@ -46,6 +46,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.make_scaffolding();
                 this.current_illustrations = null;
                 this.default_positions = null;
+                this.canvas_element = null;
             };
 
             unrestricted_context() {
@@ -169,6 +170,47 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.display_all(true);
             };
 
+            lasso_focus(get_new_context, info, button) {
+                // focus on nodes lassoed by user.
+                var that = this;
+                if (!get_new_context) {
+                    get_new_context = function(selected_nodes, old_context) {
+                        return old_context.restriction(selected_nodes);
+                    };
+                    info = "Lasso nodes to focus on.";
+                    button = that.focus_b;
+                }
+                this.clear_information();
+                this.inform(info);
+                var canvas = this.canvas_element;
+                var lasso_callback = function(names_mapping) {
+                    debugger;
+                    var selected_nodes = {};
+                    var count = 0;
+                    for (var name in names_mapping) {
+                        //that.inform("name: " + name);
+                        var object_info = names_mapping[name];
+                        var node = object_info.graph_node;
+                        if (node) {
+                            count ++;
+                            selected_nodes[node.name] = node;
+                        }
+                    }
+                    if (count > 0) {
+                        that.inform("selected " + count + " nodes.");
+                        var context = that.current_context();
+                        //var new_context = context.restriction(selected_nodes);
+                        var new_context = get_new_context(selected_nodes, context);
+                        that.display_context(new_context);
+                    } else {
+                        that.inform("no nodes selected in lasso.");
+                    }
+                    that.uncheck_button(button);
+                };
+                canvas.do_lasso(lasso_callback, {}, true);
+                this.check_button(button);
+            };
+
             set_element_size() {
                 var s = this.settings;
                 var width = s.canvas_size + s.sidebar_size + 3 * s.gap;
@@ -177,6 +219,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.canvas_div.width(s.canvas_size);
                 this.canvas_div.height(s.canvas_size);
                 this.redisplay_top_context();
+                // reset all buttons
+                if (this.all_buttons) {
+                    for (var i=0; i<this.all_buttons.length; i++) {
+                        this.uncheck_button(this.all_buttons[i]);
+                    }
+                }
             };
 
             make_scaffolding() {
@@ -319,7 +367,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     "grid-gap": `${s.gap}`,
                 });
                 //that.match_div.html("match input here");
-                that.add_button("Match glob patterns:", that.match_div, function() {that.match_pattern();});
+                that.match_b = that.add_button(
+                    "Match glob patterns:", that.match_div, function() {that.match_pattern();});
                 var match_input_div = $("<div/>").appendTo(that.match_div);
                 this.match_input = $('<input type="text" value="*" size="70"/>').appendTo(match_input_div);
                 // misc info at the bottom.
@@ -339,29 +388,29 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 that.info_display.height(s.info_height);
                 // create side buttons
                 var sb = that.side_buttons;
-                that.add_button("<em>reset</em>", sb, function() { that.reset(); });
-                that.add_button("trim leaves", sb, function() { that.trim(); });
-                that.add_button("connected", sb, function() { that.connected(); });
-                that.add_button("expand", sb, function() { that.expand(); });
-                that.add_button("points at", sb, function() { that.points_at(); });
-                that.add_button("indicated by", sb, function() { that.indicated_by(); });
-                that.add_button("sources only", sb, function() { that.sources_only(); });
-                that.add_button("<em>undo</em>", sb, function() { that.undo(); });
+                that.reset_b = that.add_button("<em>reset</em>", sb, function() { that.reset(); });
+                that.trim_b = that.add_button("trim leaves", sb, function() { that.trim(); });
+                that.connected_b = that.add_button("connected", sb, function() { that.connected(); });
+                that.expand_b = that.add_button("expand", sb, function() { that.expand(); });
+                that.points_at_b = that.add_button("points at", sb, function() { that.points_at(); });
+                that.indicated_by_b = that.add_button("indicated by", sb, function() { that.indicated_by(); });
+                that.sources_only_b = that.add_button("sources only", sb, function() { that.sources_only(); });
+                that.undo_b = that.add_button("<em>undo</em>", sb, function() { that.undo(); });
                 // create lassos
                 var sl = that.side_lassos;
-                that.add_button("focus", sl, function() { that.lasso_focus(); });
-                that.add_button("ignore", sl, function() { that.lasso_ignore(); });
+                that.focus_b = that.add_button("focus", sl, function() { that.lasso_focus(); });
+                that.ignore_b = that.add_button("ignore", sl, function() { that.lasso_ignore(); });
                 // create layout actions
                 var ly = that.side_layout;
-                that.add_button("relax (slow)", ly, function() { that.relax_layout(); });
-                that.add_button("skeleton (faster)", ly, function() { that.skeleton_layout(); });
-                that.add_button("grid (fastest)", ly, function() { that.grid_layout(); });
-                that.add_button("redraw", ly, function() { that.redisplay_top_context(); });
-                that.add_button("<em>wiggle</em>", ly, function() { that.wiggle(); });
+                that.relax_b = that.add_button("relax (slow)", ly, function() { that.relax_layout(); });
+                that.skeleton_b = that.add_button("skeleton (faster)", ly, function() { that.skeleton_layout(); });
+                that.grid_b = that.add_button("grid (fastest)", ly, function() { that.grid_layout(); });
+                that.redraw_b = that.add_button("redraw", ly, function() { that.redisplay_top_context(); });
+                that.wiggle_b = that.add_button("<em>wiggle</em>", ly, function() { that.wiggle(); });
                 // create list actions
                 var ls = that.side_lists
-                that.add_button("nodes", ls, function() { that.list_nodes(); });
-                that.add_button("edges", ls, function() { that.list_edges(); });
+                that.nodes_b = that.add_button("nodes", ls, function() { that.list_nodes(); });
+                that.edges_b = that.add_button("edges", ls, function() { that.list_edges(); });
                 // create sliders
                 that.canvas_slider = $("<div/>").appendTo(that.side_sliders);
                 that.canvas_slider.slider({
@@ -378,7 +427,27 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 };
                 update_slider();
                 that.canvas_slider.on( "slidechange", update_slider );
-                this.clear_information();
+
+                that.all_buttons = [
+                    that.match_b,
+                    that.reset_b,
+                    that.connected_b,
+                    that.expand_b,
+                    that.points_at_b,
+                    that.indicated_by_b,
+                    that.sources_only_b,
+                    that.undo_b,
+                    that.focus_b,
+                    that.ignore_b,
+                    that.relax_b,
+                    that.skeleton_b,
+                    that.grid_b,
+                    that.redraw_b,
+                    that.wiggle_b,
+                    that.nodes_b,
+                    that.edges_b,
+                ];
+                that.clear_information();
 
                 that.set_element_size();
             };
@@ -397,8 +466,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             add_button(text, container, click_callback) {
                 var button_div = $("<div/>").appendTo(container);
                 var button = $('<a href="#">' + text + "</a>").appendTo(button_div);
+                button._base_text = text;
                 button.click(click_callback);
                 return button;
+            };
+
+            check_button(button) {
+                button.html("&check;" + button._base_text);
+            };
+
+            uncheck_button(button) {
+                button.html(button._base_text);
             };
 
             set_title(text) {
@@ -436,7 +514,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     }
                     this.inform("'" + pattern + "' matched " + count + " nodes.");
                 }
-                debugger;
                 var new_context = context.restriction(pos_keep);
                 this.display_context(new_context);
             };
@@ -577,6 +654,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 canvas_container.empty();
                 canvas_container.height(size).width(size);
                 var canvas_element = $("<div/>").appendTo(canvas_container);
+                that.canvas_element = canvas_element;
+                that.for_visualization.canvas_element = canvas_element;
                 canvas_element.height(size).width(size);
                 var config = {
                     width: size,
