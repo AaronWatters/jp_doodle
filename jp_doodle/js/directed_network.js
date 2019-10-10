@@ -146,6 +146,32 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.inform("Removed " + nleaves + " isolated nodes.")
             };
 
+            sources_only() {
+                // create a new context with nodes with no visible connections removed.
+                this.clear_information();
+                this.inform("Sources only: show only nodes that have visible or undisplayed outgoing edges.")
+                var context = this.current_context();
+                var graph = this.data_graph;
+                var sources = graph.all_source_nodes();
+                var keep = {};
+                var pos = context.active_positions;
+                var eliminations = 0;
+                for (var name in pos) {
+                    if (sources[name]) {
+                        keep[name] = sources[name];
+                    } else {
+                        eliminations ++;
+                    }
+                }
+                if (eliminations) {
+                    var new_context = context.restriction(keep);
+                    this.display_context(new_context);
+                    this.inform("Removed " + eliminations + " non-sources.");
+                } else {
+                    this.inform("No nodes to eliminate: all viewed nodes are sources.")
+                }
+            };
+
             undo() {
                 // return to previous context (or reset)
                 this.clear_information();
@@ -171,7 +197,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
 
             lasso_ignore() {
-                debugger;
                 var get_new_context = function(selected_nodes, old_context) {
                     return old_context.restriction(old_context.active_positions, selected_nodes);
                 };
@@ -194,7 +219,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.inform(info);
                 var canvas = this.canvas_element;
                 var lasso_callback = function(names_mapping) {
-                    debugger;
                     var selected_nodes = {};
                     var count = 0;
                     for (var name in names_mapping) {
@@ -401,10 +425,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 that.reset_b = that.add_button("<em>reset</em>", sb, function() { that.reset(); });
                 that.trim_b = that.add_button("trim leaves", sb, function() { that.trim(); });
                 that.connected_b = that.add_button("connected", sb, function() { that.connected(); });
+                that.sources_only_b = that.add_button("sources only", sb, function() { that.sources_only(); });
                 that.expand_b = that.add_button("expand", sb, function() { that.expand(); });
                 that.points_at_b = that.add_button("points at", sb, function() { that.points_at(); });
                 that.indicated_by_b = that.add_button("indicated by", sb, function() { that.indicated_by(); });
-                that.sources_only_b = that.add_button("sources only", sb, function() { that.sources_only(); });
                 that.undo_b = that.add_button("<em>undo</em>", sb, function() { that.undo(); });
                 // create lassos
                 var sl = that.side_lassos;
@@ -755,7 +779,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 if (params.backward) {
                     // configure backward link
-                    params.back_color =get_color(backward_weight);
+                    params.back_color = get_color(backward_weight);
                     params.back_angle = head_angle(backward_weight);
                 }
                 var tick = illustration.radius * 0.005;
@@ -854,6 +878,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.key_to_edge[k] = e;
                 this.min_weight = Math.min(this.min_weight, weight);
                 this.max_weight = Math.max(this.max_weight, weight);
+            };
+            all_source_nodes() {
+                var result = {};
+                for (var k in this.key_to_edge) {
+                    result[this.key_to_edge[k].source_name] = k;
+                }
+                return result;
             };
          };
          class DirectedNode {
