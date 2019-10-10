@@ -170,6 +170,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.display_all(true);
             };
 
+            lasso_ignore() {
+                debugger;
+                var get_new_context = function(selected_nodes, old_context) {
+                    return old_context.restriction(old_context.active_positions, selected_nodes);
+                };
+                var info = "Lasso nodes to ignore."
+                var button = this.ignore_b;
+                return this.lasso_focus(get_new_context, info, button);
+            };
+
             lasso_focus(get_new_context, info, button) {
                 // focus on nodes lassoed by user.
                 var that = this;
