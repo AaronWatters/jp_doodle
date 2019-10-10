@@ -333,7 +333,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     var node = nn2d[nodename];
                     var ownernode = Gsnn2d[owner];
                     var shift = m.vscale(scale, this.node_offsetter(count));
-                    var position = m.vadd(shift, ownernode.position);
+                    var reference = m.vscale(0.25, ownernode.position);
+                    var position = m.vadd(shift, reference);
                     node.set_position(position)
                 }
                 this.initialize_penalties();
