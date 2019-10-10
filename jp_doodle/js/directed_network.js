@@ -71,6 +71,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 while (this.undo_stack.length > this.settings.undo_limit) {
                     this.undo_stack.shift()
                 }
+                this.inform(
+                    "Displaying " + hash_length(context.active_positions) + " nodes and " +
+                    hash_length(context.active_key_to_edge) + " edges."
+                );
                 context.display();
             };
 
@@ -102,31 +106,52 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
             trim() {
                 // create a new context with nodes having no visible descendants removed.
+                this.clear_information();
+                this.inform("Trim: removing nodes that don't point to other nodes.")
                 var context = this.current_context();
+                var nleaves = hash_length(context.leaves);
+                if (nleaves <= 0) {
+                    this.inform("No leaves to remove.");
+                    return;
+                }
+                this.inform("Removed " + nleaves + " leaves.")
                 this.display_context(context.trim());
             };
 
             connected() {
                 // create a new context with nodes with no visible connections removed.
+                this.clear_information();
+                this.inform("Connected: removing nodes not linked to other nodes.")
                 var context = this.current_context();
+                var nleaves = hash_length(context.isolated);
+                if (nleaves <= 0) {
+                    this.inform("No isolated nodes to remove.");
+                    return;
+                }
                 this.display_context(context.connected());
+                this.inform("Removed " + nleaves + " isolated nodes.")
             };
 
             undo() {
                 // return to previous context (or reset)
-                debugger;
+                this.clear_information();
+                this.inform("Undo!")
                 var st = this.undo_stack;
                 st.pop();
                 if (st.length > 0) {
+                    this.inform("Restoring previous context.");
                     this.redisplay_top_context();
                 } else {
                     // display all nodes and recompute layout
+                    this.inform("Redisplaying all nodes and edges.");
                     this.display_all(true);
                 }
             };
 
             reset() {
                 // reinitialize data structures.
+                this.clear_information();
+                this.inform("Resetting graph and undo stack.");
                 this.undo_stack = [];
                 this.display_all(true);
             };
@@ -340,8 +365,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 };
                 update_slider();
                 that.canvas_slider.on( "slidechange", update_slider );
-                // create canvas
-                // create selections
+                this.clear_information();
 
                 that.set_element_size();
             };
@@ -366,13 +390,33 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
             set_title(text) {
                 this.title_div.html(text);
-            }
+            };
 
             glob_matcher(pattern) {
                 // expose glob matcher for testing.
                 return new SimpleGlobMatcher(pattern);
-            }
+            };
 
+            match_pattern () {
+                // match the pattern in this.match_input text area
+            };
+
+            clear_information() {
+                // erase anything in the information area.
+                this.info_display.empty();
+            };
+
+            inform(html_text) {
+                // add information to the information area.
+                $("<div>" + html_text + "</div>").appendTo(this.info_display);
+            };
+
+        };
+
+        // convenience
+        var hash_length = function(hash) {
+            // https://stackoverflow.com/questions/8702219/how-to-get-javascript-hash-table-count
+            return Object.keys(hash).length;
         };
 
         class SimpleGlobMatcher {
