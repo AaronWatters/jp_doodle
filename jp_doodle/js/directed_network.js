@@ -172,6 +172,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
             };
 
+            points_at() {
+                return this.expand(true, false, "Points at: Add outgoing edges from shown nodes.");
+            };
+
+            indicated_by() {
+                return this.expand(false, true, "Indicated by: Add incoming edges from shown nodes.");
+            };
+
             expand(no_incoming, no_outgoing, info) {
                 this.clear_information();
                 info = info || "Expand: add nodes connected to displayed nodes.";
@@ -211,7 +219,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 if ((new_edges > 0) || (new_nodes > 0)) {
                     var new_context = new NetworkDisplayContext(this, graph, new_pos, new_k2e)
                     this.display_context(new_context);
-                    this.inform("Added " + new_edges + " and " + new_nodes + " new nodes.");
+                    this.inform("Added " + new_edges + " new edges and " + new_nodes + " new nodes.");
                 } else {
                     this.inform("No new edges or nodes added.")
                 }
@@ -576,7 +584,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var pattern_to_glob = {};
                 for (var i=0; i<pattern_strings.length; i++) {
                     var p = pattern_strings[i];
-                    pattern_to_glob[p] = this.glob_matcher(p);
+                    if (p) {
+                        pattern_to_glob[p] = this.glob_matcher(p);
+                    }
                 }
                 this.inform("Matching " + hash_length(pattern_to_glob) + " patterns.");
                 var context = this.unrestricted_context();
