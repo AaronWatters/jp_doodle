@@ -45,23 +45,36 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.full_context = null;
                 this.make_scaffolding();
                 this.current_illustrations = null;
+                this.default_positions = null;
             };
 
-            display_all(force_layout) {
-                // show all nodes and edges in the data graph
+            unrestricted_context() {
+                // context with all nodes and edges.
                 var dg = this.data_graph;
                 var k2e = $.extend({}, dg.key_to_edge);
                 var p = {};
                 var n2n = dg.name_to_node
                 var positioned = true;
+                var default_positions = this.default_positions;
                 for (var name in dg.name_to_node) {
                     var position = n2n[name].settings.position;
+                    if ((!position) && (default_positions)) {
+                        position = default_positions[name];
+                    }
                     positioned = ((positioned) && (position))
                     p[name] = position;
                 }
                 var context = new NetworkDisplayContext(this, dg, p, k2e);
-                if ((force_layout) || (!positioned)) {
+                context.positioned = positioned;
+                return context;
+            }
+
+            display_all(force_layout) {
+                // show all nodes and edges in the data graph
+                var context = this.unrestricted_context();
+                if ((force_layout) || (!context.positioned)) {
                     context.layout();
+                    this.default_positions = context.update_positions();
                 }
                 this.display_context(context);
             };
@@ -399,6 +412,33 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
             match_pattern () {
                 // match the pattern in this.match_input text area
+                this.clear_information();
+                var value = this.match_input.val();
+                this.inform("Match glob patterns: " + value);
+                var pattern_strings = value.split(" ");
+                var pattern_to_glob = {};
+                for (var i=0; i<pattern_strings.length; i++) {
+                    var p = pattern_strings[i];
+                    pattern_to_glob[p] = this.glob_matcher(p);
+                }
+                this.inform("Matching " + hash_length(pattern_to_glob) + " patterns.");
+                var context = this.unrestricted_context();
+                var pos = context.update_positions();
+                var pos_keep = {};
+                for (var pattern in pattern_to_glob) {
+                    var glob = pattern_to_glob[pattern];
+                    var count = 0;
+                    for (var name in pos) {
+                        if (glob.whole_string_match("" + name)) {
+                            count++;
+                            pos_keep[name] = pos[name];
+                        }
+                    }
+                    this.inform("'" + pattern + "' matched " + count + " nodes.");
+                }
+                debugger;
+                var new_context = context.restriction(pos_keep);
+                this.display_context(new_context);
             };
 
             clear_information() {
@@ -450,6 +490,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         if (test_match == substring) {
                             var next_substring_index = substring_index + 1;
                             var next_string_index = string_index + nsubstring;
+                            if (next_string_index < lstring) {
+                                if (next_substring_index >= nsubstrings) {
+                                    // non empty tail with no wildcard to match.
+                                    return false;
+                                }
+                            }
                             // try to match all tails
                             for (var start=next_string_index; start <= lstring; start++) {
                                 if (this.recursive_match(next_substring_index, start, string)) {
@@ -748,7 +794,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         var N = element.directed_network({
             default_layout: "relax",
         });
-        N.set_title("A Very Interesting Network.")
+        N.set_title("Gene Regulation Network.")
         
         N.node(0);
         N.edge(0, 1);
