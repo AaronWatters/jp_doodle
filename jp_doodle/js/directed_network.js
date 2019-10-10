@@ -172,6 +172,51 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
             };
 
+            expand(no_incoming, no_outgoing, info) {
+                this.clear_information();
+                info = info || "Expand: add nodes connected to displayed nodes.";
+                this.inform(info);
+                var context = this.current_context();
+                var graph = this.data_graph;
+                var pos = context.active_positions;
+                var new_pos = $.extend({}, pos);
+                var k2e = context.active_key_to_edge;
+                var new_k2e = $.extend({}, k2e);
+                var new_edges = 0;
+                var new_nodes = 0;
+                var default_positions = this.default_positions;
+                // add nodes from edges
+                for (var key in graph.key_to_edge) {
+                    var edge = graph.key_to_edge[key];
+                    var sn = edge.source_name;
+                    var dn = edge.destination_name;
+                    if ((!no_outgoing) && (!new_pos[dn]) && (pos[sn])) {
+                        new_pos[dn] = default_positions[dn];
+                        new_nodes ++;
+                    }
+                    if ((!no_incoming) && (!new_pos[sn]) && (pos[dn])) {
+                        new_pos[sn] = default_positions[sn];
+                        new_nodes ++;
+                    }
+                }
+                // add edges
+                for (var key in graph.key_to_edge) {
+                    var edge = graph.key_to_edge[key];
+                    var sn = edge.source_name;
+                    var dn = edge.destination_name;
+                    if ((new_pos[sn]) && (new_pos[dn])) {
+                        new_k2e[key] = edge;
+                    }
+                }
+                if ((new_edges > 0) || (new_nodes > 0)) {
+                    var new_context = new NetworkDisplayContext(this, graph, new_pos, new_k2e)
+                    this.display_context(new_context);
+                    this.inform("Added " + new_edges + " and " + new_nodes + " new nodes.");
+                } else {
+                    this.inform("No new edges or nodes added.")
+                }
+            };
+
             undo() {
                 // return to previous context (or reset)
                 this.clear_information();
