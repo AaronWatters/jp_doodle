@@ -250,6 +250,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
 
             relaxer(node_names, min_change) {
+                this.initialize_penalties();
                 return new GD_Relaxer(this, node_names, min_change);
             };
 
