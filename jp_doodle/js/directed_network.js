@@ -298,17 +298,38 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.check_button(button);
             };
 
-            list_nodes() {
+            list_nodes(names) {
                 var context = this.current_context();
-                var names = [];
-                for (var name in context.active_positions) {
-                    names.push(name);
-                };
+                if (!names) {
+                    names = [];
+                    for (var name in context.active_positions) {
+                        names.push(name);
+                    };
+                    this.clear_information();
+                }
                 names.sort();
-                this.clear_information();
-                this.inform("<h4>Node names</h4>")
+                this.inform("<h4>Node names</h4>");
                 this.inform("<blockquote>" + names.join(", ") + "</blockquote>");
-            }
+            };
+
+            list_edges(key_to_edge) {
+                var context = this.current_context();
+                if (!key_to_edge) {
+                    key_to_edge = context.active_key_to_edge;
+                    this.clear_information();
+                }
+                var keys = []
+                for (var key in key_to_edge) {
+                    keys.push(key);
+                };
+                keys.sort();
+                this.inform("<h4>Edge: source, destination, weight</h4>");
+                for (var i=0; i<keys.length; i++) {
+                    var edge = key_to_edge[key];
+                    var data = [edge.source_name, edge.destination_name, edge.weight];
+                    this.inform("<code>" + data.join(", ") + "</code>");
+                }
+            };
 
             set_element_size() {
                 var s = this.settings;
