@@ -298,6 +298,47 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.check_button(button);
             };
 
+            lasso_detail() {
+                var that = this;
+                this.clear_information();
+                this.inform("Lasso detail: encircle nodes to get information on nodes their edges.");
+                var button = this.detail_b;
+                var canvas = this.canvas_element;
+                var lasso_callback = function(names_mapping) {
+                    var selected_names = [];
+                    var name_to_node = {};
+                    for (var name in names_mapping) {
+                        //that.inform("name: " + name);
+                        var object_info = names_mapping[name];
+                        var node = object_info.graph_node;
+                        if (node) {
+                            var name = node.name;
+                            selected_names.push(name);
+                            name_to_node[name] = node;
+                        }
+                    }
+                    if (selected_names.length > 0) {
+                        that.inform("selected " + selected_names.length  + " nodes.");
+                        var key_to_edge = {};
+                        var context = that.current_context();
+                        var ak2e = context.active_key_to_edge;
+                        for (var key in ak2e) {
+                            var edge = ak2e[key];
+                            if (name_to_node[edge.source_name] || name_to_node[edge.destination_name]) {
+                                key_to_edge[key] = edge;
+                            }
+                        }
+                        that.list_nodes(selected_names);
+                        that.list_edges(key_to_edge);
+                    } else {
+                        that.inform("no nodes selected in lasso.");
+                    }
+                    that.uncheck_button(button);
+                };
+                canvas.do_lasso(lasso_callback, {}, true);
+                this.check_button(button);
+            };
+
             list_nodes(names) {
                 var context = this.current_context();
                 if (!names) {
@@ -323,8 +364,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     keys.push(key);
                 };
                 keys.sort();
+                if (keys.length < 1) {
+                    this.inform("No edges to list.")
+                    return;
+                }
                 this.inform("<h4>Edge: source, destination, weight</h4>");
                 for (var i=0; i<keys.length; i++) {
+                    var key = keys[i];
                     var edge = key_to_edge[key];
                     var data = [edge.source_name, edge.destination_name, edge.weight];
                     this.inform("<code>" + data.join(", ") + "</code>");
@@ -543,12 +589,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var sl = that.side_lassos;
                 that.focus_b = that.add_button("focus", sl, function() { that.lasso_focus(); });
                 that.ignore_b = that.add_button("ignore", sl, function() { that.lasso_ignore(); });
+                that.detail_b = that.add_button("detail", sl, function() { that.lasso_detail(); });
                 // create layout actions
                 var ly = that.side_layout;
                 that.relax_b = that.add_button("relax (slow)", ly, function() { that.relax_layout(); });
                 that.skeleton_b = that.add_button("skeleton (faster)", ly, function() { that.skeleton_layout(); });
                 that.grid_b = that.add_button("grid (fastest)", ly, function() { that.grid_layout(); });
-                that.redraw_b = that.add_button("redraw", ly, function() { that.redisplay_top_context(); });
+                that.redraw_b = that.add_button("<em>redraw</em>", ly, function() { that.redisplay_top_context(); });
                 that.wiggle_b = that.add_button("<em>wiggle</em>", ly, function() { that.wiggle(); });
                 // create list actions
                 var ls = that.side_lists
