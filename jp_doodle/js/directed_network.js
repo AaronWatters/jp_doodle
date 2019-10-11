@@ -311,7 +311,30 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     for (var i=0; i<this.all_buttons.length; i++) {
                         this.uncheck_button(this.all_buttons[i]);
                     }
+                    var layout = this.settings.default_layout;
+                    var layout_button = this.layout_buttons[layout];
+                    if (layout_button) {
+                        this.check_button(layout_button);
+                    }
                 }
+            };
+
+            skeleton_layout(mode) {
+                mode = mode || LAYOUT_SKELETON;
+                this.clear_information();
+                this.inform("Resetting layout: " + mode);
+                var context = this.current_context();
+                context.layout(mode);
+                //this.redisplay_top_context();
+                this.set_element_size();
+            };
+
+            relax_layout() {
+                return this.skeleton_layout(LAYOUT_RELAX);
+            };
+
+            grid_layout() {
+                return this.skeleton_layout(LAYOUT_GRID);
             };
 
             make_scaffolding() {
@@ -534,6 +557,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     that.nodes_b,
                     that.edges_b,
                 ];
+                var lb = {};
+                lb[LAYOUT_RELAX] = that.relax_b;
+                lb[LAYOUT_SKELETON] = that.skeleton_b;
+                lb[LAYOUT_GRID] = that.grid_b;
+                that.layout_buttons = lb;
                 that.clear_information();
 
                 that.set_element_size();
@@ -866,6 +894,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 else {
                     throw new Error("bad layout mode: " + layout);
                 }
+                this.for_visualization.settings.default_layout = mode;
                 return this.update_positions();
             };
             update_positions() {
