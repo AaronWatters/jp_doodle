@@ -298,6 +298,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.check_button(button);
             };
 
+            list_nodes() {
+                var context = this.current_context();
+                var names = [];
+                for (var name in context.active_positions) {
+                    names.push(name);
+                };
+                names.sort();
+                this.clear_information();
+                this.inform("<h4>Node names</h4>")
+                this.inform("<blockquote>" + names.join(", ") + "</blockquote>");
+            }
+
             set_element_size() {
                 var s = this.settings;
                 var width = s.canvas_size + s.sidebar_size + 3 * s.gap;
@@ -567,7 +579,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 that.set_element_size();
             };
 
-            apply_displayed_threshhold(){
+            apply_displayed_threshhold() {
                 var that = this;
                 var sl = that.threshold_slider;
                 var mm = that.threshold_min_display;
