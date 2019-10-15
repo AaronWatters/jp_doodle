@@ -804,29 +804,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.from_graph = from_graph;
                 this.active_positions = active_positions;
                 this.active_key_to_edge = active_key_to_edge;
-                //this.to_graph = this.undirected_graph();
-                // compute statistics
-                /*
-                this.sources = {};  // visible as source (others may be source in graph)
-                this.destinations = {};   //  visible as destination
-                this.isolated = {};  // no visible connections.
-                this.leaves = {};
-                for (var k in active_key_to_edge) {
-                    var e = active_key_to_edge[k];
-                    this.sources[e.source_name] = e;
-                    this.destinations[e.destination_name] = e;
-                }
-                for (var name in this.destinations) {
-                    if (!this.sources[name]) {
-                        this.leaves[name] = this.destinations[name] || true;
-                    }
-                }
-                for (var name in active_positions) {
-                    if ((!this.sources[name]) && (!this.destinations[name])) {
-                        this.isolated[name] = active_positions[name] || true;
-                        this.leaves[name] = active_positions[name] || true;
-                    }
-                } */
+                this.to_graph = null;   // computed on demand
                 this.display_active = false;
             };
             restriction(include_node_map, exclude_node_map) {
