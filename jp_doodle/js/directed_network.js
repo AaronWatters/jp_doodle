@@ -865,7 +865,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.low_interpolator = canvas_element.color_interpolator(vs.min_color, vs.min_threshold_color);
                 this.high_interpolator = canvas_element.color_interpolator(vs.max_threshold_color, vs.max_color);
                 var threshold_values = v.threshold_slider.slider("values");
-                debugger;
                 this.to_graph = this.undirected_graph(threshold_values[0], threshold_values[1]);
                 var illustration = this.to_graph.illustrate(canvas_element, {
                     size: size,
@@ -901,9 +900,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
             };
             draw_edge(edge, illustration, update) {
+                debugger;
                 var that = this;
                 var params = {}
-                params.color = edge.settings.color || illustration.settings.edge_color || "blue";
+                //params.color = edge.settings.color || illustration.settings.edge_color || "blue";
                 params.lineWidth = edge.settings.lineWidth || illustration.settings.edgeLineWidth || 1;
                 params.lineDash = edge.settings.lineDash || illustration.settings.edgeLineDash;
                 var graph = edge.in_graph;
@@ -943,12 +943,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 if (params.forward) {
                     // configure forward link
-                    params.color = get_color(forward_weight);
+                    params.color = edge.forward.color || get_color(forward_weight);
                     params.head_angle = head_angle(forward_weight);
                 }
                 if (params.backward) {
                     // configure backward link
-                    params.back_color = get_color(backward_weight);
+                    params.back_color = edge.backward.color || get_color(backward_weight);
                     params.back_angle = head_angle(backward_weight);
                 }
                 var tick = illustration.radius * 0.005;
@@ -1112,13 +1112,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
     };
 
     $.fn.directed_network.example = function(element) {
+        debugger;
         var N = element.directed_network({
             default_layout: "relax",
         });
         N.set_title("Gene Regulation Network.")
         
-        N.node(0);
-        N.edge(0, 1);
+        N.node(1, {color: "blue", background:"pink", font:"bold 20px Arial"});
+        N.edge(0, 1, 2.0, {color:"red"});
+        N.edge(1, 0, -0.2, {color: "blue", lineDash: [5, 3],})
+        
         N.edge(1, 0);
         N.edge(1, 2);
         N.edge(2, 3);
