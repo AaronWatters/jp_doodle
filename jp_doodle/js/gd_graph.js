@@ -866,6 +866,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             arrow(nodenameA, nodenameB, weight, config) {
                 // directional configuration
                 config = config || {}
+                // extend missing settings using config.
+                this.settings = $.extend({}, config, this.settings);
                 config.weight = weight;
                 var direction = "forward";
                 var reverse = "backward";
