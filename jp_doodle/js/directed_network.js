@@ -806,6 +806,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.active_key_to_edge = active_key_to_edge;
                 //this.to_graph = this.undirected_graph();
                 // compute statistics
+                /*
                 this.sources = {};  // visible as source (others may be source in graph)
                 this.destinations = {};   //  visible as destination
                 this.isolated = {};  // no visible connections.
@@ -825,7 +826,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         this.isolated[name] = active_positions[name] || true;
                         this.leaves[name] = active_positions[name] || true;
                     }
-                }
+                } */
                 this.display_active = false;
             };
             restriction(include_node_map, exclude_node_map) {
@@ -1011,13 +1012,20 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var to_graph = this.to_graph;
                 var positions = {};
                 for (var name in this.active_positions) {
-                    positions[name] = to_graph.get_node(name).position;
+                    var node = to_graph.get_node(name, true);
+                    if (node) {
+                        positions[name] = to_graph.get_node(name).position;
+                    }
                 }
                 this.active_positions = positions;
                 return positions;
             };
             undirected_graph(low_wt_threshold, high_wt_threshold) {
                 // make an undirected graph representing the selected nodes and edges.
+                this.sources = {};  // visible as source (others may be source in graph)
+                this.destinations = {};   //  visible as destination
+                this.isolated = {};  // no visible connections.
+                this.leaves = {};  // no visible outgoing edge
                 low_wt_threshold = low_wt_threshold || 0;
                 high_wt_threshold = high_wt_threshold || 0;
                 var vs = this.for_visualization.settings;
@@ -1042,6 +1050,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         dedge.arrow(edge.source_name, edge.destination_name, wt, edge.settings);
                         visible_nodes[edge.source_name] = edge.source_name;
                         visible_nodes[edge.destination_name] = edge.destination_name;
+                        this.sources[edge.source_name] = true;
+                        this.destinations[edge.destination_name] = true;
                     }
                 }
                 for (var node_name in visible_nodes) {
@@ -1052,6 +1062,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         dnode.set_position(position);
                     }
                     dnode.settings = $.extend(dnode.settings, node.settings);
+                    if (!this.sources[node_name]) {
+                        this.leaves[node_name] = true;
+                        if (!this.destinations[node_name]) {
+                            this.isolated[node_name] = true;
+                        }
+                    }
                 }
                 return g;
             };
