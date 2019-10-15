@@ -507,7 +507,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     range: true,
                     min: -10,
                     max: +10,
-                    values: [-1, 5],
+                    values: [0, 0],
                     step: 0.1,
                     //slide: function() { that.apply_displayed_threshhold(); },
                 })
@@ -790,7 +790,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.from_graph = from_graph;
                 this.active_positions = active_positions;
                 this.active_key_to_edge = active_key_to_edge;
-                this.to_graph = this.undirected_graph();
+                //this.to_graph = this.undirected_graph();
                 // compute statistics
                 this.sources = {};  // visible as source (others may be source in graph)
                 this.destinations = {};   //  visible as destination
@@ -862,6 +862,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // get color interpolators
                 this.low_interpolator = canvas_element.color_interpolator(vs.min_color, vs.min_threshold_color);
                 this.high_interpolator = canvas_element.color_interpolator(vs.max_threshold_color, vs.max_color);
+                var threshold_values = v.threshold_slider.slider("values");
+                debugger;
+                this.to_graph = this.undirected_graph(threshold_values[0], threshold_values[1]);
                 var illustration = this.to_graph.illustrate(canvas_element, {
                     size: size,
                     animation_milliseconds: 10000,
@@ -875,16 +878,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 v.current_illustrations = illustration;
                 // update thresholding
                 var from_graph = this.from_graph;
-                var min_weight = this.from_graph.min_weight;
-                var max_weight = this.from_graph.max_weight;
+                var min_weight = from_graph.min_weight;
+                var max_weight = from_graph.max_weight;
                 if (min_weight < max_weight) {
                     var step = (max_weight - min_weight) * 0.02;
+                    var mid_weight = 0.5 * (max_weight + min_weight);
                     var values = v.threshold_slider.slider("values");
                     if (values[0] <= min_weight) {
-                        values[0] = -step;
+                        values[0] = mid_weight;
                     }
                     if (values[1] >= max_weight) {
-                        values[1] = step;
+                        values[1] = mid_weight;
                     }
                     v.threshold_slider.slider({
                         min: min_weight,
@@ -962,6 +966,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             layout(mode) {
                 mode = mode || this.for_visualization.settings.default_layout;
+                // no thresholding
+                this.to_graph = this.undirected_graph();
                 if (mode == LAYOUT_RELAX) {
                     this.to_graph.layout_spokes();
                 }
