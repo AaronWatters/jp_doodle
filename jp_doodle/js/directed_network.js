@@ -24,6 +24,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
             constructor(options, element) {
                 this.settings = $.extend({
+                    network_json: null,   // A JSON representation for the network.
                     canvas_size: 700,
                     info_height:150,
                     selector_size: 90,
@@ -47,6 +48,33 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.current_illustrations = null;
                 this.default_positions = null;
                 this.canvas_element = null;
+                if (this.settings.network_json) {
+                    this.load_json(this.settings.network_json);
+                }
+            };
+
+            load_json(json) {
+                // Load network description from JSON representation.
+                if (json.title) {
+                    this.set_title(json.title);
+                }
+                var default_positions = this.default_positions || {};
+                if (json.nodes) {
+                    // mapping of node name to position and options
+                    for (var node_name in json.nodes) {
+                        var node_descriptor = json.nodes[node_name];
+                        this.node(node_name, node_descriptor);
+                        default_positions[node_name] = node_descriptor.position;
+                    }
+                }
+                if (json.edges) {
+                    // sequence of source/destination/weight/options.
+                    for (var i=0; i<json.edges.length; i++) {
+                        var descr = json.edges[i];
+                        this.edge(descr.src, descr.dest, descr.wt, descr.opt);
+                    }
+                }
+                this.default_positions = default_positions;
             };
 
             unrestricted_context() {
@@ -987,6 +1015,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             update_positions() {
                 // update positions
+                if (!this.to_graph) {
+                    this.to_graph = this.undirected_graph();
+                }
                 var to_graph = this.to_graph;
                 var positions = {};
                 for (var name in this.active_positions) {
