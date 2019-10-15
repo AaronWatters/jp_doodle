@@ -896,10 +896,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     var step = (max_weight - min_weight) * 0.02;
                     var mid_weight = 0.5 * (max_weight + min_weight);
                     var values = v.threshold_slider.slider("values");
-                    if (values[0] <= min_weight) {
+                    if (values[0] < min_weight) {
                         values[0] = mid_weight;
                     }
-                    if (values[1] >= max_weight) {
+                    if (values[1] > max_weight) {
                         values[1] = mid_weight;
                     }
                     v.threshold_slider.slider({
