@@ -246,6 +246,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.clear_information();
                 this.inform("Resetting graph and undo stack.");
                 this.undo_stack = [];
+                this.threshold_slider.slider({
+                    min: -10,
+                    max: 10,
+                    step: 0.1,
+                    values: [0, 0],
+                });
                 this.display_all(true);
             };
 
@@ -653,10 +659,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var mm = that.threshold_min_display;
                 var MM = that.threshold_max_display;
                 var values = sl.slider("values");
-                mm.html("" + values[0]);
-                MM.html("" + values[1]);
+                var low = values[0];
+                var high = values[1];
+                mm.html("" + low);
+                MM.html("" + high);
                 var context = this.current_context();
                 if (context && !context.display_active) {
+                    if (values[0] != values[1]) {
+                        this.inform("Edge threshold excludes: " + low + " .. " + high + ".");
+                    }
                     context.display();
                 }
             };
@@ -1015,14 +1026,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     link_radius: vs.link_radius, 
                     min_change: vs.min_change,
                 });
-                for (var node_name in this.active_positions) {
-                    var position = this.active_positions[node_name];
-                    var node = this.from_graph.name_to_node[node_name];
-                    var dnode = g.add_node(node_name);
-                    if (position) {
-                        dnode.set_position(position);
+                var visible_nodes = {};
+                if (low_wt_threshold == high_wt_threshold) {
+                    // no restriction: show all nodes.
+                    for (var node_name in this.active_positions) {
+                        visible_nodes[node_name] = node_name;
                     }
-                    dnode.settings = $.extend(dnode.settings, node.settings);
                 }
                 for (var edge_key in this.active_key_to_edge) {
                     var edge = this.from_graph.key_to_edge[edge_key];
@@ -1031,7 +1040,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         // 0 weight, allow duplicates
                         var dedge = g.add_edge(edge.source_name, edge.destination_name, 0, true);
                         dedge.arrow(edge.source_name, edge.destination_name, wt, edge.settings);
+                        visible_nodes[edge.source_name] = edge.source_name;
+                        visible_nodes[edge.destination_name] = edge.destination_name;
                     }
+                }
+                for (var node_name in visible_nodes) {
+                    var position = this.active_positions[node_name];
+                    var node = this.from_graph.name_to_node[node_name];
+                    var dnode = g.get_or_make_node(node_name);
+                    if (position) {
+                        dnode.set_position(position);
+                    }
+                    dnode.settings = $.extend(dnode.settings, node.settings);
                 }
                 return g;
             };
