@@ -84,9 +84,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 return node;
             };
 
-            get_node(name) {
+            get_node(name, if_exists) {
                 var result = this.node_name_to_descriptor[name];
                 if (!result) { 
+                    if (if_exists) {
+                        return null;
+                    }
                     throw new Error("no such node with name "+name);
                 }
                 return result;
