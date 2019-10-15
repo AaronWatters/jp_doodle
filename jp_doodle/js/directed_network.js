@@ -987,8 +987,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.active_positions = positions;
                 return positions;
             };
-            undirected_graph() {
+            undirected_graph(low_wt_threshold, high_wt_threshold) {
                 // make an undirected graph representing the selected nodes and edges.
+                low_wt_threshold = low_wt_threshold || 0;
+                high_wt_threshold = high_wt_threshold || 0;
                 var vs = this.for_visualization.settings;
                 var g = jQuery.fn.gd_graph({
                     separator_radius: vs.separator_radius, 
@@ -1006,9 +1008,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 for (var edge_key in this.active_key_to_edge) {
                     var edge = this.from_graph.key_to_edge[edge_key];
-                    // 0 weight, allow duplicates
-                    var dedge = g.add_edge(edge.source_name, edge.destination_name, 0, true);
-                    dedge.arrow(edge.source_name, edge.destination_name, edge.weight, edge.settings);
+                    var wt = edge.weight;
+                    if ((wt <= low_wt_threshold) || (wt >= high_wt_threshold)) {
+                        // 0 weight, allow duplicates
+                        var dedge = g.add_edge(edge.source_name, edge.destination_name, 0, true);
+                        dedge.arrow(edge.source_name, edge.destination_name, wt, edge.settings);
+                    }
                 }
                 return g;
             };
