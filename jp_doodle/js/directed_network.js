@@ -655,7 +655,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var values = sl.slider("values");
                 mm.html("" + values[0]);
                 MM.html("" + values[1]);
-                // XXX not finished!
+                var context = this.current_context();
+                if (context && !context.display_active) {
+                    context.display();
+                }
             };
 
             add_button(text, container, click_callback) {
@@ -812,6 +815,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         this.leaves[name] = active_positions[name] || true;
                     }
                 }
+                this.display_active = false;
             };
             restriction(include_node_map, exclude_node_map) {
                 // context with included nodes but not excluded nodes
@@ -842,6 +846,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 return this.restriction(this.active_positions, this.isolated);
             };
             display() {
+                try {
+                    this.display_active = true;
+                    this.display_main();
+                } finally {
+                    this.display_active = false;
+                }
+            }
+            display_main() {
                 // show this context in the visualization.
                 var that = this;
                 var v = this.for_visualization;
