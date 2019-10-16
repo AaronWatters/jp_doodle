@@ -454,6 +454,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 //this.redisplay_top_context();
                 //this.set_element_size();
                 this.display_context(context);
+                // reset buttons
+                this.set_element_size();
             };
 
             relax_layout() {
@@ -790,7 +792,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         class SimpleGlobMatcher {
-            "Match glob strings only supporting * wildcard.  Case insensitive."
+            // "Match glob strings only supporting * wildcard.  Case insensitive."
             // I got annoyed with regular expressions....
             constructor(pattern) {
                 pattern = pattern.toUpperCase();
