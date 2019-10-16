@@ -480,11 +480,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 that.side_buttons = $("<div/>").appendTo(that.side_controls);
                 //that.side_buttons.html("buttons here.")
                 that.side_lassos = $("<div/>").appendTo(that.side_controls);
-                that.side_lassos.html("Lasso")
+                that.side_lassos.html("<b>Lasso</b>")
                 that.side_layout = $("<div/>").appendTo(that.side_controls);
-                that.side_layout.html("Layout")
+                that.side_layout.html("<b>Layout</b>")
                 that.side_lists = $("<div/>").appendTo(that.side_controls);
-                that.side_lists.html("List")
+                that.side_lists.html("<b>List</b>")
                 // title and canvas upper right
                 that.right_display = $("<div/>").appendTo(container);
                 that.right_display.css({
@@ -981,7 +981,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 var tick = illustration.radius * 0.005;
                 params.head_length = tick * 5;
-                params.head_offset = tick * 10;
+                params.head_offset = tick * 30;
                 if (params.forward && params.backward) {
                     params.line_offset = tick;
                 }
