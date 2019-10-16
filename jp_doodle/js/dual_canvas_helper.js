@@ -1627,7 +1627,7 @@ XXXXX clean up events for forgotten objects
                 var offset = target.vscale(settings.head_length, direction);
                 var head_offset = Math.min(settings.head_offset, len * 0.33);  // don't offset too close to p1.
                 var start = target.vadd(
-                    target.vscale(-len + settings.head_offset, to_p1),
+                    target.vscale(-len + head_offset, to_p1),
                     p1
                 );
                 var params = $.extend({}, settings);
