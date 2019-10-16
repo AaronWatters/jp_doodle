@@ -46,6 +46,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     src_color: "#000",
                     src_background: "#ffa",
                 }, options);
+                this.reset_layout = this.settings.default_layout;
                 this.element = element;
                 this.data_graph = new DirectedGraph();
                 this.undo_stack = [];
@@ -282,17 +283,22 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
             };
 
-            reset() {
-                // reinitialize data structures.
-                this.clear_information();
-                this.inform("Resetting graph and undo stack.");
-                this.undo_stack = [];
+            reset_thresholds() {
                 this.threshold_slider.slider({
                     min: -10,
                     max: 10,
                     step: 0.1,
                     values: [0, 0],
                 });
+            };
+
+            reset() {
+                // reinitialize data structures.
+                this.settings.default_layout = this.reset_layout;
+                this.clear_information();
+                this.inform("Resetting graph and undo stack.");
+                this.undo_stack = [];
+                this.reset_thresholds();
                 this.display_all(true);
             };
 
@@ -748,6 +754,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             match_pattern () {
                 // match the pattern in this.match_input text area
                 this.clear_information();
+                this.reset_thresholds()
                 var value = this.match_input.val();
                 this.inform("Match glob patterns: " + value);
                 var pattern_strings = value.split(" ");
