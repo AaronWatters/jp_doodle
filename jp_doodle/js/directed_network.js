@@ -39,6 +39,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     link_radius: 1,
                     min_change: 1,
                     undo_limit: 10,
+                    font: "normal 10px Arial",
+                    color: "#999",
+                    background: "#afa",
+                    src_font: "italic 12px Arial",
+                    src_color: "#000",
+                    src_background: "#ffa",
                 }, options);
                 this.element = element;
                 this.data_graph = new DirectedGraph();
@@ -222,8 +228,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var new_nodes = 0;
                 var default_positions = this.default_positions;
                 // add nodes from edges
+                var threshold_values = this.threshold_slider.slider("values");
+                var low_cutoff = threshold_values[0];
+                var high_cutoff = threshold_values[1];
                 for (var key in graph.key_to_edge) {
                     var edge = graph.key_to_edge[key];
+                    var wt = edge.weight;
+                    if ((wt > low_cutoff) && (wt < high_cutoff)) {
+                        continue;    // edge out of threshold limits.
+                    }
                     var sn = edge.source_name;
                     var dn = edge.destination_name;
                     if ((!no_outgoing) && (!new_pos[dn]) && (pos[sn])) {
@@ -436,10 +449,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 mode = mode || LAYOUT_SKELETON;
                 this.clear_information();
                 this.inform("Resetting layout: " + mode);
-                var context = this.current_context();
+                var context = this.current_context().visible_components();
                 context.layout(mode);
                 //this.redisplay_top_context();
-                this.set_element_size();
+                //this.set_element_size();
+                this.display_context(context);
             };
 
             relax_layout() {
@@ -835,7 +849,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.to_graph = null;   // computed on demand
                 this.display_active = false;
             };
-            restriction(include_node_map, exclude_node_map) {
+            restriction(include_node_map, exclude_node_map, permited_edges_or_null) {
                 // context with included nodes but not excluded nodes
                 exclude_node_map = exclude_node_map || {};
                 var pos = this.update_positions();
@@ -848,6 +862,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     }
                 }
                 for (var k in k2e) {
+                    if ((permited_edges_or_null) && (!permited_edges_or_null[k])) {
+                        continue;    // disallowed edge.
+                    }
                     var e = k2e[k];
                     if ((keep_pos[e.destination_name]) && (keep_pos[e.source_name])) {
                         keep_k2e[k] = e;
@@ -857,6 +874,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     this.for_visualization, this.from_graph, keep_pos, keep_k2e
                 );
             };
+            visible_components() {
+                // only edges and nodes that are shown in the display (subject to threshold)
+                return this.restriction(this.visible_nodes, {}, this.visible_edges);
+            }
             trim() {
                 return this.restriction(this.active_positions, this.leaves);
             };
@@ -1044,21 +1065,23 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     min_change: vs.min_change,
                 });
                 var visible_nodes = {};
+                var visible_edges = {};
                 if (low_wt_threshold == high_wt_threshold) {
                     // no restriction: show all nodes.
                     for (var node_name in this.active_positions) {
-                        visible_nodes[node_name] = node_name;
+                        visible_nodes[node_name] = true;
                     }
                 }
                 for (var edge_key in this.active_key_to_edge) {
                     var edge = this.from_graph.key_to_edge[edge_key];
                     var wt = edge.weight;
                     if ((wt <= low_wt_threshold) || (wt >= high_wt_threshold)) {
+                        visible_edges[edge_key] = edge;
                         // 0 weight, allow duplicates
                         var dedge = g.add_edge(edge.source_name, edge.destination_name, 0, true);
                         dedge.arrow(edge.source_name, edge.destination_name, wt, edge.settings);
-                        visible_nodes[edge.source_name] = edge.source_name;
-                        visible_nodes[edge.destination_name] = edge.destination_name;
+                        visible_nodes[edge.source_name] = true;
+                        visible_nodes[edge.destination_name] = true;
                         this.sources[edge.source_name] = true;
                         this.destinations[edge.destination_name] = true;
                     }
@@ -1071,13 +1094,24 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         dnode.set_position(position);
                     }
                     dnode.settings = $.extend(dnode.settings, node.settings);
+                    var dns = dnode.settings;
                     if (!this.sources[node_name]) {
                         this.leaves[node_name] = true;
                         if (!this.destinations[node_name]) {
                             this.isolated[node_name] = true;
                         }
+                    } else {
+                        dns.is_source = true;
+                        dns.font = dns.font || vs.src_font;
+                        dns.color = dns.color || vs.src_color;
+                        dns.background = dns.background || vs.src_background;
                     }
+                    dns.font = dns.font || vs.font;
+                    dns.color = dns.color || vs.color;
+                    dns.background = dns.background || vs.background;
                 }
+                this.visible_edges = visible_edges;
+                this.visible_nodes = visible_nodes;
                 return g;
             };
         };
