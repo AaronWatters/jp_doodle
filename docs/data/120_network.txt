@@ -45,7 +45,7 @@ which can be set upon initialization or modified subsequently.
             $.getJSON("./static/network.json", make_network_visualization).fail(on_load_failure);
 ***DISCUSSION
 <p>
-They "relax" and "skeleton" layout methods use a gradient descent heuristic to find a layout
+The "relax" and "skeleton" layout methods use a gradient descent heuristic to find a layout
 for the nodes which reflects the edge weights between connected nodes.  
 These layout methods can be slow if there are a large number of nodes and edges visible.
 The "wiggle" operation
