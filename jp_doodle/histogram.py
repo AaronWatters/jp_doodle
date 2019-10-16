@@ -23,6 +23,7 @@ class Histogram:
         self.widget = dual_canvas.DualCanvasWidget(width=width, height=height)
 
     def load(self, values, color=None, slots=None):
+        values = list(values)
         slots = self.slots = slots or self.slots or 10
         color = self.color = color or self.color
         width = self.width
