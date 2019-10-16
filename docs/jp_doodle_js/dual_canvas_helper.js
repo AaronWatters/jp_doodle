@@ -220,7 +220,7 @@ XXXXX clean up events for forgotten objects
             }
             target.request_redraw();
             return stats;
-        }
+        };
 
         target.set_translate_scale = function (translate_scale) {
             if (!translate_scale) {
@@ -256,7 +256,113 @@ XXXXX clean up events for forgotten objects
                     object_info.prepare_for_redraw();
                 }
             }
+        };
+
+        // stuff for assemblies (like stars, arrows...)
+        target.assembly_draw_functions = {};
+        target.assembly_target = null;
+
+        target.define_assembly = function (name, draw_on_target) {
+            target.assembly_draw_functions[name] = draw_on_target;
+        };
+
+        target.install_assembly = function(name, draw_on_target, canvas) {
+            // attach assembly creator as canvas.name.
+            canvas = canvas || target;
+            if (draw_on_target) {
+                target.define_assembly(name, draw_on_target);
+            }
+            if (!target.assembly_draw_functions[name]) {
+                throw new Error("unknown assembly " + name);
+            }
+            canvas[name] = function(options) {
+                var settings = $.extend({
+                    assembly: name,
+                }, options)
+                return canvas.assembly(settings);
+            };
+        };
+
+        target.assembly = function(options) {
+            var settings = $.extend({
+                shape_name: "assembly",
+                assembly: null, // must be defined.
+            }, options);
+            var draw_function = target.assembly_draw_functions[settings.assembly];
+            if (!draw_function) {
+                throw new Error("no such assembly defined: ", settings.assembly);
+            }
+            var draw_on_canvas = function (canvas, s) {
+                target.assembly_target = canvas;
+                target.assembler.reset();
+                target.assembly.options = s;
+                var info = draw_function(target.assembler, s);
+                // draw accumulated objects on the canvas now
+                //var objects = target.assembler.object_list;
+                //for (var i=0; i<objects.length; i++) {
+                //    var object_info = objects[i];
+                //    target.draw_object_info(object_info)
+                //}
+                target.assembly_target = null;
+                $.extend(s, info);   // as is done in assign_shape_factory.
+            };
+            settings = target.store_object_info(settings, draw_on_canvas);
+            target.request_redraw();
+            return settings;
+        };
+
+        target.assembler = {};
+
+        target.assembler.reset = function () {
+            //target.assembler.object_list = [];
+            target.assembler.options = null;
+        };
+
+        var assign_assembler_factory = function(shape_name) {
+            target.assembler[shape_name] = function(opt) {
+                // configure the shape using the options on the assembly target, and store the configuration.
+                var settings = $.extend({}, opt);
+                var assembly_options = target.assembly.options;
+                settings.frame = assembly_options.frame;
+                settings.coordinate_conversion = assembly_options.coordinate_conversion;
+                settings.assembly_component = true;
+                var method = target.assembly_target[shape_name];
+                if (!method) {
+                    throw new Error("no such assembly method: " + shape_name);
+                }
+                if (assembly_options.is_mask) {
+                    settings.pseudocolor = assembly_options.pseudocolor;
+                    settings.color = assembly_options.pseudocolor;
+                }
+                var info = method(settings);
+                // draw the mask over the drawn object if draw_mask is defined (wasteful!)
+                if ((assembly_options.is_mask) && (info.draw_mask)) {
+                    info.draw_mask(target.assembly_target, info);
+                }
+                // store any sample pixel in assembly
+                if (info.sample_pixel) {
+                    assembly_options.sample_pixel = info.sample_pixel;
+                }
+            }
+        };
+        
+        $.fn.dual_canvas_helper.draw_op_names = (
+            "circle line text rect frame_rect frame_circle polygon " +
+            "named_image assembly").split(" ");
+
+        for (var i=0; i<$.fn.dual_canvas_helper.draw_op_names.length; i++) {
+            var name = $.fn.dual_canvas_helper.draw_op_names[i];
+            if (name != "assembly") {
+                assign_assembler_factory(name);
+            }
         }
+
+        target.assembler.assembly = function(opt) {
+            // assemble the object immediately.
+            var draw_function = target.assembly_draw_functions[opt.assembly];
+            var info = draw_function(target.assembler, opt);
+            return info;
+        };
 
         target.objects_drawn = function (object_list) {
             // Don't draw anything on the test canvas now.
@@ -272,7 +378,7 @@ XXXXX clean up events for forgotten objects
                         frame.redraw_frame();
                         //if (frame.is_empty()) {
                             // forget empty frames
-                            //console.log("forgetting empty frame " + object_info.name)
+                            ////c.l("forgetting empty frame " + object_info.name)
                             //object_index = null;
                         //}
                     } else {
@@ -317,13 +423,13 @@ XXXXX clean up events for forgotten objects
         // enable or disable auto redraw on animation frame.
         // Temporary disable prevents redraws during large or slow scene updates as an optimization for better speed and visual effect.
         target.allow_auto_redraw = function(enabled) {
-            //console.log("allow_auto_redraw", enabled);
+            ////c.l("allow_auto_redraw", enabled);
             var disabled_before = target.disable_auto_redraw;
             target.disable_auto_redraw = !enabled;
             // if it was previously disabled and there is a redraw pending then request a redraw
             if ((enabled) && (disabled_before) && (target.redraw_pending)) {
                 target.redraw_pending = false;
-                //console.log("requesting redraw afer delay")
+                ////c.l("requesting redraw afer delay")
                 target.request_redraw();
             }
         };
@@ -348,6 +454,7 @@ XXXXX clean up events for forgotten objects
             }
             //object_info.draw_on_canvas = object_info.draw_on_canvas || draw_on_canvas;
             object_info.draw_on_canvas = draw_on_canvas || object_info.draw_on_canvas;
+            //c.l("store object info", object_info);
             if (name) {
                 // Set up color indexing
                 var pseudocolor_array = null;
@@ -392,8 +499,11 @@ XXXXX clean up events for forgotten objects
                     target.transition(object_info.name, to_values, seconds_duration);
                 });
             }
-            object_info.object_index = object_index;
-            object_list[object_index] = object_info;
+            // store the object unless it is an assembly component
+            if (!object_info.assembly_component){
+                object_info.object_index = object_index;
+                object_list[object_index] = object_info;
+            }
             return object_info;
         };
 
@@ -484,6 +594,7 @@ XXXXX clean up events for forgotten objects
                 // do not draw hidden objects
                 return;
             }
+            //c.l("object_info", object_info)
             var draw_fn = object_info.draw_on_canvas;
             var draw_info = draw_fn(target.visible_canvas, object_info);
             // store additional information attached during the draw operation
@@ -501,7 +612,7 @@ XXXXX clean up events for forgotten objects
                 return;
             }
             var draw_fn = object_info.draw_on_canvas;
-            var info2 = $.extend({}, object_info);
+            var info2 = $.extend({is_mask: true}, object_info);
             if (object_info.draw_mask) {
                 // convert visible object to invisible mask object (text becomes rectangle, eg)
                 draw_fn = object_info.draw_mask;
@@ -908,12 +1019,12 @@ XXXXX clean up events for forgotten objects
             // "normal" event handling
             //process_event(e);
             // mouseover and mouseout simulation:
-            //console.log("check emulations: ", [e.type, e.canvas_name,  ((!last_event) || last_event.canvas_name)]); //debug only.
+            ////c.l("check emulations: ", [e.type, e.canvas_name,  ((!last_event) || last_event.canvas_name)]); //debug only.
             //if ((last_event) && (e.type == "mousemove") && (last_event.canvas_name != e.canvas_name)) {
             //if (e.type == "mousemove") {
-                //console.log("doing transition emulations " + last_event.canvas_name)
+                ////c.l("doing transition emulations " + last_event.canvas_name)
                 if ((last_event) && (last_event.canvas_name) && ((!e.canvas_name) || (e.canvas_name!=last_event.canvas_name))) {
-                    //console.log("emulating mouseout");
+                    ////c.l("emulating mouseout");
                     var mouseout_event = $.extend({}, e);
                     mouseout_event.type = "mouseout";
                     mouseout_event.canvas_name = last_event.canvas_name;
@@ -1211,7 +1322,7 @@ XXXXX clean up events for forgotten objects
         target.active_transitions = {};
 
         target.do_transitions = function () {
-            //console.log("doing transitions");
+            ////c.l("doing transitions");
             var active = target.active_transitions;
             var remaining = {};
             var redraw = false;
@@ -1220,16 +1331,16 @@ XXXXX clean up events for forgotten objects
                 transition.interpolate();
                 if (transition.finished()) {
                     // xxxx any termination actions?
-                    //console.log("done transitioning " + name);
+                    ////c.l("done transitioning " + name);
                     redraw = true;  // redraw for final interpolation
                 } else {
-                    //console.log("continuing transitions for " + name);
+                    ////c.l("continuing transitions for " + name);
                     remaining[name] = transition;
                     redraw = true;
                 }
             }
             if (redraw) {
-                //console.log("requesting redraw for continuing transitions");
+                ////c.l("requesting redraw for continuing transitions");
                 target.request_redraw();
             }
             target.active_transitions = remaining;
@@ -1268,7 +1379,7 @@ XXXXX clean up events for forgotten objects
             if (transition.interpolator) {
                 target.active_transitions[object_name] = transition;
             }
-            //console.log("requesting redraw for transition " + object_name)
+            ////c.l("requesting redraw for transition " + object_name)
             target.request_redraw();
             return transition;
         };
@@ -1333,7 +1444,7 @@ XXXXX clean up events for forgotten objects
         };
 
         target.linear_numeric_interpolator = function(old_value, new_value) {
-            //console.log("interpolating number from ", old_value, " to ", new_value);
+            ////c.l("interpolating number from ", old_value, " to ", new_value);
             return function(lmd) {
                 if (lmd <= 0) {
                     return old_value;
@@ -1426,7 +1537,7 @@ XXXXX clean up events for forgotten objects
         };
 
         target.color_interpolator = function(old_string, new_string) {
-            //console.log("interpolating color from ", old_string, " to ", new_string)
+            ////c.l("interpolating color from ", old_string, " to ", new_string)
             old_string = old_string || "black";
             // byte values for color strings
             var old_array = target.color_string_to_array(old_string);
@@ -1443,21 +1554,153 @@ XXXXX clean up events for forgotten objects
                     mixed.push((1 - lmd) * old_array[i] + lmd * new_array[i]);
                 }
                 // round to integers
-                //console.log("interpolating " + old_string + " " + old_array + " " + new_string + " " + new_array, " at " + lmd);
-                //console.log("mixed before " + mixed);
+                ////c.l("interpolating " + old_string + " " + old_array + " " + new_string + " " + new_array, " at " + lmd);
+                ////c.l("mixed before " + mixed);
                 var alpha = mixed[3];
                 mixed = mixed.map(x => Math.round(x));
-                //console.log("mixed after " + mixed);
+                ////c.l("mixed after " + mixed);
                 // last entry should be in [0..1]
                 mixed[3] = alpha/255.0;
                 var result =  "rgba(" + mixed.join(",") + ")";
-                //console.log("result=" + result);
+                ////c.l("result=" + result);
                 return result;
             }
         }
 
+        // Useful standard assemblies (composite glyphs)
+
+        var draw_star = function(assembler, options) {
+            var settings = $.extend({
+                points: 5,
+                radius: 10,
+                point_factor: 1.2,
+                degrees: 0,
+            }, options);
+            var x = settings.x;
+            var y = settings.y;
+            var theta = Math.PI * (90.0 + settings.degrees) / 180.0;
+            var dtheta = Math.PI / settings.points;
+            var coords = [];
+            var outer_radius = settings.point_factor * settings.radius;
+            for (var i=0; i<settings.points; i++) {
+                coords.push([x + Math.cos(theta) * outer_radius, y + Math.sin(theta) * outer_radius]);
+                theta += dtheta;
+                coords.push([x + Math.cos(theta) * settings.radius, y + Math.sin(theta) * settings.radius]);
+                theta += dtheta;
+            }
+            var polygon_config = $.extend({}, settings);
+            polygon_config.points = coords;
+            assembler.polygon(polygon_config);
+            if (settings.text) {
+                var text_config = $.extend({
+                    valign: "center",
+                    align: "center",
+                }, settings);
+                text_config.color = settings.text_color || settings.color;
+                assembler.text(text_config)
+            }
+        };
+        var draw_arrow = function(assembler, options) {
+            // arrow with head at x2, y2
+            var settings = $.extend({
+                head_angle: 45,
+                head_offset: 0,
+                head_length: 5,
+                epsilon: 1e-5,
+                symmetric: false,
+            }, options);
+            // draw the body
+            assembler.line(settings);
+            var p1 = {x: settings.x1, y: settings.y1};
+            var p2 = {x: settings.x2, y: settings.y2};
+            var diff = target.vsub(p1, p2);
+            var len = target.vlength(diff);
+            if (len > settings.epsilon) {
+                // draw the head
+                var to_p1 = target.vscale(1.0 / len, diff);
+                var normal = {x: to_p1.y, y: -to_p1.x};
+                var theta = settings.head_angle * (Math.PI / 180.0);
+                var direction = target.vadd(
+                    target.vscale(Math.cos(theta), to_p1),
+                    target.vscale(Math.sin(theta), normal)
+                );
+                var offset = target.vscale(settings.head_length, direction);
+                var head_offset = Math.min(settings.head_offset, len * 0.33);  // don't offset too close to p1.
+                var start = target.vadd(
+                    target.vscale(-len + head_offset, to_p1),
+                    p1
+                );
+                var params = $.extend({}, settings);
+                $.extend(params, {x1: start.x, y1: start.y, x2: start.x + offset.x, y2: start.y + offset.y})
+                assembler.line(params);
+                if (settings.symmetric) {
+                    theta = - theta;
+                    var direction = target.vadd(
+                        target.vscale(Math.cos(theta), to_p1),
+                        target.vscale(Math.sin(theta), normal)
+                    );
+                    var offset = target.vscale(settings.head_length, direction);
+                    params = $.extend({}, settings);
+                    $.extend(params, {x1: start.x, y1: start.y, x2: start.x + offset.x, y2: start.y + offset.y})
+                    assembler.line(params);
+                }
+            }
+        };
+        var draw_double_arrow = function(assembler, options) {
+            // use "arrow" assembly to draw arrows on both ends of line
+            var settings = $.extend({
+                line_offset: 1.5,
+                head_angle: 45,
+                head_offset: 0,
+                head_length: 5,
+                epsilon: 1e-5,
+                symmetric: false,
+                forward: true,
+                backward: true,
+            }, options);
+            var p1 = {x: settings.x1, y: settings.y1};
+            var p2 = {x: settings.x2, y: settings.y2};
+            var diff = target.vsub(p1, p2);
+            var len = target.vlength(diff);
+            if (len > settings.epsilon) {
+                var to_p1 = target.vscale(1.0 / len, diff);
+                var normal = {x: to_p1.y, y: -to_p1.x};
+                var offset = target.vscale(settings.line_offset, normal);
+                if (settings.forward) {
+                    var f = $.extend({}, settings);
+                    f.x1 = settings.x1 + offset.x;
+                    f.y1 = settings.y1 + offset.y;
+                    f.x2 = settings.x2 + offset.x;
+                    f.y2 = settings.y2 + offset.y;
+                    f.assembly = "arrow";
+                    assembler.assembly(f)
+                }
+                if (settings.backward) {
+                    var b = $.extend({}, settings);
+                    b.x1 = settings.x2 - offset.x;
+                    b.y1 = settings.y2 - offset.y;
+                    b.x2 = settings.x1 - offset.x;
+                    b.y2 = settings.y1 - offset.y;
+                    b.color = settings.back_color || settings.color;
+                    b.head_angle = settings.back_angle || settings.head_angle;
+                    b.head_offset = settings.back_offset || settings.head_offset;
+                    b.assembly = "arrow";
+                    assembler.assembly(b)
+                }
+            }
+        };
+
+        target.install_standard_assemblies = function(frame) {
+            frame = frame || target;
+            frame.install_assembly("star", draw_star);
+            frame.install_assembly("arrow", draw_arrow);
+            frame.install_assembly("double_arrow", draw_double_arrow);
+        };
+
+        // Configure the dual canvas.
         target.canvas_2d_widget_helper.add_vector_ops(target);
         target.dual_canvas_helper.add_geometry_logic(target);
+        target.install_standard_assemblies();
         target.reset_canvas();
 
         return target;
@@ -2222,12 +2465,20 @@ XXXXX clean up events for forgotten objects
             }
         }
 
+        frame.install_assembly = function(name, draw_on_target) {
+            // attach assembly creator to frame as frame.name.
+            frame.parent_canvas.install_assembly(
+                name, draw_on_target, frame
+            );
+        };
+
         // Delegate appropriate methods to parent
         var delegate_to_parent = function(name) {
             frame[name] = frame.parent_canvas[name];
         };
 
         // delegate_to_parent("change"); -- change will apply to frame
+        delegate_to_parent("define_assembly");
         delegate_to_parent("forget_objects");
         delegate_to_parent("set_visibilities");
         // delegate_to_parent("transition");  -- transition will apply to frame
@@ -2356,14 +2607,11 @@ XXXXX clean up events for forgotten objects
                 return method(s, wait);
             }
         };
-        override_positions("circle");
-        override_positions("line");
-        override_positions("text");
-        override_positions("rect");
-        override_positions("frame_rect");
-        override_positions("frame_circle");
-        override_positions("polygon");
-        override_positions("named_image");
+
+        for (var i=0; i<$.fn.dual_canvas_helper.draw_op_names.length; i++) {
+            var name = $.fn.dual_canvas_helper.draw_op_names[i];
+            override_positions(name);
+        }
 
         // define axes w.r.t the frame
         parent_canvas.dual_canvas_helper.add_geometry_logic(frame);
@@ -2375,6 +2623,10 @@ XXXXX clean up events for forgotten objects
         
         // Add the frame object to the parent canvas in place
         parent_canvas.store_object_info(frame, null, true);
+
+        // Configure the frame
+        parent_canvas.install_standard_assemblies(frame);
+        
         return frame;
     }
 

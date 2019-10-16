@@ -223,6 +223,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 color: target.canvas_strokeStyle,
                 lineWidth: target.canvas_lineWidth,
                 coordinate_conversion: no_change_conversion,
+                lineDash: null, // or array like [3,15]
                 //frame: target,
             }, opt);
             var context = target.canvas_context;
@@ -230,6 +231,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             context.beginPath();
             context.strokeStyle = s.color;
             context.lineWidth = s.lineWidth;
+            var lineDash = s.lineDash;
+            if (lineDash) {
+                context.setLineDash(lineDash);
+            }
             //var fp1 = s.coordinate_conversion(s.x1, s.y1);
             //var fp2 = s.coordinate_conversion(s.x2, s.y2);
             var fp1 = s.coordinate_conversion(s, "position1", ["x1", "y1"]);
@@ -737,13 +742,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return Math.sqrt(target.vdot(vector, vector));
         };
         target.vdistance = function(v1, v2) {
-            return target.vlength(
-                target.vadd(
-                    target.vscale(-1, v1),
-                    v2
-                )
-            );
-        }
+            return target.vlength(target.vsub(v1, v2));
+        };
+        target.vsub = function(v1, v2) {
+            return target.vadd(v1, target.vscale(-1.0, v2));
+        };
         target.vint = function(vector) {
             var result = {};
             for (var slot in vector){

@@ -1,0 +1,1516 @@
+{
+ "canvas_size": 500,
+ "default_layout": "grid",
+ "min_change": 10,
+ "network_json": {
+  "title": "Truncated Regulatory Network",
+  "nodes": {},
+  "edges": [
+   {
+    "src": "Bcl3",
+    "dest": "Il12rb2",
+    "wt": -50.0
+   },
+   {
+    "src": "Hmgn1",
+    "dest": "Hspa4l",
+    "wt": -42.0
+   },
+   {
+    "src": "Atf6",
+    "dest": "Lad1",
+    "wt": -36.0
+   },
+   {
+    "src": "Stat4",
+    "dest": "4930420k17rik",
+    "wt": -33.0
+   },
+   {
+    "src": "Stat4",
+    "dest": "Abcb1a",
+    "wt": -30.0
+   },
+   {
+    "src": "Klf4",
+    "dest": "Sf3b3",
+    "wt": -27.0
+   },
+   {
+    "src": "Klf4",
+    "dest": "St7",
+    "wt": -25.0
+   },
+   {
+    "src": "Klf4",
+    "dest": "Tmem183a",
+    "wt": -23.0
+   },
+   {
+    "src": "Aes",
+    "dest": "Ecd",
+    "wt": -21.0
+   },
+   {
+    "src": "Irf4",
+    "dest": "Utp20",
+    "wt": -20.0
+   },
+   {
+    "src": "Nfatc2",
+    "dest": "Ppp3cc",
+    "wt": -19.0
+   },
+   {
+    "src": "Bcl3",
+    "dest": "Sytl1",
+    "wt": -17.0
+   },
+   {
+    "src": "H1f0",
+    "dest": "Zfp36l1",
+    "wt": -16.0
+   },
+   {
+    "src": "Ifih1",
+    "dest": "Me2",
+    "wt": -15.0
+   },
+   {
+    "src": "Ifih1",
+    "dest": "Fam129b",
+    "wt": -14.0
+   },
+   {
+    "src": "Dffb",
+    "dest": "Cd47",
+    "wt": -13.0
+   },
+   {
+    "src": "Prkrir",
+    "dest": "Son",
+    "wt": -13.0
+   },
+   {
+    "src": "Max",
+    "dest": "Tnfrsf1a",
+    "wt": -12.0
+   },
+   {
+    "src": "Fosl2",
+    "dest": "Atf6",
+    "wt": -11.0
+   },
+   {
+    "src": "Nfyb",
+    "dest": "Phlpp1",
+    "wt": -11.0
+   },
+   {
+    "src": "Crem",
+    "dest": "Vrk2",
+    "wt": -10.0
+   },
+   {
+    "src": "Mxi1",
+    "dest": "Decr1",
+    "wt": -10.0
+   },
+   {
+    "src": "Arid5a",
+    "dest": "Vldlr",
+    "wt": -9.0
+   },
+   {
+    "src": "Maf",
+    "dest": "Tmem184b",
+    "wt": -9.0
+   },
+   {
+    "src": "Tal2",
+    "dest": "Tnip2",
+    "wt": -9.0
+   },
+   {
+    "src": "Hmgn1",
+    "dest": "Ypel5",
+    "wt": -8.0
+   },
+   {
+    "src": "Nfkb1",
+    "dest": "C630004h02rik",
+    "wt": -8.0
+   },
+   {
+    "src": "Tef",
+    "dest": "Il1rn",
+    "wt": -8.0
+   },
+   {
+    "src": "Ets2",
+    "dest": "Ankrd57",
+    "wt": -7.0
+   },
+   {
+    "src": "Maff",
+    "dest": "Sh3bp1",
+    "wt": -7.0
+   },
+   {
+    "src": "Runx1",
+    "dest": "Ifitm3",
+    "wt": -7.0
+   },
+   {
+    "src": "Creb1",
+    "dest": "Mpzl2",
+    "wt": -6.0
+   },
+   {
+    "src": "Hmgn1",
+    "dest": "Rhoc",
+    "wt": -6.0
+   },
+   {
+    "src": "Lef1",
+    "dest": "Rbpj",
+    "wt": -6.0
+   },
+   {
+    "src": "Rara",
+    "dest": "Chmp4b",
+    "wt": -6.0
+   },
+   {
+    "src": "Tef",
+    "dest": "Slc9a3r1",
+    "wt": -6.0
+   },
+   {
+    "src": "Cebpb",
+    "dest": "Tmed3",
+    "wt": -5.0
+   },
+   {
+    "src": "Fosl2",
+    "dest": "Hk2",
+    "wt": -5.0
+   },
+   {
+    "src": "Kdm2b",
+    "dest": "Calhm2",
+    "wt": -5.0
+   },
+   {
+    "src": "Nfatc1",
+    "dest": "Sidt1",
+    "wt": -5.0
+   },
+   {
+    "src": "Rora",
+    "dest": "Tnfrsf13c",
+    "wt": -5.0
+   },
+   {
+    "src": "Tef",
+    "dest": "Gpsm2",
+    "wt": -5.0
+   },
+   {
+    "src": "Atf6",
+    "dest": "Prickle1",
+    "wt": -4.0
+   },
+   {
+    "src": "Egr2",
+    "dest": "Xrcc5",
+    "wt": -4.0
+   },
+   {
+    "src": "Hmgn1",
+    "dest": "H2-eb1",
+    "wt": -4.0
+   },
+   {
+    "src": "Klf10",
+    "dest": "Pde7a",
+    "wt": -4.0
+   },
+   {
+    "src": "Myb",
+    "dest": "Fyn",
+    "wt": -4.0
+   },
+   {
+    "src": "Pml",
+    "dest": "4933426m11rik",
+    "wt": -4.0
+   },
+   {
+    "src": "Ski",
+    "dest": "Mecr",
+    "wt": -4.0
+   },
+   {
+    "src": "Txk",
+    "dest": "Ly9",
+    "wt": -4.0
+   },
+   {
+    "src": "Arid3a",
+    "dest": "Phlda3",
+    "wt": -3.0
+   },
+   {
+    "src": "Crem",
+    "dest": "Gdpd5",
+    "wt": -3.0
+   },
+   {
+    "src": "Fancm",
+    "dest": "Ifitm1",
+    "wt": -3.0
+   },
+   {
+    "src": "Ift57",
+    "dest": "Taf7",
+    "wt": -3.0
+   },
+   {
+    "src": "Klf10",
+    "dest": "Spn",
+    "wt": -3.0
+   },
+   {
+    "src": "Mafg",
+    "dest": "Tsga14",
+    "wt": -3.0
+   },
+   {
+    "src": "Nfe2l2",
+    "dest": "Rnf19b",
+    "wt": -3.0
+   },
+   {
+    "src": "Ppp1r10",
+    "dest": "2310008h04rik",
+    "wt": -3.0
+   },
+   {
+    "src": "Satb1",
+    "dest": "St7l",
+    "wt": -3.0
+   },
+   {
+    "src": "Tbx21",
+    "dest": "Lrmp",
+    "wt": -3.0
+   },
+   {
+    "src": "Zfp239",
+    "dest": "Lgals7",
+    "wt": -3.0
+   },
+   {
+    "src": "Akna",
+    "dest": "Rprd1a",
+    "wt": -2.0
+   },
+   {
+    "src": "Bcl11b",
+    "dest": "Tnfsf9",
+    "wt": -2.0
+   },
+   {
+    "src": "Crebbp",
+    "dest": "Snx19",
+    "wt": -2.0
+   },
+   {
+    "src": "Eomes",
+    "dest": "Cxcr5",
+    "wt": -2.0
+   },
+   {
+    "src": "Fbxo18",
+    "dest": "Rcl1",
+    "wt": -2.0
+   },
+   {
+    "src": "H1f0",
+    "dest": "Dusp6",
+    "wt": -2.0
+   },
+   {
+    "src": "Ift57",
+    "dest": "Dip2b",
+    "wt": -2.0
+   },
+   {
+    "src": "Irf5",
+    "dest": "Ap4m1",
+    "wt": -2.0
+   },
+   {
+    "src": "Klf3",
+    "dest": "Gata3",
+    "wt": -2.0
+   },
+   {
+    "src": "Maf",
+    "dest": "Lbp",
+    "wt": -2.0
+   },
+   {
+    "src": "Myb",
+    "dest": "2810021b07rik",
+    "wt": -2.0
+   },
+   {
+    "src": "Nfe2l2",
+    "dest": "Sms",
+    "wt": -2.0
+   },
+   {
+    "src": "Pcbp4",
+    "dest": "Tnfsf11",
+    "wt": -2.0
+   },
+   {
+    "src": "Rad52",
+    "dest": "Moap1",
+    "wt": -2.0
+   },
+   {
+    "src": "Rxra",
+    "dest": "Akr1c13",
+    "wt": -2.0
+   },
+   {
+    "src": "Smarca2",
+    "dest": "Tmem48",
+    "wt": -2.0
+   },
+   {
+    "src": "Stat4",
+    "dest": "Glipr1",
+    "wt": -2.0
+   },
+   {
+    "src": "Tox",
+    "dest": "2010109k11rik",
+    "wt": -2.0
+   },
+   {
+    "src": "Zfp239",
+    "dest": "P4hb",
+    "wt": -2.0
+   },
+   {
+    "src": "Ahr",
+    "dest": "Aim2",
+    "wt": -1.0
+   },
+   {
+    "src": "Akna",
+    "dest": "Nek6",
+    "wt": -1.0
+   },
+   {
+    "src": "Atf6",
+    "dest": "Ifitm2",
+    "wt": -1.0
+   },
+   {
+    "src": "Bcl11b",
+    "dest": "Asns",
+    "wt": -1.0
+   },
+   {
+    "src": "Cebpb",
+    "dest": "Phlda3",
+    "wt": -1.0
+   },
+   {
+    "src": "Creb1",
+    "dest": "Slc16a6",
+    "wt": -1.0
+   },
+   {
+    "src": "Crem",
+    "dest": "Ppp3cc",
+    "wt": -1.0
+   },
+   {
+    "src": "Dnmt3a",
+    "dest": "Fancm",
+    "wt": -1.0
+   },
+   {
+    "src": "Dnmt3b",
+    "dest": "S100a13",
+    "wt": -1.0
+   },
+   {
+    "src": "Eomes",
+    "dest": "Athl1",
+    "wt": -1.0
+   },
+   {
+    "src": "Ets1",
+    "dest": "Rcan3",
+    "wt": -1.0
+   },
+   {
+    "src": "Exo1",
+    "dest": "M6pr",
+    "wt": -1.0
+   },
+   {
+    "src": "Fbxo18",
+    "dest": "Slamf7",
+    "wt": -1.0
+   },
+   {
+    "src": "Foxp1",
+    "dest": "Ccbl2",
+    "wt": -1.0
+   },
+   {
+    "src": "Gfi1",
+    "dest": "1700081l11rik",
+    "wt": -1.0
+   },
+   {
+    "src": "H2afx",
+    "dest": "Ccl22",
+    "wt": -1.0
+   },
+   {
+    "src": "Hmgn1",
+    "dest": "Stat2",
+    "wt": -1.0
+   },
+   {
+    "src": "Ifih1",
+    "dest": "Tspan5",
+    "wt": -1.0
+   },
+   {
+    "src": "Ikzf4",
+    "dest": "Pet112l",
+    "wt": -1.0
+   },
+   {
+    "src": "Irf4",
+    "dest": "D1ertd622e",
+    "wt": -1.0
+   },
+   {
+    "src": "Irf5",
+    "dest": "Lamc1",
+    "wt": -1.0
+   },
+   {
+    "src": "Kdm2b",
+    "dest": "Snx11",
+    "wt": -1.0
+   },
+   {
+    "src": "Klf3",
+    "dest": "Lgals7",
+    "wt": -1.0
+   },
+   {
+    "src": "Klf7",
+    "dest": "Ifi203",
+    "wt": -1.0
+   },
+   {
+    "src": "Lrrfip1",
+    "dest": "Ankmy2",
+    "wt": -1.0
+   },
+   {
+    "src": "Maff",
+    "dest": "Gdi1",
+    "wt": -1.0
+   },
+   {
+    "src": "Max",
+    "dest": "Icam1",
+    "wt": -1.0
+   },
+   {
+    "src": "Mxi1",
+    "dest": "Sphk1",
+    "wt": -1.0
+   },
+   {
+    "src": "Naca",
+    "dest": "Gimap4",
+    "wt": -1.0
+   },
+   {
+    "src": "Nfatc1",
+    "dest": "Pfkp",
+    "wt": -1.0
+   },
+   {
+    "src": "Nfe2l2",
+    "dest": "Ormdl1",
+    "wt": -1.0
+   },
+   {
+    "src": "Nfkb1",
+    "dest": "Npc2",
+    "wt": -1.0
+   },
+   {
+    "src": "Nupr1",
+    "dest": "Sf3b3",
+    "wt": -1.0
+   },
+   {
+    "src": "Pcbp4",
+    "dest": "Apbb1ip",
+    "wt": -1.0
+   },
+   {
+    "src": "Pml",
+    "dest": "Pou2f2",
+    "wt": -1.0
+   },
+   {
+    "src": "Pou2f2",
+    "dest": "Syce2",
+    "wt": -1.0
+   },
+   {
+    "src": "Prkrir",
+    "dest": "Pgrmc1",
+    "wt": -1.0
+   },
+   {
+    "src": "Rel",
+    "dest": "Chchd7",
+    "wt": -1.0
+   },
+   {
+    "src": "Rpa2",
+    "dest": "Irf4",
+    "wt": -1.0
+   },
+   {
+    "src": "Sap30",
+    "dest": "Slc30a1",
+    "wt": -1.0
+   },
+   {
+    "src": "Sirt2",
+    "dest": "Rasal1",
+    "wt": -1.0
+   },
+   {
+    "src": "Smarca2",
+    "dest": "Zmat3",
+    "wt": -1.0
+   },
+   {
+    "src": "Sox4",
+    "dest": "Cd28",
+    "wt": -1.0
+   },
+   {
+    "src": "Stat2",
+    "dest": "Fut8",
+    "wt": -1.0
+   },
+   {
+    "src": "Stat4",
+    "dest": "Smarca2",
+    "wt": -1.0
+   },
+   {
+    "src": "Tcf12",
+    "dest": "Cyp11a1",
+    "wt": -1.0
+   },
+   {
+    "src": "Thap4",
+    "dest": "Aldh3a2",
+    "wt": -1.0
+   },
+   {
+    "src": "Trib3",
+    "dest": "Slc30a1",
+    "wt": -1.0
+   },
+   {
+    "src": "Xrcc5",
+    "dest": "Mapkapk2",
+    "wt": -1.0
+   },
+   {
+    "src": "Zfp239",
+    "dest": "Dgat1",
+    "wt": -1.0
+   },
+   {
+    "src": "Zfp36l1",
+    "dest": "Piga",
+    "wt": -1.0
+   },
+   {
+    "src": "Exo1",
+    "dest": "Smg5",
+    "wt": 0.0
+   },
+   {
+    "src": "Stat3",
+    "dest": "Car2",
+    "wt": 0.0
+   },
+   {
+    "src": "Ahr",
+    "dest": "Cutc",
+    "wt": 1.0
+   },
+   {
+    "src": "Akna",
+    "dest": "Xdh",
+    "wt": 1.0
+   },
+   {
+    "src": "Atf6",
+    "dest": "Spry1",
+    "wt": 1.0
+   },
+   {
+    "src": "Batf3",
+    "dest": "Ddx51",
+    "wt": 1.0
+   },
+   {
+    "src": "Cebpb",
+    "dest": "C630004h02rik",
+    "wt": 1.0
+   },
+   {
+    "src": "Chd7",
+    "dest": "Rnf149",
+    "wt": 1.0
+   },
+   {
+    "src": "Crebbp",
+    "dest": "H2afx",
+    "wt": 1.0
+   },
+   {
+    "src": "Dnmt3a",
+    "dest": "Ccl3",
+    "wt": 1.0
+   },
+   {
+    "src": "Egr2",
+    "dest": "Abcb1a",
+    "wt": 1.0
+   },
+   {
+    "src": "Eomes",
+    "dest": "Lrmp",
+    "wt": 1.0
+   },
+   {
+    "src": "Ets1",
+    "dest": "Prnp",
+    "wt": 1.0
+   },
+   {
+    "src": "Etv6",
+    "dest": "Apobec1",
+    "wt": 1.0
+   },
+   {
+    "src": "Fbxo18",
+    "dest": "2310004i24rik",
+    "wt": 1.0
+   },
+   {
+    "src": "Fosl2",
+    "dest": "Calcr",
+    "wt": 1.0
+   },
+   {
+    "src": "Foxp1",
+    "dest": "Clk3",
+    "wt": 1.0
+   },
+   {
+    "src": "Gfi1",
+    "dest": "Bcl2",
+    "wt": 1.0
+   },
+   {
+    "src": "H1f0",
+    "dest": "Nckap1",
+    "wt": 1.0
+   },
+   {
+    "src": "Hif1a",
+    "dest": "Acp5",
+    "wt": 1.0
+   },
+   {
+    "src": "Hmgn1",
+    "dest": "Xrcc5",
+    "wt": 1.0
+   },
+   {
+    "src": "Ifih1",
+    "dest": "St3gal1",
+    "wt": 1.0
+   },
+   {
+    "src": "Ikzf3",
+    "dest": "Tcf25",
+    "wt": 1.0
+   },
+   {
+    "src": "Ing2",
+    "dest": "Ccr8",
+    "wt": 1.0
+   },
+   {
+    "src": "Irf4",
+    "dest": "Clic1",
+    "wt": 1.0
+   },
+   {
+    "src": "Irf5",
+    "dest": "Fyn",
+    "wt": 1.0
+   },
+   {
+    "src": "Klf10",
+    "dest": "Csf2",
+    "wt": 1.0
+   },
+   {
+    "src": "Klf4",
+    "dest": "Akr1b8",
+    "wt": 1.0
+   },
+   {
+    "src": "Klf7",
+    "dest": "Acsl5",
+    "wt": 1.0
+   },
+   {
+    "src": "Lef1",
+    "dest": "Ppic",
+    "wt": 1.0
+   },
+   {
+    "src": "Maff",
+    "dest": "Dusp6",
+    "wt": 1.0
+   },
+   {
+    "src": "Max",
+    "dest": "Exo1",
+    "wt": 1.0
+   },
+   {
+    "src": "Mxi1",
+    "dest": "Inpp5a",
+    "wt": 1.0
+   },
+   {
+    "src": "Myb",
+    "dest": "Spry1",
+    "wt": 1.0
+   },
+   {
+    "src": "Nfatc1",
+    "dest": "Ifitm1",
+    "wt": 1.0
+   },
+   {
+    "src": "Nfe2l2",
+    "dest": "Dock9",
+    "wt": 1.0
+   },
+   {
+    "src": "Nfil3",
+    "dest": "Sh3kbp1",
+    "wt": 1.0
+   },
+   {
+    "src": "Nucb2",
+    "dest": "B4galt1",
+    "wt": 1.0
+   },
+   {
+    "src": "Pbx2",
+    "dest": "Gys1",
+    "wt": 1.0
+   },
+   {
+    "src": "Pcbp4",
+    "dest": "Rpl14",
+    "wt": 1.0
+   },
+   {
+    "src": "Pml",
+    "dest": "Rab7l1",
+    "wt": 1.0
+   },
+   {
+    "src": "Prkrir",
+    "dest": "Bc021614",
+    "wt": 1.0
+   },
+   {
+    "src": "Rad52",
+    "dest": "Rassf1",
+    "wt": 1.0
+   },
+   {
+    "src": "Rbpj",
+    "dest": "Stard5",
+    "wt": 1.0
+   },
+   {
+    "src": "Rorc",
+    "dest": "Trps1",
+    "wt": 1.0
+   },
+   {
+    "src": "Rxra",
+    "dest": "Ell2",
+    "wt": 1.0
+   },
+   {
+    "src": "Satb1",
+    "dest": "Atp6v1d",
+    "wt": 1.0
+   },
+   {
+    "src": "Ski",
+    "dest": "1700081l11rik",
+    "wt": 1.0
+   },
+   {
+    "src": "Son",
+    "dest": "Haus8",
+    "wt": 1.0
+   },
+   {
+    "src": "Sox4",
+    "dest": "Spn",
+    "wt": 1.0
+   },
+   {
+    "src": "Stat2",
+    "dest": "Nedd9",
+    "wt": 1.0
+   },
+   {
+    "src": "Stat3",
+    "dest": "Prnp",
+    "wt": 1.0
+   },
+   {
+    "src": "Tbx21",
+    "dest": "Cish",
+    "wt": 1.0
+   },
+   {
+    "src": "Tcf12",
+    "dest": "Il3",
+    "wt": 1.0
+   },
+   {
+    "src": "Thap4",
+    "dest": "Sh3gl3",
+    "wt": 1.0
+   },
+   {
+    "src": "Trps1",
+    "dest": "Ppp1cc",
+    "wt": 1.0
+   },
+   {
+    "src": "Vax2",
+    "dest": "Tal2",
+    "wt": 1.0
+   },
+   {
+    "src": "Zfp239",
+    "dest": "Il2rb",
+    "wt": 1.0
+   },
+   {
+    "src": "Zscan21",
+    "dest": "Lrrc33",
+    "wt": 1.0
+   },
+   {
+    "src": "Akna",
+    "dest": "Tnfrsf1a",
+    "wt": 2.0
+   },
+   {
+    "src": "Batf",
+    "dest": "Tspan5",
+    "wt": 2.0
+   },
+   {
+    "src": "Chd7",
+    "dest": "Spin4",
+    "wt": 2.0
+   },
+   {
+    "src": "Egr2",
+    "dest": "Cd2",
+    "wt": 2.0
+   },
+   {
+    "src": "Ets1",
+    "dest": "Icam2",
+    "wt": 2.0
+   },
+   {
+    "src": "Fbxo18",
+    "dest": "Galm",
+    "wt": 2.0
+   },
+   {
+    "src": "Gata3",
+    "dest": "Irf5",
+    "wt": 2.0
+   },
+   {
+    "src": "Hmgn1",
+    "dest": "Ccl4",
+    "wt": 2.0
+   },
+   {
+    "src": "Ikzf3",
+    "dest": "Acvrl1",
+    "wt": 2.0
+   },
+   {
+    "src": "Irf4",
+    "dest": "Sh3bp1",
+    "wt": 2.0
+   },
+   {
+    "src": "Klf4",
+    "dest": "Ascc1",
+    "wt": 2.0
+   },
+   {
+    "src": "Lrrfip1",
+    "dest": "Ms4a6c",
+    "wt": 2.0
+   },
+   {
+    "src": "Max",
+    "dest": "Trmt5",
+    "wt": 2.0
+   },
+   {
+    "src": "Nfatc1",
+    "dest": "Rbms2",
+    "wt": 2.0
+   },
+   {
+    "src": "Nfyb",
+    "dest": "Atad2b",
+    "wt": 2.0
+   },
+   {
+    "src": "Pcbp4",
+    "dest": "Dcxr",
+    "wt": 2.0
+   },
+   {
+    "src": "Ppp1r10",
+    "dest": "Spn",
+    "wt": 2.0
+   },
+   {
+    "src": "Rbpj",
+    "dest": "Taf7",
+    "wt": 2.0
+   },
+   {
+    "src": "Rxra",
+    "dest": "Pde8a",
+    "wt": 2.0
+   },
+   {
+    "src": "Smarca2",
+    "dest": "Fosl2",
+    "wt": 2.0
+   },
+   {
+    "src": "Stat3",
+    "dest": "Dusp14",
+    "wt": 2.0
+   },
+   {
+    "src": "Tbx21",
+    "dest": "Spn",
+    "wt": 2.0
+   },
+   {
+    "src": "Vax2",
+    "dest": "Dci",
+    "wt": 2.0
+   },
+   {
+    "src": "Ahr",
+    "dest": "Eef1a1",
+    "wt": 3.0
+   },
+   {
+    "src": "Chd7",
+    "dest": "Ckap4",
+    "wt": 3.0
+   },
+   {
+    "src": "Egr2",
+    "dest": "Itih5",
+    "wt": 3.0
+   },
+   {
+    "src": "Exo1",
+    "dest": "Plxnc1",
+    "wt": 3.0
+   },
+   {
+    "src": "H1f0",
+    "dest": "Cln6",
+    "wt": 3.0
+   },
+   {
+    "src": "Ift57",
+    "dest": "Aqp3",
+    "wt": 3.0
+   },
+   {
+    "src": "Irf4",
+    "dest": "Tmbim1",
+    "wt": 3.0
+   },
+   {
+    "src": "Klf4",
+    "dest": "Polr3gl",
+    "wt": 3.0
+   },
+   {
+    "src": "Mxi1",
+    "dest": "Tec",
+    "wt": 3.0
+   },
+   {
+    "src": "Nfkb1",
+    "dest": "Nrp1",
+    "wt": 3.0
+   },
+   {
+    "src": "Pml",
+    "dest": "Ada",
+    "wt": 3.0
+   },
+   {
+    "src": "Rpa2",
+    "dest": "Rxra",
+    "wt": 3.0
+   },
+   {
+    "src": "Smarca2",
+    "dest": "Phlpp1",
+    "wt": 3.0
+   },
+   {
+    "src": "Stat4",
+    "dest": "Ccr5",
+    "wt": 3.0
+   },
+   {
+    "src": "Vax2",
+    "dest": "Fut8",
+    "wt": 3.0
+   },
+   {
+    "src": "Atf6",
+    "dest": "Pppde1",
+    "wt": 4.0
+   },
+   {
+    "src": "Egr2",
+    "dest": "Dock9",
+    "wt": 4.0
+   },
+   {
+    "src": "Foxo1",
+    "dest": "Trim24",
+    "wt": 4.0
+   },
+   {
+    "src": "Ift57",
+    "dest": "Ehbp1l1",
+    "wt": 4.0
+   },
+   {
+    "src": "Klf3",
+    "dest": "Ptp4a1",
+    "wt": 4.0
+   },
+   {
+    "src": "Mxi1",
+    "dest": "3110003a17rik",
+    "wt": 4.0
+   },
+   {
+    "src": "Nupr1",
+    "dest": "Tgm2",
+    "wt": 4.0
+   },
+   {
+    "src": "Rora",
+    "dest": "Gnpda1",
+    "wt": 4.0
+   },
+   {
+    "src": "Sox4",
+    "dest": "Xdh",
+    "wt": 4.0
+   },
+   {
+    "src": "Trps1",
+    "dest": "Gpr65",
+    "wt": 4.0
+   },
+   {
+    "src": "Bcl3",
+    "dest": "Tnfsf11",
+    "wt": 5.0
+   },
+   {
+    "src": "Fbxo18",
+    "dest": "Tesk2",
+    "wt": 5.0
+   },
+   {
+    "src": "Ing2",
+    "dest": "Unc119b",
+    "wt": 5.0
+   },
+   {
+    "src": "Mafg",
+    "dest": "Ppp1cc",
+    "wt": 5.0
+   },
+   {
+    "src": "Pbx2",
+    "dest": "Ubiad1",
+    "wt": 5.0
+   },
+   {
+    "src": "Rpa2",
+    "dest": "Tmem173",
+    "wt": 5.0
+   },
+   {
+    "src": "Stat3",
+    "dest": "Trp53i13",
+    "wt": 5.0
+   },
+   {
+    "src": "Batf",
+    "dest": "Ctla2b",
+    "wt": 6.0
+   },
+   {
+    "src": "Etv6",
+    "dest": "Atad2b",
+    "wt": 6.0
+   },
+   {
+    "src": "Irf4",
+    "dest": "2310008h04rik",
+    "wt": 6.0
+   },
+   {
+    "src": "Nfatc2",
+    "dest": "Sf3b3",
+    "wt": 6.0
+   },
+   {
+    "src": "Rel",
+    "dest": "Lst1",
+    "wt": 6.0
+   },
+   {
+    "src": "Trib3",
+    "dest": "Clybl",
+    "wt": 6.0
+   },
+   {
+    "src": "Crebbp",
+    "dest": "Tnf",
+    "wt": 7.0
+   },
+   {
+    "src": "Ifih1",
+    "dest": "Prkcd",
+    "wt": 7.0
+   },
+   {
+    "src": "Max",
+    "dest": "Cln6",
+    "wt": 7.0
+   },
+   {
+    "src": "Prkrir",
+    "dest": "4930583h14rik",
+    "wt": 7.0
+   },
+   {
+    "src": "Txk",
+    "dest": "Gm10345",
+    "wt": 7.0
+   },
+   {
+    "src": "Egr3",
+    "dest": "Usp22",
+    "wt": 8.0
+   },
+   {
+    "src": "Irf4",
+    "dest": "Idh1",
+    "wt": 8.0
+   },
+   {
+    "src": "Pou2f2",
+    "dest": "Pak1",
+    "wt": 8.0
+   },
+   {
+    "src": "Xrcc5",
+    "dest": "Ptprcap",
+    "wt": 8.0
+   },
+   {
+    "src": "Fbxo18",
+    "dest": "Dhcr7",
+    "wt": 9.0
+   },
+   {
+    "src": "Maff",
+    "dest": "Snx19",
+    "wt": 9.0
+   },
+   {
+    "src": "Runx1",
+    "dest": "Vrk2",
+    "wt": 9.0
+   },
+   {
+    "src": "Creb1",
+    "dest": "Rilpl2",
+    "wt": 10.0
+   },
+   {
+    "src": "Irf5",
+    "dest": "Slamf7",
+    "wt": 10.0
+   },
+   {
+    "src": "Pou2f2",
+    "dest": "Ermp1",
+    "wt": 10.0
+   },
+   {
+    "src": "Batf",
+    "dest": "Cndp2",
+    "wt": 11.0
+   },
+   {
+    "src": "Max",
+    "dest": "Nme4",
+    "wt": 11.0
+   },
+   {
+    "src": "Stat3",
+    "dest": "Il17a",
+    "wt": 11.0
+   },
+   {
+    "src": "Hmgn1",
+    "dest": "Gusb",
+    "wt": 12.0
+   },
+   {
+    "src": "Runx1",
+    "dest": "Tesk2",
+    "wt": 12.0
+   },
+   {
+    "src": "Exo1",
+    "dest": "Cd5l",
+    "wt": 13.0
+   },
+   {
+    "src": "Pml",
+    "dest": "Hk1",
+    "wt": 13.0
+   },
+   {
+    "src": "Creb1",
+    "dest": "Zfp426",
+    "wt": 14.0
+   },
+   {
+    "src": "Klf7",
+    "dest": "Psmd8",
+    "wt": 14.0
+   },
+   {
+    "src": "Arid5a",
+    "dest": "Cd86",
+    "wt": 15.0
+   },
+   {
+    "src": "Nupr1",
+    "dest": "H1f0",
+    "wt": 15.0
+   },
+   {
+    "src": "Ift57",
+    "dest": "Il2rb",
+    "wt": 16.0
+   },
+   {
+    "src": "Dnmt3a",
+    "dest": "Kcna3",
+    "wt": 17.0
+   },
+   {
+    "src": "Cebpb",
+    "dest": "Pag1",
+    "wt": 18.0
+   },
+   {
+    "src": "Sox4",
+    "dest": "Fasl",
+    "wt": 18.0
+   },
+   {
+    "src": "Rel",
+    "dest": "Gpr65",
+    "wt": 19.0
+   },
+   {
+    "src": "Prkrir",
+    "dest": "Fam129a",
+    "wt": 20.0
+   },
+   {
+    "src": "Pcbp4",
+    "dest": "Arrb2",
+    "wt": 21.0
+   },
+   {
+    "src": "Prkrir",
+    "dest": "1500010j02rik",
+    "wt": 22.0
+   },
+   {
+    "src": "Rxra",
+    "dest": "Dcxr",
+    "wt": 23.0
+   },
+   {
+    "src": "Rxra",
+    "dest": "Lgals7",
+    "wt": 24.0
+   },
+   {
+    "src": "Runx1",
+    "dest": "Abcg2",
+    "wt": 25.0
+   },
+   {
+    "src": "Chd7",
+    "dest": "Sepw1",
+    "wt": 27.0
+   },
+   {
+    "src": "Ifih1",
+    "dest": "Tnfsf9",
+    "wt": 28.0
+   },
+   {
+    "src": "Stat3",
+    "dest": "Cela1",
+    "wt": 29.0
+   },
+   {
+    "src": "Gfi1",
+    "dest": "R3hdm1",
+    "wt": 31.0
+   },
+   {
+    "src": "Satb1",
+    "dest": "Chd7",
+    "wt": 32.0
+   },
+   {
+    "src": "Inhba",
+    "dest": "Timp1",
+    "wt": 34.0
+   },
+   {
+    "src": "Crebbp",
+    "dest": "Hexim1",
+    "wt": 36.0
+   },
+   {
+    "src": "Xrcc5",
+    "dest": "Tprkb",
+    "wt": 37.0
+   },
+   {
+    "src": "Nfatc1",
+    "dest": "Sqle",
+    "wt": 40.0
+   },
+   {
+    "src": "Tbx21",
+    "dest": "Arid5a",
+    "wt": 42.0
+   },
+   {
+    "src": "Stat3",
+    "dest": "Il24",
+    "wt": 45.0
+   },
+   {
+    "src": "Gata3",
+    "dest": "Map3k14",
+    "wt": 48.0
+   },
+   {
+    "src": "Rpa2",
+    "dest": "Exo1",
+    "wt": 50.0
+   }
+  ]
+ }
+}

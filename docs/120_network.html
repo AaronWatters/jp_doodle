@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Images -- jp_doodle demo</title>
+    <title>Network Explorer -- jp_doodle demo</title>
     <link rel="icon" type="image/png" href="images/clock.png">
     <link rel=stylesheet href="static/style.css">
 
@@ -77,13 +77,30 @@
     to easily run the Jupyter notebooks of the package.
 </em></p>
 
-<h1>Images</h1>
+<h1>Network Explorer</h1>
 <div>
-    You can draw images on canvases in two steps.
-First you must load the image and identify it with a name,
-and afterward you can draw the image any number of times
-by providing x, y corner coordinates with width and height.
-You may also specify a rectangle inside the image to draw.
+    <p>
+The directed network widget allows interactive
+exploration of directed weighted network structures.
+It was developed to facilitate the exploration and comparison of gene regulatory
+networks which are inferred using different methodologies.
+</p>
+<p>
+The widget allows the user to
+<dl>
+<li> drag nodes of the network to new positions with the mouse,
+<li> adjust the display size,
+<li> find a subset of the network of interest,
+<li> focus on lassoed elements or remove lassoed elements,
+<li> reset the layout for the nodes of the network,
+<li> display visible node and edges as text.
+<li> specify a region of "too small" edge weights to exclude from view,
+<li> select nodes to display by matching names or "glob" patterns for names.
+</dl>
+The widget also includes a large number of configuration options which
+do not have corresponding visual controls
+which can be set upon initialization or modified subsequently.
+</p>
 </div>
 
 <div id="target_container">
@@ -93,74 +110,22 @@ You may also specify a rectangle inside the image to draw.
 <script>
     var element = $('#target_div');
     //$('<img src="http://sipi.usc.edu/database/preview/misc/4.2.03.png">').appendTo(element);
-    var element = $('#target_div');
-var config = {
-            width: 600,
-            height: 600,
-        };
-element.dual_canvas_helper(config);
-
-// Mandrill from a remote image
-var mandrill_url = "http://sipi.usc.edu/database/preview/misc/4.2.03.png";
-// This local image reference works in "classic" notebook, but not in Jupyter Lab.
-var mandrill_url = "static/mandrill.png"
-element.name_image_url("mandrill", mandrill_url);
-
-
-// just the eyes, not the whole image
-var eyes = element.named_image({
-    name: "mandrill eyes",
-    image_name: "mandrill", x:0, y:-40, w:80, h:30,
-    sx:30, sy:15, sWidth:140, sHeight:20
-    });
-    
-var mandrill = element.named_image({
-    name: "whole mandrill",
-    image_name: "mandrill", x:0, y:0, w:200, h:200
-    });
-    
-var square = element.named_image({
-    name: "mandrill square",
-    image_name: "mandrill", x:210, y:0, w:200, h:200,
-    sx:40, sy:14, sWidth:30, sHeight:30
-    });
-    
-var highlight = element.rect({name:"highlight", x:40, y:200-14, w:30, h:-30,
-    color:"rgba(200,200,100,0.7)"});
-    
-// events to drag the square and adjust the detail.
-// Attach a mousedown event which picks the highlight.
-var moving = false;
-var on_mouse_down = function(event) {
-    moving = true;
-};
-element.on_canvas_event("mousedown", on_mouse_down);
-square.on("mousedown", on_mouse_down)
-
-// Attach a mousemove event which moves the highlight.
-var on_mouse_move = function(event) {
-    if (moving) {
-        var loc = element.event_model_location(event);
-        var x = loc.x;
-        var y = loc.y;
-        if ((x > 0) && (y > 30) && (x < 170) && (y < 200)) {
-            highlight.change({x:loc.x, y:loc.y});
-            square.change({sx:loc.x, sy:200-loc.y})
-        }
-    } 
-};
-element.on_canvas_event("mousemove", on_mouse_move);
-
-// Attach a mouseup event which "drops" the current picked up object.
-var on_mouse_up = function(event) {
-    moving = false;
-};
-element.on_canvas_event("mouseup", on_mouse_up);
-
-// Fit the figure into the available space
-element.fit(null, 10);
-
-$("<div>Drag the yellow square to adjust the detail view</div>").appendTo(element);
+    function make_network_visualization(json_spec) {
+                var N = element.directed_network(json_spec);
+                N.display_all();
+                // preset the network to a subset view
+                N.match_input.val("*stat4*");
+                N.match_pattern();
+                N.expand();
+                N.expand();
+                N.expand();
+                N.relax_layout();
+            };
+            var on_load_failure = function() {
+                alert("Could not load local JSON data.\n" +
+                        "You may need to run a web server to avoid cross origin restrictions.")
+            };
+            $.getJSON("./static/network.json", make_network_visualization).fail(on_load_failure);
 </script>
 
 <div id="code_text">
@@ -168,74 +133,22 @@ $("<div>Drag the yellow square to adjust the detail view</div>").appendTo(elemen
     
         <div><textarea id="code" name="code">
 var element = $('#target_div');
-var element = $('#target_div');
-var config = {
-            width: 600,
-            height: 600,
-        };
-element.dual_canvas_helper(config);
-
-// Mandrill from a remote image
-var mandrill_url = "http://sipi.usc.edu/database/preview/misc/4.2.03.png";
-// This local image reference works in "classic" notebook, but not in Jupyter Lab.
-var mandrill_url = "static/mandrill.png"
-element.name_image_url("mandrill", mandrill_url);
-
-
-// just the eyes, not the whole image
-var eyes = element.named_image({
-    name: "mandrill eyes",
-    image_name: "mandrill", x:0, y:-40, w:80, h:30,
-    sx:30, sy:15, sWidth:140, sHeight:20
-    });
-    
-var mandrill = element.named_image({
-    name: "whole mandrill",
-    image_name: "mandrill", x:0, y:0, w:200, h:200
-    });
-    
-var square = element.named_image({
-    name: "mandrill square",
-    image_name: "mandrill", x:210, y:0, w:200, h:200,
-    sx:40, sy:14, sWidth:30, sHeight:30
-    });
-    
-var highlight = element.rect({name:"highlight", x:40, y:200-14, w:30, h:-30,
-    color:"rgba(200,200,100,0.7)"});
-    
-// events to drag the square and adjust the detail.
-// Attach a mousedown event which picks the highlight.
-var moving = false;
-var on_mouse_down = function(event) {
-    moving = true;
-};
-element.on_canvas_event("mousedown", on_mouse_down);
-square.on("mousedown", on_mouse_down)
-
-// Attach a mousemove event which moves the highlight.
-var on_mouse_move = function(event) {
-    if (moving) {
-        var loc = element.event_model_location(event);
-        var x = loc.x;
-        var y = loc.y;
-        if ((x > 0) && (y > 30) && (x < 170) && (y < 200)) {
-            highlight.change({x:loc.x, y:loc.y});
-            square.change({sx:loc.x, sy:200-loc.y})
-        }
-    } 
-};
-element.on_canvas_event("mousemove", on_mouse_move);
-
-// Attach a mouseup event which "drops" the current picked up object.
-var on_mouse_up = function(event) {
-    moving = false;
-};
-element.on_canvas_event("mouseup", on_mouse_up);
-
-// Fit the figure into the available space
-element.fit(null, 10);
-
-$("<div>Drag the yellow square to adjust the detail view</div>").appendTo(element);
+function make_network_visualization(json_spec) {
+                var N = element.directed_network(json_spec);
+                N.display_all();
+                // preset the network to a subset view
+                N.match_input.val("*stat4*");
+                N.match_pattern();
+                N.expand();
+                N.expand();
+                N.expand();
+                N.relax_layout();
+            };
+            var on_load_failure = function() {
+                alert("Could not load local JSON data.\n" +
+                        "You may need to run a web server to avoid cross origin restrictions.")
+            };
+            $.getJSON("./static/network.json", make_network_visualization).fail(on_load_failure);
         </textarea></div>
     
     </div>
@@ -244,7 +157,14 @@ $("<div>Drag the yellow square to adjust the detail view</div>").appendTo(elemen
         <h3>Discussion</h3>
     
         <div>
-            This example demonstrates dynamically adjusting a window within an image.
+            <p>
+They "relax" and "skeleton" layout methods use a gradient descent heuristic to find a layout
+for the nodes which reflects the edge weights between connected nodes.  
+These layout methods can be slow if there are a large number of nodes and edges visible.
+The "wiggle" operation
+applies that heuristic for a limited number of steps.
+The "grid" layout just puts the nodes in a rectangular array without considering the edge weights.
+</p>
         </div>
     
     </div>
