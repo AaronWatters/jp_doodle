@@ -607,7 +607,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 });
                 //that.match_div.html("match input here");
                 that.match_b = that.add_button(
-                    "Match glob patterns:", that.match_div, function() {that.match_pattern();});
+                    "Match glob patterns:", that.match_div, function() {that.match_pattern(); });
                 var match_input_div = $("<div/>").appendTo(that.match_div);
                 this.match_input = $('<input type="text" value="*" size="70"/>').appendTo(match_input_div);
                 // misc info at the bottom.
@@ -717,10 +717,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
 
             add_button(text, container, click_callback) {
+                var button_id = this.button_count | 1;
+                this.button_count = button_id + 1;
                 var button_div = $("<div/>").appendTo(container);
-                var button = $('<a href="#">' + text + "</a>").appendTo(button_div);
+                //var button = $('<a href="#">' + text + "</a>").appendTo(button_div);
+                var button = $(`<a href="#" id="button_${button_id}"> ${text} </a>`).appendTo(button_div);
                 button._base_text = text;
-                button.click(click_callback);
+                // don't scroll on click
+                button.click(function () { click_callback(); return false; });
                 return button;
             };
 
