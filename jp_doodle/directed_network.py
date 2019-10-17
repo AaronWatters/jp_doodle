@@ -14,7 +14,7 @@ directed_network_js = doodle_files.vendor_path("js/directed_network.js")
 gd_graph_js = doodle_files.vendor_path("js/gd_graph.js")
 additional_js = [gd_graph_js, directed_network_js]
 
-class Network_Widget(jp_proxy_widget.JSProxyWidget):
+class Network_Widget(jp_proxy_widget.JSProxyWidget, dual_canvas.SaveImageMixin):
 
     "Wrapper for an nd-scatter structure."
     
@@ -66,3 +66,23 @@ class Network_Widget(jp_proxy_widget.JSProxyWidget):
         s.update(other_args)
         self.element.d_network.edge(source_name, destination_name, weight, s)
 
+    def save_png(self, file_path=None):
+        if file_path is None:
+            file_path = "Network.png"
+        self.clear_information()
+        self.inform("Attempting to save as " + repr(file_path))
+        def after():
+            self.inform("Saved image " + repr(file_path))
+        def error(e):
+            self.inform("Image save failed.")
+            self.inform("Exception: " + e)
+        self.save_pixels_to_png_async(
+            file_path, 
+            canvas_element="element.d_network.canvas_element",
+            after=after, error=error)
+
+    def clear_information(self):
+        self.element.d_network.clear_information()
+
+    def inform(self, message):
+        self.element.d_network.inform(message)
