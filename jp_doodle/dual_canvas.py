@@ -423,15 +423,13 @@ class DisableRedrawContextManager(object):
         if (self.save_flush):
             canvas.flush()
 
+class SaveImageMixin:
 
-class TopLevelCanvasMixin(CanvasOperationsMixin):
+    """
+    Logic for saving canvas image to array or file.
+    """
 
-    "Common operations for top level canvas objects."
-
-    def get_canvas(self):
-        return self
-
-    def pixels_array_async(self, callback, x=None, y=None, w=None, h=None):
+    def pixels_array_async(self, callback, x=None, y=None, w=None, h=None, canvas_element=None):
         """
         Get all pixels in the canvas as an array, or pixels in rectangular region if specified.
         Deliver the result to the callback(a) as a numpy array.
@@ -449,21 +447,14 @@ class TopLevelCanvasMixin(CanvasOperationsMixin):
             image_array = array1d.reshape((height, width, bytes_per_pixel))
             callback(image_array)
         self.js_init("""
-            var pixels = element.pixels(x, y, w, h);
+            canvas_element = canvas_element || element;
+            var pixels = canvas_element.pixels(x, y, w, h);
             callback(pixels);
-        """, callback=converter_callback, x=x, y=y, w=w, h=h)
+        """, callback=converter_callback, x=x, y=y, w=w, h=h, canvas_element=canvas_element)
 
-    def on_rendered(self, callable, *positional, **keyword):
-        """
-        After the widget has rendered, call the callable.
-        This can be used to initialize an animation after the widget is visible, for example.
-        xxxx this should probably be added to jp_proxy_widget.
-        """
-        def call_it():
-            return callable(*positional, **keyword)
-        self.js_init("call_it();", call_it=call_it)
-
-    def save_pixels_to_png_async(self, file_path, x=None, y=None, w=None, h=None, after=None, error=None):
+    def save_pixels_to_png_async(
+        self, file_path, x=None, y=None, w=None, h=None, 
+        after=None, error=None, canvas_element=None):
         #import scipy.misc as sm
         def save_callback(image_array):
             try:
@@ -474,7 +465,25 @@ class TopLevelCanvasMixin(CanvasOperationsMixin):
                 if error:
                     error(e)
                 raise e
-        self.pixels_array_async(save_callback, x, y, w, h)
+        self.pixels_array_async(save_callback, x, y, w, h, canvas_element=canvas_element)
+
+
+class TopLevelCanvasMixin(CanvasOperationsMixin, SaveImageMixin):
+
+    "Common operations for top level canvas objects."
+
+    def get_canvas(self):
+        return self
+
+    def on_rendered(self, callable, *positional, **keyword):
+        """
+        After the widget has rendered, call the callable.
+        This can be used to initialize an animation after the widget is visible, for example.
+        xxxx this should probably be added to jp_proxy_widget.
+        """
+        def call_it():
+            return callable(*positional, **keyword)
+        self.js_init("call_it();", call_it=call_it)
 
     def in_dialog(self):
         self.element.dialog()
