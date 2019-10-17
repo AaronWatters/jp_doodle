@@ -434,6 +434,8 @@ class SaveImageMixin:
         Get all pixels in the canvas as an array, or pixels in rectangular region if specified.
         Deliver the result to the callback(a) as a numpy array.
         All parameters are in pixel offsets, not canvas transformed coordinates.
+        The canvas_element if provided should be a string which evaluates in javascript
+        to the target canvas (in the js_init context).
         """
         from jp_proxy_widget.hex_codec import hex_to_bytearray
         import numpy as np
@@ -447,8 +449,11 @@ class SaveImageMixin:
             image_array = array1d.reshape((height, width, bytes_per_pixel))
             callback(image_array)
         self.js_init("""
-            canvas_element = canvas_element || element;
-            var pixels = canvas_element.pixels(x, y, w, h);
+            var target = element;
+            if (canvas_element) {
+                target = eval(canvas_element);
+            }
+            var pixels = target.pixels(x, y, w, h);
             callback(pixels);
         """, callback=converter_callback, x=x, y=y, w=w, h=h, canvas_element=canvas_element)
 
