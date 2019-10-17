@@ -423,22 +423,6 @@ exploration of directed weighted network structures.
 It was developed to facilitate the exploration and comparison of gene regulatory
 networks which are inferred using different methodologies.
 </p>
-<p>
-The widget allows the user to
-<dl>
-<li> drag nodes of the network to new positions with the mouse,
-<li> adjust the display size,
-<li> find a subset of the network of interest,
-<li> focus on lassoed elements or remove lassoed elements,
-<li> reset the layout for the nodes of the network,
-<li> display visible node and edges as text.
-<li> specify a region of "too small" edge weights to exclude from view,
-<li> select nodes to display by matching names or "glob" patterns for names.
-</dl>
-The widget also includes a large number of configuration options which
-do not have corresponding visual controls
-which can be set upon initialization or modified subsequently.
-</p>
         </div>
     </td>
 </tr>

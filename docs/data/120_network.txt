@@ -9,41 +9,43 @@ exploration of directed weighted network structures.
 It was developed to facilitate the exploration and comparison of gene regulatory
 networks which are inferred using different methodologies.
 </p>
+***CODE
+            
+function make_network_visualization(json_spec) {
+    var N = element.directed_network(json_spec);
+    N.display_all();
+    // preset the network to a subset view
+    N.match_input.val("*stat4*");
+    N.match_pattern();
+    N.expand();
+    N.expand();
+    N.expand();
+    N.relax_layout();
+};
+var on_load_failure = function() {
+    alert("Could not load local JSON data.\n" +
+            "You may need to run a web server to avoid cross origin restrictions.")
+};
+$.getJSON("./static/network.json", make_network_visualization).fail(on_load_failure);
+***DISCUSSION
 <p>
-The widget allows the user to
+The widget allows the user to:
+</p>
 <dl>
 <li> drag nodes of the network to new positions with the mouse,
 <li> adjust the display size,
 <li> find a subset of the network of interest,
 <li> focus on lassoed elements or remove lassoed elements,
 <li> reset the layout for the nodes of the network,
-<li> display visible node and edges as text.
-<li> specify a region of "too small" edge weights to exclude from view,
+<li> display visible node and edges as text,
+<li> specify a region of "too small" edge weights to exclude from view, and
 <li> select nodes to display by matching names or "glob" patterns for names.
 </dl>
+<p>
 The widget also includes a large number of configuration options which
 do not have corresponding visual controls
 which can be set upon initialization or modified subsequently.
 </p>
-***CODE
-            
-            function make_network_visualization(json_spec) {
-                var N = element.directed_network(json_spec);
-                N.display_all();
-                // preset the network to a subset view
-                N.match_input.val("*stat4*");
-                N.match_pattern();
-                N.expand();
-                N.expand();
-                N.expand();
-                N.relax_layout();
-            };
-            var on_load_failure = function() {
-                alert("Could not load local JSON data.\n" +
-                        "You may need to run a web server to avoid cross origin restrictions.")
-            };
-            $.getJSON("./static/network.json", make_network_visualization).fail(on_load_failure);
-***DISCUSSION
 <p>
 The "relax" and "skeleton" layout methods use a gradient descent heuristic to find a layout
 for the nodes which reflects the edge weights between connected nodes.  

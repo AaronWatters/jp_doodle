@@ -294,7 +294,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
             reset() {
                 // reinitialize data structures.
-                this.settings.default_layout = this.reset_layout;
+                this.settings.default_layout = this.reset_layout;   // use the first
                 this.clear_information();
                 this.inform("Resetting graph and undo stack.");
                 this.undo_stack = [];
