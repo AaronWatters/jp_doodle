@@ -98,3 +98,51 @@ class Network_Widget(jp_proxy_widget.JSProxyWidget, dual_canvas.SaveImageMixin):
 
     def inform(self, message):
         self.element.d_network.inform(message)
+
+def graph(
+        network_json=None,
+        canvas_size=500,
+        info_height=150,
+        selector_size=90,
+        sidebar_size=150,
+        gap=10,
+        min_color="#00f",
+        min_threshold_color="#aaa",
+        max_threshold_color="#bbb",
+        max_color="orange",
+        default_layout="grid",  # or "relax" or "skeleton"
+        separator_radius=6,
+        link_radius=1,
+        min_change=1,
+        undo_limit=10,
+        font="normal 10px Arial",  # default node font
+        color="#999", # default node font
+        background=None,  # default node background
+        src_font=None,  # override src font
+        src_color=None, # override src colot
+        src_background=None, # override src background
+    ):
+    s = clean_dict(
+        network_json=network_json,
+        canvas_size=canvas_size,
+        info_height=info_height,
+        selector_size=selector_size,
+        sidebar_size=sidebar_size,
+        gap=gap,
+        min_color=min_color,
+        min_threshold_color=min_threshold_color,
+        max_threshold_color=max_threshold_color,
+        max_color=max_color,
+        default_layout=default_layout,  # or "relax" or "skeleton"
+        separator_radius=separator_radius,
+        link_radius=link_radius,
+        min_change=min_change,
+        undo_limit=undo_limit,
+        font=font,
+        color=color,
+        background=background,
+        src_font=src_font,
+        src_color=src_color,
+        src_background=src_background,
+    )
+    return Network_Widget(s)
