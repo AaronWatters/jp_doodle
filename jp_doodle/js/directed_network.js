@@ -39,12 +39,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     link_radius: 1,
                     min_change: 1,
                     undo_limit: 10,
-                    font: "normal 10px Arial",
-                    color: "#999",
-                    background: "#afa",
-                    src_font: "italic 12px Arial",
-                    src_color: "#000",
-                    src_background: "#ffa",
+                    font: "normal 12px Arial",
+                    color: "#222",
+                    background: "#ddd",
+                    src_font: null,
+                    src_color: null,
+                    src_background: null,
                 }, options);
                 this.reset_layout = this.settings.default_layout;
                 this.element = element;
@@ -584,19 +584,19 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 });
                 //that.swatch_div.html("swatches here.");
                 that.min_swatch = $("<div/>").appendTo(that.swatch_div);
-                that.min_swatch.html("Minimum");
+                that.min_swatch.html("&gt;");
                 that.min_swatch.css({"background-color": s.min_color, color:"white"});
                 
                 that.min_threshold_swatch = $("<div/>").appendTo(that.swatch_div);
-                that.min_threshold_swatch.html("Low Threshold");
+                that.min_threshold_swatch.html("&lt;");
                 that.min_threshold_swatch.css({"background-color": s.min_threshold_color, color:"white"});
                 
                 that.max_threshold_swatch = $("<div/>").appendTo(that.swatch_div);
-                that.max_threshold_swatch.html("High Threshold");
+                that.max_threshold_swatch.html("&gt");
                 that.max_threshold_swatch.css({"background-color": s.max_threshold_color, color:"white"});
                 
                 that.max_swatch = $("<div/>").appendTo(that.swatch_div);
-                that.max_swatch.html("Maximum");
+                that.max_swatch.html("&lt;");
                 that.max_swatch.css({"background-color": s.max_color, color:"white"});
                 
                 // match area
@@ -615,7 +615,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 that.match_b = that.add_button(
                     "Match glob patterns:", that.match_div, function() {that.match_pattern(); });
                 var match_input_div = $("<div/>").appendTo(that.match_div);
-                this.match_input = $('<input type="text" value="*" size="70"/>').appendTo(match_input_div);
+                this.match_input = $('<input type="text" value="*" size="30"/>').appendTo(match_input_div);
                 // misc info at the bottom.
                 that.info_container = $("<div/>").appendTo(container);
                 that.info_container.css({
