@@ -117,10 +117,15 @@ def graph(
         undo_limit=10,
         font="normal 10px Arial",  # default node font
         color="#999", # default node font
+        shape="text", # or "circle", "rect"
+        radius=4,  # radius for circle or rect
         background=None,  # default node background
-        src_font=None,  # override src font
-        src_color=None, # override src colot
-        src_background=None, # override src background
+        src_font=None,  # overrides for src nodes
+        src_color=None,
+        src_background=None,
+        src_shape=None,
+        src_radius=None,
+        **other_attributes
     ):
     s = clean_dict(
         network_json=network_json,
@@ -141,8 +146,13 @@ def graph(
         font=font,
         color=color,
         background=background,
+        shape=shape,
+        radius=radius,
         src_font=src_font,
         src_color=src_color,
         src_background=src_background,
+        src_shape=src_shape,
+        src_radius=src_radius,
     )
+    s.update(other_attributes)
     return Network_Widget(s)
