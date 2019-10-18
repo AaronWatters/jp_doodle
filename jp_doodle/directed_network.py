@@ -29,8 +29,20 @@ class Network_Widget(jp_proxy_widget.JSProxyWidget, dual_canvas.SaveImageMixin):
             element.empty();
             element.d_network = element.directed_network(config);
         """, config = config)
+        self.customize()
         if display:
             self.display_all()
+
+    def customize(self):
+        """
+        Add special user interface elements for Jupyter.
+        """
+        # add a button to save as PNG image
+        self.js_init("""
+            var d_network = element.d_network;
+            var list_buttons = d_network.side_lists;
+            d_network.add_button("<b>save as PNG</b>", list_buttons, callback);
+        """, callback=self.save_png)
 
     def display_all(self):
         self.element.d_network.display_all()
