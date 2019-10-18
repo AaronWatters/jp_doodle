@@ -25,6 +25,7 @@ setup(
         "pillow", 
         "psutil",
         "imageio",
+        "sklearn",
         ],
     license="MIT"
 )
