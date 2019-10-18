@@ -7,7 +7,6 @@ from jp_doodle.dual_canvas import clean_dict
 import jp_proxy_widget
 import csv
 from IPython.display import display, HTML
-from sklearn.preprocessing import StandardScaler
 import numpy as np
 
 directed_network_js = doodle_files.vendor_path("js/directed_network.js")
