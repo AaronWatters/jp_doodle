@@ -42,9 +42,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     font: "normal 12px Arial",
                     color: "#222",
                     background: "#ddd",
-                    src_font: null,
+                    shape: "text",  // default node shape (or "circle", "rect")
+                    radius: 4,  // default node pixel radius
+                    src_font: null,  // src node overrides
                     src_color: null,
                     src_background: null,
+                    src_shape: null,
+                    src_radius: null, 
                 }, options);
                 this.reset_layout = this.settings.default_layout;
                 this.element = element;
@@ -1092,7 +1096,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         visible_edges[edge_key] = edge;
                         // 0 weight, allow duplicates
                         var dedge = g.add_edge(edge.source_name, edge.destination_name, 0, true);
-                        dedge.arrow(edge.source_name, edge.destination_name, wt, edge.settings);
+                        var esettings = $.extend({}, edge.settings);
+                        esettings.color = esettings.color || vs.edge_color;
+                        esettings.lineWidth = esettings.lineWidth || vs.lineWidth;
+                        esettings.lineDash = esettings.lineDash || vs.lineDash;
+                        dedge.arrow(edge.source_name, edge.destination_name, wt, esettings);
                         visible_nodes[edge.source_name] = true;
                         visible_nodes[edge.destination_name] = true;
                         this.sources[edge.source_name] = true;
@@ -1118,10 +1126,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         dns.font = dns.font || vs.src_font;
                         dns.color = dns.color || vs.src_color;
                         dns.background = dns.background || vs.src_background;
+                        dns.shape = dns.shape || vs.src_shape;
+                        dns.r = dns.r || vs.src_radius;
                     }
                     dns.font = dns.font || vs.font;
                     dns.color = dns.color || vs.color;
                     dns.background = dns.background || vs.background;
+                    dns.shape = dns.shape || vs.shape;
+                    dns.r = dns.r || vs.radius;
                 }
                 this.visible_edges = visible_edges;
                 this.visible_nodes = visible_nodes;
