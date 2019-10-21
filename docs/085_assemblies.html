@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Assemblies -- jp_doodle demo</title>
+    <link rel="icon" type="image/png" href="images/clock.png">
+    <link rel=stylesheet href="static/style.css">
+
+    <link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css">
+    <script src="jquery-ui-1.12.1/external/jquery/jquery.js"></script>
+    <script src="jquery-ui-1.12.1/jquery-ui.js"></script>
+
+    <link rel="stylesheet" href="codemirrorjs/codemirror.css">
+    <script src="codemirrorjs/codemirror.js"></script>
+    <script src="codemirrorjs/matchbrackets.js"></script>
+    <script src="codemirrorjs/continuecomment.js"></script>
+    <script src="codemirrorjs/comment.js"></script>
+    <script src="codemirrorjs/javascript.js"></script>
+    <style type="text/css">.CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black;}</style>
+    <script src="jp_doodle_js/canvas_2d_widget_helper.js"></script>
+    <script src="jp_doodle_js/dual_canvas_helper.js"></script>
+    <script src="jp_doodle_js/rectangle_collection.js"></script>
+    <script src="jp_doodle_js/array_explorer.js"></script>
+    <script src="jp_doodle_js/canvas_2d_vector_field.js"></script>
+    <script src="jp_doodle_js/nd_frame.js"></script>
+    <script src="jp_doodle_js/nd_scatter.js"></script>
+    <script src="jp_doodle_js/gd_graph.js"></script>
+    <script src="jp_doodle_js/directed_network.js"></script>
+
+    <script>
+        $( function() {
+          $( "#discussion" ).accordion({collapsible : true, active : 'none'});
+          $( "#code_text" ).accordion({collapsible : true, active : 'none'});
+        } );
+    </script>
+</head>
+
+<body>
+<div class="top_menu">
+<div style="display: grid; margin: 10px; grid-template-columns:  125px 125px 125px 125px 125px 125px 125px 125px 125px 125px">
+<div><a href="index.html"><div> Drawing </div><div> <img src="images/drawing.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+<div><a href="010_events.html"><div> Events </div><div> <img src="images/events.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+<div><a href="020_bindings.html"><div> Bindings </div><div> <img src="images/bindings.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+<div><a href="030_animation.html"><div> Animation </div><div> <img src="images/clock.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+<div><a href="040_lasso.html"><div> Lasso </div><div> <img src="images/lasso.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+<div><a href="050_rectangles.html"><div> Rectangles </div><div> <img src="images/rectangle.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+<div><a href="060_chart.html"><div> Chart </div><div> <img src="images/chart.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+<div><a href="070_images.html"><div> Images </div><div> <img src="images/Images.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+<div><a href="080_transitions.html"><div> Transitions </div><div> <img src="images/Transitions.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+<div><a href="085_assemblies.html"><div> Assemblies </div><div> <img src="images/assemblies.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+<div><a href="090_frames.html"><div> Frames </div><div> <img src="images/Frame.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+<div><a href="095_nd_frames.html"><div> N-Dimensional Frames </div><div> <img src="images/nd_frame.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+<div><a href="110_nd_scatter.html"><div> N-Dimensional Scatter Plot </div><div> <img src="images/nd_scatter.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+<div><a href="120_network.html"><div> Network Explorer </div><div> <img src="images/network.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+<div><a href="array_explorer.html"><div> Array explorer </div><div> <img src="images/ArrayChooser.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+<div><a href="color_chooser.html"><div> Color chooser </div><div> <img src="images/color_chooser.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+<div><a href="opacity.html"><div> Opacity Sliders </div><div> <img src="images/opacity.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+<div><a href="polygon.html"><div> Edit polygon </div><div> <img src="images/edit_poly.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+<div><a href="vector_field.html"><div> Vector Field </div><div> <img src="images/vector_field.png" style="background-color:#cdf" width="50px"/> </div></a></div>
+</div>
+</div>
+
+<p><em>
+    This is an example page for the 
+    <code><a href="https://github.com/AaronWatters/jp_doodle">jp_doodle</a></em></code>
+    package. <br>
+
+    <p><b><code><a href="https://github.com/AaronWatters/jp_doodle">jp_doodle</a></em></code>
+        makes implementing special purpose interactive visualizations easy.</b></p>
+
+    These example pages use stand alone Javascript, but the code used to implement them
+    can be transliterated to Python and implemented using Jupyter widgets (modulo some subtleties). <br>
+
+    Please see the Jupyter notebooks in the package for additional
+    discussion and documentation. <br>
+
+    Please use 
+    <a href="https://mybinder.org/v2/gh/AaronWatters/jp_doodle/master">Binder</a>
+    to easily run the Jupyter notebooks of the package.
+</em></p>
+
+<h1>Assemblies</h1>
+<div>
+    <p>
+Assembly definitions may be specified using Javascript and attached
+to a jp_doodle canvas.  The assemblies describe how to draw composite
+objects which are manipulated as primative units in the jp_doodle
+drawing system.
+</p>
+<p>
+This demonstration attaches a "teddy bear" assembly definition and then
+creates some teddy bear assemblies and other
+standard assemblies on the
+canvas.
+</p>
+<p>
+You may move the assemblies
+by mousing down on the object and dragging it to a new location and then mousing up.
+</p>
+</div>
+
+<div id="target_container">
+    <div id="target_div"/>
+</div>
+
+<script>
+    var element = $('#target_div');
+    //$('<img src="http://sipi.usc.edu/database/preview/misc/4.2.03.png">').appendTo(element);
+    // Attach an information div to the element to display event feedback.
+var info_area = $("<div>Please mouse-down and drag objects below.</div>").appendTo(element);
+
+// Attach a dual canvas associated with the element as a child of the element
+// configured with width 400 and height 200.
+var config = {
+            width: 400,
+            height: 200,
+        };
+element.dual_canvas_helper(config);
+
+// Define an assembly which draws a teddy bear shape.
+// Assembly definitions are tightly integrated into the
+// redraw logic and cannot be defined using callbacks
+// to Jupyter Python kernels (they must be defined in the
+// browser Javascript context).
+
+var draw_bear = function(assembler, settings) {
+    var cx = settings.x;
+    var cy = settings.y;
+    var sc = settings.scale || 1;
+    var eyes = settings.eyes || "black";
+    var fur = settings.fur || "orange";
+    var belly = settings.belly || "white";
+    var nose = settings.nose || "pink";
+    var lips = settings.lips || "red";
+    var xx = function(x) {
+        return x * sc + cx;
+    };
+    var yy = function(y) {
+        return y * sc + cy;
+    };
+    var circle = function(x, y, r, color) {
+        return assembler.frame_circle({x: xx(x), y:yy(y), r:r*sc, color:color});
+    };
+    circle(0, -2, 8, fur);  // torso
+    circle(0, 10, 5, fur);  // head
+    circle(0, -4, 4, belly);
+    circle(0, 9.5, 1, nose);
+    assembler.line({x1: xx(-2), y1: yy(7.7), x2: xx(2), y2: yy(7.7), color:lips});
+    for (var sign=-1; sign<=1; sign+=2) {
+        circle(sign * 4, 15, 2, fur);  // ear
+        circle(sign * 7, 3.5, 2.5, fur);  // arm
+        circle(sign * 6, -8, 3, fur);  // leg
+        circle(sign * 2, 11.3, 1, eyes);
+    }
+};
+// Install the definition
+element.install_assembly("teddy_bear", draw_bear);
+
+// draw some assemblies on the canvas:
+
+// A teddy bear named "Ted"
+element.teddy_bear({x:50, y:150, scale:5, belly:"yellow", name:"ted"})
+
+// A teddy bear named "Fred"
+element.teddy_bear({x:150, y:50, scale:3, 
+    eyes: "#99f", fur:"brown", lips: "white", name:"Fred"})
+
+// A filled yellow star (disk) named "Mick"
+element.star({x:300, y: 150, radius:56, points:14, 
+    color:"rgba(100,100,255,0.5)", 
+    text_color:"#129", background:"yellow", font: "bold 20px Arial",
+    text:"Mick", name:"Mick"})
+
+// an arrow named "William".
+element.arrow({x1:200, y1:200, x2:20, y2:300, 
+        color:"green", symmetric: true, lineWidth:7,
+        head_angle:25, head_offset:35, head_length: 30,
+        name:"William"});
+
+// a double arrow named "Mary".
+element.double_arrow({x1:200, y1:100, x2:120, y2:300, 
+        color:"purple", lineWidth:7, line_offset:5,
+        head_angle:25, head_offset:35, head_length: 30,
+        name:"Mary"});
+
+element.fit(null, 10);
+
+// The remaining code defines mouse event logic
+// which allows the user to move the assemblies.
+
+// Define a variable for the picked-up object
+var picked_up_object = null;
+
+// Attach a mousedown event which picks up any named object under the mouse.
+var on_mouse_down = function(event) {
+    if (event.canvas_name) {
+        info_area.html("<div>Picking up the object named " + event.canvas_name + "</div>");
+        picked_up_object = event.canvas_name;
+    } else {
+        info_area.html("<div>No object to pick up.</div>");
+    }
+};
+element.on_canvas_event("mousedown", on_mouse_down);
+
+// Attach a mousemove event which moves any picked up object.
+var on_mouse_move = function(event) {
+    if (picked_up_object) {
+        var loc = element.event_model_location(event);
+        info_area.html("<div>"+picked_up_object+":"+loc.x+","+loc.y+"</div>");
+        if ((picked_up_object == "William") || (picked_up_object == "Mary")) {
+            element.change(picked_up_object, {"x1":loc.x, "y1":loc.y});
+        } else {
+            element.change(picked_up_object, {"x":loc.x, "y":loc.y});
+        }
+    } else if (event.canvas_name) {
+        info_area.html("<div>Click to drag the object named " + event.canvas_name + "</div>");
+    } else {
+        info_area.html("<div>You are not over anybody.</div>");
+    }
+};
+element.on_canvas_event("mousemove", on_mouse_move);
+
+// Attach a mouseup event which "drops" the current picked up object and re-fits the canvas.
+var on_mouse_up = function(event) {
+    info_area.html("<div>Dropping " + picked_up_object + ".</div>");
+    picked_up_object = null;
+    // refit the canvas to the new object configuration.
+    element.fit(null, 10)
+};
+element.on_canvas_event("mouseup", on_mouse_up);
+
+$("<div>Please mouse down and drag over the colorful objects to move them.</div>")
+.appendTo(element);
+</script>
+
+<div id="code_text">
+        <h3>Code</h3>
+    
+        <div><textarea id="code" name="code">
+var element = $('#target_div');
+// Attach an information div to the element to display event feedback.
+var info_area = $("<div>Please mouse-down and drag objects below.</div>").appendTo(element);
+
+// Attach a dual canvas associated with the element as a child of the element
+// configured with width 400 and height 200.
+var config = {
+            width: 400,
+            height: 200,
+        };
+element.dual_canvas_helper(config);
+
+// Define an assembly which draws a teddy bear shape.
+// Assembly definitions are tightly integrated into the
+// redraw logic and cannot be defined using callbacks
+// to Jupyter Python kernels (they must be defined in the
+// browser Javascript context).
+
+var draw_bear = function(assembler, settings) {
+    var cx = settings.x;
+    var cy = settings.y;
+    var sc = settings.scale || 1;
+    var eyes = settings.eyes || "black";
+    var fur = settings.fur || "orange";
+    var belly = settings.belly || "white";
+    var nose = settings.nose || "pink";
+    var lips = settings.lips || "red";
+    var xx = function(x) {
+        return x * sc + cx;
+    };
+    var yy = function(y) {
+        return y * sc + cy;
+    };
+    var circle = function(x, y, r, color) {
+        return assembler.frame_circle({x: xx(x), y:yy(y), r:r*sc, color:color});
+    };
+    circle(0, -2, 8, fur);  // torso
+    circle(0, 10, 5, fur);  // head
+    circle(0, -4, 4, belly);
+    circle(0, 9.5, 1, nose);
+    assembler.line({x1: xx(-2), y1: yy(7.7), x2: xx(2), y2: yy(7.7), color:lips});
+    for (var sign=-1; sign<=1; sign+=2) {
+        circle(sign * 4, 15, 2, fur);  // ear
+        circle(sign * 7, 3.5, 2.5, fur);  // arm
+        circle(sign * 6, -8, 3, fur);  // leg
+        circle(sign * 2, 11.3, 1, eyes);
+    }
+};
+// Install the definition
+element.install_assembly("teddy_bear", draw_bear);
+
+// draw some assemblies on the canvas:
+
+// A teddy bear named "Ted"
+element.teddy_bear({x:50, y:150, scale:5, belly:"yellow", name:"ted"})
+
+// A teddy bear named "Fred"
+element.teddy_bear({x:150, y:50, scale:3, 
+    eyes: "#99f", fur:"brown", lips: "white", name:"Fred"})
+
+// A filled yellow star (disk) named "Mick"
+element.star({x:300, y: 150, radius:56, points:14, 
+    color:"rgba(100,100,255,0.5)", 
+    text_color:"#129", background:"yellow", font: "bold 20px Arial",
+    text:"Mick", name:"Mick"})
+
+// an arrow named "William".
+element.arrow({x1:200, y1:200, x2:20, y2:300, 
+        color:"green", symmetric: true, lineWidth:7,
+        head_angle:25, head_offset:35, head_length: 30,
+        name:"William"});
+
+// a double arrow named "Mary".
+element.double_arrow({x1:200, y1:100, x2:120, y2:300, 
+        color:"purple", lineWidth:7, line_offset:5,
+        head_angle:25, head_offset:35, head_length: 30,
+        name:"Mary"});
+
+element.fit(null, 10);
+
+// The remaining code defines mouse event logic
+// which allows the user to move the assemblies.
+
+// Define a variable for the picked-up object
+var picked_up_object = null;
+
+// Attach a mousedown event which picks up any named object under the mouse.
+var on_mouse_down = function(event) {
+    if (event.canvas_name) {
+        info_area.html("<div>Picking up the object named " + event.canvas_name + "</div>");
+        picked_up_object = event.canvas_name;
+    } else {
+        info_area.html("<div>No object to pick up.</div>");
+    }
+};
+element.on_canvas_event("mousedown", on_mouse_down);
+
+// Attach a mousemove event which moves any picked up object.
+var on_mouse_move = function(event) {
+    if (picked_up_object) {
+        var loc = element.event_model_location(event);
+        info_area.html("<div>"+picked_up_object+":"+loc.x+","+loc.y+"</div>");
+        if ((picked_up_object == "William") || (picked_up_object == "Mary")) {
+            element.change(picked_up_object, {"x1":loc.x, "y1":loc.y});
+        } else {
+            element.change(picked_up_object, {"x":loc.x, "y":loc.y});
+        }
+    } else if (event.canvas_name) {
+        info_area.html("<div>Click to drag the object named " + event.canvas_name + "</div>");
+    } else {
+        info_area.html("<div>You are not over anybody.</div>");
+    }
+};
+element.on_canvas_event("mousemove", on_mouse_move);
+
+// Attach a mouseup event which "drops" the current picked up object and re-fits the canvas.
+var on_mouse_up = function(event) {
+    info_area.html("<div>Dropping " + picked_up_object + ".</div>");
+    picked_up_object = null;
+    // refit the canvas to the new object configuration.
+    element.fit(null, 10)
+};
+element.on_canvas_event("mouseup", on_mouse_up);
+
+$("<div>Please mouse down and drag over the colorful objects to move them.</div>")
+.appendTo(element);
+        </textarea></div>
+    
+    </div>
+
+<div id="discussion">
+        <h3>Discussion</h3>
+    
+        <div>
+            <p>
+As mention in the code comments,
+assembly definitions are tightly integrated into the
+redraw logic and cannot be defined using callbacks
+to Jupyter Python kernels (they must be defined in the
+browser Javascript context).
+</p>
+<p>
+Assembly definitions which use other assembly definitions
+must refer to the other assembly indirectly
+using <code>assembler.assembly</code>, for example
+<blockquote><code>
+assembler.assembly({
+    assembly: "arrow",
+    x1: 0, y1:0, x2:100, y2:0, ...
+});
+</code></blockquote>
+See the <code>draw_double_arrow</code> definition in the
+source code for an example.
+</p>
+        </div>
+    
+    </div>
+    
+    <script>
+            var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+              lineNumbers: true,
+              matchBrackets: true,
+              continueComments: "Enter",
+              extraKeys: {"Ctrl-Q": "toggleComment"}
+            });
+     </script>
+            
+</body>
+</html>
