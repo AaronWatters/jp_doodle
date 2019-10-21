@@ -331,6 +331,38 @@ which interpolate between one group of attribute values and another smoothly ove
 
 <tr>
     <td>
+        <a href="https://aaronwatters.github.io/jp_doodle/085_assemblies.html">
+        <img width="200px" src="docs/images/assemblies.png">
+        </a>
+    </td>
+    <td>
+        <h4><a href="https://aaronwatters.github.io/jp_doodle/085_assemblies.html">
+        Assemblies
+        </a></h4>
+        <div>
+        <p>
+Assembly definitions may be specified using Javascript and attached
+to a jp_doodle canvas.  The assemblies describe how to draw composite
+objects which are manipulated as primative units in the jp_doodle
+drawing system.
+</p>
+<p>
+This demonstration attaches a "teddy bear" assembly definition and then
+creates some teddy bear assemblies and other
+standard assemblies on the
+canvas.
+</p>
+<p>
+You may move the assemblies
+by mousing down on the object and dragging it to a new location and then mousing up.
+</p>
+        </div>
+    </td>
+</tr>
+
+
+<tr>
+    <td>
         <a href="https://aaronwatters.github.io/jp_doodle/090_frames.html">
         <img width="200px" src="docs/images/Frame.png">
         </a>
