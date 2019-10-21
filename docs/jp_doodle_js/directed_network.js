@@ -39,12 +39,16 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     link_radius: 1,
                     min_change: 1,
                     undo_limit: 10,
-                    font: "normal 10px Arial",
-                    color: "#999",
-                    background: "#afa",
-                    src_font: "italic 12px Arial",
-                    src_color: "#000",
-                    src_background: "#ffa",
+                    font: "normal 12px Arial",
+                    color: "#222",
+                    background: "#ddd",
+                    shape: "text",  // default node shape (or "circle", "rect")
+                    radius: 4,  // default node pixel radius
+                    src_font: null,  // src node overrides
+                    src_color: null,
+                    src_background: null,
+                    src_shape: null,
+                    src_radius: null, 
                 }, options);
                 this.reset_layout = this.settings.default_layout;
                 this.element = element;
@@ -294,7 +298,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
             reset() {
                 // reinitialize data structures.
-                this.settings.default_layout = this.reset_layout;   // use the first
+                this.settings.default_layout = this.reset_layout;
                 this.clear_information();
                 this.inform("Resetting graph and undo stack.");
                 this.undo_stack = [];
@@ -584,19 +588,19 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 });
                 //that.swatch_div.html("swatches here.");
                 that.min_swatch = $("<div/>").appendTo(that.swatch_div);
-                that.min_swatch.html("Minimum");
+                that.min_swatch.html("&gt;");
                 that.min_swatch.css({"background-color": s.min_color, color:"white"});
                 
                 that.min_threshold_swatch = $("<div/>").appendTo(that.swatch_div);
-                that.min_threshold_swatch.html("Low Threshold");
+                that.min_threshold_swatch.html("&lt;");
                 that.min_threshold_swatch.css({"background-color": s.min_threshold_color, color:"white"});
                 
                 that.max_threshold_swatch = $("<div/>").appendTo(that.swatch_div);
-                that.max_threshold_swatch.html("High Threshold");
+                that.max_threshold_swatch.html("&gt");
                 that.max_threshold_swatch.css({"background-color": s.max_threshold_color, color:"white"});
                 
                 that.max_swatch = $("<div/>").appendTo(that.swatch_div);
-                that.max_swatch.html("Maximum");
+                that.max_swatch.html("&lt;");
                 that.max_swatch.css({"background-color": s.max_color, color:"white"});
                 
                 // match area
@@ -615,7 +619,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 that.match_b = that.add_button(
                     "Match glob patterns:", that.match_div, function() {that.match_pattern(); });
                 var match_input_div = $("<div/>").appendTo(that.match_div);
-                this.match_input = $('<input type="text" value="*" size="70"/>').appendTo(match_input_div);
+                this.match_input = $('<input type="text" value="*" size="30"/>').appendTo(match_input_div);
                 // misc info at the bottom.
                 that.info_container = $("<div/>").appendTo(container);
                 that.info_container.css({
@@ -962,7 +966,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
             };
             draw_edge(edge, illustration, update) {
-                debugger;
                 var that = this;
                 var params = {}
                 //params.color = edge.settings.color || illustration.settings.edge_color || "blue";
@@ -1092,7 +1095,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         visible_edges[edge_key] = edge;
                         // 0 weight, allow duplicates
                         var dedge = g.add_edge(edge.source_name, edge.destination_name, 0, true);
-                        dedge.arrow(edge.source_name, edge.destination_name, wt, edge.settings);
+                        var esettings = $.extend({}, edge.settings);
+                        esettings.color = esettings.color || vs.edge_color;
+                        esettings.lineWidth = esettings.lineWidth || vs.lineWidth;
+                        esettings.lineDash = esettings.lineDash || vs.lineDash;
+                        dedge.arrow(edge.source_name, edge.destination_name, wt, esettings);
                         visible_nodes[edge.source_name] = true;
                         visible_nodes[edge.destination_name] = true;
                         this.sources[edge.source_name] = true;
@@ -1118,10 +1125,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         dns.font = dns.font || vs.src_font;
                         dns.color = dns.color || vs.src_color;
                         dns.background = dns.background || vs.src_background;
+                        dns.shape = dns.shape || vs.src_shape;
+                        dns.r = dns.r || vs.src_radius;
                     }
                     dns.font = dns.font || vs.font;
                     dns.color = dns.color || vs.color;
                     dns.background = dns.background || vs.background;
+                    dns.shape = dns.shape || vs.shape;
+                    dns.r = dns.r || vs.radius;
                 }
                 this.visible_edges = visible_edges;
                 this.visible_nodes = visible_nodes;
@@ -1190,7 +1201,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
     };
 
     $.fn.directed_network.example = function(element) {
-        debugger;
         var N = element.directed_network({
             default_layout: "relax",
         });
