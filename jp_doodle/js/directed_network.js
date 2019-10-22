@@ -1061,6 +1061,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     var node = to_graph.get_node(name, true);
                     if (node) {
                         positions[name] = to_graph.get_node(name).position;
+                    } else {
+                        positions[name] = this.active_positions[name];
                     }
                 }
                 this.active_positions = positions;
