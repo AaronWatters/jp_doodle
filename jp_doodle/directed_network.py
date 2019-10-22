@@ -28,6 +28,7 @@ class Network_Widget(jp_proxy_widget.JSProxyWidget, dual_canvas.SaveImageMixin):
             element.empty();
             element.d_network = element.directed_network(config);
         """, config = config)
+        self.file_path = "Network.png"
         self.customize()
         if display:
             self.display_all()
@@ -40,8 +41,14 @@ class Network_Widget(jp_proxy_widget.JSProxyWidget, dual_canvas.SaveImageMixin):
         self.js_init("""
             var d_network = element.d_network;
             var list_buttons = d_network.side_lists;
-            d_network.add_button("<b>save as PNG</b>", list_buttons, callback);
-        """, callback=self.save_png)
+            d_network.add_button("<b>save as PNG</b>", list_buttons, save_png);
+            element.path_input = $('<input type="text" value="' + path + '">').appendTo(list_buttons);
+            element.path_input.change(
+                function () {
+                    set_path(element.path_input.val());
+                }
+            );
+        """, save_png=self.save_png, set_path=self.set_path, path=self.file_path)
 
     def display_all(self):
         self.element.d_network.display_all()
@@ -77,9 +84,12 @@ class Network_Widget(jp_proxy_widget.JSProxyWidget, dual_canvas.SaveImageMixin):
         s.update(other_args)
         self.element.d_network.edge(source_name, destination_name, weight, s)
 
+    def set_path(self, path):
+        self.file_path = path
+
     def save_png(self, file_path=None):
         if file_path is None:
-            file_path = "Network.png"
+            file_path = self.file_path
         self.clear_information()
         self.inform("Attempting to save as " + repr(file_path))
         def after():
