@@ -966,7 +966,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
             };
             draw_edge(edge, illustration, update) {
-                debugger;
                 var that = this;
                 var params = {}
                 //params.color = edge.settings.color || illustration.settings.edge_color || "blue";
@@ -1202,7 +1201,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
     };
 
     $.fn.directed_network.example = function(element) {
-        debugger;
         var N = element.directed_network({
             default_layout: "relax",
         });
