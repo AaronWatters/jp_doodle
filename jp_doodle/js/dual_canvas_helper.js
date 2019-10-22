@@ -1689,12 +1689,42 @@ XXXXX clean up events for forgotten objects
                 }
             }
         };
+        var draw_circle_arrow = function(assembler, options) {
+            // circle with arrow head indicator
+            debugger;
+            var settings = $.extend({
+                head_angle: 45,
+                offset_angle: 25,
+                fill: false,
+                // x, y, r, head_length, offset_angle, head_angle
+            }, options);
+            // x, y position is bottom of the circle
+            var x = settings.x;
+            var y = settings.y;
+            var r = settings.r;
+            var l = settings.head_length || r * 0.4;
+            var circle_settings = $.extend({}, settings);
+            circle_settings.x = x;
+            circle_settings.y = y + r;
+            assembler.frame_circle(circle_settings);
+            var theta = settings.offset_angle * Math.PI / 180.0;
+            var phi = (90 - settings.head_angle) * Math.PI / 180.0;
+            var x1 = circle_settings.x + r * Math.sin(theta);
+            var y1 = circle_settings.y - r * Math.cos(theta);
+            var x2 = x1 + l * Math.sin(theta + phi);
+            var y2 = y1 - l * Math.cos(theta + phi);
+            var head_settings = $.extend({}, settings, {
+                x1: x1, y1: y1, x2:x2, y2:y2
+            });
+            assembler.line(head_settings);
+        };
 
         target.install_standard_assemblies = function(frame) {
             frame = frame || target;
             frame.install_assembly("star", draw_star);
             frame.install_assembly("arrow", draw_arrow);
             frame.install_assembly("double_arrow", draw_double_arrow);
+            frame.install_assembly("circle_arrow", draw_circle_arrow);
         };
 
         // Configure the dual canvas.
