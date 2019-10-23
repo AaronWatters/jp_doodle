@@ -966,6 +966,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
             };
             draw_edge(edge, illustration, update) {
+                debugger;
                 var that = this;
                 var params = {}
                 //params.color = edge.settings.color || illustration.settings.edge_color || "blue";
@@ -1017,7 +1018,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     params.back_angle = head_angle(backward_weight);
                 }
                 var tick = illustration.radius * 0.005;
-                params.head_length = tick * 5;
+                params.head_length = edge.settings.head_length || tick * 5;
                 params.head_offset = tick * 30;
                 if (params.forward && params.backward) {
                     params.line_offset = tick;
@@ -1096,7 +1097,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     if ((wt <= low_wt_threshold) || (wt >= high_wt_threshold)) {
                         visible_edges[edge_key] = edge;
                         // 0 weight, allow duplicates
-                        var dedge = g.add_edge(edge.source_name, edge.destination_name, 0, true);
+                        var dedge = g.add_edge(edge.source_name, edge.destination_name, 0, true, edge.settings);
                         var esettings = $.extend({}, edge.settings);
                         esettings.color = esettings.color || vs.edge_color;
                         esettings.lineWidth = esettings.lineWidth || vs.lineWidth;
