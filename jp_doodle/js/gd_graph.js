@@ -103,12 +103,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 return result;
             }
 
-            add_edge(node_name1, node_name2, weight, skip_duplicate) {
-                if (node_name1 == node_name2) {
-                    // error?
-                    return null;
-                }
-                var e = new GD_Edge(node_name1, node_name2, weight, this);
+            add_edge(node_name1, node_name2, weight, skip_duplicate, options) {
+                //if (node_name1 == node_name2) {
+                //    // error?
+                //    return null;
+                //}
+                var e = new GD_Edge(node_name1, node_name2, weight, this, options);
                 return this.record_edge(e, skip_duplicate);
             }
 
@@ -865,6 +865,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             arrow(nodenameA, nodenameB, weight, config) {
                 // directional configuration
+                debugger;
                 config = config || {}
                 // extend missing settings using config.
                 this.settings = $.extend({}, config, this.settings);
