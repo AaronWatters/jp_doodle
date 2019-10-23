@@ -1615,7 +1615,14 @@ XXXXX clean up events for forgotten objects
             var p2 = {x: settings.x2, y: settings.y2};
             var diff = target.vsub(p1, p2);
             var len = target.vlength(diff);
-            if (len > settings.epsilon) {
+            var epsilon = settings.epsilon;
+            if (len < epsilon) {
+                // arbitrary 0 duvision fix
+                debugger;
+                len = 2 * epsilon;
+                diff = {x: 2 * epsilon, y:0};
+            }
+            if (len > epsilon) {
                 // draw the head
                 var to_p1 = target.vscale(1.0 / len, diff);
                 var normal = {x: to_p1.y, y: -to_p1.x};
@@ -1662,7 +1669,13 @@ XXXXX clean up events for forgotten objects
             var p2 = {x: settings.x2, y: settings.y2};
             var diff = target.vsub(p1, p2);
             var len = target.vlength(diff);
-            if (len > settings.epsilon) {
+            var epsilon = settings.epsilon;
+            if (len < epsilon) {
+                // hack to eliminate divide by zero for debugging
+                len = 2 * epsilon;
+                diff = {x: 2 * epsilon, y: 0};
+            }
+            if (len > epsilon) {
                 var to_p1 = target.vscale(1.0 / len, diff);
                 var normal = {x: to_p1.y, y: -to_p1.x};
                 var offset = target.vscale(settings.line_offset, normal);
