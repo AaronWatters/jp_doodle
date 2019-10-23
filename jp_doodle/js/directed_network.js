@@ -133,7 +133,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
             current_context () {
                 var st = this.undo_stack;
-                return st[st.length - 1];
+                var result = st[st.length - 1];
+                if (result) {
+                    // always update any adjusted positions as displayed
+                    result.update_positions();
+                }
+                return result;
             };
 
             redisplay_top_context() {
