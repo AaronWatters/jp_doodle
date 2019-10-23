@@ -1617,8 +1617,7 @@ XXXXX clean up events for forgotten objects
             var len = target.vlength(diff);
             var epsilon = settings.epsilon;
             if (len < epsilon) {
-                // arbitrary 0 duvision fix
-                debugger;
+                // arbitrary 0 division fix
                 len = 2 * epsilon;
                 diff = {x: 2 * epsilon, y:0};
             }
@@ -1704,7 +1703,6 @@ XXXXX clean up events for forgotten objects
         };
         var draw_circle_arrow = function(assembler, options) {
             // circle with arrow head indicator
-            debugger;
             var settings = $.extend({
                 head_angle: 45,
                 offset_angle: 25,
