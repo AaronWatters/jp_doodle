@@ -1021,16 +1021,30 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var graph = edge.in_graph;
             var node1 = graph.get_node(edge.nodename1);
             var node2 = graph.get_node(edge.nodename2);
-            params.x1 = node1.position.x;
-            params.y1 = node1.position.y;
-            params.x2 = node2.position.x;
-            params.y2 = node2.position.y;
+            var self_loop = (edge.nodename1 == edge.nodename2);
+            if (self_loop){
+                var loop_factor = illustration.settings.loop_factor || 0.5;
+                var r = loop_factor * graph.settings.link_radius;
+                params.fill = false;
+                params.x = node1.position.x;
+                params.y = node1.position.y - r;
+                params.r = r;
+            } else {
+                params.x1 = node1.position.x;
+                params.y1 = node1.position.y;
+                params.x2 = node2.position.x;
+                params.y2 = node2.position.y;
+            }
             if (update) {
                 edge.settings.glyph.change(params);
             } else {
                 params.name = true;
                 params.graph_edge = edge;
-                edge.settings.glyph = in_frame.line(params);
+                if (self_loop) {
+                    edge.settings.glyph = in_frame.frame_circle(params)
+                } else {
+                    edge.settings.glyph = in_frame.line(params);
+                }
             }
         };
 
@@ -1363,6 +1377,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         for (var i=0; i<s; i++) {
             var i10 = i * s;
             var e1 = g.add_edge(i10, i10+s-1, 2, true);
+            g.add_edge(i10, i10, -1);
             e1.settings.color = "#0f9";
             var e2 = g.add_edge(i, (s-1)*s+i, 1, true);
             e2.settings.color = "#27f"
