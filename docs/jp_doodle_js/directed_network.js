@@ -133,7 +133,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
             current_context () {
                 var st = this.undo_stack;
-                return st[st.length - 1];
+                var result = st[st.length - 1];
+                if (result) {
+                    // always update any adjusted positions as displayed
+                    result.update_positions();
+                }
+                return result;
             };
 
             redisplay_top_context() {
@@ -975,11 +980,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var from_graph = this.from_graph;
                 var node1 = graph.get_node(edge.nodename1);
                 var node2 = graph.get_node(edge.nodename2);
-                params.x1 = node1.position.x;
-                params.y1 = node1.position.y;
-                params.x2 = node2.position.x;
-                params.y2 = node2.position.y;
-                params.line_offset = 0.0;
+                var self_loop = (edge.nodename1 == edge.nodename2);
+                if (!self_loop) {
+                    params.x1 = node1.position.x;
+                    params.y1 = node1.position.y;
+                    params.x2 = node2.position.x;
+                    params.y2 = node2.position.y;
+                    params.line_offset = 0.0;
+                } else {
+                    params.x = node1.position.x;
+                    params.y = node1.position.y;
+                }
                 var forward_weight = edge.forward.weight;
                 var backward_weight = edge.backward.weight;
                 params.forward = (forward_weight != 0);
@@ -988,7 +999,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     if (w < 0) {
                         return 90;
                     }
-                    return 45;
+                    return 35;
                 };
                 var interpolated_color = function(interpolator, value, minimum, maximum) {
                     if ((minimum >= maximum) || (value > maximum)) {
@@ -1017,10 +1028,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     params.back_angle = head_angle(backward_weight);
                 }
                 var tick = illustration.radius * 0.005;
-                params.head_length = tick * 5;
+                params.head_length = edge.settings.head_length || tick * 8;
                 params.head_offset = tick * 30;
                 if (params.forward && params.backward) {
-                    params.line_offset = tick;
+                    params.line_offset = 2 * tick;
+                }
+                if (self_loop) {
+                    params.r = tick * 10;
+                    params.offset_angle = 70;
                 }
                 var in_frame = illustration.frame;
                 if (update) {
@@ -1028,7 +1043,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 } else {
                     params.name = true;
                     params.graph_edge = edge;
-                    edge.settings.glyph = in_frame.double_arrow(params);
+                    if (self_loop) {
+                        edge.settings.glyph = in_frame.circle_arrow(params);
+                    } else {
+                        edge.settings.glyph = in_frame.double_arrow(params);
+                    }
                 }
             };
             layout(mode) {
@@ -1096,7 +1115,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     if ((wt <= low_wt_threshold) || (wt >= high_wt_threshold)) {
                         visible_edges[edge_key] = edge;
                         // 0 weight, allow duplicates
-                        var dedge = g.add_edge(edge.source_name, edge.destination_name, 0, true);
+                        var dedge = g.add_edge(edge.source_name, edge.destination_name, 0, true, edge.settings);
                         var esettings = $.extend({}, edge.settings);
                         esettings.color = esettings.color || vs.edge_color;
                         esettings.lineWidth = esettings.lineWidth || vs.lineWidth;
