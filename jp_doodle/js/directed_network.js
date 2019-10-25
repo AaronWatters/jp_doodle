@@ -1034,7 +1034,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     params.line_offset = 2 * tick;
                 }
                 if (self_loop) {
-                    params.r = tick * 10;
+                    params.r = edge.settings.r || tick * 10;
                     params.offset_angle = 70;
                 }
                 var in_frame = illustration.frame;

@@ -865,7 +865,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             };
             arrow(nodenameA, nodenameB, weight, config) {
                 // directional configuration
-                debugger;
                 config = config || {}
                 // extend missing settings using config.
                 this.settings = $.extend({}, config, this.settings);
