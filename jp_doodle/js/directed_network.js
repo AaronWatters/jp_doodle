@@ -578,7 +578,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 })
                 that.threshold_slider.on("slidechange", function() { that.apply_displayed_threshhold(); })
                 that.threshold_max_display = $("<div>???</div>").appendTo(that.threshold_div)
-                that.apply_displayed_threshhold();
+                //that.apply_displayed_threshhold();
                 // swatches
                 that.swatch_div = $("<div/>").appendTo(that.selection_div);
                 that.swatch_div.css({
@@ -594,19 +594,21 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 //that.swatch_div.html("swatches here.");
                 that.min_swatch = $("<div/>").appendTo(that.swatch_div);
                 that.min_swatch.html("&gt;");
-                that.min_swatch.css({"background-color": s.min_color, color:"white"});
+                that.min_swatch.css({"background-color": s.min_color, color:"#888"});
                 
                 that.min_threshold_swatch = $("<div/>").appendTo(that.swatch_div);
                 that.min_threshold_swatch.html("&lt;");
-                that.min_threshold_swatch.css({"background-color": s.min_threshold_color, color:"white"});
+                that.min_threshold_swatch.css({"background-color": s.min_threshold_color, color:"#888"});
                 
                 that.max_threshold_swatch = $("<div/>").appendTo(that.swatch_div);
                 that.max_threshold_swatch.html("&gt");
-                that.max_threshold_swatch.css({"background-color": s.max_threshold_color, color:"white"});
+                that.max_threshold_swatch.css({"background-color": s.max_threshold_color, color:"#888"});
                 
                 that.max_swatch = $("<div/>").appendTo(that.swatch_div);
                 that.max_swatch.html("&lt;");
-                that.max_swatch.css({"background-color": s.max_color, color:"white"});
+                that.max_swatch.css({"background-color": s.max_color, color:"#888"});
+
+                that.apply_displayed_threshhold();
                 
                 // match area
                 that.match_div = $("<div/>").appendTo(that.selection_div);
@@ -721,10 +723,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var low = values[0];
                 var high = values[1];
                 mm.html("" + low);
+                that.min_threshold_swatch.html("&lt;" + low);
                 MM.html("" + high);
+                that.max_threshold_swatch.html("" + high + "&gt");
                 var context = this.current_context();
                 if (context && !context.display_active) {
                     if (values[0] != values[1]) {
+                        that.clear_information();
                         this.inform("Edge threshold excludes: " + low + " .. " + high + ".");
                     }
                     context.display();
@@ -968,6 +973,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         step: step,
                         values: values,
                     });
+                    v.min_swatch.html("" + min_weight + "&gt;");
+                    v.max_swatch.html("&lt;" + max_weight);
                 }
             };
             draw_edge(edge, illustration, update) {
