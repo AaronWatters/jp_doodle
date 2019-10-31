@@ -1385,7 +1385,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
     };
 
     $.fn.gd_graph.example = function(element) {
-        debugger;
         var g = jQuery.fn.gd_graph({separator_radius: 6, link_radius: 1, min_change: 199});
         var s = 11;
         for (var i=0; i<s; i++) {
