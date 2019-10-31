@@ -14,6 +14,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
     const LAYOUT_RELAX = "relax";
     const LAYOUT_SKELETON = "skeleton";
     const LAYOUT_GRID = "grid";
+    const LAYOUT_CIRCLE = "circle"
 
     $.fn.directed_network = function (options, element) {
 
@@ -481,6 +482,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 return this.skeleton_layout(LAYOUT_GRID);
             };
 
+            circle_layout() {
+                return this.skeleton_layout(LAYOUT_CIRCLE);
+            };
+
             make_scaffolding() {
                 var that = this;
                 that.element.empty();
@@ -662,6 +667,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 that.relax_b = that.add_button("relax (slow)", ly, function() { that.relax_layout(); });
                 that.skeleton_b = that.add_button("skeleton (faster)", ly, function() { that.skeleton_layout(); });
                 that.grid_b = that.add_button("grid (fastest)", ly, function() { that.grid_layout(); });
+                that.circle_b = that.add_button("circle (fastest)", ly, function() { that.circle_layout(); });
                 that.redraw_b = that.add_button("<em>redraw</em>", ly, function() { that.redisplay_top_context(); });
                 that.wiggle_b = that.add_button("<em>wiggle</em>", ly, function() { that.wiggle(); });
                 // create list actions
@@ -699,6 +705,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     that.relax_b,
                     that.skeleton_b,
                     that.grid_b,
+                    that.circle_b,
                     that.redraw_b,
                     that.wiggle_b,
                     that.nodes_b,
@@ -708,6 +715,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 lb[LAYOUT_RELAX] = that.relax_b;
                 lb[LAYOUT_SKELETON] = that.skeleton_b;
                 lb[LAYOUT_GRID] = that.grid_b;
+                lb[LAYOUT_CIRCLE] = that.circle_b;
                 that.layout_buttons = lb;
                 that.clear_information();
 
@@ -723,9 +731,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var low = values[0];
                 var high = values[1];
                 mm.html("" + low);
-                that.min_threshold_swatch.html("&lt;" + low);
+                that.min_threshold_swatch.html("&gt;" + low);
                 MM.html("" + high);
-                that.max_threshold_swatch.html("" + high + "&gt");
+                that.max_threshold_swatch.html("" + high + "&lt;");
                 var context = this.current_context();
                 if (context && !context.display_active) {
                     if (values[0] != values[1]) {
@@ -1063,14 +1071,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.to_graph = this.undirected_graph();
                 if (mode == LAYOUT_RELAX) {
                     this.to_graph.layout_spokes();
-                }
-                else if (mode == LAYOUT_SKELETON) {
+                } else if (mode == LAYOUT_SKELETON) {
                     this.to_graph.layout_skeleton(1);
-                }
-                else if (mode == LAYOUT_GRID) {
+                } else if (mode == LAYOUT_GRID) {
                     this.to_graph.rectangular_layout();
-                }
-                else {
+                } else if (mode == LAYOUT_CIRCLE) {
+                    this.to_graph.layout_circle();
+                } else {
                     throw new Error("bad layout mode: " + layout);
                 }
                 this.for_visualization.settings.default_layout = mode;

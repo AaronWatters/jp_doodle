@@ -306,7 +306,22 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 // set up bookkeeping
                 this.initialize_penalties();
-            }
+            };
+
+            layout_circle(radius) {
+                // circular layout of nodes from heavily weighted to less weighted.
+                radius = radius || 100.0;
+                var nodes = this.ordered_nodes();
+                var nnodes = nodes.length;
+                var dtheta = 2 * Math.PI / nnodes;
+                var theta = 0;
+                for (var i=0; i<nnodes; i++) {
+                    var position = {x: radius * Math.sin(theta), y: radius * Math.cos(theta)};
+                    nodes[i].set_position(position);
+                    theta += dtheta;
+                }
+                this.initialize_penalties();
+            };
 
             layout_spokes(level, skeletize, top_graph) {
                 // bottom up layout strategy for graph -- first layout simplified graph with spokes collapsed.
