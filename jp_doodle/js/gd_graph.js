@@ -310,9 +310,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
             layout_circle(radius) {
                 // circular layout of nodes from heavily weighted to less weighted.
-                radius = radius || 100.0;
                 var nodes = this.ordered_nodes();
                 var nnodes = nodes.length;
+                radius = radius || this.settings.link_radius * nnodes / Math.PI;
                 var dtheta = 2 * Math.PI / nnodes;
                 var theta = 0;
                 for (var i=0; i<nnodes; i++) {
