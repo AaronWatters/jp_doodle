@@ -15,7 +15,6 @@ class Examiner:
         self.widget = jp_proxy_widget.JSProxyWidget()
         self.widget.js_init("""
             element.show_json = function(json, node, all_json) {
-            debugger;
                 all_json = all_json || json;
                 if (!node) {
                     node = element;

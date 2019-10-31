@@ -337,7 +337,6 @@ class CanvasOperationsMixin(object):
         # Based on the tooltip implementation in array_explorer.
         canvas = self.get_canvas()
         canvas.js_init("""
-            debugger;
             let tooltip = $("<div>tooltip here</div>").appendTo(element);
             tooltip.css({
                 position: "absolute",
@@ -349,7 +348,6 @@ class CanvasOperationsMixin(object):
             });
             element.jp_doodle_tooltip = tooltip;
             var event_handler = function(event) {
-                debugger;
                 var name = event.canvas_name;
                 var tooltip_text = null;
                 if (name) {

@@ -36,18 +36,17 @@ class ND_Frame(dual_canvas.CanvasOperationsMixin):
         self.dedicated_frame = dedicated_frame
         self.feature_names = feature_names
         in_canvas.js_init("""
-        debugger;
             var frame = element[frame_name];
             element[internal_name] = element.nd_frame({
                 dedicated_frame: frame,
                 feature_names: feature_names,
                 feature_axes: feature_axes,
             });
-        """,
-        frame_name=dedicated_frame.attribute_name,
-        feature_names=feature_names,
-        feature_axes=feature_axes,
-        internal_name=self._internal_name)
+            """,
+            frame_name=dedicated_frame.attribute_name,
+            feature_names=feature_names,
+            feature_axes=feature_axes,
+            internal_name=self._internal_name)
         self.element = in_canvas.element[self._internal_name]
 
     def get_canvas(self):

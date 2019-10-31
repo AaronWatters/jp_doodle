@@ -77,7 +77,6 @@ class FileSystemExplorer:
         self.widget = canvas_widget
         canvas_widget.load_js_files([qf_js])
         canvas_widget.js_init("""
-            debugger;
             var forest_config = {
                 top_label: top_label,
                 roots: members,
