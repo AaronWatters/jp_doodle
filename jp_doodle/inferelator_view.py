@@ -68,7 +68,7 @@ class InferelatorCSV:
         """display related network as a widget (default) or HTML file."""
         edges = self.related_edges(nodes, level)
         if html_file:
-            raise ValueError("html output not yet implemented")
+            return network_html(html_file, edges, weight, **network_settings)
         else:
             # default: Jupyter network widget.
             return network_widget(edges, weight, **network_settings)
@@ -99,6 +99,82 @@ def network_widget(edge_map, weight="beta.sign.sum", **network_settings):
     print ("network " + repr(widget) + " with", len(edge_map), "edges")
     widget.display_all()
     return widget
+
+def network_html(html_file_name, edge_map, weight="beta.sign.sum", **network_settings):
+    import json
+    settings = dict(
+        title="Regulatory Network",
+        default_layout="circle",
+        separator_radius=6,
+        link_radius=1,
+        min_change=1,
+        undo_limit=10,
+        font="normal 10px Arial",  # default node font
+        color="#fff", # default node color
+        background="#259",  # default node background
+        src_font=None,  # override src font
+        src_color=None, # override src color
+        src_background=None, # override src background
+    )
+    settings.update(network_settings)
+    edges = []
+    for e in edge_map:
+        (src, dst) = e
+        d = edge_map[e]
+        wt = d[weight]
+        D = dict(src=src, dest=dst, wt=wt)
+        edges.append(D)
+    network_json = dict(edges=edges)
+    settings["network_json"] = network_json
+    json_str = json.dumps(settings, indent=1)
+    subs = dict(JSON= json_str, title= settings["title"])
+    html_txt = HTML_TEMPLATE % subs
+    f = open(html_file_name, "w")
+    f.write(html_txt)
+    f.close()
+    print ("wrote", len(html_txt), "to", html_file_name)
+
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html>
+<head>
+
+<title> %(title)s </title>
+
+
+    <link rel="stylesheet" href="https://aaronwatters.github.io/jp_doodle/jquery-ui-1.12.1/jquery-ui.css">
+    <script src="https://aaronwatters.github.io/jp_doodle/jquery-ui-1.12.1/external/jquery/jquery.js"></script>
+    <script src="https://aaronwatters.github.io/jp_doodle/jquery-ui-1.12.1/jquery-ui.js"></script>
+
+    <script src="https://aaronwatters.github.io/jp_doodle/jp_doodle_js/canvas_2d_widget_helper.js"></script>
+    <script src="https://aaronwatters.github.io/jp_doodle/jp_doodle_js/dual_canvas_helper.js"></script>
+    <script src="https://aaronwatters.github.io/jp_doodle/jp_doodle_js/nd_frame.js"></script>
+    <script src="https://aaronwatters.github.io/jp_doodle/jp_doodle_js/gd_graph.js"></script>
+    <script src="https://aaronwatters.github.io/jp_doodle/jp_doodle_js/directed_network.js"></script>
+    <link rel=stylesheet href="https://aaronwatters.github.io/static/style.css">
+
+</head>
+<body>
+        
+<div id="target_container">
+    <div id="target_div"/>
+</div>
+<script>
+    var element = $('#target_div');
+
+    function make_network_visualization(json_spec) {
+        var N = element.directed_network(json_spec);
+        N.display_all();
+    };
+
+    var json_spec = %(JSON)s;
+
+    make_network_visualization(json_spec);
+
+</script>    
+</body>
+</html>
+"""
 
 def relatedness_view(
     csv_filename,
