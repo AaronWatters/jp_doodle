@@ -1080,7 +1080,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 } else if (mode == LAYOUT_CIRCLE) {
                     this.to_graph.layout_circle();
                 } else {
-                    throw new Error("bad layout mode: " + layout);
+                    throw new Error("bad layout mode: " + mode);
                 }
                 this.for_visualization.settings.default_layout = mode;
                 return this.update_positions();
