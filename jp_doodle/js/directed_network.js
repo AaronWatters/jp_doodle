@@ -25,6 +25,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
             constructor(options, element) {
                 this.settings = $.extend({
+                    title: "directed network",
                     network_json: null,   // A JSON representation for the network.
                     canvas_size: 700,
                     info_height:150,
@@ -57,6 +58,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.undo_stack = [];
                 this.full_context = null;
                 this.make_scaffolding();
+                this.set_title(this.settings.title)
                 this.current_illustrations = null;
                 this.default_positions = null;
                 this.canvas_element = null;
