@@ -14,6 +14,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
     const LAYOUT_RELAX = "relax";
     const LAYOUT_SKELETON = "skeleton";
     const LAYOUT_GRID = "grid";
+    const LAYOUT_CIRCLE = "circle"
 
     $.fn.directed_network = function (options, element) {
 
@@ -24,6 +25,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
             constructor(options, element) {
                 this.settings = $.extend({
+                    title: "directed network",
                     network_json: null,   // A JSON representation for the network.
                     canvas_size: 700,
                     info_height:150,
@@ -56,6 +58,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.undo_stack = [];
                 this.full_context = null;
                 this.make_scaffolding();
+                this.set_title(this.settings.title)
                 this.current_illustrations = null;
                 this.default_positions = null;
                 this.canvas_element = null;
@@ -481,6 +484,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 return this.skeleton_layout(LAYOUT_GRID);
             };
 
+            circle_layout() {
+                return this.skeleton_layout(LAYOUT_CIRCLE);
+            };
+
             make_scaffolding() {
                 var that = this;
                 that.element.empty();
@@ -578,7 +585,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 })
                 that.threshold_slider.on("slidechange", function() { that.apply_displayed_threshhold(); })
                 that.threshold_max_display = $("<div>???</div>").appendTo(that.threshold_div)
-                that.apply_displayed_threshhold();
+                //that.apply_displayed_threshhold();
                 // swatches
                 that.swatch_div = $("<div/>").appendTo(that.selection_div);
                 that.swatch_div.css({
@@ -594,19 +601,21 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 //that.swatch_div.html("swatches here.");
                 that.min_swatch = $("<div/>").appendTo(that.swatch_div);
                 that.min_swatch.html("&gt;");
-                that.min_swatch.css({"background-color": s.min_color, color:"white"});
+                that.min_swatch.css({"background-color": s.min_color, color:"#888"});
                 
                 that.min_threshold_swatch = $("<div/>").appendTo(that.swatch_div);
                 that.min_threshold_swatch.html("&lt;");
-                that.min_threshold_swatch.css({"background-color": s.min_threshold_color, color:"white"});
+                that.min_threshold_swatch.css({"background-color": s.min_threshold_color, color:"#888"});
                 
                 that.max_threshold_swatch = $("<div/>").appendTo(that.swatch_div);
                 that.max_threshold_swatch.html("&gt");
-                that.max_threshold_swatch.css({"background-color": s.max_threshold_color, color:"white"});
+                that.max_threshold_swatch.css({"background-color": s.max_threshold_color, color:"#888"});
                 
                 that.max_swatch = $("<div/>").appendTo(that.swatch_div);
                 that.max_swatch.html("&lt;");
-                that.max_swatch.css({"background-color": s.max_color, color:"white"});
+                that.max_swatch.css({"background-color": s.max_color, color:"#888"});
+
+                that.apply_displayed_threshhold();
                 
                 // match area
                 that.match_div = $("<div/>").appendTo(that.selection_div);
@@ -660,6 +669,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 that.relax_b = that.add_button("relax (slow)", ly, function() { that.relax_layout(); });
                 that.skeleton_b = that.add_button("skeleton (faster)", ly, function() { that.skeleton_layout(); });
                 that.grid_b = that.add_button("grid (fastest)", ly, function() { that.grid_layout(); });
+                that.circle_b = that.add_button("circle (fastest)", ly, function() { that.circle_layout(); });
                 that.redraw_b = that.add_button("<em>redraw</em>", ly, function() { that.redisplay_top_context(); });
                 that.wiggle_b = that.add_button("<em>wiggle</em>", ly, function() { that.wiggle(); });
                 // create list actions
@@ -697,6 +707,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     that.relax_b,
                     that.skeleton_b,
                     that.grid_b,
+                    that.circle_b,
                     that.redraw_b,
                     that.wiggle_b,
                     that.nodes_b,
@@ -706,6 +717,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 lb[LAYOUT_RELAX] = that.relax_b;
                 lb[LAYOUT_SKELETON] = that.skeleton_b;
                 lb[LAYOUT_GRID] = that.grid_b;
+                lb[LAYOUT_CIRCLE] = that.circle_b;
                 that.layout_buttons = lb;
                 that.clear_information();
 
@@ -721,10 +733,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var low = values[0];
                 var high = values[1];
                 mm.html("" + low);
+                that.min_threshold_swatch.html("&gt;" + low);
                 MM.html("" + high);
+                that.max_threshold_swatch.html("" + high + "&lt;");
                 var context = this.current_context();
                 if (context && !context.display_active) {
                     if (values[0] != values[1]) {
+                        that.clear_information();
                         this.inform("Edge threshold excludes: " + low + " .. " + high + ".");
                     }
                     context.display();
@@ -968,6 +983,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         step: step,
                         values: values,
                     });
+                    v.min_swatch.html("" + min_weight + "&gt;");
+                    v.max_swatch.html("&lt;" + max_weight);
                 }
             };
             draw_edge(edge, illustration, update) {
@@ -1056,15 +1073,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.to_graph = this.undirected_graph();
                 if (mode == LAYOUT_RELAX) {
                     this.to_graph.layout_spokes();
-                }
-                else if (mode == LAYOUT_SKELETON) {
+                } else if (mode == LAYOUT_SKELETON) {
                     this.to_graph.layout_skeleton(1);
-                }
-                else if (mode == LAYOUT_GRID) {
+                } else if (mode == LAYOUT_GRID) {
                     this.to_graph.rectangular_layout();
-                }
-                else {
-                    throw new Error("bad layout mode: " + layout);
+                } else if (mode == LAYOUT_CIRCLE) {
+                    this.to_graph.layout_circle();
+                } else {
+                    throw new Error("bad layout mode: " + mode);
                 }
                 this.for_visualization.settings.default_layout = mode;
                 return this.update_positions();

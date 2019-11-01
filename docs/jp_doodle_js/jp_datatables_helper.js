@@ -279,7 +279,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
 
         element.toggle_row = function (row_info) {
-            debugger
             var row_index = row_info.index;
             var previous_row_info = element.indexed_row_info(row_index-1);
             var next_row_info = element.indexed_row_info(row_index+1);
