@@ -151,7 +151,7 @@ HTML_TEMPLATE = """
     <script src="https://aaronwatters.github.io/jp_doodle/jp_doodle_js/nd_frame.js"></script>
     <script src="https://aaronwatters.github.io/jp_doodle/jp_doodle_js/gd_graph.js"></script>
     <script src="https://aaronwatters.github.io/jp_doodle/jp_doodle_js/directed_network.js"></script>
-    <link rel=stylesheet href="https://aaronwatters.github.io/static/style.css">
+    <link rel=stylesheet href="https://aaronwatters.github.io/jp_doodle/static/style.css">
 
 </head>
 <body>
