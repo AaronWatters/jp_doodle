@@ -1,5 +1,5 @@
 """
-Network view support for inferelator CSV output
+Network view support for inferelator CSV output.
 """
 
 def try_float(x):
@@ -63,10 +63,42 @@ class InferelatorCSV:
             nodes = set(related_nodes)
         return selected_edges
 
+    def head_and_tail_edges(self, positive_limit, negative_limit, weight="beta.sign.sum"):
+        all_edges = self.get_edges()
+        selected_edges = {}
+        sorter = []
+        for e in all_edges:
+            d = all_edges[e]
+            wt = d[weight]
+            sorter.append((wt, e))
+        sorter = sorted(sorter)
+        nedges = len(sorter)
+        positive_limit = min(positive_limit, nedges)
+        negative_limit = min(nedges - positive_limit, negative_limit)
+        positive_chosen = sorter[-positive_limit:]
+        negative_chosen = sorter[:negative_limit]
+        for (wt, e) in positive_chosen:
+            if wt > 0:
+                selected_edges[e] = all_edges[e]
+        for (wt, e) in negative_chosen:
+            if wt < 0:
+                selected_edges[e] = all_edges[e]
+        return selected_edges
+
     def related_subnetwork(self, nodes, level=1, html_file=None, weight="beta.sign.sum",
             **network_settings):
         """display related network as a widget (default) or HTML file."""
         edges = self.related_edges(nodes, level)
+        if html_file:
+            return network_html(html_file, edges, weight, **network_settings)
+        else:
+            # default: Jupyter network widget.
+            return network_widget(edges, weight, **network_settings)
+
+    def head_and_tail_subnetwork(self, positive_limit, negative_limit, html_file=None, weight="beta.sign.sum",
+            **network_settings):
+        """display most positive and most negative edges subnetwork as a widget (default) or HTML file."""
+        edges = self.head_and_tail_edges(positive_limit, negative_limit)
         if html_file:
             return network_html(html_file, edges, weight, **network_settings)
         else:
@@ -191,3 +223,66 @@ def relatedness_view(
     data.get_edges(source, dest)
     #edge_map = data.related_edges(nodes, level)
     return data.related_subnetwork(nodes, level, html_file, weight)
+
+def head_and_tail_view(
+    csv_filename,
+    positive_limit, 
+    negative_limit,
+    source="regulator",
+    dest="target",
+    weight="beta.sign.sum",
+    html_file=None,
+    **network_settings
+    ):
+    data = InferelatorCSV()
+    data.read_csv(csv_filename)
+    data.get_edges(source, dest)
+    #edge_map = data.related_edges(nodes, level)
+    return data.head_and_tail_subnetwork(positive_limit, negative_limit, html_file, weight)
+
+def as_script():
+    import argparse
+    parser = argparse.ArgumentParser()
+    # define the argument sequence
+    parser.add_argument("infile",
+                       help="The TAB separated values input file describing the network.")
+    parser.add_argument("nodes", nargs="*",
+                       help="The initial nodes for relatedness (can be empty).")
+    parser.add_argument("--out", default="Network.html",
+                       help="The output HTML file.")
+    parser.add_argument("--col_weight", default="beta.sign.sum",
+                       help="The header name for the column containing the network weights (default: %(default)s).")
+    parser.add_argument("--col_src", default="regulator",
+                       help="The header name for the column containing the source node name (default: %(default)s).")
+    parser.add_argument("--col_dest", default="target",
+                       help="The header name for the column containing the target node name (default: %(default)s).")
+    parser.add_argument("--relatedness", default=1, type=int,
+                       help="The number of levels of relatedness to follow in the network (default: %(default)s).")
+    parser.add_argument("--negative_limit", default=0, type=int,
+                       help="Select this many negatively weighted edges, most negative first.")
+    parser.add_argument("--positive_limit", default=0, type=int,
+                       help="Select this many positively weighted edges, most positive first.")
+    args = parser.parse_args()
+    # extract the arguments
+    nl = args.negative_limit
+    pl = args.positive_limit
+    nodes = args.nodes
+    weighted = (nl or pl)
+    if weighted and nodes:
+        raise ValueError("Please specify node names or weight limits, not both.")
+    if weighted:
+        head_and_tail_view(
+            args.infile, pl, nl, args.col_src, args.col_dest, args.col_weight,
+            args.out
+        )
+    else:
+        if not nodes:
+            raise ValueError("Please supply either nodes for relatedness or weight limits (not both).")
+        relatedness_view(
+            args.infile, nodes, args.col_src, args.col_dest, args.col_weight,
+            args.out, args.relatedness
+        )
+    print("Wrote HTML network representation to", args.out)
+
+if __name__=="__main__":
+    as_script()
