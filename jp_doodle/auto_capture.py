@@ -61,6 +61,67 @@ def javascript_eval(widget, string_expression):
     e.sync()
     return e.value()
 
+class JavascriptExample:
+
+    """
+    Automatically execute code for a javascript example widget.
+    Show the code and the widget and embed an image of the widget.
+    """
+
+    language = "Javascript"
+
+    def __init__(self, prologue_markdown, code, image_filename, width=320, height=120):
+        (self.prologue_markdown, self.code, self.image_filename) = (prologue_markdown, code, image_filename)
+        self.width = width
+        self.height = height
+        self.widget = None
+
+    def embed_prologue(self):
+        from IPython.display import display, Markdown
+        display(Markdown(self.prologue_markdown))
+
+    def embed_code(self):
+        from IPython.display import display, Markdown
+        L = ["```%s" % self.language]
+        L.append(self.code)
+        L.append("```")
+        txt = "\n".join(L)
+        display(Markdown(txt))
+
+    def execute_widget(self, widget):
+        from jp_doodle import dual_canvas
+        from IPython.display import display
+        if widget is None:
+            widget = dual_canvas.DualCanvasWidget(width=self.width, height=self.height)
+        display(widget)
+        self.exec_code(widget)
+
+    def exec_code(self, widget):
+        widget.js_init(self.code)
+
+    def embed_widget(self):
+        from jp_doodle import auto_capture, dual_canvas
+        self.widget = dual_canvas.DualCanvasWidget(width=self.width, height=self.height)
+        with auto_capture.SaveAndEmbed(self.widget, self.image_filename):
+            self.execute_widget(self.widget)
+
+    def __call__(self):
+        self.embed_prologue()
+        self.embed_code()
+        self.embed_widget()
+
+class PythonExample(JavascriptExample):
+
+    language = "Python"
+
+    def exec_code(self, widget):
+        code = "if 1:\n" + self.code
+        g = globals()
+        l = {"widget": widget}
+        exec(code, g, l)
+
+
+
 IMAGE_COUNTER = 0
 
 class SaveAndEmbed:
@@ -72,7 +133,7 @@ class SaveAndEmbed:
 
     sleep_seconds = 0.5
 
-    def __init__(self, canvas_widget, image_filename, prefix="<div>Image result</div>\n"):
+    def __init__(self, canvas_widget, image_filename, prefix="<div>Image from widget:</div>\n"):
         self.canvas_widget = canvas_widget
         self.image_filename = image_filename
         self.prefix = prefix
@@ -88,7 +149,7 @@ class SaveAndEmbed:
         w = self.canvas_widget
         # synchronize -- force execution of widget methods on javascript side
         self.sync()
-        # sleep to allow draw operations...
+        # sleep to allow draw operations to complete...
         time.sleep(self.sleep_seconds)
         w.save_pixels_to_png_async(self.image_filename)
         self.sync()
@@ -96,8 +157,8 @@ class SaveAndEmbed:
         lines = []
         if self.prefix:
             lines.append(self.prefix)
-        global IMAGE_COUNTER
-        IMAGE_COUNTER += 1
+        #global IMAGE_COUNTER
+        #IMAGE_COUNTER += 1
         lines.append('<img src="%s"/>' % (self.image_filename,))
         html = "\n".join(lines)
         display(HTML(html))
