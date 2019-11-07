@@ -52,7 +52,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var canvas = target.canvas[0];
             var context = target.canvas_context;
             var ts = target.canvas_translate_scale;
-            context.resetTransform();
+            //context.resetTransform();  -- not supported in IE
+            context.setTransform(1, 0, 0, 1, 0, 0);
             context.clearRect(0, 0, canvas.width, canvas.height)
             // first scale then translate
             context.scale(ts.w, ts.h);
