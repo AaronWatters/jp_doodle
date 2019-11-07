@@ -93,7 +93,11 @@ class Examiner:
         elif hasattr(thing, "__dict__"):
             result = self.json_dict(thing, expanded, template, thing.__dict__)
         else:
-            result = self.json_repr(thing)
+            #result = self.json_repr(thing)
+            D = {}
+            for name in dir(thing):
+                D[name] = getattr(thing, name)
+            result = self.json_dict(thing, expanded, template, D)
         return result
     
     def json_dict(self, thing, expanded, template, dictionary=None):
