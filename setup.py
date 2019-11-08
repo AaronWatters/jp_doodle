@@ -26,6 +26,7 @@ setup(
         "psutil",
         "imageio",
         "sklearn",
+        "jupyter-ui-poll",
         ],
     license="MIT"
 )
