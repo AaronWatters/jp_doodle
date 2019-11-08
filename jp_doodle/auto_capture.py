@@ -133,10 +133,11 @@ class SaveAndEmbed:
 
     sleep_seconds = 0.5
 
-    def __init__(self, canvas_widget, image_filename, prefix="<div>Image from widget:</div>\n"):
+    def __init__(self, canvas_widget, image_filename, prefix="<div>Image from widget:</div>\n", hide_after=False):
         self.canvas_widget = canvas_widget
         self.image_filename = image_filename
         self.prefix = prefix
+        self.hide_after = hide_after
 
     def __enter__(self):
         pass
@@ -162,3 +163,9 @@ class SaveAndEmbed:
         lines.append('<img src="%s"/>' % (self.image_filename,))
         html = "\n".join(lines)
         display(HTML(html))
+        if self.hide_after:
+            w.element.hide()
+
+def embed_hidden(canvas_widget, image_filename, prefix=None):
+    return SaveAndEmbed(canvas_widget, image_filename, prefix, hide_after=True)
+
