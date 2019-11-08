@@ -575,6 +575,9 @@ class FrameInterface(CanvasOperationsMixin):
     def in_dialog(self):
         self.from_widget.in_dialog()
 
+    def fit(self):
+        self.from_widget.fit()
+
 
 class SnapshotCanvas(DualCanvasWidget):
 
@@ -712,16 +715,25 @@ def swatch(
     model_height=2.0,
     cx=0,
     cy=0,
+    snapfile=None,
+    show=True,
     ):
     pixel_height = pixels
     dc_config = {
         "width": pixel_height,
         "height": pixel_height,
     }
-    canvas = dual_canvas.DualCanvasWidget(width=pixel_height, height=pixel_height, config=dc_config)
+    if snapfile:
+        canvas = SnapshotCanvas(filename=snapfile, width=pixel_height, height=pixel_height, config=dc_config)
+    else:
+        canvas = DualCanvasWidget(width=pixel_height, height=pixel_height, config=dc_config)
     radius = model_height * 0.5
     frame = canvas.frame_region(
         0, 0, pixel_height, pixel_height,
         cx-radius, cy-radius, cx+radius, cy+radius)
-    display(canvas)
+    if show:
+        if snapfile:
+            canvas.display_all()
+        else:
+            display(canvas)
     return frame
