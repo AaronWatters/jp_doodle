@@ -279,11 +279,19 @@ class CanvasOperationsMixin(object):
         # return an interface wrapper for the named frame
         return FrameInterface(self, name)
 
+    def add_axis_color_configs(self, config, color):
+        if color is not None:
+            for cfg in ("tick_line_config", "tick_text_config"):
+                d = config.get(cfg, {})
+                d["color"] = color
+                config[cfg] = d
+
     def lower_left_axes(self, min_x=None, min_y=None, max_x=None, max_y=None, 
-        max_tick_count=None, **other_args):
+            max_tick_count=None, color=None, **other_args):
         s = clean_dict(min_x=min_x, min_y=min_y, max_x=max_x, max_y=max_y, 
                 max_tick_count=max_tick_count)
         s.update(other_args)
+        self.add_axis_color_configs(s, color)
         #self.call_method("lower_left_axes", s)
         self.element.lower_left_axes(s)
 
@@ -309,9 +317,14 @@ class CanvasOperationsMixin(object):
         ...    complex_update1(my_canvas)
         ...    complex_update2(my_canvas)
 
-        Above 
+        Above the complex updates will happen all at once and the user will not
+        see the canvas in a partially updated state.
         """
         return DisableRedrawContextManager(self.get_canvas())
+
+    def show(self):
+        "Display the canvas"
+        display(self.get_canvas())
 
     def deserialize_json_objects(self, object_list):
         """
@@ -509,7 +522,7 @@ class DualCanvasWidget(jp_proxy_widget.JSProxyWidget, TopLevelCanvasMixin):
 
     default_config = dict(width=400, height=400)
     
-    def __init__(self, width=None, height=None, config=None, *pargs, **kwargs):
+    def __init__(self, width=None, height=None, font=None, config=None, *pargs, **kwargs):
         "Create a canvas drawing area widget."
         super(DualCanvasWidget, self).__init__(*pargs, **kwargs)
         load_requirements(self)
@@ -519,6 +532,8 @@ class DualCanvasWidget(jp_proxy_widget.JSProxyWidget, TopLevelCanvasMixin):
             config["height"] = height
         if width is not None:
             config["width"] = width
+        if font is not None:
+            config["font"] = font
         self.canvas_config = config
         # Standard initialization
         self.js_init("""
@@ -575,8 +590,8 @@ class FrameInterface(CanvasOperationsMixin):
     def in_dialog(self):
         self.from_widget.in_dialog()
 
-    def fit(self):
-        self.from_widget.fit()
+    def fit(self, stats=None, margin=0):
+        self.from_widget.fit(stats=stats, margin=margin)
 
 
 class SnapshotCanvas(DualCanvasWidget):
