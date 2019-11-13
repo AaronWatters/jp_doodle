@@ -19,7 +19,7 @@ setup(
     install_requires=[
         "jp_proxy_widget", 
         "requests", 
-        "matplotlib", 
+        #"matplotlib", 
         "numpy", 
         "scipy", 
         "pillow", 
