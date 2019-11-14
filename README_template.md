@@ -78,19 +78,25 @@ The following must have been run once at sometime in the past:
 jupyter labextension install @jupyter-widgets/jupyterlab-manager
 ```
 
-Then install `jp_doodle` from github
+Then install `jp_doodle` from github using the zipball resource
 
 ```
-pip install git+https://github.com/aaronwatters/jp_doodle
+pip install https://github.com/AaronWatters/jp_doodle/zipball/master
 ```
 
 Or if that doesn't work
 
 ```
+python -m pip install https://github.com/AaronWatters/jp_doodle/zipball/master
+```
+
+It is also possible to install using the `git+https` resource if you have git installed
+
+```
 python -m pip install git+https://github.com/aaronwatters/jp_doodle
 ```
 
-or similar.
+and you can try that method if the zipball resource fails.
 
 # `dual_canvas`
 
@@ -112,6 +118,8 @@ relative event coordinate transformations.
 - A built in "lasso tool" for selecting multiple objects in a canvas.
 
 - Animation support.
+
+- Python wrappers for building Jupyter widgets containing dual canvases .
 
 
 
