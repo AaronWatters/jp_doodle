@@ -74,14 +74,30 @@ class CanvasOperationsMixin(object):
         "Draw a circle or arc on the canvas frame with radius adjusted to the frame."
         return self.circle(x, y, r, color, fill, method_name="frame_circle", **other_args)
 
-    def line(self, x1, y1, x2, y2, color="black", lineWidth=None, **other_args):
+    def line(self, x1, y1, x2, y2, color="black", lineWidth=None, lineDash=None, **other_args):
         "Draw a line segment on the canvas frame."
-        s = clean_dict(x1=x1, y1=y1, x2=x2, y2=y2, color=color)
+        s = clean_dict(x1=x1, y1=y1, x2=x2, y2=y2, color=color, lineDash=lineDash)
         if lineWidth:
             s["lineWidth"] = lineWidth
         s.update(other_args)
         name = self.check_name(s, "line")
         self.call_method("line", s)
+        return self.wrap_name(name)
+
+    def arrow(
+            self, x1, y1, x2, y2, head_length, color="black", lineWidth=None, lineDash=None,
+            head_angle=45, head_offset=0, symmetric=False,
+            **other_args):
+        "Draw an arrow."
+        s = clean_dict(
+            x1=x1, y1=y1, x2=x2, y2=y2, color=color, lineDash=lineDash,
+            head_length=head_length, head_angle=head_angle, head_offset=head_offset,
+            symmetric=symmetric)
+        if lineWidth:
+            s["lineWidth"] = lineWidth
+        s.update(other_args)
+        name = self.check_name(s, "arrow")
+        self.call_method("arrow", s)
         return self.wrap_name(name)
 
     def text(self, x, y, text, color="black", degrees=0, align="left", font=None, **other_args):
