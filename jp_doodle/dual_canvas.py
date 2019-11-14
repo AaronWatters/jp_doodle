@@ -100,6 +100,24 @@ class CanvasOperationsMixin(object):
         self.call_method("arrow", s)
         return self.wrap_name(name)
 
+    def double_arrow(
+            self, x1, y1, x2, y2, head_length, color="black", lineWidth=None, lineDash=None,
+            head_angle=45, head_offset=0, symmetric=False,
+            back_color="black", back_angle=45, line_offset=0, back_offset=0,
+            **other_args):
+        "Draw an arrow in both directions."
+        s = clean_dict(
+            x1=x1, y1=y1, x2=x2, y2=y2, color=color, lineDash=lineDash,
+            head_length=head_length, head_angle=head_angle, head_offset=head_offset,
+            back_color=back_color, back_angle=back_angle, line_offset=line_offset, back_offset=back_offset,
+            symmetric=symmetric)
+        if lineWidth:
+            s["lineWidth"] = lineWidth
+        s.update(other_args)
+        name = self.check_name(s, "double_arrow")
+        self.call_method("double_arrow", s)
+        return self.wrap_name(name)
+
     def text(self, x, y, text, color="black", degrees=0, align="left", font=None, **other_args):
         "Draw some text on the canvas frame."
         s = clean_dict(x=x, y=y, text=text, color=color, degrees=degrees, align=align)
