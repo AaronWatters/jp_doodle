@@ -84,6 +84,21 @@ class CanvasOperationsMixin(object):
         self.call_method("line", s)
         return self.wrap_name(name)
 
+    def star(
+            self, x, y, radius, points=5, color="black", fill=True, lineWidth=None, lineDash=None,
+            **other_args):
+        "Draw an arrow."
+        s = clean_dict(
+            x=x, y=y, radius=radius, points=points, color=color, fill=fill,
+            lineDash=lineDash, lineWidth=lineWidth,
+        )
+        if lineWidth:
+            s["lineWidth"] = lineWidth
+        s.update(other_args)
+        name = self.check_name(s, "star")
+        self.call_method("star", s)
+        return self.wrap_name(name)
+
     def arrow(
             self, x1, y1, x2, y2, head_length, color="black", lineWidth=None, lineDash=None,
             head_angle=45, head_offset=0, symmetric=False,
