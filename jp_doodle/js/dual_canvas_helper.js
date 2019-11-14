@@ -16,6 +16,14 @@ XXXXX clean up events for forgotten objects
 
 (function($) {
 
+    // generally useful helpers
+    var numeric_default = function(value, default_value) {
+        if ((typeof value) == "number") {
+            return value;
+        }
+        return default_value;
+    };
+
     $.fn.dual_canvas_json = function (json) {
         // json deserializer...
         var target = this;
@@ -1694,8 +1702,9 @@ XXXXX clean up events for forgotten objects
                     b.x2 = settings.x1 - offset.x;
                     b.y2 = settings.y1 - offset.y;
                     b.color = settings.back_color || settings.color;
-                    b.head_angle = settings.back_angle || settings.head_angle;
-                    b.head_offset = settings.back_offset || settings.head_offset;
+                    //b.head_angle = settings.back_angle || settings.head_angle;
+                    b.head_angle = numeric_default(settings.back_angle, settings.head_angle);
+                    b.head_offset = numeric_default(settings.back_offset, settings.head_offset);
                     b.assembly = "arrow";
                     assembler.assembly(b)
                 }
@@ -2128,12 +2137,12 @@ XXXXX clean up events for forgotten objects
             }
             params.tick_direction = tick_direction || {x: 0, y: -1};
             params.offset_vector = offset_direction || {x: 1, y: 0};
-            var numeric_default = function(value, default_value) {
-                if ((typeof value) == "number") {
-                    return value;
-                }
-                return default_value;
-            }
+            //var numeric_default = function(value, default_value) {
+             //   if ((typeof value) == "number") {
+            //        return value;
+            //    }
+            //   return default_value;
+            //}
             //degrees = degrees || -90;
             degrees = numeric_default(degrees, -90);
             params.tick_text_config = $.extend({
