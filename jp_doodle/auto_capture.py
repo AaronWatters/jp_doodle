@@ -106,7 +106,7 @@ class JavascriptExample:
         widget.js_init(self.code)
         if self.autoframe:
             widget.fit()
-            widget.lower_left_axes()
+            widget.lower_left_axes(color="#999", max_tick_count=5)
             widget.fit(margin=self.autoframe)
 
     def embed_widget(self, embed=True):
@@ -134,7 +134,7 @@ class PythonExample(JavascriptExample):
         exec(code, g, l)
         if self.autoframe:
             widget.fit()
-            widget.lower_left_axes(color="#999")
+            widget.lower_left_axes(color="#999", max_tick_count=5)
             widget.fit(margin=self.autoframe)
 
 
