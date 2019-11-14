@@ -128,17 +128,17 @@ class CanvasOperationsMixin(object):
         self.call_method("text", s)
         return self.wrap_name(name)
 
-    def rect(self, x, y, w, h, color="black", degrees=0, fill=True, method_name="rect", **other_args):
+    def rect(self, x, y, w, h, color="black", degrees=0, fill=True, dx=0, dy=0, method_name="rect", **other_args):
         "Draw a rectangle on the canvas frame."
-        s = clean_dict(x=x, y=y, w=w, h=h, color=color, degrees=degrees, fill=fill)
+        s = clean_dict(x=x, y=y, w=w, h=h, color=color, degrees=degrees, fill=fill, dx=dx, dy=dy)
         s.update(other_args)
         name = self.check_name(s, method_name)
         self.call_method(method_name, s)
         return self.wrap_name(name)
 
-    def frame_rect(self, x, y, w, h, color="black", degrees=0, fill=True, **other_args):
+    def frame_rect(self, x, y, w, h, color="black", degrees=0, fill=True, dx=0, dy=0, **other_args):
         "Draw a rectangle on the canvas frame adjusted by frame transform."
-        return self.rect(x, y, w, h, color, degrees, fill, method_name="frame_rect", **other_args)
+        return self.rect(x, y, w, h, color, degrees, fill, dx, dy, method_name="frame_rect", **other_args)
 
     def polyline(self, points, color="black", **other_args):
         return self.polygon(points, color, close=False, fill=False, **other_args)
