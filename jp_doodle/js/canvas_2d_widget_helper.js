@@ -499,6 +499,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 if (s.lineWidth) {
                     context.lineWidth = s.lineWidth;
                 }
+                var lineDash = s.lineDash;
+                if (lineDash) {
+                    context.setLineDash(lineDash);
+                }
                 context.stroke();
             }
         };
