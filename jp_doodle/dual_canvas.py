@@ -344,19 +344,20 @@ class CanvasOperationsMixin(object):
         #self.call_method("lower_left_axes", s)
         self.element.lower_left_axes(s)
 
-    def left_axis(self, min_value=None, max_value=None, method_name="left_axis", **other_args):
-        s = clean_dict(min_value=min_value, max_value=max_value)
+    def left_axis(self, min_value=None, max_value=None, anchor=None, method_name="left_axis", **other_args):
+        s = clean_dict(min_value=min_value, max_value=max_value, anchor=anchor)
         s.update(other_args)
+        self.add_axis_color_configs(s, s.get("color"))
         return self.call_method(method_name, s)
 
-    def bottom_axis(self, min_value=None, max_value=None, **other_args):
-        return self.left_axis(min_value, max_value, method_name="bottom_axis", **other_args)
+    def bottom_axis(self, min_value=None, max_value=None, anchor=None, **other_args):
+        return self.left_axis(min_value, max_value, anchor, method_name="bottom_axis", **other_args)
 
-    def top_axis(self, min_value=None, max_value=None, **other_args):
-        return self.left_axis(min_value, max_value, method_name="top_axis", **other_args)
+    def top_axis(self, min_value=None, max_value=None, anchor=None, **other_args):
+        return self.left_axis(min_value, max_value, anchor, method_name="top_axis", **other_args)
 
-    def right_axis(self, min_value=None, max_value=None, **other_args):
-        return self.left_axis(min_value, max_value, method_name="right_axis", **other_args)
+    def right_axis(self, min_value=None, max_value=None, anchor=None, **other_args):
+        return self.left_axis(min_value, max_value, anchor, method_name="right_axis", **other_args)
 
     def delay_redraw(self):
         """
