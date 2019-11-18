@@ -356,3 +356,37 @@ sx, sy, sWidth, and sHeight are specified.
     widget.circle(x, y, 5, "magenta")
 ''')
 
+def py_bw_image_example():
+    return python_example(
+"""
+### 2.1 Drawing black and white images from arrays
+
+The `name_image_array`
+can load a black and white image from a
+2 dimensional `numpy` array.  The numeric values in the
+array should be in the range from 0 to 255.
+""",
+''' 
+    import numpy as np
+    checkerboard = np.zeros((8,8))
+    for i in range(8):
+        for j in range(8):
+            if (i + j) % 2 == 0:
+                checkerboard[i,j] = 64 + 3*i*j
+    widget.name_image_array(
+        image_name="checkerboard",
+        np_array=checkerboard,
+    )
+    # draw the named image (any number of times)
+    (x, y) = (50,20)
+    widget.named_image(  # Draw just the eyes (by specifying the subimage)
+        image_name="checkerboard",
+        x=x, y=y,  # rectangle position relative to the canvas
+        w=150, h=140,  # width and height relative to the frame
+        dx=-30, dy=-10,  # offset of lower left corner from (x,y) relative to the canvas
+        degrees=10,  # optional rotation in degrees
+    )
+    # Draw a reference point at (x, y)
+    widget.circle(x, y, 5, "magenta")
+''')
+
