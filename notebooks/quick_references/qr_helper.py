@@ -53,6 +53,32 @@ The `arrow` method draws an arrow between a head position and a tail position.
     )
 ''')
 
+def py_double_arrow_example():
+    return python_example(
+"""
+### 2.2 Drawing double arrows
+
+The `double_arrow` method draws an arrow between a head position and a tail position
+with head marks at both ends.
+""",
+'''
+    widget.double_arrow(
+        head_length=30,
+        x1=50, y1=10,   # The tail end point of the line
+        x2=320, y2=70,  # The head end point of the line
+        color="red",   # Optional color (default: "black")
+        back_color="blue",  # Optional color of back arrow
+        lineWidth=4,    # Optional line width
+        lineDash=[2,2], # Optional line dash pattern
+        head_angle=45,  # Optional head segment angle in degrees (default 45)
+        back_angle=90,   # Optional back head segment angle
+        head_offset=10,  # Optional offset of head from endpoint
+        back_offset=0,   # Optional, offset of back pointing head mark
+        symmetric=False, # If true draw two arrow head segments (default False)
+        line_offset=5,  # offset of back arrow from forward arros
+    )
+''')
+
 def py_line_example():
     return python_example(
 """
@@ -69,3 +95,232 @@ The `line` method draws a line segment between two end points.
         lineDash=[5,2,1], # Optional line dash pattern
     )
 ''')
+
+def py_polyline_example():
+    return python_example(
+"""
+### 2.1 Drawing polylines
+
+The `polyline` method draws sequence of connected line segments.
+""",
+'''
+    points = [(50,20), (40, 60), (140, 111), (300,4), (100,70)]
+    widget.polyline(
+        points=points, # The vertices of the polyline path
+        color="green",   # Optional color (default: "black")
+        lineWidth=3,    # Optional line width
+        lineDash=[5,5], # Optional line dash pattern
+    )
+''')
+
+def py_polygon_example():
+    return python_example(
+"""
+### 2.1 Drawing polygons
+
+The `polygon` method draws closed sequence of connected line segments.
+""",
+'''
+    points = [(50,20), (40, 60), (140, 111), (300,4), (100,70)]
+    widget.polygon(
+        points=points, # The vertices of the polyline path
+        color="green",   # Optional color (default: "black")
+        lineWidth=3,    # Optional line width
+        lineDash=[5,5], # Optional line dash pattern
+        fill=False,     # Optional, if True (default) fill interior
+    )
+''')
+
+
+def py_circle_example():
+    return python_example(
+"""
+### 2.1 Drawing circles with canvas relative radius
+
+The `circle` method draws a circle sized relative to the canvas
+coordinate system.  Circles on two frames with the same radius
+will have the same size.
+""",
+'''   
+    frame = widget.frame_region(
+        minx=10, miny=10, maxx=100, maxy=100,
+        frame_minx=-3, frame_miny=0, frame_maxx=3, frame_maxy=6,
+    )
+    # Draw a circle positioned relative to the frame and sized relative to the canvas.
+    frame.circle(
+        x=4,
+        y=2.5,
+        r=20,  # radius "r" is in canvas coordinates, not frame coordinates
+        color="blue",
+        fill=False,
+        lineWidth=5,
+        lineDash=[5,5],
+    )
+''')
+
+def py_frame_circle_example():
+    return python_example(
+"""
+### 2.1 Drawing circles with frame relative radius
+
+The `frame_circle` method draws a circle sized relative to the current reference frame
+coordinate system.  Frame circles on two frames with the same radius
+may have different sizes if the scaling differs between the frames.
+""",
+'''   
+    frame = widget.frame_region(
+        minx=10, miny=10, maxx=100, maxy=100,
+        frame_minx=-3, frame_miny=0, frame_maxx=3, frame_maxy=6,
+    )
+    # Draw a circle positioned and sized relative to the frame.
+    frame.frame_circle(
+        x=4,
+        y=2.5,
+        r=3,  # radius "r" is in frame coordinates
+        color="blue",
+        fill=True,
+    )
+''')
+
+def py_star_example():
+    return python_example(
+"""
+### 2.1 Drawing stars
+
+The `star` method draws a star on the canvas.
+""",
+'''   
+    # Draw a star (always positioned and sized relative to the frame)
+    widget.star(
+        x=40, y=25, radius=30,
+        points=5,   # optional number of points
+        point_factor=2.1,  # optional scale factor for outer radius
+        color="magenta",
+        fill=False,
+        lineWidth=5,
+        lineDash=[5,5],
+    )
+''')
+
+def py_rect_example():
+    return python_example(
+"""
+### 2.1 Drawing rectangles with canvas relative size
+
+The `rect` method draws a rectangle sized relative to the canvas
+coordinate system.  `rect`s on two frames with the same width and height
+will have the same size.
+""",
+''' 
+    frame = widget.frame_region(
+        minx=10, miny=10, maxx=100, maxy=100,
+        frame_minx=-3, frame_miny=0, frame_maxx=3, frame_maxy=6,
+    )
+
+    # Draw a rectangle positioned and sized relative to the frame.
+    (x,y) = (4, 2.5)
+    frame.rect(
+        x=x, y=y,  # rectangle position relative to the canvas
+        w=50, h=40,  # width and height relative to the frame
+        dx=-10, dy=-10,  # offset of lower left corner from (x,y) relative to the canvas
+        color="green",
+        degrees=10,  # optional rotation in degrees
+        fill=False,
+        lineWidth=5,
+        lineDash=[5,5],
+    )
+    # Draw a reference point at (x, y)
+    frame.circle(x, y, 5, "red")
+    frame.lower_left_axes(color="pink")
+''')
+
+def py_canvas_rect_example():
+    return python_example(
+"""
+### 2.1 Drawing rectangles with frame relative size
+
+The `frame_rect` method draws a rectangle sized relative to the current reference frame
+coordinate system.  `frame_rect`s on two frames with the same width and height
+may have the different sizes.
+""",
+'''    
+    frame = widget.frame_region(
+        minx=10, miny=10, maxx=100, maxy=100,
+        frame_minx=-3, frame_miny=0, frame_maxx=3, frame_maxy=6,
+    )
+    # Draw a rectangle positioned and sized relative to the frame.
+    (x,y) = (4, 2.5)
+    frame.frame_rect(
+        x=x, y=y,  # rectangle position
+        w=5, h=4,  # width and height relative to frame
+        dx=-1, dy=-1,  # offset of lower left corner from (x,y) relative to frame
+        color="green",
+        fill=False,
+        degrees=10,  # optional rotation in degrees
+        lineWidth=5,
+        lineDash=[5,5],
+    )
+    # Draw a reference point at (x, y)
+    frame.circle(x, y, 5, "red")
+    frame.lower_left_axes(color="pink")
+''')
+
+
+def py_text_example():
+    return python_example(
+"""
+### 2.1 Drawing text
+
+The `text` method draws a text screen on the canvas.
+The position of the text is determined by the current reference frame
+but the text font parameters are relative to the shared canvas coordinate space.
+""",
+'''   
+    (x, y) = (50,20)
+    widget.text(
+        x=x, y=y, # The vertices of the polyline path
+        text="We the people",
+        color="white",   # Optional color (default: "black")
+        font="italic 52px Courier",   # optional
+        background="#a00",  # optional
+        degrees=-15,  # optional rotation in degrees
+        align="center", # or "left" or "right", optional
+        valign="center",  # or "bottom", optional
+    )
+    # Draw a reference point at (x, y)
+    widget.circle(x, y, 5, "magenta")
+''')
+
+def py_full_full_image_example():
+    return python_example(
+"""
+### 2.1 Drawing whole images
+
+Before an image can be drawn on a canvas
+the image must be loaded.  The `name_imagea_url` methodß
+loads an image from a file or a remote resource.
+After the image has been loaded and named the `named_image`
+draws the loaded image.  If no subimage is specified
+the whole image is drawn into the rectangular region.
+A loaded image may be drawn any number of times.
+""",
+'''   
+    # load the image from a remote resource
+    mandrill_url = "http://sipi.usc.edu/database/preview/misc/4.2.03.png"
+    widget.name_image_url(
+        image_name="mandrill",
+        url=mandrill_url,
+    )
+    # draw the named image (any number of times)
+    (x, y) = (50,20)
+    widget.named_image(  # Draw the *whole* image (don't specify the s* parameters)
+        image_name="mandrill",
+        x=x, y=y,  # rectangle position relative to the canvas
+        w=150, h=140,  # width and height relative to the frame
+        dx=-30, dy=-50,  # offset of lower left corner from (x,y) relative to the canvas
+        degrees=10,  # optional rotation in degrees
+    )
+    # Draw a reference point at (x, y)
+    widget.circle(x, y, 5, "magenta")
+''')
+
