@@ -403,8 +403,8 @@ can load a color image from a
 3 dimensional `numpy` array of shape "width by height by 3"
 or "width by height by 4".  The values at `array[:,:,1:3]` represent
 the red, green, and blue color values for the pixel and should be in the range 0 to 255.
-If provided the values at `array[:,:,3]` represent opacity of the
-pixel and should be in the range 0 (clear) to 1.0 (fully opaque).
+If provided the values at `array[:,:,3]` represent the opacity of the
+pixel and should be in the range 0 (transparent) to 1.0 (fully opaque).
 """,
 ''' 
     # Make a "color" numpy array
