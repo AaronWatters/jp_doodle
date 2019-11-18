@@ -291,7 +291,7 @@ but the text font parameters are relative to the shared canvas coordinate space.
     widget.circle(x, y, 5, "magenta")
 ''')
 
-def py_full_full_image_example():
+def py_full_image_example():
     return python_example(
 """
 ### 2.1 Drawing whole images
@@ -317,8 +317,40 @@ A loaded image may be drawn any number of times.
         image_name="mandrill",
         x=x, y=y,  # rectangle position relative to the canvas
         w=150, h=140,  # width and height relative to the frame
-        dx=-30, dy=-50,  # offset of lower left corner from (x,y) relative to the canvas
+        dx=-30, dy=-50,  # optional offset of lower left corner from (x,y) relative to the canvas
         degrees=10,  # optional rotation in degrees
+    )
+    # Draw a reference point at (x, y)
+    widget.circle(x, y, 5, "magenta")
+''')
+
+
+def py_part_image_example():
+    return python_example(
+"""
+### 2.1 Drawing parts of images
+
+The `named_image`
+draws part of a loaded image if the subimage parameters
+sx, sy, sWidth, and sHeight are specified.
+""",
+''' 
+    # load the image from a remote resource
+    mandrill_url = "http://sipi.usc.edu/database/preview/misc/4.2.03.png"
+    widget.name_image_url(
+        image_name="mandrill",
+        url=mandrill_url,
+    )
+    # draw the named image (any number of times)
+    (x, y) = (50,20)
+    widget.named_image(  # Draw just the eyes (by specifying the subimage)
+        image_name="mandrill",
+        x=x, y=y,  # rectangle position relative to the canvas
+        w=150, h=40,  # width and height relative to the frame
+        dx=-30, dy=-10,  # optional offset of lower left corner from (x,y) relative to the canvas
+        degrees=10,  # optional rotation in degrees
+        sx=30, sy=15, # subimage upper left corner in image coordinates
+        sWidth=140, sHeight=20,  # subimage extent in image coordinates
     )
     # Draw a reference point at (x, y)
     widget.circle(x, y, 5, "magenta")
