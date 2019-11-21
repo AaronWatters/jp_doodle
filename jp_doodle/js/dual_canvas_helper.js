@@ -2145,10 +2145,15 @@ XXXXX clean up events for forgotten objects
             //}
             //degrees = degrees || -90;
             degrees = numeric_default(degrees, -90);
+            var color = params.color;
             params.tick_text_config = $.extend({
                 degrees: degrees,
-                align: align
-            }, params.tick_text_config)
+                align: align,
+                color: color,
+            }, params.tick_text_config);
+            params.tick_line_config = $.extend({
+                color: color,
+            }, params.tick_line_config);
             var stats = target.active_region(true);   // drawn region or model view box
             var min_value = numeric_default(params.min_value, stats["min_" + coordinate]);
             var max_value = numeric_default(params.max_value, stats["max_" + coordinate]);
