@@ -1,5 +1,5 @@
 from jp_doodle.dual_canvas import swatch
-from jp_doodle.auto_capture import embed_hidden, PythonExample
+from jp_doodle.auto_capture import embed_hidden, PythonExample, JavascriptExample
 import inspect
 
 DO_EMBEDDINGS = False
@@ -24,6 +24,35 @@ def python_example(markdown, code, width=320, height=120):
     EG.embed_prologue()
     EG.embed_code()
     EG.embed_widget(DO_EMBEDDINGS)
+
+def js_example(markdown, code, width=320, height=120):
+    file_prefix = inspect.stack()[1][3]
+    filename = file_prefix + ".png"
+    EG = JavascriptExample(markdown, code, filename, width, height)
+    EG.embed_prologue()
+    EG.embed_code()
+    EG.embed_widget(DO_EMBEDDINGS)
+
+def js_frame_example():
+    return js_example(
+"""
+### 1.2 Create a reference frame inside a dual canvas
+
+Pixel coordinates are rarely the most convenient coordinate systems to
+use for scientific visualizations.  Reference frames allow drawing using
+transformed coordinates.  The `frame_region` method creates a frame
+by mapping reference points in the pixel space to reference
+points in the reference frame coordinate space.  Objects can then
+be drawn on the reference frame and the underlying coordinates will be
+converted automatically.
+""",
+"""
+element.text({x:0, y:0, text:"0,0", color:"red", background:"yellow"} );
+element.text({x:410, y:110, text:"410,110", align:"right", color:"red", background:"yellow"} );
+element.lower_left_axes({min_x:10, min_y:10, max_x:410, 
+                         max_y:110, x_anchor:100, y_anchor:40, max_tick_count:7, color:"blue"})
+"""
+    )
 
 def py_circle_example():
     return python_example(
@@ -79,10 +108,34 @@ with head marks at both ends.
     )
 ''')
 
+def py_event_example():
+    return python_example(
+"""
+### 2.1 Attaching event callbacks
+
+The `object.on(etype, callback)`
+attaches a `callback` to be called when the object
+recieves an event of type `etype`.
+""",
+'''
+    # this circle cannot be mutated and does not respond to events because it is not named.
+    widget.circle(x=0, y=0, r=100, color="#e99")
+
+    # this text is named and can be mutated and can respond to events
+    txt1 = widget.text(x=0, y=0, text="Hello World", degrees=45, name=True,
+            font= "40pt Arial", color="#ee3", background="#9e9", align="center", valign="center")
+
+    # add a click event bound to the txt which transitions the text rotation
+    def on_click(*ignored):
+        txt1.transition(text="That tickles", degrees=720, color="#f90", background="#009", seconds_duration=5)
+        
+    txt1.on("click", on_click)
+''')
+
 def py_line_example():
     return python_example(
 """
-### 2.4 Drawing lines
+### 2.1 Drawing lines
 
 The `line` method draws a line segment between two end points.
 """,
@@ -99,7 +152,7 @@ The `line` method draws a line segment between two end points.
 def py_polyline_example():
     return python_example(
 """
-### 2.5 Drawing polylines
+### 2.4 Drawing polylines
 
 The `polyline` method draws sequence of connected line segments.
 """,
@@ -116,7 +169,7 @@ The `polyline` method draws sequence of connected line segments.
 def py_polygon_example():
     return python_example(
 """
-### 2.1 Drawing polygons
+### 2.5 Drawing polygons
 
 The `polygon` method draws closed sequence of connected line segments.
 """,
@@ -437,3 +490,9 @@ pixel and should be in the range 0 (transparent) to 1.0 (fully opaque).
     widget.circle(x, y, 10, "yellow")
 ''')
 
+def html_hello_world():
+    from IPython.display import display, Markdown
+    txt = open("minimal.html").read()
+    L = ["```HTML", txt, "```"]
+    md = "\n".join(L)
+    display(Markdown(md))
