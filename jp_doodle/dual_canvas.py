@@ -278,7 +278,10 @@ class CanvasOperationsMixin(object):
 
     def do_lasso(self, lasso_callback, delete_after=True, **config):
         "Use a polygon to select named elements.  Return name --> description mapping to the callback."
-        self.element.do_lasso(lasso_callback, config, delete_after)
+        mycanvas = self.get_canvas()
+        # Translate 3 levels
+        callback2 = mycanvas.callable(lasso_callback, level=3)
+        self.element.do_lasso(callback2, config, delete_after)
 
     def transition(self, object_name, to_values, seconds_duration=1):
         "transition configuration values of object with name smoothly over duration."
