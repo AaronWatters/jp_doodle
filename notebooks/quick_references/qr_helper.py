@@ -36,7 +36,7 @@ def js_example(markdown, code, width=320, height=120):
 def js_frame_example():
     return js_example(
 """
-### 1.2 Create a reference frame inside a dual canvas
+### Create a reference frame inside a dual canvas
 
 Pixel coordinates are rarely the most convenient coordinate systems to
 use for scientific visualizations.  Reference frames allow drawing using
@@ -45,12 +45,53 @@ by mapping reference points in the pixel space to reference
 points in the reference frame coordinate space.  Objects can then
 be drawn on the reference frame and the underlying coordinates will be
 converted automatically.
+
+The following Javascript creates a reference `frame` from the canvas `element`
+and draws some reference marks on the frame.  Reference axes in canvas coordinates
+are also shown in grey.
 """,
 """
-element.text({x:0, y:0, text:"0,0", color:"red", background:"yellow"} );
-element.text({x:410, y:110, text:"410,110", align:"right", color:"red", background:"yellow"} );
-element.lower_left_axes({min_x:10, min_y:10, max_x:410, 
-                         max_y:110, x_anchor:100, y_anchor:40, max_tick_count:7, color:"blue"})
+// Map pixel coords (10,10) and (400,100)
+//  to frame coords (-1, 0) and (1, 2)
+frame = element.frame_region(
+        10, 10, 400, 100,
+        -1, 0, 1, 2);
+// draw some reference marks on the frame:
+frame.text({x:-1, y:0, text:"-1,0", color:"red", background:"yellow"} );
+frame.text({x:1, y:2, text:"1,2", align:"right", color:"red", background:"yellow"} );
+frame.lower_left_axes({min_x:-1, min_y:0, max_x:1, 
+                         max_y:2, x_anchor:0, y_anchor:1, max_tick_count:5, color:"blue"})
+"""
+    )
+
+def js_2_frame_example():
+    return js_example(
+"""
+### Create two reference frames inside a dual canvas
+
+It is possible to create many reference frames inside a dual canvas each with a different
+coordinate transform.  The following Javascript places two canvases side-by-side and
+annotates them similarly.
+""",
+"""
+// Map pixel coords (10,10) and (190,100) to frame coords (-1, 0) and (1, 2) in frame1
+frame1 = element.frame_region(
+        10, 10, 190, 100,
+        -1, 0, 1, 2);
+// draw some reference marks on the frame1:
+frame1.text({x:-1, y:0, text:"-1,0", color:"red", background:"yellow"} );
+frame1.text({x:1, y:2, text:"1,2", align:"right", color:"red", background:"yellow"} );
+frame1.lower_left_axes({min_x:-1, min_y:0, max_x:1, 
+                         max_y:2, x_anchor:0, y_anchor:1, max_tick_count:5, color:"blue"})
+// Map pixel coords (210,10) and (400,100) to frame coords (-1, 0) and (1, 2) in frame2
+frame2 = element.frame_region(
+        210, 10, 400, 100,
+        -1, 0, 1, 2);
+// draw some reference marks on the frame1:
+frame2.text({x:-1, y:0, text:"-1,0", color:"red", background:"cyan"} );
+frame2.text({x:1, y:2, text:"1,2", align:"right", color:"red", background:"cyan"} );
+frame2.lower_left_axes({min_x:-1, min_y:0, max_x:1, 
+                         max_y:2, x_anchor:0, y_anchor:1, max_tick_count:5, color:"green"})
 """
     )
 
