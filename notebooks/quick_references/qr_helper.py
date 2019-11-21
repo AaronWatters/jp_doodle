@@ -53,7 +53,7 @@ are also shown in grey.
 """
 // Map pixel coords (10,10) and (400,100)
 //  to frame coords (-1, 0) and (1, 2)
-frame = element.frame_region(
+var frame = element.frame_region(
         10, 10, 400, 100,
         -1, 0, 1, 2);
 // draw some reference marks on the frame:
@@ -75,7 +75,7 @@ annotates them similarly using the same frame coordinates.
 """,
 """
 // Map pixel coords (10,10) and (190,100) to frame coords (-1, 0) and (1, 2) in frame1
-frame1 = element.frame_region(
+var frame1 = element.frame_region(
         10, 10, 190, 100,
         -1, 0, 1, 2);
 // draw some reference marks on the frame1:
@@ -84,7 +84,7 @@ frame1.text({x:1, y:2, text:"1,2", align:"right", color:"red", background:"yello
 frame1.lower_left_axes({min_x:-1, min_y:0, max_x:1, 
                          max_y:2, x_anchor:0, y_anchor:1, max_tick_count:5, color:"blue"})
 // Map pixel coords (210,10) and (400,100) to frame coords (-1, 0) and (1, 2) in frame2
-frame2 = element.frame_region(
+var frame2 = element.frame_region(
         210, 10, 400, 100,
         -1, 0, 1, 2);
 // draw some reference marks on the frame1:
@@ -163,6 +163,32 @@ with head marks at both ends.
     )
 ''')
 
+def js_double_arrow_example():
+    return js_example(
+"""
+### Drawing double arrows
+
+The `double_arrow` method draws an arrow between a head position and a tail position
+with head marks at both ends.
+""",
+'''
+    element.double_arrow({
+        head_length:30,
+        x1:50, y1:10,   // The tail end point of the line
+        x2:320, y2:70,  // The head end point of the line
+        color:"red",   // Optional color (default: "black")
+        back_color:"blue",  // Optional color of back arrow
+        lineWidth:4,    // Optional line width
+        lineDash:[2,2], // Optional line dash pattern
+        head_angle:45,  // Optional head segment angle in degrees (default 45)
+        back_angle:90,   // Optional back head segment angle
+        head_offset:10,  // Optional offset of head from endpoint
+        back_offset:0,   // Optional, offset of back pointing head mark
+        symmetric:false, // If true draw two arrow head segments (default False)
+        line_offset:5,  // offset of back arrow from forward arros
+    });
+''')
+
 def py_event_example():
     return python_example(
 """
@@ -204,6 +230,23 @@ The `line` method draws a line segment between two end points.
     )
 ''')
 
+def js_line_example():
+    return js_example(
+"""
+### Drawing lines
+
+The `line` method draws a line segment between two end points.
+""",
+'''
+    element.line({
+        x1:50, y1:10,   // One end point of the line
+        x2:320, y2:100,  // The other end point of the line
+        color:"cyan",   // Optional color (default: "black")
+        lineWidth:4,    // Optional line width
+        lineDash:[5,2,1], // Optional line dash pattern
+    })
+''')
+
 def py_polyline_example():
     return python_example(
 """
@@ -219,6 +262,25 @@ The `polyline` method draws sequence of connected line segments.
         lineWidth=3,    # Optional line width
         lineDash=[5,5], # Optional line dash pattern
     )
+''')
+
+def js_polyline_example():
+    return js_example(
+"""
+### Drawing polylines
+
+The `polygon` method with `fill:false` and `close:false` draws sequence of connected line segments.
+""",
+'''
+    var points = [[50,20], [40, 60], [140, 111], [300,4], [100,70]];
+    element.polygon({
+        points:points, // The vertices of the polyline path
+        color:"green",   // Optional color (default: "black")
+        lineWidth:3,    // Optional line width
+        lineDash:[5,5], // Optional line dash pattern
+        fill:false,
+        close:false,
+    });
 ''')
 
 def py_polygon_example():
@@ -239,11 +301,55 @@ The `polygon` method draws closed sequence of connected line segments.
     )
 ''')
 
+def js_polygon_example():
+    return js_example(
+"""
+### 2.5 Drawing polygons
+
+The `polygon` method (with the default of `close:true`) draws closed sequence of connected line segments.
+""",
+'''
+    var points = [[50,20], [40, 60], [140, 111], [300,4], [100,70]];
+    element.polygon({
+        points:points, // The vertices of the polyline path
+        color:"green",   // Optional color (default: "black")
+        lineWidth:3,    // Optional line width
+        lineDash:[5,5], // Optional line dash pattern
+        fill:false,
+    });
+''')
+
 
 def py_circle_example():
     return python_example(
 """
 ### 2.6 Drawing circles with canvas relative radius
+
+The `circle` method draws a circle sized relative to the canvas
+coordinate system.  Circles on two frames with the same radius
+will have the same size.
+""",
+'''   
+    frame = widget.frame_region(
+        minx=10, miny=10, maxx=100, maxy=100,
+        frame_minx=-3, frame_miny=0, frame_maxx=3, frame_maxy=6,
+    )
+    # Draw a circle positioned relative to the frame and sized relative to the canvas.
+    frame.circle(
+        x=4,
+        y=2.5,
+        r=20,  # radius "r" is in canvas coordinates, not frame coordinates
+        color="blue",
+        fill=False,
+        lineWidth=5,
+        lineDash=[5,5],
+    )
+''')
+
+def js_circle_example():
+    return js_example(
+"""
+### Drawing circles with canvas relative radius
 
 The `circle` method draws a circle sized relative to the canvas
 coordinate system.  Circles on two frames with the same radius
