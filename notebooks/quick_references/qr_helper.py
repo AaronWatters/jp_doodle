@@ -71,7 +71,7 @@ def js_2_frame_example():
 
 It is possible to create many reference frames inside a dual canvas each with a different
 coordinate transform.  The following Javascript places two canvases side-by-side and
-annotates them similarly.
+annotates them similarly using the same frame coordinates.
 """,
 """
 // Map pixel coords (10,10) and (190,100) to frame coords (-1, 0) and (1, 2) in frame1
@@ -95,13 +95,6 @@ frame2.lower_left_axes({min_x:-1, min_y:0, max_x:1,
 """
     )
 
-def py_circle_example():
-    return python_example(
-"A circle in python",
-'''
-    widget.circle(name="full filled", x=20, y=-10, r=50, color="orange");
-''')
-
 def py_arrow_example():
     return python_example(
 """
@@ -121,6 +114,27 @@ The `arrow` method draws an arrow between a head position and a tail position.
         head_offset=10,  # Optional offset of head from endpoint
         symmetric=True, # If true draw two arrow head segments (default False)
     )
+''')
+
+def js_arrow_example():
+    return js_example(
+"""
+### Drawing arrows
+
+The `arrow` method draws an arrow between a head position and a tail position.
+""",
+'''
+    element.arrow({
+        head_length:30,
+        x1:50, y1:10,   // The tail end point of the line
+        x2:320, y2:70,  // The head end point of the line
+        color:"red",   // Optional color (default: "black")
+        lineWidth:4,    // Optional line width
+        lineDash:[2,2], // Optional line dash pattern
+        head_angle:45,  // Optional head segment angle in degrees (default 45)
+        head_offset:10,  // Optional offset of head from endpoint
+        symmetric:true, // If true draw two arrow head segments (default False)
+    });
 ''')
 
 def py_double_arrow_example():
