@@ -35,7 +35,7 @@ class JSEval:
             } catch (e) {
                 error = "exception: " + e;
             };
-            finish(evaled, error)
+            finish(evaled, error);
         """, expr=self.expr, finish=self.finish)
         
     def finish(self, result, error):
@@ -105,7 +105,7 @@ class JavascriptExample:
     def exec_code(self, widget):
         widget.js_init(self.code)
         if self.autoframe:
-            widget.fit()
+            #widget.fit()
             widget.lower_left_axes(color="#999", max_tick_count=5)
             widget.fit(margin=self.autoframe)
 
