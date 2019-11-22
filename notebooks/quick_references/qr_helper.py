@@ -740,6 +740,36 @@ sx, sy, sWidth, and sHeight are specified.
     widget.circle(x, y, 5, "magenta")
 ''')
 
+def js_part_image_example():
+    return js_example(
+"""
+### Drawing parts of images
+
+The `named_image`
+draws part of a loaded image if the subimage parameters
+sx, sy, sWidth, and sHeight are specified.
+""",
+'''  
+    // load the image from a remote resource
+    var mandrill_url = "http://sipi.usc.edu/database/preview/misc/4.2.03.png";
+    element.name_image_url("mandrill", mandrill_url);
+    // draw the named image (any number of times)
+    var x = 50;
+    var y = 20;
+    // draw the named image (any number of times)
+    element.named_image({  // Draw the *whole* image (don't specify the s* parameters)
+        image_name:"mandrill",
+        x:x, y:y,  // rectangle position relative to the canvas
+        w:150, h:140,  // width and height relative to the frame
+        dx:-30, dy:-50,  // optional offset of lower left corner from (x,y) relative to the canvas
+        degrees:10,  // optional rotation in degrees
+        sx:30, sy:15, // subimage upper left corner in image coordinates
+        sWidth:140, sHeight:20,  // subimage extent in image coordinates
+    });
+    // Draw a reference point at (x, y)
+    element.circle({x:x, y:y, r:5, color:"magenta"});
+''')
+
 def py_bw_image_example():
     return python_example(
 """
