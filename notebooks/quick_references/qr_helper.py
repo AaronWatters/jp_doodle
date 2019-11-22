@@ -346,6 +346,7 @@ will have the same size.
         lineWidth:5,
         lineDash:[5,5],
     })
+    frame.lower_left_axes({max_tick_count:5, color:"green"});
 ''')
 
 def py_circle_example():
@@ -396,6 +397,7 @@ may have different sizes if the scaling differs between the frames.
         color:"blue",
         fill:true,
     });
+    frame.lower_left_axes({max_tick_count:5, color:"green"});
 ''')
 
 def py_frame_circle_example():
@@ -492,6 +494,39 @@ will have the same size.
     # Draw a reference point at (x, y)
     frame.circle(x, y, 5, "red")
     frame.lower_left_axes(color="pink")
+''')
+
+def js_rect_example():
+    return js_example(
+"""
+### 2.9 Drawing rectangles with canvas relative size
+
+The `rect` method draws a rectangle sized relative to the canvas
+coordinate system.  `rect`s on two frames with the same width and height
+will have the same size.
+""",
+''' 
+    frame = element.frame_region(
+        10, 10, 100, 100,
+        -3, 0, 3, 6,
+    )
+
+    // Draw a rectangle positioned and sized relative to the frame.
+    var x = 4;
+    var y = 2.5;
+    frame.rect({
+        x:x, y:y,  // rectangle position relative to the canvas
+        w:50, h:40,  // width and height relative to the frame
+        dx:-10, dy:-10,  // offset of lower left corner from (x,y) relative to the canvas
+        color:"green",
+        degrees:10,  // optional rotation in degrees
+        fill:false,
+        lineWidth:5,
+        lineDash:[5,5],
+    });
+    // Draw a reference point at (x, y)
+    frame.circle({x:x, y:y, r:5, color:"red"});
+    frame.lower_left_axes({color:"pink", max_tick_count:5})
 ''')
 
 def py_canvas_rect_example():
