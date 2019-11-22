@@ -316,38 +316,40 @@ The `polygon` method (with the default of `close:true`) draws closed sequence of
         lineWidth:3,    // Optional line width
         lineDash:[5,5], // Optional line dash pattern
         fill:false,
+        // close:true,  // default value
     });
 ''')
 
 
-def py_circle_example():
-    return python_example(
+def js_circle_example():
+    return js_example(
 """
-### 2.6 Drawing circles with canvas relative radius
+### Drawing circles with canvas relative radius
 
 The `circle` method draws a circle sized relative to the canvas
 coordinate system.  Circles on two frames with the same radius
 will have the same size.
 """,
 '''   
-    frame = widget.frame_region(
-        minx=10, miny=10, maxx=100, maxy=100,
-        frame_minx=-3, frame_miny=0, frame_maxx=3, frame_maxy=6,
+    // map (10,10), (100,100) to (-3,0),(3,6) in the frame
+    frame = element.frame_region(
+        10, 10, 100, 100,
+        -3, 0, 3, 6,
     )
-    # Draw a circle positioned relative to the frame and sized relative to the canvas.
-    frame.circle(
-        x=4,
-        y=2.5,
-        r=20,  # radius "r" is in canvas coordinates, not frame coordinates
-        color="blue",
-        fill=False,
-        lineWidth=5,
-        lineDash=[5,5],
-    )
+    // Draw a circle positioned relative to the frame and sized relative to the canvas.
+    frame.circle({
+        x:4,
+        y:2.5,
+        r:20,  // radius "r" is in canvas coordinates, not frame coordinates
+        color:"blue",
+        fill:false,
+        lineWidth:5,
+        lineDash:[5,5],
+    })
 ''')
 
-def js_circle_example():
-    return js_example(
+def py_circle_example():
+    return python_example(
 """
 ### Drawing circles with canvas relative radius
 
@@ -370,6 +372,30 @@ will have the same size.
         lineWidth=5,
         lineDash=[5,5],
     )
+''')
+
+def js_frame_circle_example():
+    return js_example(
+"""
+### 2.7 Drawing circles with frame relative radius
+
+The `frame_circle` method draws a circle sized relative to the current reference frame
+coordinate system.  Frame circles on two frames with the same radius
+may have different sizes if the scaling differs between the frames.
+""",
+'''   
+    frame = element.frame_region(
+        10, 10, 100, 100,
+        -3, 0, 3, 6,
+    )
+    // Draw a circle positioned and sized relative to the frame.
+    frame.frame_circle({
+        x:4,
+        y:2.5,
+        r:3,  // radius "r" is in frame coordinates
+        color:"blue",
+        fill:true,
+    });
 ''')
 
 def py_frame_circle_example():
@@ -414,6 +440,26 @@ The `star` method draws a star on the canvas.
         lineWidth=5,
         lineDash=[5,5],
     )
+''')
+
+def js_star_example():
+    return js_example(
+"""
+### 2.8 Drawing stars
+
+The `star` method draws a star on the canvas.
+""",
+'''   
+    // Draw a star (always positioned and sized relative to the frame)
+    element.star({
+        x:40, y:25, radius:30,
+        points:5,   // optional number of points
+        point_factor:2.1,  // optional scale factor for outer radius
+        color:"magenta",
+        fill:false,
+        lineWidth:5,
+        lineDash:[5,5],
+    })
 ''')
 
 def py_rect_example():
