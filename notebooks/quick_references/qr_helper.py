@@ -605,7 +605,7 @@ but the text font parameters are relative to the shared canvas coordinate space.
 '''   
     (x, y) = (50,20)
     widget.text(
-        x=x, y=y, # The vertices of the polyline path
+        x=x, y=y, 
         text="We the people",
         color="white",   # Optional color (default: "black")
         font="italic 52px Courier",   # optional
@@ -616,6 +616,32 @@ but the text font parameters are relative to the shared canvas coordinate space.
     )
     # Draw a reference point at (x, y)
     widget.circle(x, y, 5, "magenta")
+''')
+
+def js_text_example():
+    return js_example(
+"""
+### Drawing text
+
+The `text` method draws a text screen on the canvas.
+The position of the text is determined by the current reference frame
+but the text font parameters are relative to the shared canvas coordinate space.
+""",
+'''   
+    var x = 240;
+    var y = 30;
+    element.text({
+        x:x, y:y, 
+        text:"We the people",
+        color:"white",   // Optional color (default: "black")
+        font:"italic 52px Courier",   // optional
+        background:"#a00",  // optional
+        degrees:-15,  // optional rotation in degrees
+        align:"center", // or "left" or "right", optional
+        valign:"center",  // or "bottom", optional
+    })
+    // Draw a reference point at (x, y)
+    element.circle({x:x, y:y, r:5, color:"red"});
 ''')
 
 def py_full_image_example():
