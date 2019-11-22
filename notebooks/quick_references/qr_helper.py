@@ -677,6 +677,37 @@ A loaded image may be drawn any number of times.
     widget.circle(x, y, 5, "magenta")
 ''')
 
+def js_full_image_example():
+    return js_example(
+"""
+### Drawing whole images
+
+Before an image can be drawn on a canvas
+the image must be loaded.  The `name_imagea_url` methodß
+loads an image from a file or a remote resource.
+After the image has been loaded and named the `named_image`
+draws the loaded image.  If no subimage is specified
+the whole image is drawn into the rectangular region.
+A loaded image may be drawn any number of times.
+""",
+'''   
+    // load the image from a remote resource
+    var mandrill_url = "http://sipi.usc.edu/database/preview/misc/4.2.03.png";
+    element.name_image_url("mandrill", mandrill_url);
+    // draw the named image (any number of times)
+    var x = 50;
+    var y = 20;
+    element.named_image({  // Draw the *whole* image (don't specify the s* parameters)
+        image_name:"mandrill",
+        x:x, y:y,  // rectangle position relative to the canvas
+        w:150, h:140,  // width and height relative to the frame
+        dx:-30, dy:-50,  // optional offset of lower left corner from (x,y) relative to the canvas
+        degrees:10,  // optional rotation in degrees
+    });
+    // Draw a reference point at (x, y)
+    element.circle({x:x, y:y, r:5, color:"magenta"});
+''')
+
 
 def py_part_image_example():
     return python_example(
