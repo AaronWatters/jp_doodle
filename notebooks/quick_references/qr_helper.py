@@ -98,7 +98,7 @@ frame2.lower_left_axes({min_x:-1, min_y:0, max_x:1,
 def py_arrow_example():
     return python_example(
 """
-### 2.2 Drawing arrows
+### Drawing arrows
 
 The `arrow` method draws an arrow between a head position and a tail position.
 """,
@@ -140,7 +140,7 @@ The `arrow` method draws an arrow between a head position and a tail position.
 def py_double_arrow_example():
     return python_example(
 """
-### 2.3 Drawing double arrows
+### Drawing double arrows
 
 The `double_arrow` method draws an arrow between a head position and a tail position
 with head marks at both ends.
@@ -192,7 +192,7 @@ with head marks at both ends.
 def py_event_example():
     return python_example(
 """
-### 2.1 Attaching event callbacks
+### Attaching event callbacks
 
 The `object.on(etype, callback)`
 attaches a `callback` to be called when the object
@@ -216,7 +216,7 @@ recieves an event of type `etype`.
 def py_line_example():
     return python_example(
 """
-### 2.1 Drawing lines
+### Drawing lines
 
 The `line` method draws a line segment between two end points.
 """,
@@ -250,7 +250,7 @@ The `line` method draws a line segment between two end points.
 def py_polyline_example():
     return python_example(
 """
-### 2.4 Drawing polylines
+### Drawing polylines
 
 The `polyline` method draws sequence of connected line segments.
 """,
@@ -286,7 +286,7 @@ The `polygon` method with `fill:false` and `close:false` draws sequence of conne
 def py_polygon_example():
     return python_example(
 """
-### 2.5 Drawing polygons
+### Drawing polygons
 
 The `polygon` method draws closed sequence of connected line segments.
 """,
@@ -304,7 +304,7 @@ The `polygon` method draws closed sequence of connected line segments.
 def js_polygon_example():
     return js_example(
 """
-### 2.5 Drawing polygons
+### Drawing polygons
 
 The `polygon` method (with the default of `close:true`) draws closed sequence of connected line segments.
 """,
@@ -378,7 +378,7 @@ will have the same size.
 def js_frame_circle_example():
     return js_example(
 """
-### 2.7 Drawing circles with frame relative radius
+### Drawing circles with frame relative radius
 
 The `frame_circle` method draws a circle sized relative to the current reference frame
 coordinate system.  Frame circles on two frames with the same radius
@@ -403,7 +403,7 @@ may have different sizes if the scaling differs between the frames.
 def py_frame_circle_example():
     return python_example(
 """
-### 2.7 Drawing circles with frame relative radius
+### Drawing circles with frame relative radius
 
 The `frame_circle` method draws a circle sized relative to the current reference frame
 coordinate system.  Frame circles on two frames with the same radius
@@ -427,7 +427,7 @@ may have different sizes if the scaling differs between the frames.
 def py_star_example():
     return python_example(
 """
-### 2.8 Drawing stars
+### Drawing stars
 
 The `star` method draws a star on the canvas.
 """,
@@ -447,7 +447,7 @@ The `star` method draws a star on the canvas.
 def js_star_example():
     return js_example(
 """
-### 2.8 Drawing stars
+### Drawing stars
 
 The `star` method draws a star on the canvas.
 """,
@@ -467,7 +467,7 @@ The `star` method draws a star on the canvas.
 def py_rect_example():
     return python_example(
 """
-### 2.9 Drawing rectangles with canvas relative size
+### Drawing rectangles with canvas relative size
 
 The `rect` method draws a rectangle sized relative to the canvas
 coordinate system.  `rect`s on two frames with the same width and height
@@ -482,8 +482,8 @@ will have the same size.
     # Draw a rectangle positioned and sized relative to the frame.
     (x,y) = (4, 2.5)
     frame.rect(
-        x=x, y=y,  # rectangle position relative to the canvas
-        w=50, h=40,  # width and height relative to the frame
+        x=x, y=y,  # rectangle position relative to the frame
+        w=50, h=40,  # width and height relative to the canvas
         dx=-10, dy=-10,  # offset of lower left corner from (x,y) relative to the canvas
         color="green",
         degrees=10,  # optional rotation in degrees
@@ -499,7 +499,7 @@ will have the same size.
 def js_rect_example():
     return js_example(
 """
-### 2.9 Drawing rectangles with canvas relative size
+### Drawing rectangles with canvas relative size
 
 The `rect` method draws a rectangle sized relative to the canvas
 coordinate system.  `rect`s on two frames with the same width and height
@@ -509,14 +509,14 @@ will have the same size.
     frame = element.frame_region(
         10, 10, 100, 100,
         -3, 0, 3, 6,
-    )
+    );
 
     // Draw a rectangle positioned and sized relative to the frame.
     var x = 4;
     var y = 2.5;
     frame.rect({
-        x:x, y:y,  // rectangle position relative to the canvas
-        w:50, h:40,  // width and height relative to the frame
+        x:x, y:y,  // rectangle position relative to the frame
+        w:50, h:40,  // width and height relative to the canvas
         dx:-10, dy:-10,  // offset of lower left corner from (x,y) relative to the canvas
         color:"green",
         degrees:10,  // optional rotation in degrees
@@ -532,7 +532,7 @@ will have the same size.
 def py_canvas_rect_example():
     return python_example(
 """
-### 2.10 Drawing rectangles with frame relative size
+### Drawing rectangles with frame relative size
 
 The `frame_rect` method draws a rectangle sized relative to the current reference frame
 coordinate system.  `frame_rect`s on two frames with the same width and height
@@ -560,11 +560,43 @@ may have the different sizes.
     frame.lower_left_axes(color="pink")
 ''')
 
+def js_canvas_rect_example():
+    return js_example(
+"""
+### Drawing rectangles with frame relative size
+
+The `frame_rect` method draws a rectangle sized relative to the current reference frame
+coordinate system.  `frame_rect`s on two frames with the same width and height
+may have the different sizes.
+""",
+'''  
+    frame = element.frame_region(
+        10, 10, 100, 100,
+        -3, 0, 3, 6,
+    );
+    // Draw a rectangle positioned and sized relative to the frame.
+    var x = 4;
+    var y = 2.5;
+    frame.frame_rect({
+        x:x, y:y,  // rectangle position
+        w:5, h:4,  // width and height relative to frame
+        dx:-1, dy:-1,  // offset of lower left corner from (x,y) relative to frame
+        color:"green",
+        fill:false,
+        degrees:10,  // optional rotation in degrees
+        lineWidth:5,
+        lineDash:[5,5],
+    })
+    // Draw a reference point at (x, y)
+    frame.circle({x:x, y:y, r:5, color:"red"});
+    frame.lower_left_axes({color:"pink", max_tick_count:5})
+''')
+
 
 def py_text_example():
     return python_example(
 """
-### 2.11 Drawing text
+### Drawing text
 
 The `text` method draws a text screen on the canvas.
 The position of the text is determined by the current reference frame
@@ -589,7 +621,7 @@ but the text font parameters are relative to the shared canvas coordinate space.
 def py_full_image_example():
     return python_example(
 """
-### 2.12 Drawing whole images
+### Drawing whole images
 
 Before an image can be drawn on a canvas
 the image must be loaded.  The `name_imagea_url` methodß
@@ -623,7 +655,7 @@ A loaded image may be drawn any number of times.
 def py_part_image_example():
     return python_example(
 """
-### 2.13 Drawing parts of images
+### Drawing parts of images
 
 The `named_image`
 draws part of a loaded image if the subimage parameters
@@ -654,7 +686,7 @@ sx, sy, sWidth, and sHeight are specified.
 def py_bw_image_example():
     return python_example(
 """
-### 2.14 Drawing black and white images from arrays
+### Drawing black and white images from arrays
 
 The `name_image_array`
 can load a black and white image from a
@@ -691,7 +723,7 @@ array should be in the range from 0 to 255.
 def py_color_image_example():
     return python_example(
 """
-### 2.15 Drawing color images from arrays
+### Drawing color images from arrays
 
 The `name_image_array`
 can load a color image from a
