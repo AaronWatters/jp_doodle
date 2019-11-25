@@ -73,7 +73,7 @@ class JavascriptExample:
     def __init__(
         self, prologue_markdown, code, image_filename, 
         width=320, height=120, 
-        prefix=None, hide_after=True, frame=True, autoframe=10):
+        prefix=None, hide_after=True, frame=True, autoframe=10, axes=True):
         (self.prologue_markdown, self.code, self.image_filename) = (prologue_markdown, code, image_filename)
         self.width = width
         self.height = height
@@ -81,6 +81,7 @@ class JavascriptExample:
         self.prefix = prefix
         self.hide_after = hide_after
         self.autoframe = autoframe
+        self.axes = axes
 
     def embed_prologue(self):
         from IPython.display import display, Markdown
@@ -106,7 +107,8 @@ class JavascriptExample:
         widget.js_init(self.code)
         if self.autoframe:
             #widget.fit()
-            widget.lower_left_axes(color="#999", max_tick_count=5)
+            if self.axes:
+                widget.lower_left_axes(color="#999", max_tick_count=5)
             widget.fit(margin=self.autoframe)
 
     def embed_widget(self, embed=True):
