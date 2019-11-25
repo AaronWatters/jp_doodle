@@ -25,10 +25,10 @@ def python_example(markdown, code, width=320, height=120):
     EG.embed_code()
     EG.embed_widget(DO_EMBEDDINGS)
 
-def js_example(markdown, code, width=320, height=120):
+def js_example(markdown, code, width=320, height=120, axes=True):
     file_prefix = inspect.stack()[1][3]
     filename = file_prefix + ".png"
-    EG = JavascriptExample(markdown, code, filename, width, height)
+    EG = JavascriptExample(markdown, code, filename, width, height, axes=axes)
     EG.embed_prologue()
     EG.embed_code()
     EG.embed_widget(DO_EMBEDDINGS)
@@ -643,6 +643,56 @@ but the text font parameters are relative to the shared canvas coordinate space.
     // Draw a reference point at (x, y)
     element.circle({x:x, y:y, r:5, color:"red"});
 ''')
+
+def js_axes_example():
+    return js_example(
+"""
+### Drawing axes
+
+The `left_axis`, `right_axis`, `bottom_axis`, `top_axis`, and `lower_left_axis` methods
+draw axes on the canvas.
+""",
+'''   
+    element.left_axis({
+        min_value:10,
+        max_value:80,
+        axis_origin:{x:40, y:0},
+        max_tick_count:3,
+        color:"green",
+        add_end_points:true
+    })
+    element.right_axis({
+        min_value:10,
+        max_value:80,
+        axis_origin:{x:240, y:0},
+        max_tick_count:7,
+        color:"red"
+    })
+    element.bottom_axis({
+        min_value:60,
+        max_value:110,
+        axis_origin:{x:0, y:0},
+        max_tick_count:5,
+        color:"blue"
+    })
+    element.top_axis({
+        min_value:130,
+        max_value:180,
+        axis_origin:{x:0, y:0},
+        max_tick_count:5,
+        color:"orange"
+    })
+    element.lower_left_axes({
+        min_x:50, 
+        min_y:30, 
+        max_x:210, 
+        max_y:90, 
+        x_anchor:130, 
+        y_anchor:66, 
+        max_tick_count:4, 
+        color:"brown"
+    });
+''', axes=False)
 
 def py_full_image_example():
     return python_example(
