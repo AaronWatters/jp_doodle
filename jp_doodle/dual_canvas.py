@@ -390,7 +390,7 @@ class CanvasOperationsMixin(object):
         width="140px",
         height="auto",
         background="white",
-        font="12px Ariel",
+        font="12pt Ariel",
         tooltip_attribute="tooltip",   # if "canvas_name" then show the name by default
         on_events="mousemove",
         shift_left=10,
