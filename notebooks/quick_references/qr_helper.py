@@ -959,7 +959,7 @@ A loaded image may be drawn any number of times.
     });
     // Draw a reference point at (x, y)
     element.circle({x:x, y:y, r:5, color:"magenta"});
-''')
+''', embeddable=False)
 
 
 def py_part_image_example():
@@ -1021,7 +1021,7 @@ sx, sy, sWidth, and sHeight are specified.
     });
     // Draw a reference point at (x, y)
     element.circle({x:x, y:y, r:5, color:"magenta"});
-''')
+''', embeddable=False)
 
 def py_bw_image_example():
     return python_example(
