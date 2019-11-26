@@ -1,0 +1,27 @@
+<html>
+<head>
+<title> Dual Canvas HTML Hello World </title>
+    <link rel="stylesheet" href="https://aaronwatters.github.io/jp_doodle/jquery-ui-1.12.1/jquery-ui.css">
+    <script src="https://aaronwatters.github.io/jp_doodle/jquery-ui-1.12.1/external/jquery/jquery.js"></script>
+    <script src="https://aaronwatters.github.io/jp_doodle/jquery-ui-1.12.1/jquery-ui.js"></script>
+    <script src="https://aaronwatters.github.io/jp_doodle/jp_doodle_js/canvas_2d_widget_helper.js"></script>
+    <script src="https://aaronwatters.github.io/jp_doodle/jp_doodle_js/dual_canvas_helper.js"></script>
+    <link rel=stylesheet href="https://aaronwatters.github.io/jp_doodle/static/style.css">
+</head>
+<body>
+    <p>Canvas below:</p>
+    <div id="target_div"/>
+    <script>
+        var element = $('#target_div');
+        var config = {
+                    width: 400,
+                    height: 200,
+                };
+        element.dual_canvas_helper(config);
+        element.circle({x:0, y:0, r:100, color:"#e99"})
+        element.text({x:0, y:0, text:"Hello World", degrees:45,
+           font: "40pt Arial", color:"#ee3", background:"#9e9", align:"center", valign:"center"})
+        element.fit()
+    </script>
+</body>
+</html>

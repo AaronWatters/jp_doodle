@@ -5,6 +5,8 @@ data_dir = "../data"
 template_file = "./template.html"
 source_path = "../../jp_doodle/js/"
 code_destination_path = "../jp_doodle_js/"
+qr_source_path = "../../notebooks/quick_references/"
+qr_destination_path = "../quick_references/"
 github_io_prefix = "https://aaronwatters.github.io/jp_doodle"
 readme_template = "../../README_template.md"
 readme_out = "../../README.md"
@@ -71,7 +73,7 @@ class HTML_Builder:
     def build_readme(self):
         result = open(readme_template).read()
         divs = []
-        docs_dir = "docs/"
+        #docs_dir = "docs/"
         for file_name in sorted(self.file_name_to_info.keys()):
             info = self.file_name_to_info[file_name]
             div = self.here_substitutions(readme_demo_fragment, info)
@@ -134,8 +136,13 @@ class HTML_Builder:
     
     def write_files(self):
         print ("copying " + repr((source_path, code_destination_path)))
+        # Copy javascript code from source area to doc area
         shutil.rmtree(code_destination_path)
         shutil.copytree(source_path, code_destination_path)
+        # Copy quick refs from notebooks to doc area
+        print ("copying " + repr((qr_source_path, qr_destination_path)))
+        shutil.rmtree(qr_destination_path)
+        shutil.copytree(qr_source_path, qr_destination_path)
         for file_name in sorted(self.file_name_to_info.keys()):
             info = self.file_name_to_info[file_name]
             outfile = info["outfile"]

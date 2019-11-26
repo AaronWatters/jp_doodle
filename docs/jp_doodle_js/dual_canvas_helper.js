@@ -16,6 +16,14 @@ XXXXX clean up events for forgotten objects
 
 (function($) {
 
+    // generally useful helpers
+    var numeric_default = function(value, default_value) {
+        if ((typeof value) == "number") {
+            return value;
+        }
+        return default_value;
+    };
+
     $.fn.dual_canvas_json = function (json) {
         // json deserializer...
         var target = this;
@@ -710,6 +718,8 @@ XXXXX clean up events for forgotten objects
             target.image_urls[image_name] = url;
             // load an image url
             var the_image = new Image();
+            // The following doesn't work unless the server is configured for it...
+            //the_image.crossOrigin = "Anonymous";
             the_image.src = url;
             target.visible_canvas.add_image(image_name, the_image);
             if (!no_redraw) {
@@ -1694,8 +1704,9 @@ XXXXX clean up events for forgotten objects
                     b.x2 = settings.x1 - offset.x;
                     b.y2 = settings.y1 - offset.y;
                     b.color = settings.back_color || settings.color;
-                    b.head_angle = settings.back_angle || settings.head_angle;
-                    b.head_offset = settings.back_offset || settings.head_offset;
+                    //b.head_angle = settings.back_angle || settings.head_angle;
+                    b.head_angle = numeric_default(settings.back_angle, settings.head_angle);
+                    b.head_offset = numeric_default(settings.back_offset, settings.head_offset);
                     b.assembly = "arrow";
                     assembler.assembly(b)
                 }
@@ -2128,18 +2139,23 @@ XXXXX clean up events for forgotten objects
             }
             params.tick_direction = tick_direction || {x: 0, y: -1};
             params.offset_vector = offset_direction || {x: 1, y: 0};
-            var numeric_default = function(value, default_value) {
-                if ((typeof value) == "number") {
-                    return value;
-                }
-                return default_value;
-            }
+            //var numeric_default = function(value, default_value) {
+             //   if ((typeof value) == "number") {
+            //        return value;
+            //    }
+            //   return default_value;
+            //}
             //degrees = degrees || -90;
             degrees = numeric_default(degrees, -90);
+            var color = params.color;
             params.tick_text_config = $.extend({
                 degrees: degrees,
-                align: align
-            }, params.tick_text_config)
+                align: align,
+                color: color,
+            }, params.tick_text_config);
+            params.tick_line_config = $.extend({
+                color: color,
+            }, params.tick_line_config);
             var stats = target.active_region(true);   // drawn region or model view box
             var min_value = numeric_default(params.min_value, stats["min_" + coordinate]);
             var max_value = numeric_default(params.max_value, stats["max_" + coordinate]);
