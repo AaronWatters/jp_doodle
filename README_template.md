@@ -10,7 +10,17 @@ makes implementing special purpose interactive visualizations easy.</b>
 It is designed to facilitate the development of bespoke scientific data presentation
 and interactive exploration tools.
 
-Below is a screenshot the 
+<p><b>Quick references:</b>
+Please see the 
+<a href="https://aaronwatters.github.io/jp_doodle/quick_references/Dual%20canvas%20Javascript%20quick%20reference.html">
+Javascript quick reference</a>
+or the 
+<a href="https://aaronwatters.github.io/jp_doodle/quick_references/Dual%20canvas%20python%20quick%20reference.html">
+Python/Jupyter quick reference</a>
+for an introduction to building visualizations using `jp_doodle`.
+</p>
+
+Below is a screenshot of the 
 <a href="https://aaronwatters.github.io/jp_doodle/095_nd_frames.html">multidimensional frames
 example</a> using <code>jp_doodle</code> dual canvases.
 
