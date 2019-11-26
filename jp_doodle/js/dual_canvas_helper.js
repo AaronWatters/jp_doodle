@@ -718,6 +718,8 @@ XXXXX clean up events for forgotten objects
             target.image_urls[image_name] = url;
             // load an image url
             var the_image = new Image();
+            // The following doesn't work unless the server is configured for it...
+            //the_image.crossOrigin = "Anonymous";
             the_image.src = url;
             target.visible_canvas.add_image(image_name, the_image);
             if (!no_redraw) {

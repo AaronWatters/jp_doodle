@@ -2,6 +2,10 @@ from jp_doodle.dual_canvas import swatch
 from jp_doodle.auto_capture import embed_hidden, PythonExample, JavascriptExample
 import inspect
 
+# widen the notebook
+from jp_doodle import data_tables
+data_tables.widen_notebook()
+
 DO_EMBEDDINGS = False
 
 def show(frame, file_prefix=None, do_display=True):
@@ -17,18 +21,18 @@ def show(frame, file_prefix=None, do_display=True):
         if do_display:
             frame.show()
 
-def python_example(markdown, code, width=320, height=120):
+def python_example(markdown, code, width=320, height=120, embeddable=True):
     file_prefix = inspect.stack()[1][3]
     filename = file_prefix + ".png"
-    EG = PythonExample(markdown, code, filename, width, height)
+    EG = PythonExample(markdown, code, filename, width, height, embeddable=embeddable)
     EG.embed_prologue()
     EG.embed_code()
     EG.embed_widget(DO_EMBEDDINGS)
 
-def js_example(markdown, code, width=320, height=120, axes=True):
+def js_example(markdown, code, width=320, height=120, axes=True, embeddable=True):
     file_prefix = inspect.stack()[1][3]
     filename = file_prefix + ".png"
-    EG = JavascriptExample(markdown, code, filename, width, height, axes=axes)
+    EG = JavascriptExample(markdown, code, filename, width, height, axes=axes, embeddable=embeddable)
     EG.embed_prologue()
     EG.embed_code()
     EG.embed_widget(DO_EMBEDDINGS)
@@ -61,6 +65,118 @@ frame.text({x:-1, y:0, text:"-1,0", color:"red", background:"yellow"} );
 frame.text({x:1, y:2, text:"1,2", align:"right", color:"red", background:"yellow"} );
 frame.lower_left_axes({min_x:-1, min_y:0, max_x:1, 
                          max_y:2, x_anchor:0, y_anchor:1, max_tick_count:5, color:"blue"})
+"""
+    )
+
+def js_lasso_example():
+    return js_example(
+"""
+### Selecting named objects by surrounding them with a lasso
+
+The 
+```
+element.do_lasso(callback, config, delete_after)
+``` 
+method allows the user to select named objects
+by surrounding them with a graphical loop.  After the loop is complete the callback
+receives a dictionary mapping the names of the selected objects to their descriptions.
+The optional argument `config` is provides configuration parameters and the
+optional boolean argument `delete_after` deletes the lasso polygon after selection
+if `true`.
+""",
+"""
+// draw some named objects on the canvas
+for (var i=10; i<300; i+=40) {
+    for (var j=10; j<100; j+=15) {
+        var ijtext = i+","+j
+        element.text({x:i, y:j, text:ijtext, name:ijtext, color:"red", background:"yellow"} );
+    }
+}
+
+// Add a text area to display the result of the lasso operation:
+var info = $("<div/>").appendTo(element);
+info.html("Mouse down and encircle elements to select them with the lasso.");
+
+var lasso_callback = function(mapping) {
+    var txt = "Lasso circled: ";
+    for (var name in mapping) {
+        txt += " (" + name + "),";
+    }
+    info.html(txt);
+}
+
+element.do_lasso(lasso_callback, {}, true);
+"""
+    )
+
+def js_mouse_tracking_example():
+    return js_example(
+"""
+### Mouse tracking
+
+The following code tracks mouse moves over the whole canvas
+and moves an external HTML DIV and a canvas circle in coordination
+with the pointer position.
+""",
+"""
+// Mouse tracking DIV
+let tooltip = $("<div>Move the mouse over the canvas.</div>").appendTo(element);
+tooltip.css({background: "yellow", width:120});
+// Mouse tracking circle
+let circle = element.circle({name:true, x:10, y:10, r:13, color: "red"});
+var event_handler = function(event) {
+    var element_offset = element.visible_canvas.offset();
+    var canvas_location = element.event_model_location(event);
+    var pixel_offset = element.event_pixel_location(event);
+    // move the tooltip near the mouse
+    tooltip.offset({
+        left: pixel_offset.x + element_offset.left + 5,
+        top: pixel_offset.y + element_offset.top + 5,
+    });
+    // move the circle under the mouse.
+    circle.change({x:canvas_location.x, y:canvas_location.y});
+    // Report canvas position in the tooltip
+    tooltip.html("x=" + Math.floor(canvas_location.x)
+        + "<br> y=" + Math.floor(canvas_location.y));
+};
+element.on_canvas_event("mousemove", event_handler);
+"""
+    )
+
+def js_event_callback():
+    return js_example(
+"""
+### Displaying mouse move coordinates
+
+The following widget contains a `rectangle` drawn on a `frame`.
+The `model_location` coordinates for a `mousemove` over the rectangle
+are reported in an appended `info_div` text area.  The `model_location`
+gives coordinates for the reference frame associated with the object.
+""",
+"""
+// Map pixel coords (10,10) and (400,100)
+//  to frame coords (-1, 0) and (1, 2)
+var frame = element.frame_region(
+        10, 10, 400, 100,
+        -1, 0, 1, 2);
+
+// Create a named rectangle to receive events.
+var rectangle = frame.frame_rect({x:-0.8, y:0.1, w:1.3, h:1.9, color:"cyan", name:true});
+
+frame.lower_left_axes({min_x:-1, min_y:0, max_x:1, 
+     max_y:2, x_anchor:0, y_anchor:1, max_tick_count:5, color:"blue"});
+
+var info_div = $("<div/>").appendTo(element);
+info_div.html("Please mouse over the cyan rectangle");
+
+var mouse_over_handler = function(event) {
+    var x = event.model_location.x;
+    var y = event.model_location.y;
+    info_div.html("x=" + x + "; y=" + y);
+};
+
+// Attach the event handler to the rectangle.
+rectangle.on("mousemove", mouse_over_handler);
 """
     )
 
@@ -644,6 +760,93 @@ but the text font parameters are relative to the shared canvas coordinate space.
     element.circle({x:x, y:y, r:5, color:"red"});
 ''')
 
+def js_event_example():
+    return js_example(
+"""
+### Attaching event callbacks
+
+The `object.on(etype, callback)`
+attaches a `callback` to be called when the object
+recieves an event of type `etype`.
+""",
+'''   
+    // this circle cannot be mutated and does not respond to events because it is not named.
+    element.circle({x:0, y:0, r:100, color:"#e99"});
+
+    // this text is named and can be mutated and can respond to events
+    var txt1 = element.text({x:0, y:0, text:"Click me please", degrees:45, name:true,
+               font:"40pt Arial", color:"#e3e", background:"#9e9", align:"center", valign:"center"});
+
+    // add a click event bound to the txt which transitions the text rotation
+    var on_click = function() {
+        var seconds_duration = 5;
+        txt1.transition({text:"That tickles", degrees:720, color:"#f90", background:"#009"}, seconds_duration);
+    };
+
+    txt1.on("click", on_click)
+''')
+
+def js_no_name_no_event_example():
+    return js_example(
+"""
+### Unnamed objects are invisible to events
+
+If an object is not named it will not respond to events
+but a named object drawn undernieth the unnamed object may
+receive the event.
+A named object may also disable events by setting `events=False`
+-- the resulting object can be changed or deleted but it will not respond to events.
+```Javascript
+widget.circle({x:0, y:0, r:100, color:"#e99", name:True, events:False});
+```
+Below the circle obscures the text but clicks in the
+center of the circle are recieved by the text.
+""",
+'''   
+    // this text is named and can be mutated and can respond to events
+    var txt1 = element.text({x:0, y:0, text:"CLICK THE CENTER OF THE CIRCLE", degrees:25, name:true,
+               font:"40pt Arial", color:"#e3e", background:"#9e9", align:"center", valign:"center"});
+
+    // This circle cannot be mutated and does not respond to events because it is not named.
+    // The txt1 undernieth the circle may respond to clicks on the circle.
+    element.circle({x:0, y:0, r:70, color:"#e99"});
+
+    // add a click event bound to the txt which transitions the text rotation
+    var on_click = function() {
+        var seconds_duration = 5;
+        txt1.transition({text:"That tickles", degrees:720, color:"#f90", background:"#009"}, seconds_duration);
+    };
+
+    txt1.on("click", on_click)
+''')
+
+def js_event_top_only_example():
+    return js_example(
+"""
+### Only the top named object responds to events
+
+Only the top named object under an event receives the event even if
+it is drawn using a transparent color.
+Any object underneith the top object will not receive the event.
+""",
+'''   
+    // this text is named and can be mutated and can respond to events
+    var txt1 = element.text({x:0, y:0, text:"TRY TO CLICK THE CENTER OF THE CIRCLE", degrees:15, name:true,
+               font:"40pt Arial", color:"#e3e", background:"#9e9", align:"center", valign:"center"});
+
+    // This circle CAN be mutated and MAY respond to events because it is named.
+    // The txt1 undernieth the circle will not respond to clicks on the circle.
+    element.circle({x:0, y:0, r:70, color:"#e99", name:true});
+
+    // add a click event bound to the txt which transitions the text rotation
+    var on_click = function() {
+        var seconds_duration = 5;
+        txt1.transition({text:"That tickles", degrees:720, color:"#f90", background:"#009"}, seconds_duration);
+    };
+
+    txt1.on("click", on_click)
+''')
+
 def js_axes_example():
     return js_example(
 """
@@ -725,7 +928,7 @@ A loaded image may be drawn any number of times.
     )
     # Draw a reference point at (x, y)
     widget.circle(x, y, 5, "magenta")
-''')
+''', embeddable=False)
 
 def js_full_image_example():
     return js_example(
@@ -788,7 +991,7 @@ sx, sy, sWidth, and sHeight are specified.
     )
     # Draw a reference point at (x, y)
     widget.circle(x, y, 5, "magenta")
-''')
+''', embeddable=False)
 
 def js_part_image_example():
     return js_example(

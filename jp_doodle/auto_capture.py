@@ -73,7 +73,7 @@ class JavascriptExample:
     def __init__(
         self, prologue_markdown, code, image_filename, 
         width=320, height=120, 
-        prefix=None, hide_after=True, frame=True, autoframe=10, axes=True):
+        prefix=None, hide_after=True, frame=True, autoframe=10, axes=True, embeddable=True):
         (self.prologue_markdown, self.code, self.image_filename) = (prologue_markdown, code, image_filename)
         self.width = width
         self.height = height
@@ -82,6 +82,7 @@ class JavascriptExample:
         self.hide_after = hide_after
         self.autoframe = autoframe
         self.axes = axes
+        self.embeddable = embeddable
 
     def embed_prologue(self):
         from IPython.display import display, Markdown
@@ -114,7 +115,7 @@ class JavascriptExample:
     def embed_widget(self, embed=True):
         from jp_doodle import auto_capture, dual_canvas
         self.widget = dual_canvas.DualCanvasWidget(width=self.width, height=self.height)
-        if embed:
+        if embed and self.embeddable:
             with auto_capture.SaveAndEmbed(self.widget, self.image_filename, self.prefix, self.hide_after):
                 self.execute_widget(self.widget)
         else:
