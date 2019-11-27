@@ -893,6 +893,26 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
     $.fn.nd_frame.matrix = function(variable_to_vector, vi_order, vj_order, translator) {
 
+        // Matrix implementation with attached variable names.
+        // See the test cases for example usages.  For example matrix multiplication:
+        // it("mmults", () => {
+        //    var vv = {
+        //        u: {x: -1, y: 2},
+        //        v: {x: 2, y: 0},
+        //    };
+        //    var m = jQuery.fn.nd_frame.matrix(vv);
+        //    var vv1 = {
+        //        x: {z: 1, w: 2},
+        //        y: {z: -1, w:-1}
+        //    };
+        //    var m2 = jQuery.fn.nd_frame.matrix(vv1);
+        //    var mm = m.mmult(m2);
+        //    var vmm = {
+        //        "u": {"w": -4, "z": -3}, 
+        //        "v": {"w": 4, "z": 2}
+        //    }
+        //    expect(mm.matrix).toEqual(vmm);
+        // });
         // xxxx eventually move this somewhere else...
         class Matrix {
             constructor(variable_to_vector, vi_order, vj_order, translator) {
@@ -1191,7 +1211,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // get translation from affine transform
                 var translator = this.translator;
                 if (!translator) {
-                    throw new Error("Cannot get axes: this is not an augmented affine matrix.");
+                    throw new Error("Cannot get translation: this is not an augmented affine matrix.");
                 }
                 var matrix = this.matrix;
                 var vector = {};
