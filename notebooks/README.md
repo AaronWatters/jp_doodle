@@ -17,19 +17,19 @@ for an introduction to building visualizations using `jp_doodle`.
 The following notebooks and directories may be useful for learning about how to build
 illustrations:
 
-- <a href="Tutorial - Drawing Interactive Diagrams with Dual Canvases.ipynb">
+<a href="Tutorial - Drawing Interactive Diagrams with Dual Canvases.ipynb">
 The tutorial</a> discusses how to create visualizations using `jp_doodle.dual_canvas`es
 primarily using the Javascript interface.
 
-- <a href="quick-referencews">
+<a href="quick-referencews">
 The quick references directory</a> provide Javascript and Python quick reference
 guides as executable notebooks and other formats.
 
-- <a href="Feature demonstrations">
+<a href="Feature demonstrations">
 The feature demonstrations directory</a> provides notebooks
 demonstrating individual features of `dual_canvas`es in detail.
 
-- <a href="Simple Python Examples.ipynb">
+<a href="Simple Python Examples.ipynb">
 The simple Python examples</a> notebook develops some nontrivial widgets
 using the Python/Jupyter widget interface.
 
