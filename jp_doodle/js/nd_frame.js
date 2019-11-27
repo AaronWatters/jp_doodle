@@ -825,6 +825,34 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         class ND_Text extends ND_Shape {
             _shape_name() { return "text"; }  // xxxx should be a class member?
+            project(nd_frame) {
+                //this.position = nd_frame.coordinate_conversion(this.location);
+                var that = this;
+                this.position = this.frame_conversion(this.location, nd_frame);
+                // if up or base is defined, use it to determine/override text rotation
+                var m = nd_frame.feature_to_frame;
+                var projected_angle = function(direction, rotation_radians) {
+                    if (direction) {
+                        var shift = m.vadd(that.location, direction);
+                        var shift2d = that.frame_conversion(shift, nd_frame);
+                        var diff = m.vsub(shift2d, that.position);
+                        var dx = diff.x;
+                        var dy = diff.y;
+                        if (Math.abs(dx) > nd_frame.epsilon) {
+                            theta = Math.atan(dy / dx);
+                            if (dx * dy < 0) {
+                                theta = theta + Math.PI;
+                            }
+                            return theta + rotation_radians;
+                        }
+                    }
+                    return null;  // default
+                };
+                var theta = projected_angle(this.up, - 0.5 * Math.PI) || projected_angle(this.base, 0);
+                if (theta) {
+                    this.degrees = theta * 180.0 / Math.PI;
+                }
+            };
         };
 
         class ND_Line extends ND_Shape {
