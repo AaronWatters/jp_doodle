@@ -10,6 +10,7 @@ import shutil
 import time
 import ipywidgets as widgets
 from imageio import imsave, imread
+import numpy as np
 
 required_javascript_modules = [
     doodle_files.vendor_path("js/canvas_2d_widget_helper.js"),
@@ -229,7 +230,7 @@ class CanvasOperationsMixin(object):
 
     def name_image_array(self, image_name, np_array,
             low_color=None, high_color=None):
-        import numpy as np
+        #import numpy as np
         shape = np_array.shape
         ndim = len(shape)
         assert ndim > 1, "image data should have at least 2 dimensions"
@@ -457,6 +458,9 @@ def clean_dict(**kwargs):
     for kw in kwargs:
         v = kwargs[kw]
         if v is not None:
+            if isinstance(v, np.ndarray):
+                # listiffy arrays -- maybe should be done elsewhere
+                v = v.tolist()
             result[kw] = v
     return result
 
@@ -502,7 +506,7 @@ class SaveImageMixin:
         to the target canvas (in the js_init context).
         """
         from jp_proxy_widget.hex_codec import hex_to_bytearray
-        import numpy as np
+        #import numpy as np
         def converter_callback(imgData):
             width = imgData["width"]
             height = imgData["height"]
