@@ -60,6 +60,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     feature_axes: null,
                     // translation in model space
                     translation: null,
+                    // translation in feature space
+                    feature_center: null,
                     // rotates/skew etcetera from model space to 2d_projection
                     model_axes: null,
                     //is_frame: true,
@@ -155,6 +157,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
                 json_ob.feature_names = this.feature_names;
                 json_ob.feature_axes = this.feature_axes;
+                json_ob.feature_center = this.feature_center;
                 json_ob.translation = this.translation;
                 json_ob.model_axes = this.model_axes;
 
@@ -175,6 +178,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.feature_names = jsonob.feature_names;
                 this.feature_axes = jsonob.feature_axes;
                 this.translation = jsonob.translation;
+                this.feature_center = jsonob.feature_center;
                 this.model_axes = jsonob.model_axes;
                 this.prepare_transform();
 
@@ -404,7 +408,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var model_transform = ma_matrix.transpose().augment(tr);
                 this.model_transform = model_transform;
                 var fa_matrix = $.fn.nd_frame.matrix(fa, fn, projector_var_order);
-                // xxxx No translation for features?
+                // centering for features happens before feature transform
                 var feature_transform = fa_matrix.transpose().augment();
                 this.feature_transform = feature_transform;
                 this.feature_to_frame = model_transform.mmult(feature_transform)
@@ -431,6 +435,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             feature_vector_to_model_location(feature_vector) {
                 // convert feature vector to xyz model position
                 var M = this.feature_transform;
+                var shift = this.feature_center;
+                if (shift) {
+                    feature_vector = M.vsub(feature_vector, shift);
+                }
                 return M.affine(feature_vector);
             }
             install_model_transform(model_transform) {
@@ -493,6 +501,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var scaled_axis = model_transform.vscale(scale_factor, axis3d);
                 return scaled_axis;
             };
+            /*
             feature_scale(feature_name, shift2d, fixed_feature_point) {
                 // adjust the feature axis by the 2d mouse move shift.
                 var feature_axes = this.feature_axes;
@@ -503,6 +512,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var scaled_axis = this.axis_scale(axis, shift2d);
                 return this.reset_axis(feature_name, scaled_axis, fixed_feature_point);
             };
+            
             axis_rotate(axis3d, shift2d) {
                 // rotate the axis vector by the 2d mous move shift2d.
                 var model_transform = this.model_transform;
@@ -514,7 +524,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var direction = model_transform.vunit(offset);
                 var rotated_axis = model_transform.vscale(alength, direction);
                 return rotated_axis;
-            }
+            };
+            
             feature_rotate(feature_name, shift2d, fixed_feature_point) {
                 // adjust the feature axis by the 2d mouse move shift.
                 var feature_axes = this.feature_axes;
@@ -525,6 +536,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var rotated_axis = this.axis_rotate(axis, shift2d);
                 return this.reset_axis(feature_name, rotated_axis, fixed_feature_point);
             };
+            */
             reset_axis(feature_name, rotated_axis, fixed_feature_point) {
                 var feature_axes = this.feature_axes;
                 var point_before = null;
