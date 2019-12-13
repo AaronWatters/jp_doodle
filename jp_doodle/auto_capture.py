@@ -141,6 +141,52 @@ class PythonExample(JavascriptExample):
             widget.fit(margin=self.autoframe)
 
 
+class Swatch3dExample(PythonExample):
+
+    def __init__(
+        self, prologue_markdown, code, image_filename, 
+        pixels=300, model_height=4.0, 
+        prefix=None, hide_after=True, frame=True, autoframe=0.9, embeddable=True):
+        (self.prologue_markdown, self.code, self.image_filename) = (prologue_markdown, code, image_filename)
+        self.pixels = pixels
+        self.model_height = model_height
+        self.widget = None
+        self.prefix = prefix
+        self.hide_after = hide_after
+        self.autoframe = autoframe
+        #self.axes = axes
+        self.embeddable = embeddable
+
+    def embed_widget(self, embed=True):
+        from jp_doodle import nd_frame
+        self.swatch = nd_frame.swatch3d(self.pixels, self.model_height, auto_show=False)
+        self.widget = self.swatch.in_canvas
+        if embed and self.embeddable:
+            with SaveAndEmbed(self.widget, self.image_filename, self.prefix, self.hide_after):
+                self.execute_widget(self.widget)
+        else:
+            self.execute_widget(self.widget)
+
+    def exec_code(self, widget):
+        swatch = self.swatch
+        m = self.model_height
+        # rotate a bit
+        swatch.orbit(center3d=(0,0,0), radius=m, shift2d=(-0.5 * m, -0.8 * m))
+        # Allow the user to rotate the figure using dragging
+        swatch.orbit_all(radius=m)
+        # Add axes
+        swatch.arrow((-m,0,0), (m,0,0), head_length=0.1 * m, color="green", symmetric=True)
+        swatch.text((m * 1.2,0,0), "X", color="green", align="center")
+        swatch.arrow((0,-m,0), (0,m,0), head_length=0.1 * m, color="green", symmetric=True)
+        swatch.text((0,m * 1.2,0), "Y", color="green", align="center")
+        swatch.arrow((0,0,-m), (0,0,m), head_length=0.1 * m, color="green", symmetric=True)
+        swatch.text((0,0,m * 1.2), "Z", color="green", align="center")
+        code = "if 1:\n" + self.code
+        g = globals()
+        l = {"widget": widget, "swatch": swatch}
+        exec(code, g, l)
+        if self.autoframe:
+            swatch.fit(zoom=self.autoframe)
 
 IMAGE_COUNTER = 0
 
