@@ -33,7 +33,6 @@ Shift-drag the mouse on the figure to translate the diagram.
             // Enable orbitting.
             var center3d = {x:0.1, y:-0.1, z:-0.25};
             var radius = 3;
-            //nd_frame.orbit_region(center3d, radius, -4, -4, 8)
             nd_frame.orbit_region(radius, center3d, -4, -4, 8, 8)
 
             // Give the frame a small initial rotation.
@@ -41,9 +40,11 @@ Shift-drag the mouse on the figure to translate the diagram.
             nd_frame.orbit(center3d, radius, shift2d);
 
             // Draw simple axes.
-            nd_frame.line({location1: {x:1.5}, location2: {x:-1.5}, color:"red", lineWidth:3});
-            nd_frame.line({location1: {y:1.5}, location2: {y:-1.5}, color:"blue", lineWidth:3});
+            nd_frame.arrow({location2: {x:1.5}, location1: {x:-1.5}, color:"red", lineWidth:3, head_length: 0.2});
+            nd_frame.double_arrow({location1: {y:1.5}, location2: {y:-1.5}, color:"blue", lineWidth:3, 
+                head_length: 0.2, line_offset: 0.02,});
             nd_frame.line({location1: {z:1.5}, location2: {z:-1.5}, color:"green", lineWidth:3});
+            nd_frame.star({location: {z:-1.9}, radius:0.05, point_factor:1.7, color:"#dd3"})
             nd_frame.text({location: {x:1.9}, text: "X", font: "normal 30px Arial"});
             nd_frame.text({location: {y:1.9}, text: "Y", font: "normal 30px Arial"});
             nd_frame.text({location: {z:1.9}, text: "Z", font: "normal 30px Arial"});

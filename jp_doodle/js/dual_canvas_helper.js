@@ -1578,6 +1578,14 @@ XXXXX clean up events for forgotten objects
         }
 
         // Useful standard assemblies (composite glyphs)
+        var map_coordinates = function(to_settings, from_slot, x_name, y_name) {
+            var slot_value = to_settings[from_slot];
+            if (slot_value) {
+                to_settings[x_name] = slot_value.x;
+                to_settings[y_name] = slot_value.y;
+                to_settings[from_slot] = null;
+            }
+        };
 
         var draw_star = function(assembler, options) {
             var settings = $.extend({
@@ -1586,6 +1594,7 @@ XXXXX clean up events for forgotten objects
                 point_factor: 1.2,
                 degrees: 0,
             }, options);
+            map_coordinates(settings, "position", "x", "y");
             var x = settings.x;
             var y = settings.y;
             var theta = Math.PI * (90.0 + settings.degrees) / 180.0;
@@ -1621,6 +1630,8 @@ XXXXX clean up events for forgotten objects
             }, options);
             // draw the body
             assembler.line(settings);
+            map_coordinates(settings, "position1", "x1", "y1");
+            map_coordinates(settings, "position2", "x2", "y2");
             var p1 = {x: settings.x1, y: settings.y1};
             var p2 = {x: settings.x2, y: settings.y2};
             var diff = target.vsub(p1, p2);
@@ -1647,6 +1658,9 @@ XXXXX clean up events for forgotten objects
                     p1
                 );
                 var params = $.extend({}, settings);
+                // use x1, ... not position1...
+                //params.position1 = null;
+                //params.position2 = null;
                 $.extend(params, {x1: start.x, y1: start.y, x2: start.x + offset.x, y2: start.y + offset.y})
                 assembler.line(params);
                 if (settings.symmetric) {
@@ -1657,6 +1671,9 @@ XXXXX clean up events for forgotten objects
                     );
                     var offset = target.vscale(settings.head_length, direction);
                     params = $.extend({}, settings);
+                    // use x1, ... not position1...
+                    //params.position1 = null;
+                    //params.position2 = null;
                     $.extend(params, {x1: start.x, y1: start.y, x2: start.x + offset.x, y2: start.y + offset.y})
                     assembler.line(params);
                 }
@@ -1674,6 +1691,8 @@ XXXXX clean up events for forgotten objects
                 forward: true,
                 backward: true,
             }, options);
+            map_coordinates(settings, "position1", "x1", "y1");
+            map_coordinates(settings, "position2", "x2", "y2");
             var p1 = {x: settings.x1, y: settings.y1};
             var p2 = {x: settings.x2, y: settings.y2};
             var diff = target.vsub(p1, p2);

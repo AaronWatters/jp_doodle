@@ -466,8 +466,20 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             frame_circle(opt) {
                 return new ND_Frame_Circle(this, opt);
             };
+            star(opt) {
+                return new ND_Star(this, opt);
+            };
+            circle_arrow(opt) {
+                return new ND_Circle_Arrow(this, opt);
+            };
             line(opt) {
                 return new ND_Line(this, opt);
+            };
+            arrow(opt) {
+                return new ND_Arrow(this, opt);
+            };
+            double_arrow(opt) {
+                return new ND_Double_Arrow(this, opt);
             };
             text(opt) {
                 return new ND_Text(this, opt);
@@ -831,6 +843,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             _shape_name() { return "circle"; }  // xxxx should be a class member?
         };
 
+        class ND_Circle_Arrow extends ND_Shape {
+            _shape_name() { return "circle_arrow"; }  // xxxx should be a class member?
+        };
+
+        class ND_Star extends ND_Shape {
+            _shape_name() { return "star"; }  // xxxx should be a class member?
+        };
+
         class ND_Frame_Circle extends ND_Shape {
             _shape_name() { return "frame_circle"; }  // xxxx should be a class member?
         };
@@ -878,6 +898,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             position2d() {
                 return this.position1;  // xxxx arbitrary choice; could use midpoint.
             };
+        };
+
+        class ND_Arrow extends ND_Line {
+            _shape_name() { return "arrow"; }  // xxxx should be a class member?
+        };
+
+        class ND_Double_Arrow extends ND_Line {
+            _shape_name() { return "double_arrow"; }  // xxxx should be a class member?
         };
 
         class ND_Polygon extends ND_Shape {

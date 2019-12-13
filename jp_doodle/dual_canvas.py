@@ -88,7 +88,7 @@ class CanvasOperationsMixin(object):
     def star(
             self, x, y, radius, points=5, color="black", fill=True, lineWidth=None, lineDash=None,
             **other_args):
-        "Draw an arrow."
+        "Draw a star."
         s = clean_dict(
             x=x, y=y, radius=radius, points=points, color=color, fill=fill,
             lineDash=lineDash, lineWidth=lineWidth,

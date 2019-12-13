@@ -60,6 +60,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     feature_axes: null,
                     // translation in model space
                     translation: null,
+                    // translation in feature space
+                    feature_center: null,
                     // rotates/skew etcetera from model space to 2d_projection
                     model_axes: null,
                     //is_frame: true,
@@ -155,6 +157,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
                 json_ob.feature_names = this.feature_names;
                 json_ob.feature_axes = this.feature_axes;
+                json_ob.feature_center = this.feature_center;
                 json_ob.translation = this.translation;
                 json_ob.model_axes = this.model_axes;
 
@@ -175,6 +178,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.feature_names = jsonob.feature_names;
                 this.feature_axes = jsonob.feature_axes;
                 this.translation = jsonob.translation;
+                this.feature_center = jsonob.feature_center;
                 this.model_axes = jsonob.model_axes;
                 this.prepare_transform();
 
@@ -404,7 +408,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var model_transform = ma_matrix.transpose().augment(tr);
                 this.model_transform = model_transform;
                 var fa_matrix = $.fn.nd_frame.matrix(fa, fn, projector_var_order);
-                // xxxx No translation for features?
+                // centering for features happens before feature transform
                 var feature_transform = fa_matrix.transpose().augment();
                 this.feature_transform = feature_transform;
                 this.feature_to_frame = model_transform.mmult(feature_transform)
@@ -431,6 +435,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             feature_vector_to_model_location(feature_vector) {
                 // convert feature vector to xyz model position
                 var M = this.feature_transform;
+                var shift = this.feature_center;
+                if (shift) {
+                    feature_vector = M.vsub(feature_vector, shift);
+                }
                 return M.affine(feature_vector);
             }
             install_model_transform(model_transform) {
@@ -458,8 +466,20 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             frame_circle(opt) {
                 return new ND_Frame_Circle(this, opt);
             };
+            star(opt) {
+                return new ND_Star(this, opt);
+            };
+            circle_arrow(opt) {
+                return new ND_Circle_Arrow(this, opt);
+            };
             line(opt) {
                 return new ND_Line(this, opt);
+            };
+            arrow(opt) {
+                return new ND_Arrow(this, opt);
+            };
+            double_arrow(opt) {
+                return new ND_Double_Arrow(this, opt);
             };
             text(opt) {
                 return new ND_Text(this, opt);
@@ -493,6 +513,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var scaled_axis = model_transform.vscale(scale_factor, axis3d);
                 return scaled_axis;
             };
+            /*
             feature_scale(feature_name, shift2d, fixed_feature_point) {
                 // adjust the feature axis by the 2d mouse move shift.
                 var feature_axes = this.feature_axes;
@@ -503,6 +524,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var scaled_axis = this.axis_scale(axis, shift2d);
                 return this.reset_axis(feature_name, scaled_axis, fixed_feature_point);
             };
+            
             axis_rotate(axis3d, shift2d) {
                 // rotate the axis vector by the 2d mous move shift2d.
                 var model_transform = this.model_transform;
@@ -514,7 +536,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var direction = model_transform.vunit(offset);
                 var rotated_axis = model_transform.vscale(alength, direction);
                 return rotated_axis;
-            }
+            };
+            
             feature_rotate(feature_name, shift2d, fixed_feature_point) {
                 // adjust the feature axis by the 2d mouse move shift.
                 var feature_axes = this.feature_axes;
@@ -525,6 +548,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var rotated_axis = this.axis_rotate(axis, shift2d);
                 return this.reset_axis(feature_name, rotated_axis, fixed_feature_point);
             };
+            */
             reset_axis(feature_name, rotated_axis, fixed_feature_point) {
                 var feature_axes = this.feature_axes;
                 var point_before = null;
@@ -819,12 +843,48 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             _shape_name() { return "circle"; }  // xxxx should be a class member?
         };
 
+        class ND_Circle_Arrow extends ND_Shape {
+            _shape_name() { return "circle_arrow"; }  // xxxx should be a class member?
+        };
+
+        class ND_Star extends ND_Shape {
+            _shape_name() { return "star"; }  // xxxx should be a class member?
+        };
+
         class ND_Frame_Circle extends ND_Shape {
             _shape_name() { return "frame_circle"; }  // xxxx should be a class member?
         };
 
         class ND_Text extends ND_Shape {
             _shape_name() { return "text"; }  // xxxx should be a class member?
+            project(nd_frame) {
+                //this.position = nd_frame.coordinate_conversion(this.location);
+                var that = this;
+                this.position = this.frame_conversion(this.location, nd_frame);
+                // if up or base is defined, use it to determine/override text rotation
+                var m = nd_frame.feature_to_frame;
+                var projected_angle = function(direction, rotation_radians) {
+                    if (direction) {
+                        var shift = m.vadd(that.location, direction);
+                        var shift2d = that.frame_conversion(shift, nd_frame);
+                        var diff = m.vsub(shift2d, that.position);
+                        var dx = diff.x;
+                        var dy = diff.y;
+                        if (Math.abs(dx) > nd_frame.epsilon) {
+                            theta = Math.atan(dy / dx);
+                            if (dx * dy < 0) {
+                                theta = theta + Math.PI;
+                            }
+                            return theta + rotation_radians;
+                        }
+                    }
+                    return null;  // default
+                };
+                var theta = projected_angle(this.up, - 0.5 * Math.PI) || projected_angle(this.base, 0);
+                if (theta) {
+                    this.degrees = theta * 180.0 / Math.PI;
+                }
+            };
         };
 
         class ND_Line extends ND_Shape {
@@ -838,6 +898,14 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             position2d() {
                 return this.position1;  // xxxx arbitrary choice; could use midpoint.
             };
+        };
+
+        class ND_Arrow extends ND_Line {
+            _shape_name() { return "arrow"; }  // xxxx should be a class member?
+        };
+
+        class ND_Double_Arrow extends ND_Line {
+            _shape_name() { return "double_arrow"; }  // xxxx should be a class member?
         };
 
         class ND_Polygon extends ND_Shape {
@@ -865,6 +933,26 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
     $.fn.nd_frame.matrix = function(variable_to_vector, vi_order, vj_order, translator) {
 
+        // Matrix implementation with attached variable names.
+        // See the test cases for example usages.  For example matrix multiplication:
+        // it("mmults", () => {
+        //    var vv = {
+        //        u: {x: -1, y: 2},
+        //        v: {x: 2, y: 0},
+        //    };
+        //    var m = jQuery.fn.nd_frame.matrix(vv);
+        //    var vv1 = {
+        //        x: {z: 1, w: 2},
+        //        y: {z: -1, w:-1}
+        //    };
+        //    var m2 = jQuery.fn.nd_frame.matrix(vv1);
+        //    var mm = m.mmult(m2);
+        //    var vmm = {
+        //        "u": {"w": -4, "z": -3}, 
+        //        "v": {"w": 4, "z": 2}
+        //    }
+        //    expect(mm.matrix).toEqual(vmm);
+        // });
         // xxxx eventually move this somewhere else...
         class Matrix {
             constructor(variable_to_vector, vi_order, vj_order, translator) {
@@ -1163,7 +1251,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // get translation from affine transform
                 var translator = this.translator;
                 if (!translator) {
-                    throw new Error("Cannot get axes: this is not an augmented affine matrix.");
+                    throw new Error("Cannot get translation: this is not an augmented affine matrix.");
                 }
                 var matrix = this.matrix;
                 var vector = {};
