@@ -461,6 +461,8 @@ def clean_dict(**kwargs):
             if isinstance(v, np.ndarray):
                 # listiffy arrays -- maybe should be done elsewhere
                 v = v.tolist()
+            if type(v) is tuple:
+                v = list(v)
             result[kw] = v
     return result
 
