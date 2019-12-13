@@ -68,12 +68,61 @@ class ND_Frame(dual_canvas.CanvasOperationsMixin):
         "Draw a circle or arc on the canvas frame with radius adjusted to the frame."
         return self.circle(location, r, color, fill, method_name="frame_circle", **other_args)
 
-    def line(self, location1, location2, color="black", lineWidth=None, **other_args):
+    def line(self, location1, location2, color="black", lineWidth=None, method_name="line", **other_args):
         "Draw a line segment on the canvas frame."
         s = clean_dict(location1=location1, location2=location2, color=color, lineWidth=lineWidth)
         s.update(other_args)
-        name = self.check_name(s, "line")
-        self.call_method("line", s)
+        name = self.check_name(s, method_name)
+        self.call_method(method_name, s)
+        return self.wrap_name(name)
+
+    def double_arrow(
+            self, location1, location2, head_length, color="black", lineWidth=None, lineDash=None,
+            head_angle=45, head_offset=0, symmetric=False,
+            back_color=None, back_angle=45, line_offset=0, back_offset=0,
+            **other_args):
+        "Draw an arrow in both directions."
+        s = clean_dict(
+            location1=location1, location2=location2, color=color, lineDash=lineDash,
+            head_length=head_length, head_angle=head_angle, head_offset=head_offset,
+            back_color=back_color, back_angle=back_angle, line_offset=line_offset, back_offset=back_offset,
+            symmetric=symmetric)
+        if lineWidth:
+            s["lineWidth"] = lineWidth
+        s.update(other_args)
+        name = self.check_name(s, "double_arrow")
+        self.call_method("double_arrow", s)
+        return self.wrap_name(name)
+
+    def arrow(
+            self, location1, location2, head_length, color="black", lineWidth=None, lineDash=None,
+            head_angle=45, head_offset=0, symmetric=False,
+            **other_args):
+        "Draw an arrow."
+        s = clean_dict(
+            location1=location1, location2=location2, color=color, lineDash=lineDash,
+            head_length=head_length, head_angle=head_angle, head_offset=head_offset,
+            symmetric=symmetric)
+        if lineWidth:
+            s["lineWidth"] = lineWidth
+        s.update(other_args)
+        name = self.check_name(s, "arrow")
+        self.call_method("arrow", s)
+        return self.wrap_name(name)
+
+    def star(
+            self, location, radius, points=5, color="black", fill=True, lineWidth=None, lineDash=None,
+            **other_args):
+        "Draw a star."
+        s = clean_dict(
+            location=location, radius=radius, points=points, color=color, fill=fill,
+            lineDash=lineDash, lineWidth=lineWidth,
+        )
+        if lineWidth:
+            s["lineWidth"] = lineWidth
+        s.update(other_args)
+        name = self.check_name(s, "star")
+        self.call_method("star", s)
         return self.wrap_name(name)
 
     def text(self, location, text, color="black", degrees=0, align="left", font=None, **other_args):
@@ -145,6 +194,7 @@ def swatch3d(
     model_height=2.0,
     cx=0,
     cy=0,
+    auto_show=True,
     ):
     pixel_height = pixels
     dc_config = {
@@ -157,6 +207,7 @@ def swatch3d(
         0, 0, pixel_height, pixel_height,
         cx-radius, cy-radius, cx+radius, cy+radius)
     result = ND_Frame(canvas, frame)
-    result.show()
+    if auto_show:
+        result.show()
     return result
 
