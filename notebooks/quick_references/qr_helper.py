@@ -1,5 +1,5 @@
 from jp_doodle.dual_canvas import swatch
-from jp_doodle.auto_capture import embed_hidden, PythonExample, JavascriptExample
+from jp_doodle.auto_capture import embed_hidden, PythonExample, JavascriptExample, Swatch3dExample
 import inspect
 
 # widen the notebook
@@ -29,6 +29,14 @@ def python_example(markdown, code, width=320, height=120, embeddable=True):
     EG.embed_code()
     EG.embed_widget(DO_EMBEDDINGS)
 
+def swatch3d_example(markdown, code, pixels=300, model_height=1.0, embeddable=True):
+    file_prefix = inspect.stack()[1][3]
+    filename = file_prefix + ".png"
+    EG = Swatch3dExample(markdown, code, filename, pixels=pixels, model_height=model_height, embeddable=embeddable)
+    EG.embed_prologue()
+    EG.embed_code()
+    EG.embed_widget(DO_EMBEDDINGS)
+
 def js_example(markdown, code, width=320, height=120, axes=True, embeddable=True):
     file_prefix = inspect.stack()[1][3]
     filename = file_prefix + ".png"
@@ -36,6 +44,29 @@ def js_example(markdown, code, width=320, height=120, axes=True, embeddable=True
     EG.embed_prologue()
     EG.embed_code()
     EG.embed_widget(DO_EMBEDDINGS)
+
+def swatch_3d_lines():
+    return swatch3d_example(
+"""
+### Draw lines in 3d
+
+The `line` method draws a line on a swatch.
+""",
+"""
+    import math
+    for i in range(10):
+        x = (i - 5) * 0.05
+        s = math.sin(x * 3)
+        c = math.cos(x * 2)
+        swatch.line(
+            location1=(1,c,x),   # start point
+            location2=(-c,s,x*0.5),   # end point
+            color="cyan",        # optional color
+            lineWidth=3,         # optional line width
+            lineDash=[1,2,1],    # Optional line dash pattern
+        )
+"""
+    )
 
 def js_frame_example():
     return js_example(
