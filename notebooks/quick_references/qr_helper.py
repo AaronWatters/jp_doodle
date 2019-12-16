@@ -69,6 +69,67 @@ The `line` method draws a line on a swatch.
 """
     )
     
+def swatch_3d_polyline():
+    return swatch3d_example(
+"""
+### Draw arrows in 3d
+
+The `polyline` method draws an connected sequence of line segments on a swatch.
+""",
+"""
+    points = [
+        (1, 1, 1),
+        (1, -1, 1),
+        (-1, 1, 1),
+        (1, 1, -1),
+        (0, 0, 0)
+    ]
+
+    swatch.polyline(
+        locations=points,   # end point
+        color="magenta",        # optional color
+        lineWidth=3,         # optional line width
+        lineDash=[1,2,1],    # Optional line dash pattern
+    )
+"""
+    )
+
+def swatch_3d_polygon():
+    return swatch3d_example(
+"""
+### Draw arrows in 3d
+
+The `polygon` method draws an connected and closed sequence of line segments on a swatch.
+If the polygon is filled the 2 dimensional figure defined by the projection of the
+projected 3 dimensional points will be filled.
+
+**Note:** A filled "polygon" where the points do not lie on the same plane
+will not behave like a true 3 dimensional polygon when rotated.
+""",
+"""
+    points = [
+        (1, 1, 1),
+        (1, -1, 1),
+        (-1, 1, 1),
+        (1, 1, -1),
+        (0, 0, 0)
+    ]
+
+    swatch.polygon(
+        locations=points,   # end point
+        color="magenta",        # optional color
+        lineWidth=3,         # optional line width
+        lineDash=[1,2,1],    # Optional line dash pattern
+        fill=False,  # Just the outline line segments
+    )
+    swatch.polygon(
+        locations=points,   # end point
+        color="rgba(100,200,255,0.3)",        # translucent color
+        # fill=True (the default)
+    )
+"""
+    )
+
 def swatch_3d_arrows():
     return swatch3d_example(
 """
