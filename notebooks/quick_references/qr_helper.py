@@ -920,6 +920,43 @@ may have different size.
     swatch.polyline(locations=points, color="pink")
 ''')
 
+def swatch_3d_text_example():
+    return swatch3d_example(
+"""
+### Drawing text
+
+The `text` method draws a text on the canvas.
+""",
+''' 
+    import math
+    points = []
+    for i in range(0,20,3):
+        x = (i - 10) * 0.15
+        s = math.sin(x * 3)
+        c = math.cos(x * 2)
+        p = (-c,s,x*0.5)
+        w = 0.1 * (abs(c) + abs(s)) + 0.01
+        color = "rgb" + repr((255-i*10, i*10, i*10))
+        points.append(p)
+        txt = "%1.1f,%1.1f.%1.1f" % p
+
+        # Draw a rectangle positioned and sized relative to the frame.
+        swatch.text(
+            location=p,
+            text=txt,
+            color="white",   # Optional color (default: "black")
+            font="italic 10px Courier",   # optional
+            background=color,  # optional
+            degrees= 20,  # optional rotation in degrees
+            align="left", # or "center" or "right", optional
+            valign="center",  # or "bottom", optional
+        )
+
+    # Draw a reference polyline at rectangle reference points
+    swatch.polyline(locations=points, color="pink")
+''')
+
+
 def js_rect_example():
     return js_example(
 """
