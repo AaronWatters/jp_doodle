@@ -146,7 +146,7 @@ class Swatch3dExample(PythonExample):
     def __init__(
         self, prologue_markdown, code, image_filename, 
         pixels=300, model_height=4.0, 
-        prefix=None, hide_after=True, frame=True, autoframe=0.9, embeddable=True):
+        prefix=None, hide_after=True, frame=True, autoframe=0.7, embeddable=True):
         (self.prologue_markdown, self.code, self.image_filename) = (prologue_markdown, code, image_filename)
         self.pixels = pixels
         self.model_height = model_height
@@ -171,7 +171,7 @@ class Swatch3dExample(PythonExample):
         swatch = self.swatch
         m = self.model_height
         # rotate a bit
-        swatch.orbit(center3d=(0,0,0), radius=m, shift2d=(-0.5 * m, -0.8 * m))
+        swatch.orbit(center3d=(0,0,0), radius=m, shift2d=(-0.5 * m, -0.3 * m))
         # Allow the user to rotate the figure using dragging
         swatch.orbit_all(radius=m)
         # Add axes
@@ -185,8 +185,12 @@ class Swatch3dExample(PythonExample):
         g = globals()
         l = {"widget": widget, "swatch": swatch}
         exec(code, g, l)
-        if self.autoframe:
+        def refit(*ignored_arguments):
             swatch.fit(zoom=self.autoframe)
+        if self.autoframe:
+            refit()
+            refitter = widget.text(0,0,"refit", name=True, color="#444", background="#fed")
+            refitter.on("click", refit)
 
 IMAGE_COUNTER = 0
 
