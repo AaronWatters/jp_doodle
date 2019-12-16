@@ -69,10 +69,61 @@ The `line` method draws a line on a swatch.
 """
     )
     
+def swatch_3d_circles():
+    return swatch3d_example(
+"""
+### Drawing circles with canvas relative radius
+
+The `circle` method draws a circle sized relative to the canvas
+coordinate system.  Circles on two frames with the same radius
+will have the same size.
+""",
+"""
+    import math
+    for i in range(20):
+        x = (i - 10) * 0.15
+        s = math.sin(x * 3)
+        c = math.cos(x * 2)
+
+        swatch.circle(
+            location=(-c,s,x*0.5),   # center
+            r=5, # radius in canvas (pixel) sizing
+            color="#448",        # optional color
+            lineWidth=2,         # optional line width
+            lineDash=[1,1],    # Optional line dash pattern
+            fill=False,
+        )
+"""
+    )
+    
+def swatch_3d_framecircles():
+    return swatch3d_example(
+"""
+### Drawing circles with frame relative radius
+
+The `frame_circle` method draws a circle sized relative to the frame
+coordinate system.  Circles on two frames with the same radius
+may have different size.
+""",
+"""
+    import math
+    for i in range(20):
+        x = (i - 10) * 0.15
+        s = math.sin(x * 3)
+        c = math.cos(x * 2)
+
+        swatch.frame_circle(
+            location=(-c,s,x*0.5),   # center
+            r=abs(c * 0.2), # radius in canvas (pixel) sizing
+            color="rgba(0,200,200,0.2)",        # optional color
+        )
+"""
+    )
+    
 def swatch_3d_polyline():
     return swatch3d_example(
 """
-### Draw arrows in 3d
+### Draw polygons in 3d
 
 The `polyline` method draws an connected sequence of line segments on a swatch.
 """,
@@ -97,14 +148,14 @@ The `polyline` method draws an connected sequence of line segments on a swatch.
 def swatch_3d_polygon():
     return swatch3d_example(
 """
-### Draw arrows in 3d
+### Draw polygons in 3d
 
 The `polygon` method draws an connected and closed sequence of line segments on a swatch.
-If the polygon is filled the 2 dimensional figure defined by the projection of the
-projected 3 dimensional points will be filled.
+If the "polygon" is filled the 2 dimensional figure defined by the projection of the
+projected 3 dimensional points will be filled with a solid color.
 
 **Note:** A filled "polygon" where the points do not lie on the same plane
-will not behave like a true 3 dimensional polygon when rotated.
+will not behave like a true 3 dimensional polygon.
 """,
 """
     points = [
