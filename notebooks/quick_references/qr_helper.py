@@ -763,6 +763,39 @@ The `star` method draws a star on the canvas.
     )
 ''')
 
+def swatch_3d_star_example():
+    return swatch3d_example(
+"""
+### Drawing stars
+
+The `star` method draws a star on the canvas.
+""",
+'''
+    import math
+    points = []
+    for i in range(20):
+        x = (i - 10) * 0.15
+        s = math.sin(x * 3)
+        c = math.cos(x * 2)
+        p = (-c,s,x*0.5)
+        w = 0.05 * (abs(c) + abs(s)) + 0.01
+        color = "rgb" + repr((i*10, (i*70) % 244, 255-i*10))
+        points.append(p)
+
+        # Draw a star (always positioned and sized relative to the frame)
+        swatch.star(
+            location=p, 
+            radius=w,
+            points=5,   # optional number of points
+            point_factor=2.1,  # optional scale factor for outer radius
+            color=color,
+            fill=True,
+        )
+
+    # Draw a reference polyline at rectangle reference points
+    swatch.polyline(locations=points, color="red")
+''')
+
 def js_star_example():
     return js_example(
 """
@@ -813,6 +846,78 @@ will have the same size.
     # Draw a reference point at (x, y)
     frame.circle(x, y, 5, "red")
     frame.lower_left_axes(color="pink")
+''')
+
+def swatch_3d_rect_example():
+    return swatch3d_example(
+"""
+### Drawing rectangles with canvas relative size
+
+The `rect` method draws a rectangle sized relative to the canvas (pixel)
+coordinate system.  `rect`s on two frames with the same width and height
+will have the same size.
+""",
+''' 
+    import math
+    points = []
+    for i in range(20):
+        x = (i - 10) * 0.15
+        s = math.sin(x * 3)
+        c = math.cos(x * 2)
+        p = (-c,s,x*0.5)
+        points.append(p)
+
+        # Draw a rectangle positioned and sized relative to the canvas.
+        swatch.rect(
+            location=p,  # rectangle position relative to the frame
+            w=20, h=10,  # width and height relative to the canvas
+            dx=-10, dy=-5,  # offset of lower left corner from (x,y) relative to the canvas
+            color="#379",
+            degrees=10,  # optional rotation in degrees
+            fill=False,
+            lineWidth=2,
+            lineDash=[2,2],
+        )
+
+    # Draw a reference polyline at rectangle reference points
+    swatch.polyline(locations=points, color="pink")
+''')
+
+def swatch_3d_frame_rect_example():
+    return swatch3d_example(
+"""
+### Drawing rectangles with frame relative size
+
+The `frame_rect` method draws a rectangle sized relative to the frame
+coordinate system.  `frame_rect`s on two frames with the same width and height
+may have different size.
+""",
+''' 
+    import math
+    points = []
+    for i in range(20):
+        x = (i - 10) * 0.15
+        s = math.sin(x * 3)
+        c = math.cos(x * 2)
+        p = (-c,s,x*0.5)
+        w = 0.1 * (abs(c) + abs(s)) + 0.01
+        color = "rgb" + repr((255-i*10, i*10, i*10))
+        points.append(p)
+
+        # Draw a rectangle positioned and sized relative to the frame.
+        swatch.frame_rect(
+            location=p,  # rectangle position relative to the frame
+            w=w, h=0.3,  # width and height relative to the canvas
+            dx=-0.5*w, dy=-0.15,  # offset of lower left corner from (x,y) relative to the canvas
+            color=color,
+            degrees=i*10,  # optional rotation in degrees
+            fill=False,
+            lineWidth=2,
+            lineDash=[2,2],
+        )
+
+    # Draw a reference polyline at rectangle reference points
+    swatch.polyline(locations=points, color="pink")
 ''')
 
 def js_rect_example():
