@@ -58,12 +58,72 @@ The `line` method draws a line on a swatch.
         x = (i - 5) * 0.05
         s = math.sin(x * 3)
         c = math.cos(x * 2)
+
         swatch.line(
             location1=(1,c,x),   # start point
             location2=(-c,s,x*0.5),   # end point
             color="cyan",        # optional color
             lineWidth=3,         # optional line width
             lineDash=[1,2,1],    # Optional line dash pattern
+        )
+"""
+    )
+    
+def swatch_3d_arrows():
+    return swatch3d_example(
+"""
+### Draw arrows in 3d
+
+The `arrow` method draws an arrow on a swatch.
+""",
+"""
+    import math
+    for i in range(10):
+        x = (i - 5) * 0.05
+        s = math.sin(x * 3)
+        c = math.cos(x * 2)
+
+        swatch.arrow(
+            location1=(1,c,x),   # start point
+            location2=(-c,s,x*0.5),   # end point
+            color="magenta",        # optional color
+            lineWidth=3,         # optional line width
+            lineDash=[1,2,1],    # Optional line dash pattern
+            head_length=0.1,
+            head_angle=45,  # Optional head segment angle in degrees (default 45)
+            head_offset=0.1,  # Optional offset of head from endpoint
+            symmetric=True, # If true draw two arrow head segments (default False)
+        )
+"""
+    )
+
+def swatch_3d_double_arrows():
+    return swatch3d_example(
+"""
+### Draw double arrows in 3d
+
+The `double_arrow` method draws an arrow on a swatch with heads on both ends.
+""",
+"""
+    import math
+    for i in range(-5,5,2):
+        x = i * 0.05
+        s = math.sin(x * 3)
+        c = math.cos(x * 2)
+
+        swatch.double_arrow(
+            #location1=(1,c,x * 2 - s),   # start point
+            location1=(1,c,c+s*2),   # start point
+            location2=(-c,s,x*2.5),   # end point
+            color="#e50",        # optional color
+            lineWidth=3,         # optional line width
+            lineDash=[1,2,1],    # Optional line dash pattern
+            head_length=0.1,
+            head_angle=45,  # Optional head segment angle in degrees (default 45)
+            head_offset=0.1,  # Optional offset of head from endpoint
+            symmetric=False, # If true draw two arrow head segments (default False)
+            back_angle=90,
+            back_offset=0,
         )
 """
     )
