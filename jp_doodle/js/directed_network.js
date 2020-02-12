@@ -240,10 +240,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var new_edges = 0;
                 var new_nodes = 0;
                 var default_positions = this.default_positions;
+                var current_context = this.current_context();
+                var current_edges = current_context.active_key_to_edge;
                 // add nodes from edges
                 var threshold_values = this.threshold_slider.slider("values");
                 var low_cutoff = threshold_values[0];
                 var high_cutoff = threshold_values[1];
+                var added_node = {};
                 for (var key in graph.key_to_edge) {
                     var edge = graph.key_to_edge[key];
                     var wt = edge.weight;
@@ -254,20 +257,28 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     var dn = edge.destination_name;
                     if ((!no_outgoing) && (!new_pos[dn]) && (pos[sn])) {
                         new_pos[dn] = default_positions[dn];
+                        added_node[dn] = true;
                         new_nodes ++;
                     }
                     if ((!no_incoming) && (!new_pos[sn]) && (pos[dn])) {
                         new_pos[sn] = default_positions[sn];
+                        added_node[sn] = true;
                         new_nodes ++;
                     }
                 }
                 // add edges
+                var cross_link = this.cross_link_b._is_checked;
                 for (var key in graph.key_to_edge) {
                     var edge = graph.key_to_edge[key];
                     var sn = edge.source_name;
                     var dn = edge.destination_name;
                     if ((new_pos[sn]) && (new_pos[dn])) {
-                        new_k2e[key] = edge;
+                        if ((cross_link) || (pos[sn]) || (pos[dn])) {
+                            new_k2e[key] = edge;
+                            if (!current_edges[key]) {
+                                new_edges ++;
+                            }
+                        }
                     }
                 }
                 if ((new_edges > 0) || (new_nodes > 0)) {
@@ -658,6 +669,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 that.expand_b = that.add_button("expand", sb, function() { that.expand(); });
                 that.points_at_b = that.add_button("points at", sb, function() { that.points_at(); });
                 that.indicated_by_b = that.add_button("indicated by", sb, function() { that.indicated_by(); });
+                that.cross_link_b = that.add_button("<em>cross link</em>", sb, function() { that.toggle_cross_link(); });
+                that.check_button(that.cross_link_b)
                 that.undo_b = that.add_button("<em>undo</em>", sb, function() { that.undo(); });
                 // create lassos
                 var sl = that.side_lassos;
@@ -760,15 +773,29 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
             check_button(button) {
                 button.html("&check;" + button._base_text);
+                button._is_checked = true;
             };
 
             uncheck_button(button) {
                 button.html(button._base_text);
+                button._is_checked = false;
             };
 
             set_title(text) {
                 this.title_div.html(text);
             };
+
+            toggle_cross_link() {
+                var button = this.cross_link_b;
+                if (button._is_checked) {
+                    this.uncheck_button(button);
+                    this.clear_information();
+                    this.inform("Disabling cross linked edges.")
+                } else {
+                    this.check_button(button);
+                    this.expand(true, true, "Cross linked edges.");
+                }
+            }
 
             glob_matcher(pattern) {
                 // expose glob matcher for testing.
