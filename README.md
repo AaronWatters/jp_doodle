@@ -62,42 +62,10 @@ the various features of dual canvases both in the Javascript and the Python cont
 
 # Installation
 
-To install the package for use with Jupyter please install
-`jp_proxy_widget` first and enable it.  To install either use
+To install the package for use with Jupyter notebooks:
 
 ```
-pip install jp_proxy_widget
-```
-
-Or use
-
-```
-python -m pip install jp_proxy_widget
-```
-
-Then enable `jp_proxy_widget` as a notebook extension
-
-```
-jupyter nbextension enable --py --sys-prefix jp_proxy_widget
-```
-
-
-For jupyterlab also do
-
-```
-jupyter labextension install jp_proxy_widget
-```
-
-The following must have been run once at sometime in the past:
-
-```
-jupyter labextension install @jupyter-widgets/jupyterlab-manager
-```
-
-Then install `jp_doodle` from github using the zipball resource
-
-```
-pip install https://github.com/AaronWatters/jp_doodle/zipball/master
+python -m pip install https://github.com/AaronWatters/jp_doodle/zipball/master
 ```
 
 Or if that doesn't work
@@ -106,13 +74,13 @@ Or if that doesn't work
 python -m pip install https://github.com/AaronWatters/jp_doodle/zipball/master
 ```
 
-It is also possible to install using the `git+https` resource if you have git installed
+To use the package with Jupyter Lab you also need to build the Jupyterlab Javascript
+resources with widget support and `jp_proxy_widget`:
 
 ```
-python -m pip install git+https://github.com/aaronwatters/jp_doodle
+jupyter labextension install @jupyter-widgets/jupyterlab-manager  --no-build
+jupyter labextension install jp_proxy_widget
 ```
-
-and you can try that method if the zipball resource fails.
 
 # `dual_canvas`
 
