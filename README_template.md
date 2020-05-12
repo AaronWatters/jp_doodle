@@ -62,12 +62,6 @@ To install the package for use with Jupyter notebooks:
 python -m pip install https://github.com/AaronWatters/jp_doodle/zipball/master
 ```
 
-Or if that doesn't work
-
-```
-python -m pip install https://github.com/AaronWatters/jp_doodle/zipball/master
-```
-
 To use the package with Jupyter Lab you also need to build the Jupyterlab Javascript
 resources with widget support and `jp_proxy_widget`:
 
