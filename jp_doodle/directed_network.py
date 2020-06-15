@@ -96,7 +96,7 @@ class Network_Widget(jp_proxy_widget.JSProxyWidget, dual_canvas.SaveImageMixin):
             self.inform("Saved image " + repr(file_path))
         def error(e):
             self.inform("Image save failed.")
-            self.inform("Exception: " + e)
+            self.inform("Exception: " + repr(e))
         self.save_pixels_to_png_async(
             file_path, 
             canvas_element="element.d_network.canvas_element",
