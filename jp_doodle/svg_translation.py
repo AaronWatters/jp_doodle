@@ -1,0 +1,138 @@
+"""
+Logic to support exporting figures drawn on canvases to SVG.
+"""
+
+TOP_LEVEL_SVG_TEMPLATE = """
+<svg viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg">
+  <g transform="scale({x_scale} {y_scale}) translate({x_translate} {y_translate})">{draw_operations}</g>
+</svg>
+"""
+
+class SVG_Interpreter:
+
+    """
+    Convert dumped canvas draw operation to equivalent SVG.
+    """
+
+    def __init__(
+        self, 
+        shape_name, 
+        width, 
+        height, 
+        lineWidth, 
+        fillColor, 
+        strokeStyle, 
+        translate_scale, 
+        font, 
+        y_up,
+        style,
+        **other_arguments_ignored):
+        (
+        self.shape_name, 
+        self.width, 
+        self.height, 
+        self.lineWidth, 
+        self.fillColor, 
+        self.strokeStyle, 
+        self.translate_scale, 
+        self.font, 
+        self.y_up,
+        self.style) = (
+            shape_name, 
+            width, 
+            height, 
+            lineWidth, 
+            fillColor, 
+            strokeStyle, 
+            translate_scale, 
+            font, 
+            y_up,
+            style,
+            )
+        self.draw_list = []
+
+    def to_svg_text(self):
+        D = {}
+        D["width"] = self.width
+        D["height"] = self.height
+        D["x_translate"] = self.translate_scale["x"]
+        D["y_translate"] = self.translate_scale["y"]
+        D["x_scale"] = self.translate_scale["w"]
+        D["y_scale"] = self.translate_scale["h"]
+        draw_tags = [""] + self.draw_list
+        draw_tags.append("")
+        separator = "\n\t"
+        D["draw_operations"] = separator.join(draw_tags)
+        return TOP_LEVEL_SVG_TEMPLATE.format(**D)
+
+    def circle(self, x, y, r, color, **other_arguments_ignored):
+        self.add_draw_tag(
+            tag_name="circle",
+            cx=x, cy=y,
+            r=r,
+            fill=color,
+        )
+
+    def text(self, x, y, text, degrees, align, valign, font, color, **other_arguments_ignored):
+        text_anchor = "start"
+        baseline = None
+        # Don't worry about "background" for now....
+        # support attributes that don't have valid python variable names...
+        atts = {}
+        if degrees:
+            atts["transform"] = "rotate(%s, %s, %s)" % (-degrees, x, y)
+        if valign == "center":
+            atts["alignment-baseline"] = "middle"
+        if align == "center":
+            atts["text-anchor"] = "middle"
+        if font:
+            # should parse out the font-family font-size font-style
+            atts["font-family"] = font
+        self.add_draw_tag(
+            tag_name="text",
+            body=text,
+            fill=color,
+            **atts
+        )
+
+    def add_draw_tag(self, tag_name, body=None, **attributes):
+        accum = []
+        add = accum.append
+        add("<" + tag_name)
+        for (a, v) in attributes.items():
+            add('%s="%s"' % (a, v))
+        if body:
+            add(">%s</%s>" % (body,tag_name))
+        else:
+            add("/>")
+        tag = " ".join(accum)
+        self.draw_list.append(tag)
+
+def interpret_dump(canvas_dump):
+    svg_interp = None
+    for description in canvas_dump:
+        shape_name = description["shape_name"]
+        if shape_name == "canvas":
+            assert svg_interp is None, "too many canvases"
+            svg_interp = SVG_Interpreter(**description)
+        else:
+            assert svg_interp is not None, "Canvas description must come before draw commands."
+            method = getattr(svg_interp, shape_name, None)
+            if method is None:
+                print ("SVG draw method not yet defined: " + repr(shape_name))
+            else:
+                method(**description)
+    return svg_interp
+
+def interpret(canvas):
+    canvas_dump = canvas.get_raw_draw_information()
+    return interpret_dump(canvas_dump)
+
+def canvas_as_svg_text(canvas):
+    interp = interpret(canvas)
+    return interp.to_svg_text()
+
+def display_as_svg(canvas):
+    from IPython.display import HTML, display
+    svg = canvas_as_svg_text(canvas)
+    display(HTML(svg))
