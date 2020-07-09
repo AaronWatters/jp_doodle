@@ -376,6 +376,12 @@ class CanvasOperationsMixin(object):
         """
         return DisableRedrawContextManager(self.get_canvas())
 
+    def get_raw_draw_information(self):
+        """
+        Get a description of drawn objects and canvas parameters.
+        """
+        return self.element.get_raw_draw_information().sync_value(level=5)
+
     def show(self):
         "Display the canvas"
         display(self.get_canvas())

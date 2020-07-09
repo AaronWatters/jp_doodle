@@ -97,6 +97,11 @@ XXXXX clean up events for forgotten objects
             target.invisible_canvas.canvas_2d_widget_helper(settings_overrides);
             target.test_canvas.canvas_2d_widget_helper(settings_overrides);
 
+            // set draw list to [] to collect raw draw operations (for export to svg), default: disabled
+            target.visible_canvas.draw_list = null;
+            target.invisible_canvas.draw_list = null;
+            target.test_canvas.draw_list = null;
+
             target.clear_canvas(keep_stats);
         }
 
@@ -127,6 +132,31 @@ XXXXX clean up events for forgotten objects
             target.invisible_canvas.canvas.off();   // not needed.
 
             // no need to clear the test_canvas now
+        };
+
+        target.get_raw_draw_information = function () {
+            // get low level draw operation information for export to SVG (for example).
+            debugger;
+            var params = {};
+            // for symmetry
+            params.shape_name = "canvas";
+            var vc = target.visible_canvas;
+            params.width = vc.canvas_width;
+            params.height = vc.canvas_height;
+            params.lineWidth = vc.canvas_lineWidth;
+            params.fillColor = vc.canvas_fillColor;
+            params.strokeStyle = vc.canvas_strokeStyle;
+            params.translate_scale = vc.canvas_translate_scale;
+            params.font = vc.canvas_font;
+            params.y_up = vc.canvas_y_up;
+            params.style = vc.canvas_style;
+            // do a draw pass and collect the draw list.
+            vc.draw_list = [params];
+            target.redraw();
+            var draw_list = vc.draw_list;
+            // disable draw collection
+            vc.draw_list = null;
+            return draw_list;
         };
 
         target.local_json_data = function () {
@@ -693,6 +723,10 @@ XXXXX clean up events for forgotten objects
                     var info = method(s);
                     // store additional information added during draw operation
                     $.extend(s, info);
+                    // record raw drawing info if draw list is defined
+                    if (canvas.draw_list) {
+                        canvas.draw_list.push($.extend({}, s));
+                    }
                 };
                 var object_info = target.store_object_info(opt, draw);
                 object_info.shape_name = shape_name;
