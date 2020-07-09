@@ -65,7 +65,14 @@ class SVG_Interpreter:
         D["draw_operations"] = separator.join(draw_tags)
         return TOP_LEVEL_SVG_TEMPLATE.format(**D)
 
+    def canvas_to_svg_axis(self, x, y):
+        if self.y_up:
+            # y = (self.translate_scale["model_height"]-2*self.translate_scale["y"])-y
+            y = self.translate_scale["model_intercept"] - y
+        return (x, y)
+
     def circle(self, x, y, r, color, **other_arguments_ignored):
+        (x, y) = self.canvas_to_svg_axis(x, y)
         self.add_draw_tag(
             tag_name="circle",
             cx=x, cy=y,
@@ -74,6 +81,7 @@ class SVG_Interpreter:
         )
 
     def text(self, x, y, text, degrees, align, valign, font, color, **other_arguments_ignored):
+        (x, y) = self.canvas_to_svg_axis(x, y)
         text_anchor = "start"
         baseline = None
         # Don't worry about "background" for now....
@@ -94,6 +102,51 @@ class SVG_Interpreter:
             fill=color,
             **atts
         )
+    
+    def line(self, x1, y1, x2, y2, color, lineWidth, **other_arguments_ignored):
+        (x1, y1) = self.canvas_to_svg_axis(x1, y1)
+        (x2, y2) = self.canvas_to_svg_axis(x2, y2)
+        style = ""
+        if lineWidth:
+            style += "stroke-width:" + str(lineWidth)
+        self.add_draw_tag(
+            tag_name="line",
+            x1=x1, 
+            y1=y1,
+            x2=x2, 
+            y2=y2,
+            fill=color,
+            stroke = color,
+            style = style,
+            **other_arguments_ignored
+        )
+    
+    def rect(self, x, y, w, h, color, degrees = None, lineWidth=1, fill=True, **other_arguments_ignored):
+        (x, y) = self.canvas_to_svg_axis(x, y)
+        atts = {}
+        if fill:
+            atts['fill'] = color
+        else:
+            atts['fill'] = 'transparent'
+
+        if degrees:
+            atts['transform'] = "rotate(%s, %s, %s)" %(-degrees, x, y)
+        else:
+            atts['x'] = x
+            atts['y'] = y-h
+        style = ""
+        if lineWidth:
+            style += "stroke-width:" + str(lineWidth)
+        self.add_draw_tag(
+            tag_name="rect",
+            width=w, 
+            height=h,
+            stroke=color,
+            style = style,
+            **atts
+        )
+
+
 
     def add_draw_tag(self, tag_name, body=None, **attributes):
         accum = []
