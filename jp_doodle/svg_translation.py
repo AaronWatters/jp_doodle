@@ -173,6 +173,18 @@ class SVG_Interpreter:
             **atts
         )
 
+    def image(self, x, y, w, h, image_name, **other_arguments_ignored):
+        # href is hard coded
+        (x, y) = self.canvas_to_svg_axis(x, y)
+        self.add_draw_tag(
+            tag_name="image",
+            href = image_name+".png",
+            x = x,
+            y = y-h,
+            height = h,
+            width = w
+        )
+
     def add_draw_tag(self, tag_name, body=None, **attributes):
         accum = []
         add = accum.append
@@ -196,6 +208,8 @@ def interpret_dump(canvas_dump):
         else:
             assert svg_interp is not None, "Canvas description must come before draw commands."
             method = getattr(svg_interp, shape_name, None)
+            if shape_name == "named_image":
+                method = svg_interp.image
             if method is None:
                 print ("SVG draw method not yet defined: " + repr(shape_name))
             else:
