@@ -129,6 +129,8 @@ class SVG_Interpreter:
         else:
             atts['fill'] = 'transparent'
 
+        # rotation is not working correctly
+        # svg rect element does not support negative coordinates
         if degrees:
             atts['transform'] = "rotate(%s, %s, %s)" %(-degrees, x, y)
         else:
@@ -146,7 +148,25 @@ class SVG_Interpreter:
             **atts
         )
 
-
+    def polygon(self, points, color, fill=True, close = True, lineWidth=1, **other_arguments_ignored):
+        points = [list(self.canvas_to_svg_axis(ptx[0], ptx[1])) for ptx in points]
+        points = ' '.join([",".join([str(ptx[0]),str(ptx[1])]) for ptx in points])
+        atts = {}
+        if fill:
+            atts['fill'] = color
+        else:
+            atts['fill'] = 'transparent'
+        tag_name = "polygon"
+        if not close:
+            tag_name = "polyline"
+        style = 'stroke-width:'+str(lineWidth)
+        self.add_draw_tag(
+            tag_name=tag_name,
+            points = points,
+            stroke=color,
+            style = style,
+            **atts
+        )
 
     def add_draw_tag(self, tag_name, body=None, **attributes):
         accum = []
