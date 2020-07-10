@@ -65,7 +65,14 @@ class SVG_Interpreter:
         D["draw_operations"] = separator.join(draw_tags)
         return TOP_LEVEL_SVG_TEMPLATE.format(**D)
 
+    def canvas_to_svg_axis(self, x, y):
+        if self.y_up:
+            # y = (self.translate_scale["model_height"]-2*self.translate_scale["y"])-y
+            y = self.translate_scale["model_intercept"] - y
+        return (x, y)
+
     def circle(self, x, y, r, color, **other_arguments_ignored):
+        (x, y) = self.canvas_to_svg_axis(x, y)
         self.add_draw_tag(
             tag_name="circle",
             cx=x, cy=y,
@@ -74,6 +81,7 @@ class SVG_Interpreter:
         )
 
     def text(self, x, y, text, degrees, align, valign, font, color, **other_arguments_ignored):
+        (x, y) = self.canvas_to_svg_axis(x, y)
         text_anchor = "start"
         baseline = None
         # Don't worry about "background" for now....
@@ -85,14 +93,96 @@ class SVG_Interpreter:
             atts["alignment-baseline"] = "middle"
         if align == "center":
             atts["text-anchor"] = "middle"
+        
         if font:
+            if 'pt' in font:
+                font = font.split('pt ')
+                atts["font-size"] = int(font[0])
             # should parse out the font-family font-size font-style
-            atts["font-family"] = font
+                atts["font-family"] = font[1]
+
         self.add_draw_tag(
             tag_name="text",
             body=text,
             fill=color,
             **atts
+        )
+    
+    def line(self, x1, y1, x2, y2, color, lineWidth, **other_arguments_ignored):
+        (x1, y1) = self.canvas_to_svg_axis(x1, y1)
+        (x2, y2) = self.canvas_to_svg_axis(x2, y2)
+        style = ""
+        if lineWidth:
+            style += "stroke-width:" + str(lineWidth)
+        self.add_draw_tag(
+            tag_name="line",
+            x1=x1, 
+            y1=y1,
+            x2=x2, 
+            y2=y2,
+            fill=color,
+            stroke = color,
+            style = style,
+            **other_arguments_ignored
+        )
+    
+    def rect(self, x, y, w, h, color, degrees = None, lineWidth=1, fill=True, **other_arguments_ignored):
+        (x, y) = self.canvas_to_svg_axis(x, y)
+        atts = {}
+        if fill:
+            atts['fill'] = color
+        else:
+            atts['fill'] = 'transparent'
+
+        # rotation is not working correctly
+        # svg rect element does not support negative coordinates
+        if degrees:
+            atts['transform'] = "rotate(%s, %s, %s)" %(-degrees, x, y)
+        else:
+            atts['x'] = x
+            atts['y'] = y-h
+        style = ""
+        if lineWidth:
+            style += "stroke-width:" + str(lineWidth)
+        self.add_draw_tag(
+            tag_name="rect",
+            width=w, 
+            height=h,
+            stroke=color,
+            style = style,
+            **atts
+        )
+
+    def polygon(self, points, color, fill=True, close = True, lineWidth=1, **other_arguments_ignored):
+        points = [list(self.canvas_to_svg_axis(ptx[0], ptx[1])) for ptx in points]
+        points = ' '.join([",".join([str(ptx[0]),str(ptx[1])]) for ptx in points])
+        atts = {}
+        if fill:
+            atts['fill'] = color
+        else:
+            atts['fill'] = 'transparent'
+        tag_name = "polygon"
+        if not close:
+            tag_name = "polyline"
+        style = 'stroke-width:'+str(lineWidth)
+        self.add_draw_tag(
+            tag_name=tag_name,
+            points = points,
+            stroke=color,
+            style = style,
+            **atts
+        )
+
+    def image(self, x, y, w, h, image_name, **other_arguments_ignored):
+        # href is hard coded
+        (x, y) = self.canvas_to_svg_axis(x, y)
+        self.add_draw_tag(
+            tag_name="image",
+            href = image_name+".png",
+            x = x,
+            y = y-h,
+            height = h,
+            width = w
         )
 
     def add_draw_tag(self, tag_name, body=None, **attributes):
@@ -118,6 +208,8 @@ def interpret_dump(canvas_dump):
         else:
             assert svg_interp is not None, "Canvas description must come before draw commands."
             method = getattr(svg_interp, shape_name, None)
+            if shape_name == "named_image":
+                method = svg_interp.image
             if method is None:
                 print ("SVG draw method not yet defined: " + repr(shape_name))
             else:
