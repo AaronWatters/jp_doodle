@@ -93,8 +93,6 @@ class SVG_Interpreter:
             atts["alignment-baseline"] = "middle"
         if align == "center":
             atts["text-anchor"] = "middle"
-        elif align == "left":
-            atts["text-anchor"] = "end"
         
         if font:
             if 'pt' in font:
@@ -102,7 +100,7 @@ class SVG_Interpreter:
                 atts["font-size"] = int(font[0])
             # should parse out the font-family font-size font-style
                 atts["font-family"] = font[1]
-        print(atts)
+
         self.add_draw_tag(
             tag_name="text",
             body=text,
