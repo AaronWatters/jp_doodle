@@ -302,6 +302,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 config.h = height;
                 config.dx = dx;
                 config.dy = rdy;
+                // record the background rect geometry for use in (eg) SVG conversion.
+                s.background_rect = {w: rwidth, h: height, dx: dx, dy: rdy}
                 to_canvas.rect(config);
             };
             // If background is provided, draw a background rectangle
