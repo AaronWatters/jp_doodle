@@ -144,9 +144,8 @@ class SVG_Interpreter:
         # svg rect element does not support negative coordinates
         if degrees:
             atts['transform'] = "rotate(%s, %s, %s)" %(-degrees, x, y)
-        else:
-            atts['x'] = x
-            atts['y'] = y-h
+        atts['x'] = x
+        atts['y'] = y-h
         style = ""
         if lineWidth:
             style += "stroke-width:" + str(lineWidth)
