@@ -127,6 +127,12 @@ class SVG_Interpreter:
         )
     
     def rect(self, x, y, w, h, color, degrees = None, lineWidth=1, fill=True, **other_arguments_ignored):
+        if w < 0:
+            x = x + w
+            w = abs(w)
+        if h < 0:
+            y = y + h
+            h = abs(h)
         (x, y) = self.canvas_to_svg_axis(x, y)
         atts = {}
         if fill:
@@ -174,11 +180,11 @@ class SVG_Interpreter:
         )
 
     def image(self, x, y, w, h, image_name, **other_arguments_ignored):
-        # href is hard coded
+        # href is hard coded: image_name must be the file path
         (x, y) = self.canvas_to_svg_axis(x, y)
         self.add_draw_tag(
             tag_name="image",
-            href = image_name+".png",
+            href = image_name,
             x = x,
             y = y-h,
             height = h,
