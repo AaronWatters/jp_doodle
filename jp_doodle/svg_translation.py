@@ -80,7 +80,8 @@ class SVG_Interpreter:
             fill=color,
         )
 
-    def text(self, x, y, text, degrees, align, valign, font, color, **other_arguments_ignored):
+    def text(self, x, y, text, degrees, align, valign, font, color, background = None, **other_arguments_ignored):
+        rect_x, rect_y = x, y
         (x, y) = self.canvas_to_svg_axis(x, y)
         text_anchor = "start"
         baseline = None
@@ -89,10 +90,24 @@ class SVG_Interpreter:
         atts = {}
         if degrees:
             atts["transform"] = "rotate(%s, %s, %s)" % (-degrees, x, y)
+        atts['x'] = x
+        atts['y'] = y
         if valign == "center":
             atts["alignment-baseline"] = "middle"
         if align == "center":
             atts["text-anchor"] = "middle"
+        if background:
+            bg_info = other_arguments_ignored['background_rect']
+            bg_w = bg_info['w']
+            bg_h = bg_info['h']
+            bg_x = bg_info['dx']
+            bg_y = bg_info['dy']
+            bg_color = background
+            # if align == "center":
+            #     bg_x += bg_w/2.5
+            #     bg_y -= bg_h/2
+            self.rect(bg_x, bg_y, bg_w, bg_h, bg_color, degrees)
+            
         
         if font:
             if 'pt' in font:
