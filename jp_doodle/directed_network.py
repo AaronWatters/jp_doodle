@@ -2,7 +2,7 @@
 Python wrapper and related helpers for directed_network using proxy widgets.
 """
 
-from jp_doodle import doodle_files, dual_canvas, nd_frame, data_tables
+from jp_doodle import doodle_files, dual_canvas, nd_frame, data_tables, svg_translation
 from jp_doodle.dual_canvas import clean_dict
 import jp_proxy_widget
 import csv
@@ -29,6 +29,7 @@ class Network_Widget(jp_proxy_widget.JSProxyWidget, dual_canvas.SaveImageMixin):
             element.d_network = element.directed_network(config);
         """, config = config)
         self.file_path = "Network.png"
+        self.svg_path = "Network.svg"
         self.customize()
         if display:
             self.display_all()
@@ -48,7 +49,16 @@ class Network_Widget(jp_proxy_widget.JSProxyWidget, dual_canvas.SaveImageMixin):
                     set_path(element.path_input.val());
                 }
             );
-        """, save_png=self.save_png, set_path=self.set_path, path=self.file_path)
+            
+            d_network.add_button("<b>save as SVG</b>", list_buttons, save_svg);
+            element.path_input = $('<input type="text" value="' + svg_path + '">').appendTo(list_buttons);
+            element.path_input.change(
+                function () {
+                    set_path(element.path_input.val());
+                }
+            );
+        """, save_png=self.save_png, set_path=self.set_path, path=self.file_path, 
+            save_svg = self.save_svg, svg_path = self.svg_path)
 
     def display_all(self):
         self.element.d_network.display_all()
@@ -101,6 +111,16 @@ class Network_Widget(jp_proxy_widget.JSProxyWidget, dual_canvas.SaveImageMixin):
             file_path, 
             canvas_element="element.d_network.canvas_element",
             after=after, error=error)
+    
+    def save_svg(self, file_path = None):
+        if file_path is None:
+            file_path = self.svg_path
+        canvas_raw_info = self.element.d_network.canvas_element.get_raw_draw_information().sync_value(level=5)
+        svg_format = svg_translation.interpret_dump(canvas_raw_info)
+        svg_file = open(file_path,"w") 
+        svg_file.write(svg_format.to_svg_text())
+        svg_file.close()
+        
 
     def clear_information(self):
         self.element.d_network.clear_information()
