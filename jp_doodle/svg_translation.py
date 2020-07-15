@@ -106,7 +106,8 @@ class SVG_Interpreter:
             # if align == "center":
             #     bg_x += bg_w/2.5
             #     bg_y -= bg_h/2
-            self.rect(bg_x, bg_y, bg_w, bg_h, bg_color, degrees)
+            #self.rect(rect_x + bg_x, rect_y + bg_y, bg_w, bg_h, bg_color, degrees)
+            self.rect(x=rect_x, y=rect_y, w=bg_w, h=bg_h, color=bg_color, degrees=degrees, dx=bg_x, dy=bg_y)
 
         if font:
             if 'pt' in font:
@@ -150,7 +151,7 @@ class SVG_Interpreter:
             **other_arguments_ignored
         )
     
-    def rect(self, x, y, w, h, color, degrees = None, lineWidth=1, fill=True, **other_arguments_ignored):
+    def rect(self, x, y, w, h, color, degrees = None, lineWidth=1, fill=True, dx=0, dy=0, **other_arguments_ignored):
         if w < 0:
             x = x + w
             w = abs(w)
@@ -166,10 +167,15 @@ class SVG_Interpreter:
 
         # rotation is not working correctly
         # svg rect element does not support negative coordinates
+        transform = ""
         if degrees:
-            atts['transform'] = "rotate(%s, %s, %s)" %(-degrees, x, y)
-        atts['x'] = x
-        atts['y'] = y-h
+            transform = "rotate(%s, %s, %s)" %(-degrees, x, y)
+        elif dx or dy:
+            transform = transform + " translate(%s %s)" % (dx, dy)
+        if transform:
+            atts['transform'] = transform
+        atts['x'] = x + dx
+        atts['y'] = y - h - dy
         style = ""
         if lineWidth:
             style += "stroke-width:" + str(lineWidth)
