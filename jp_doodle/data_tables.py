@@ -114,7 +114,8 @@ class Table0(jp_proxy_widget.JSProxyWidget):
 def CSVwidget(csv_path, dialect='excel', jupyter=True, limit=None, klass=Table1):
     f = open(csv_path)
     reader = csv.reader(f, dialect=dialect)
-    headers = reader.next()
+    #headers = reader.next()
+    headers = next(reader)
     return klass(headers, reader, jupyter=jupyter, limit=limit)
 
 def TSVwidget(tsv_path, limit=None, klass=Table1):
