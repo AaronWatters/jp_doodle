@@ -40,23 +40,31 @@ class Network_Widget(jp_proxy_widget.JSProxyWidget, dual_canvas.SaveImageMixin):
         """
         # add a button to save as PNG image
         self.js_init("""
+            debugger;
             var d_network = element.d_network;
             var list_buttons = d_network.side_lists;
-            d_network.add_button("<b>save as PNG</b>", list_buttons, save_png);
-            element.path_input = $('<input type="text" value="' + path + '">').appendTo(list_buttons);
-            element.path_input.change(
+
+            var save_png_click = function() {
+                save_png(element.png_path_input.val())
+            };
+
+            d_network.add_button("<b>save as PNG</b>", list_buttons, save_png_click);
+
+            element.png_path_input = $('<input type="text" value="' + path + '">').appendTo(list_buttons);
+
+            element.png_path_input.change(
                 function () {
-                    set_path(element.path_input.val());
+                    set_path(element.png_path_input.val());
                 }
             );
             
-            d_network.add_button("<b>save as SVG</b>", list_buttons, save_svg);
-            element.path_input = $('<input type="text" value="' + svg_path + '">').appendTo(list_buttons);
-            element.path_input.change(
-                function () {
-                    set_path(element.path_input.val());
-                }
-            );
+            var save_svg_click = function() {
+                save_svg(element.svg_path_input.val())
+            };
+
+            d_network.add_button("<b>save as SVG (broken)</b>", list_buttons, save_svg);
+
+            element.svg_path_input = $('<input type="text" value="' + svg_path + '">').appendTo(list_buttons);
         """, save_png=self.save_png, set_path=self.set_path, path=self.file_path, 
             save_svg = self.save_svg, svg_path = self.svg_path)
 
@@ -113,14 +121,30 @@ class Network_Widget(jp_proxy_widget.JSProxyWidget, dual_canvas.SaveImageMixin):
             after=after, error=error)
     
     def save_svg(self, file_path = None):
+        self.clear_information()
         if file_path is None:
             file_path = self.svg_path
-        canvas_raw_info = self.element.d_network.canvas_element.get_raw_draw_information().sync_value(level=5)
-        svg_format = svg_translation.interpret_dump(canvas_raw_info)
-        svg_file = open(file_path,"w") 
-        svg_file.write(svg_format.to_svg_text())
-        svg_file.close()
-        
+        self.inform("Attempting to save SVG as " + repr(file_path))
+        try:
+            canvas_raw_info = self.element.d_network.canvas_element.get_raw_draw_information().sync_value(level=5)
+        except Exception as e:
+            self.inform ("Could not get drawing information " + repr(e))
+            raise e
+        self.inform("Got drawing information.")
+        try:
+            self.inform("Converting...")
+            svg_format = svg_translation.interpret_dump(canvas_raw_info)
+        except Exception as e:
+            self.inform("Could not convert to SVG: " + repr(e))
+            raise e
+        try:
+            svg_file = open(file_path,"w") 
+            svg_file.write(svg_format.to_svg_text())
+            svg_file.close()
+            self.inform("Wrote to file: " + repr(file_path))
+        except Exception as e:
+            self.inform("failed to write " + repr((file_path, e)))
+            raise e
 
     def clear_information(self):
         self.element.d_network.clear_information()
