@@ -725,7 +725,11 @@ XXXXX clean up events for forgotten objects
                     $.extend(s, info);
                     // record raw drawing info if draw list is defined
                     if (canvas.draw_list) {
-                        canvas.draw_list.push($.extend({}, s));
+                        var draw_descriptor = $.extend({}, s);
+                        // don't return frame information
+                        draw_descriptor.frame = null;
+                        //canvas.draw_list.push($.extend({}, s));
+                        canvas.draw_list.push(draw_descriptor);
                     }
                 };
                 var object_info = target.store_object_info(opt, draw);
