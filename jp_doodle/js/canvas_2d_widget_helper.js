@@ -240,6 +240,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             //var fp2 = s.coordinate_conversion(s.x2, s.y2);
             var fp1 = s.coordinate_conversion(s, "position1", ["x1", "y1"]);
             var fp2 = s.coordinate_conversion(s, "position2", ["x2", "y2"]);
+            // keep the converted coordinates for SVG conversion
+            s.fp1 = fp1;
+            s.fp2 = fp2;
             var p1 = target.converted_location(fp1.x, fp1.y);
             var p2 = target.converted_location(fp2.x, fp2.y);
             context.moveTo(p1.x, p1.y);
@@ -362,13 +365,19 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var context = target.canvas_context;
             context.save();   // should be matched by restore elsewhere
             var coords = s.coordinate_conversion(s);
+            // keep the coords for SVG conversion
+            s.coords = coords;
             var cvt = target.converted_location(coords.x, coords.y);
             if ((degrees) && (target.canvas_y_up)) {
                 degrees = -degrees;  // standard counter clockwise rotation convention.
             }
             context.translate(cvt.x, cvt.y);
+            s.translate = cvt;
             if (degrees) {
-                context.rotate(degrees * Math.PI / 180.0);
+                var radians = degrees * Math.PI / 180.0;
+                //context.rotate(degrees * Math.PI / 180.0);
+                context.rotate(radians);
+                s.rotate_radians = radians;
             }
         };
 
@@ -546,6 +555,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     points.push([rx + cx, ry + cy]);
                 }
             }
+            var fpoints = [];
+            // record fpoints for SVG conversion (could make conditionsal)
+            s.fpoints = fpoints;
             // If no points do nothing.
             if ((!points) || (points.length < 1)) {
                 return s;
@@ -561,10 +573,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             // sample pixel for lasso testing
             s.sample_pixel = target.canvas_to_pixel(p0f.x, p0f.y, true);
             context.moveTo(p0c.x, p0c.y);
+            fpoints.push(p0f);
             for (var i=1; i<points.length; i++) {
                 var point = points[i];
                 //var pf = s.coordinate_conversion(point[0], point[1]);
                 var pf = s.coordinate_conversion(point);
+                fpoints.push(pf);
                 var pc = target.converted_location(pf.x, pf.y);
                 context.lineTo(pc.x, pc.y);
                 if (target.canvas_stats) {
