@@ -2,6 +2,8 @@
 Logic to support exporting figures drawn on canvases to SVG.
 """
 
+import math
+
 TOP_LEVEL_SVG_TEMPLATE = """
 <svg viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg">
   <g transform="scale({x_scale} {y_scale}) translate({x_translate} {y_translate})">{draw_operations}</g>
@@ -71,8 +73,8 @@ class SVG_Interpreter:
             y = self.translate_scale["model_intercept"] - y
         return (x, y)
 
-    def circle(self, x, y, r, color, **other_arguments_ignored):
-        (x, y) = self.canvas_to_svg_axis(x, y)
+    def circle(self, x, y, fcenter, r, color, **other_arguments_ignored):
+        (x, y) = self.canvas_to_svg_axis(fcenter["x"], fcenter["y"])
         self.add_draw_tag(
             tag_name="circle",
             cx=x, cy=y,
@@ -80,7 +82,9 @@ class SVG_Interpreter:
             fill=color,
         )
 
-    def text(self, x, y, text, align, valign, font, color, degrees=None, background = None, **other_arguments_ignored):
+    def text(self, x, y, text, align, valign, font, color, coords, rotate_radians=None, degrees=None, background = None, **other_arguments_ignored):
+        x = coords["x"]
+        y = coords["y"]
         rect_x, rect_y = x, y
         (x, y) = self.canvas_to_svg_axis(x, y)
         text_anchor = "start"
@@ -107,7 +111,7 @@ class SVG_Interpreter:
             #     bg_x += bg_w/2.5
             #     bg_y -= bg_h/2
             #self.rect(rect_x + bg_x, rect_y + bg_y, bg_w, bg_h, bg_color, degrees)
-            self.rect(x=rect_x, y=rect_y, w=bg_w, h=bg_h, color=bg_color, degrees=degrees, dx=bg_x, dy=bg_y)
+            self.rect(x=rect_x, y=rect_y, coords=coords, rotate_radians=rotate_radians, w=bg_w, h=bg_h, color=bg_color, degrees=degrees, dx=bg_x, dy=bg_y)
 
         if font:
             if 'pt' in font:
@@ -133,9 +137,9 @@ class SVG_Interpreter:
             **atts
         )
     
-    def line(self, x1, y1, x2, y2, color, lineWidth, **other_arguments_ignored):
-        (x1, y1) = self.canvas_to_svg_axis(x1, y1)
-        (x2, y2) = self.canvas_to_svg_axis(x2, y2)
+    def line(self, x1, y1, x2, y2, fp1, fp2, color, lineWidth, **other_arguments_ignored):
+        (x1, y1) = self.canvas_to_svg_axis(fp1["x"], fp1["y"])
+        (x2, y2) = self.canvas_to_svg_axis(fp2["x"], fp2["y"])
         style = ""
         if lineWidth:
             style += "stroke-width:" + str(lineWidth)
@@ -151,7 +155,9 @@ class SVG_Interpreter:
             **other_arguments_ignored
         )
     
-    def rect(self, x, y, w, h, color, degrees = None, lineWidth=1, fill=True, dx=0, dy=0, **other_arguments_ignored):
+    def rect(self, x, y, coords, w, h, color, rotate_radians=None, degrees=None, lineWidth=1, fill=True, dx=0, dy=0, **other_arguments_ignored):
+        x = coords["x"]
+        y = coords["y"]
         if w < 0:
             x = x + w
             w = abs(w)
@@ -168,8 +174,11 @@ class SVG_Interpreter:
         # rotation is not working correctly
         # svg rect element does not support negative coordinates
         transform = ""
-        if degrees:
-            transform = "rotate(%s, %s, %s)" %(-degrees, x, y)
+        if rotate_radians:
+            ndegrees = rotate_radians * (180.0 / math.pi)
+            transform = "rotate(%s, %s, %s)" %(ndegrees, x, y)
+        #if degrees:
+        #    transform = "rotate(%s, %s, %s)" %(-degrees, x, y)
         elif dx or dy:
             transform = transform + " translate(%s %s)" % (dx, dy)
         if transform:
@@ -188,8 +197,9 @@ class SVG_Interpreter:
             **atts
         )
 
-    def polygon(self, points, color, fill=True, close = True, lineWidth=1, **other_arguments_ignored):
-        points = [list(self.canvas_to_svg_axis(ptx[0], ptx[1])) for ptx in points]
+    def polygon(self, points, fpoints, color, fill=True, close = True, lineWidth=1, **other_arguments_ignored):
+        points = fpoints
+        points = [list(self.canvas_to_svg_axis(ptx["x"], ptx["y"])) for ptx in points]
         points = ' '.join([",".join([str(ptx[0]),str(ptx[1])]) for ptx in points])
         atts = {}
         if fill:
