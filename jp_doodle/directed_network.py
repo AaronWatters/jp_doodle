@@ -59,10 +59,12 @@ class Network_Widget(jp_proxy_widget.JSProxyWidget, dual_canvas.SaveImageMixin):
             );
             
             var save_svg_click = function() {
-                save_svg(element.svg_path_input.val())
+                debugger;
+                var file_path = element.svg_path_input.val();
+                save_svg(file_path)
             };
 
-            d_network.add_button("<b>save as SVG (broken)</b>", list_buttons, save_svg);
+            d_network.add_button("<b>save as SVG</b>", list_buttons, save_svg_click);
 
             element.svg_path_input = $('<input type="text" value="' + svg_path + '">').appendTo(list_buttons);
         """, save_png=self.save_png, set_path=self.set_path, path=self.file_path, 
@@ -122,6 +124,7 @@ class Network_Widget(jp_proxy_widget.JSProxyWidget, dual_canvas.SaveImageMixin):
     
     def save_svg(self, file_path = None):
         self.clear_information()
+        self.inform("Save svg click: " + repr(file_path))
         if file_path is None:
             file_path = self.svg_path
         self.inform("Attempting to save SVG as " + repr(file_path))
@@ -139,9 +142,11 @@ class Network_Widget(jp_proxy_widget.JSProxyWidget, dual_canvas.SaveImageMixin):
             raise e
         try:
             svg_file = open(file_path,"w") 
-            svg_file.write(svg_format.to_svg_text())
+            txt = svg_format.to_svg_text()
+            self.inform("got svg text " + str(repr(type(txt))))
+            svg_file.write(txt)
             svg_file.close()
-            self.inform("Wrote to file: " + repr(file_path))
+            self.inform("Wrote to file: " + repr(file_path) + " " + str(len(txt)))
         except Exception as e:
             self.inform("failed to write " + repr((file_path, e)))
             raise e
