@@ -10,6 +10,8 @@ TOP_LEVEL_SVG_TEMPLATE = """
 </svg>
 """
 
+VERBOSE = False
+
 class SVG_Interpreter:
 
     """
@@ -100,6 +102,9 @@ class SVG_Interpreter:
             atts["alignment-baseline"] = "middle"
         if align == "center":
             atts["text-anchor"] = "middle"
+        if align == "right":
+            atts["text-anchor"] = "end"
+            """
         if background:
             bg_info = other_arguments_ignored['background_rect']
             bg_w = bg_info['w']
@@ -112,6 +117,7 @@ class SVG_Interpreter:
             #     bg_y -= bg_h/2
             #self.rect(rect_x + bg_x, rect_y + bg_y, bg_w, bg_h, bg_color, degrees)
             self.rect(x=rect_x, y=rect_y, coords=coords, rotate_radians=rotate_radians, w=bg_w, h=bg_h, color=bg_color, degrees=degrees, dx=bg_x, dy=bg_y)
+            """
 
         if font:
             if 'pt' in font:
@@ -179,8 +185,8 @@ class SVG_Interpreter:
             transform = "rotate(%s, %s, %s)" %(ndegrees, x, y)
         #if degrees:
         #    transform = "rotate(%s, %s, %s)" %(-degrees, x, y)
-        elif dx or dy:
-            transform = transform + " translate(%s %s)" % (dx, dy)
+        #elif dx or dy:
+        #    transform = transform + " translate(%s %s)" % (dx, dy)
         if transform:
             atts['transform'] = transform
         atts['x'] = x + dx
@@ -243,9 +249,16 @@ class SVG_Interpreter:
         tag = " ".join(accum)
         self.draw_list.append(tag)
 
+    def comment(self, thing):
+        cmt = "<!-- %s -->" % str(thing)
+        self.draw_list.append(cmt)
+
 def interpret_dump(canvas_dump):
     svg_interp = None
     for description in canvas_dump:
+        #if VERBOSE:
+        #    print("description:", description)
+        #    die
         shape_name = description["shape_name"]
         if shape_name == "canvas":
             assert svg_interp is None, "too many canvases"
@@ -259,6 +272,8 @@ def interpret_dump(canvas_dump):
                 print ("SVG draw method not yet defined: " + repr(shape_name))
             else:
                 method(**description)
+        if VERBOSE:
+            svg_interp.comment(description)
     return svg_interp
 
 def interpret(canvas):
