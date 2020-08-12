@@ -192,8 +192,22 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             // sample pixel for lasso testing
             s.sample_pixel = target.canvas_to_pixel(fcenter.x, fcenter.y, true);
-            return s;
+            return save_check(s, "circle");
         };
+
+        var save_check = function(s, shape_name) {
+            // record to object settings to draw list if set
+            var draw_list = target.draw_list;
+            if (draw_list) {
+                var sc = $.extend({}, s);
+                if (sc.frame) {
+                    sc.frame = null;
+                }
+                sc.shape_name = shape_name;
+                draw_list.push(sc);
+            }
+            return s;
+        }
 
         target.frame_circle = function(opt) {
             // circle with radius adjusted w.r.t frame transform.
@@ -256,7 +270,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             // sample pixel for lasso testing
             s.sample_pixel = target.canvas_to_pixel(fp1.x, fp1.y, true);
-            return s;
+            return save_check(s, "line");
         };
 
         target.text = function(opt) {
@@ -328,7 +342,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 target.rectangle_stats(s, rwidth, height, s.degrees, s.coordinate_conversion, dx, rdy);
             }
             context.restore();  // matches translate_and_rotate
-            return s;
+            return save_check(s, "text");
         };
 
         target.rectangle_stats = function(s, w, h, degrees, coordinate_conversion, dx, dy) {
@@ -434,7 +448,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 //target.rectangle_stats(s.x, s.y, s.w, s.h, s.degrees, s.coordinate_conversion, dx, dy0);
                 target.rectangle_stats(s, s.w, s.h, s.degrees, s.coordinate_conversion, dx, dy0);
             }
-            return s;
+            return save_check(s, "rect");
         };
 
         // attached image sources by name
@@ -498,7 +512,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var config = $.extend({}, info);
                 to_canvas.rect(config);
             };
-            return s;
+            return save_check(s, "named_image");
         };
 
         var fill_or_stroke = function(context, s) {
@@ -590,7 +604,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             fill_or_stroke(context, s);
             context.restore();
-            return s;
+            return save_check(s, "polygon");
         };
 
         target.color_at = function(pixel_x, pixel_y) {
