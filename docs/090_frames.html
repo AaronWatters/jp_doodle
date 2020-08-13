@@ -90,6 +90,9 @@
     <p>
 Objects can be created in reference frames in 
 order to share the same drawing order priority and the same coordinate system.
+All objects contained in a reference frame share the same translation and vector scaling
+with respect to the underlying canvas coordinate system.  Changes or transitions to a reference frame
+geometry effect all objects contained in the frame.
 </p>
 <p>
 In this demonstration drag the
@@ -269,6 +272,24 @@ element.text({
     text:"Drag the blue controls to adjust the frame."
 });
 
+var reset_transition = function() {
+    // transition components back to initial settings.
+    var duration = 5.0; // seconds
+    x_vector={"x":1, "y":-0.3};
+    y_vector={"x":1, "y":1};
+    xy_offset={"x":300, "y":-10};
+    frame.transition({x_vector: x_vector, y_vector: y_vector, xy_offset: xy_offset}, duration);
+    x_dragger.transition({text: "X=" + xy_offset.x, x: xy_offset.x,}, duration);
+    y_dragger.transition({text: "Y=" + xy_offset.y, y: xy_offset.y,}, duration);
+    dy_dragger.transition({x: y_vector.x, y: y_vector.y, text: vformat("dy", y_vector)}, duration);
+    dy_line.transition({x2: y_vector.x, y2: y_vector.y,}, duration);
+    dx_dragger.transition({x: x_vector.x, y: x_vector.y, text: vformat("dx", x_vector)}, duration);
+    dx_line.transition({x2: x_vector.x, y2: x_vector.y,}, duration);
+};
+
+var reset_button = $("<button>Transition to original settings</button>").appendTo(element);
+reset_button.click(reset_transition);
+
 element.fit(null, 20);
 </script>
 
@@ -442,6 +463,24 @@ element.text({
     text:"Drag the blue controls to adjust the frame."
 });
 
+var reset_transition = function() {
+    // transition components back to initial settings.
+    var duration = 5.0; // seconds
+    x_vector={"x":1, "y":-0.3};
+    y_vector={"x":1, "y":1};
+    xy_offset={"x":300, "y":-10};
+    frame.transition({x_vector: x_vector, y_vector: y_vector, xy_offset: xy_offset}, duration);
+    x_dragger.transition({text: "X=" + xy_offset.x, x: xy_offset.x,}, duration);
+    y_dragger.transition({text: "Y=" + xy_offset.y, y: xy_offset.y,}, duration);
+    dy_dragger.transition({x: y_vector.x, y: y_vector.y, text: vformat("dy", y_vector)}, duration);
+    dy_line.transition({x2: y_vector.x, y2: y_vector.y,}, duration);
+    dx_dragger.transition({x: x_vector.x, y: x_vector.y, text: vformat("dx", x_vector)}, duration);
+    dx_line.transition({x2: x_vector.x, y2: x_vector.y,}, duration);
+};
+
+var reset_button = $("<button>Transition to original settings</button>").appendTo(element);
+reset_button.click(reset_transition);
+
 element.fit(null, 20);
         </textarea></div>
     
@@ -451,8 +490,8 @@ element.fit(null, 20);
         <h3>Discussion</h3>
     
         <div>
-            Frames effect the (x,y) positioning
-of objects but do not effect styling for objects.
+            Frame geometry effects the (x,y) positioning
+of reference points for objects in the frame but do not effect styling for objects.
         </div>
     
     </div>
