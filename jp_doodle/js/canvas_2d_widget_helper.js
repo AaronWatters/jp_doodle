@@ -534,6 +534,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         target.polygon = function(opt) {
             // eg: element.polygon({points: [[210, 10], [210, 110], [290, 60]], color: "brown"});
+            //  A "point" array of length 3 consisting of 3 inner points represents a bezier curve:
+            // eg: element.polygon({points: [[20, 20], [[20,100], [200,100], [200,20]]]})
             var s = $.extend({
                 color: target.canvas_fillColor,
                 fill: true,  // if false then do a outline
@@ -555,19 +557,28 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var degrees = s.degrees;
             var points = input_points;
             if (degrees) {
-                points = [];
-                // xxxx duplicate code here
-                var radians = degrees * Math.PI / 180.0;
-                var cs = Math.cos(radians);
-                var sn = Math.sin(radians);
-                for (var i=0; i<input_points.length; i++) {
-                    var point = input_points[i];
-                    var vx = point[0] - cx;                         
-                    var vy = point[1] - cy;
-                    var rx = (vx * cs - vy * sn);
-                    var ry = (vx * sn + vy * cs);
-                    points.push([rx + cx, ry + cy]);
+                var map_degrees = function(input_points) {
+                    var points = [];
+                    // xxxx duplicate code here
+                    var radians = degrees * Math.PI / 180.0;
+                    var cs = Math.cos(radians);
+                    var sn = Math.sin(radians);
+                    for (var i=0; i<input_points.length; i++) {
+                        var point = input_points[i];
+                        if (point.length == 2) {
+                            var vx = point[0] - cx;
+                            var vy = point[1] - cy;
+                            var rx = (vx * cs - vy * sn);
+                            var ry = (vx * sn + vy * cs);
+                            points.push([rx + cx, ry + cy]);
+                        } else {
+                            // inner array of points (maybe always should have length 3?)
+                            points.push(map_degrees(point));
+                        }
+                    }
+                    return points;
                 }
+                points = map_degrees(input_points);
             }
             var fpoints = [];
             // record fpoints for SVG conversion (could make conditionsal)
@@ -578,26 +589,60 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             context.beginPath();
             var point0 = points[0];
-            //var p0f = s.coordinate_conversion(point0[0], point0[1]);
-            var p0f = s.coordinate_conversion(point0);
-            var p0c = target.converted_location(p0f.x, p0f.y);
-            if (target.canvas_stats) {
-                target.add_point_stats(p0f.x, p0f.y);
+            if (point0.length != 2) {
+                throw new Error("First point of polygon must have length 2: " + point0);
             }
+            //var p0f = s.coordinate_conversion(point0[0], point0[1]);
+            var point_conversion = function (point, is_sample, recursed) {
+                var ln = point.length;
+                if (ln == 2) {
+                    var pf = s.coordinate_conversion(point);
+                    // xxxx note: svg conversion does not support bezier correctly!! xxxx
+                    // xxxx automatically convert bezier control points to regular polygon vertices in fpoints.
+                    fpoints.push(pf);  
+                    if (target.canvas_stats) {
+                        target.add_point_stats(pf.x, pf.y);
+                    }
+                    if (is_sample) {
+                        s.sample_pixel = target.canvas_to_pixel(pf.x, pf.y, true);
+                    }
+                    var pc = target.converted_location(pf.x, pf.y);
+                    return pc;
+                } else if ((!recursed) && (ln == 3)) {
+                    // bezier control points point = [A, B, C]
+                    var A = point_conversion(point[0], false, true);
+                    var B = point_conversion(point[1], false, true);
+                    var C = point_conversion(point[2], false, true);
+                    return {A:A, B:B, C:C, bezier: true};
+                } else {
+                    throw new Error("unsupported point length: " + [ln, point]);
+                }
+            };
+            //var p0f = s.coordinate_conversion(point0);
+            //var p0c = target.converted_location(p0f.x, p0f.y);
+            //if (target.canvas_stats) {
+            //    target.add_point_stats(p0f.x, p0f.y);
+            //}
             // sample pixel for lasso testing
-            s.sample_pixel = target.canvas_to_pixel(p0f.x, p0f.y, true);
+            var p0c = point_conversion(point0, true, false);
+            //s.sample_pixel = target.canvas_to_pixel(p0f.x, p0f.y, true);
             context.moveTo(p0c.x, p0c.y);
-            fpoints.push(p0f);
+            //fpoints.push(p0f);
             for (var i=1; i<points.length; i++) {
                 var point = points[i];
                 //var pf = s.coordinate_conversion(point[0], point[1]);
-                var pf = s.coordinate_conversion(point);
-                fpoints.push(pf);
-                var pc = target.converted_location(pf.x, pf.y);
-                context.lineTo(pc.x, pc.y);
-                if (target.canvas_stats) {
-                    target.add_point_stats(pf.x, pf.y);
+                //var pf = s.coordinate_conversion(point);
+                //fpoints.push(pf);
+                //var pc = target.converted_location(pf.x, pf.y);
+                var pc = point_conversion(point, false, false);
+                if (pc.bezier) {
+                    context.bezierCurveTo(pc.A.x, pc.A.y, pc.B.x, pc.B.y, pc.C.x, pc.C.y);
+                } else {
+                    context.lineTo(pc.x, pc.y);
                 }
+                //if (target.canvas_stats) {
+                //    target.add_point_stats(pf.x, pf.y);
+                //}
             }
             if (s.close) {
                 context.closePath();
