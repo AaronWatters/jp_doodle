@@ -44,6 +44,7 @@ class Box:
         width_height,
         text = None,
         text_lines = (),
+        header=None,
         color="black",  # font color
         line_color="black",
         background="#aaf",
@@ -65,6 +66,7 @@ class Box:
         self.background = background
         self.line_offset = line_offset
         self.font = font
+        self.header = header
         self.geometry()
         if draw_now:
             self.draw()
@@ -113,6 +115,11 @@ class Box:
         if not line_offset:
             line_offset = h / nlines
         y = yc + 0.5 * (nlines - 1) * line_offset
+        if self.header:
+            (hx, hy) = self.anchors["CT"]
+            frame.text(
+                hx, hy, text=self.header, color=self.color,
+                align="center", font=self.font)
         for i in range(nlines):
             yi = y - i * line_offset
             ti = text_lines[i]
@@ -120,7 +127,12 @@ class Box:
                 xc, yi, text=ti, color=self.color, background=self.background,
                 valign="center", align="center", font=self.font)
 
-    def point_to(self, other, anchor, other_anchor, color=None, head_length=None, delta=1.0, lineWidth=None):
+    def point_to(
+        self, other, anchor, other_anchor, 
+        color=None, head_length=None, delta=1.0, lineWidth=None,
+        label=None, labelColor=None, background=None, degrees=None, labelxy=None,
+        labelshift=(0,0),
+        ):
         color = color or self.line_color
         lineWidth = lineWidth or self.lineWidth
         frame = self.on_frame
@@ -147,6 +159,21 @@ class Box:
             frame.arrow(x1, y1, x2, y2, color=color, head_length=head_length, symmetric=True, lineWidth=lineWidth)
         else:
             frame.line(x1, y1, x2, y2, color=color, lineWidth=lineWidth)
+        if label is not None:
+            if degrees is None:
+                diff = p2m - q2m
+                n = np.linalg.norm(diff)
+                theta = 0.0
+                if n > 1e-10:
+                    theta = np.arcsin(diff[1]/n)
+                degrees = theta * 180 / np.pi
+            if labelxy is None:
+                labelxy = m + point(*labelshift)
+            labelColor = labelColor or self.color
+            frame.text(
+                labelxy[0], labelxy[1], text=label, color=labelColor,
+                background=background, degrees=degrees,
+                align="center", font=self.font)
 
     def anchor_reference_points(self, anchor_name, delta=1.0):
         anchors = self.anchors
@@ -167,13 +194,16 @@ def example():
         width_height=(50,50),
         line_color="green",
         lineWidth=2,
+        font="bold 15px Courier",
     )
-    B1 = M.box(center_xy=(100, 100), text_lines="hello world".split())
-    B2 = M.box(center_xy=(200, 150), text_lines="good bye".split())
-    B1.point_to(B2, "TR", "LC", head_length=10, delta=0.2)
-    B2.point_to(B2, "BR", "RC", head_length=10)
-    B2.point_to(B1, "BL", "BR", head_length=10, delta=0.2)
-    B2.point_to(B1, "TC", "TC", head_length=10)
+    B1 = M.box(header="Start", center_xy=(100, 100), text_lines="hello world".split())
+    B2 = M.box(header="End", center_xy=(250, 150), text_lines="good_bye".split(), width_height=(100,25))
+    B1.point_to(
+        B2, "TR", "LC", head_length=10, delta=0.2, 
+        label="abc", background="yellow", degrees=17, labelshift=(-5,5), labelColor="red")
+    B2.point_to(B2, "BR", "RC", head_length=10, label="def", labelshift=(5,0))
+    B2.point_to(B1, "BL", "BR", head_length=10, delta=0.2, label="ghi", labelxy=(170, 100))
+    B2.point_to(B1, "TL", "TL", head_length=10, label="jkl", background="green", labelColor="yellow", labelshift=(-10,3))
     demo.fit()
     demo.B1 = B1
     demo.B2 = B2
