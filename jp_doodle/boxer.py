@@ -93,6 +93,7 @@ class Box:
         self.anchors = anchors
 
     def draw(self):
+        print("drawing", self.header)
         self.draw_background()
         self.draw_foreground()
 
@@ -105,6 +106,12 @@ class Box:
 
     def draw_foreground(self):
         frame = self.on_frame
+        if self.header:
+            (hx, hy) = self.anchors["CT"]
+            print ("header at", hx, hy)
+            frame.text(
+                hx, hy, text=self.header, color=self.color,
+                align="center", font=self.font)
         text_lines = self.text_lines
         if not text_lines:
             return # no foreground to draw
@@ -115,11 +122,6 @@ class Box:
         if not line_offset:
             line_offset = h / nlines
         y = yc + 0.5 * (nlines - 1) * line_offset
-        if self.header:
-            (hx, hy) = self.anchors["CT"]
-            frame.text(
-                hx, hy, text=self.header, color=self.color,
-                align="center", font=self.font)
         for i in range(nlines):
             yi = y - i * line_offset
             ti = text_lines[i]
