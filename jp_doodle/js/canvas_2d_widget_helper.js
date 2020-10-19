@@ -312,6 +312,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             var rdy = dy - height * 0.2;
             // use a rectangle for masking operations
+            s.background_rect = {w: rwidth, h: height, dx: dx, dy: rdy};
             s.draw_mask = function (to_canvas, info) {
                 //to_canvas.rect({x: info.x, y: info.y, w:rwidth, h:height, degrees:info.degrees, color:info.color, dx:dx, dy:rdy});
                 var config = $.extend({}, info);
@@ -320,7 +321,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 config.dx = dx;
                 config.dy = rdy;
                 // record the background rect geometry for use in (eg) SVG conversion.
-                s.background_rect = {w: rwidth, h: height, dx: dx, dy: rdy}
+                s.background_rect = {w: rwidth, h: height, dx: dx, dy: rdy};
                 to_canvas.rect(config);
             };
             // If background is provided, draw a background rectangle

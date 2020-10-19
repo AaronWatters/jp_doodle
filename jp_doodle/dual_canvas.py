@@ -792,6 +792,12 @@ class GeometryWrapper:
     def transition(self, seconds_duration=1, **to_values):
         return self.on_canvas.transition(self.name, to_values, seconds_duration)
 
+    def get_background_rect(self):
+        """
+        For text elements, get background rect dictionary with {w:width, h:height, dx:dx, dy:dy}.
+        """
+        return self.on_canvas.element.get_object_info(self.name).background_rect.sync_value()
+
 def swatch(
     pixels=500,
     model_height=2.0,
