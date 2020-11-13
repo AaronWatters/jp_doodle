@@ -535,6 +535,22 @@ class SaveImageMixin:
             callback(pixels);
         """, callback=converter_callback, x=x, y=y, w=w, h=h, canvas_element=canvas_element)
 
+    def pixels_array(self, **async_args):
+        """
+        Get the pixels array syncronously.  Currently there is no timeout.
+        """
+        from jupyter_ui_poll import run_ui_poll_loop
+        self.last_pixels_array = None
+        def callback(image_array):
+            self.last_pixels_array = image_array
+        def completed():
+            if self.last_pixels_array is not None:
+                return True
+            return None
+        self.pixels_array_async(callback, **async_args)
+        run_ui_poll_loop(completed)
+        return self.last_pixels_array
+
     def save_pixels_to_png_async(
         self, file_path, x=None, y=None, w=None, h=None, 
         after=None, error=None, canvas_element=None):
