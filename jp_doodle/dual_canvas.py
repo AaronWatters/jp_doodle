@@ -566,6 +566,38 @@ class SaveImageMixin:
                 raise e
         self.pixels_array_async(save_callback, x, y, w, h, canvas_element=canvas_element)
 
+    video_attached = False
+
+    def attach_video(self):
+        """
+        Feed the video from the camera to the visible canvas.
+        After setting up the video use the canvas *only* to capture video frames.
+        Do not use the canvas for other purposes -- it will not work.
+        """
+        cfg = self.canvas_config
+        width = cfg["width"]
+        height = cfg["height"]
+        self.js_init("""
+            element.attached_video = $('<video width="${width}" height="${height}" autoplay></video>');
+            // video is NOT visible because it is not placed in the DOM
+            navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+                var video = element.attached_video[0];
+                video.srcObject = stream;
+                video.play();
+                animate();
+            });
+            element.capture_video = function() {
+                var context = element.visible_canvas.canvas_context;
+                var video = element.attached_video[0];
+                context.drawImage(video, 0, 0, width, height);
+            };
+            var animate = function() {
+                element.capture_video();
+                window.requestAnimationFrame(animate);
+            };
+            //animate();
+        """, width=width, height=height)
+        self.video_attached = True
 
 class TopLevelCanvasMixin(CanvasOperationsMixin, SaveImageMixin):
 
