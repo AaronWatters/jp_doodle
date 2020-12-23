@@ -281,13 +281,14 @@ XXXXX clean up events for forgotten objects
             target.object_list = target.objects_drawn(target.object_list);
             // handle deferred events
             var t2e = target.deferred_type_to_event;
+            // don't cause an infinite loop in case redraw is called again...
+            target.deferred_type_to_event = null;
             if (t2e) {
                 for (var event_type in t2e) {
                     var e = t2e[event_type];
                     target.deferred_event_handler(e);
                 }
             }
-            target.deferred_type_to_event = null;
             // perform any transitions last to allow for temporary objects
             target.do_transitions();
         };
