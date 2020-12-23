@@ -136,7 +136,6 @@ XXXXX clean up events for forgotten objects
 
         target.get_raw_draw_information = function () {
             // get low level draw operation information for export to SVG (for example).
-            debugger;
             var params = {};
             // for symmetry
             params.shape_name = "canvas";
@@ -280,6 +279,15 @@ XXXXX clean up events for forgotten objects
             target.invisible_canvas.clear_canvas();
             target.prepare_for_redraw();
             target.object_list = target.objects_drawn(target.object_list);
+            // handle deferred events
+            var t2e = target.deferred_type_to_event;
+            if (t2e) {
+                for (var event_type in t2e) {
+                    var e = t2e[event_type];
+                    target.deferred_event_handler(e);
+                }
+            }
+            target.deferred_type_to_event = null;
             // perform any transitions last to allow for temporary objects
             target.do_transitions();
         };
@@ -637,8 +645,9 @@ XXXXX clean up events for forgotten objects
             var draw_info = draw_fn(target.visible_canvas, object_info);
             // store additional information attached during the draw operation
             $.extend(object_info, draw_info);
-            if ((object_info.name) && (object_info.events !== false)) {
+            if ((object_info.name) && (object_info.events !== false) && (target.deferred_type_to_event)) {
                 // also draw invisible object using psuedocolor for event lookups
+                // only if a deferred event is outstanding
                 target.draw_mask(object_info, target.invisible_canvas);
                 // Don't draw on the test canvas now.
             }
@@ -847,6 +856,19 @@ XXXXX clean up events for forgotten objects
             // ??? no provision for cancelling events on the visible canvas?
         };
 
+        target.generic_event_handler = function (e) {
+            // defer the event and request a redraw -- events are handled only after redraw
+            // one event per type for each event type.
+            var event_type = e.type;
+            if (target.event_info.event_types[event_type]) {
+                if (!target.deferred_type_to_event) {
+                    target.deferred_type_to_event = {};
+                }
+                target.deferred_type_to_event[event_type] = e;
+                target.request_redraw();
+            }
+        };
+
         target.get_object_info = function(for_name_or_info) {
             // get the stored object info for a name or a possibly old version of object info.
             var for_name = for_name_or_info;
@@ -1004,7 +1026,7 @@ XXXXX clean up events for forgotten objects
             return canvas_name;
         };
 
-        target.generic_event_handler = function(e) {
+        target.deferred_event_handler = function(e) {
             var visible = target.visible_canvas;
             // for testing allow test case to override pixel location.
             if (!e.pixel_location) {
