@@ -75,7 +75,7 @@ class SVG_Interpreter:
             y = self.translate_scale["model_intercept"] - y
         return (x, y)
 
-    def circle(self, x, y, fcenter, r, color, **other_arguments_ignored):
+    def circle(self, fcenter, r, color, **other_arguments_ignored):
         (x, y) = self.canvas_to_svg_axis(fcenter["x"], fcenter["y"])
         self.add_draw_tag(
             tag_name="circle",
@@ -84,7 +84,10 @@ class SVG_Interpreter:
             fill=color,
         )
 
-    def text(self, x, y, text, align, valign, font, color, coords, rotate_radians=None, degrees=None, background = None, **other_arguments_ignored):
+    def text(
+        self, text, coords, 
+        align=None, valign=None, font=None, color=None, rotate_radians=None, degrees=None, background = None, 
+        **other_arguments_ignored):
         x = coords["x"]
         y = coords["y"]
         rect_x, rect_y = x, y
@@ -143,10 +146,13 @@ class SVG_Interpreter:
             **atts
         )
     
-    def line(self, x1, y1, x2, y2, fp1, fp2, color, lineWidth, **other_arguments_ignored):
+    def line(self, fp1, fp2, color, lineWidth, **other_arguments_ignored):
         (x1, y1) = self.canvas_to_svg_axis(fp1["x"], fp1["y"])
         (x2, y2) = self.canvas_to_svg_axis(fp2["x"], fp2["y"])
         style = ""
+        for attr in "x1 x2 y1 y2 fill style stroke".split():
+            if other_arguments_ignored.get(attr):
+                del other_arguments_ignored[attr]
         if lineWidth:
             style += "stroke-width:" + str(lineWidth)
         self.add_draw_tag(
@@ -161,7 +167,7 @@ class SVG_Interpreter:
             **other_arguments_ignored
         )
     
-    def rect(self, x, y, coords, w, h, color, rotate_radians=None, degrees=None, lineWidth=1, fill=True, dx=0, dy=0, **other_arguments_ignored):
+    def rect(self, coords, w, h, color, rotate_radians=None, degrees=None, lineWidth=1, fill=True, dx=0, dy=0, **other_arguments_ignored):
         x = coords["x"]
         y = coords["y"]
         if w < 0:
