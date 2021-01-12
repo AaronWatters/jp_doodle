@@ -284,9 +284,9 @@ class CanvasOperationsMixin(object):
         callback2 = mycanvas.callable(lasso_callback, level=3)
         self.element.do_lasso(callback2, config, delete_after)
 
-    def transition(self, object_name, to_values, seconds_duration=1):
+    def transition(self, object_name, to_values, seconds_duration=1, done_callback=None):
         "transition configuration values of object with name smoothly over duration."
-        self.element.transition(object_name, to_values, seconds_duration)
+        self.element.transition(object_name, to_values, seconds_duration, done_callback)
 
     def vector_frame(self, x_vector, y_vector, xy_offset, name=None):
         """
@@ -837,8 +837,8 @@ class GeometryWrapper:
     def off(self, event_type):
         return self.on_canvas.off_canvas_event(event_type, for_name=self.name)
 
-    def transition(self, seconds_duration=1, **to_values):
-        return self.on_canvas.transition(self.name, to_values, seconds_duration)
+    def transition(self, seconds_duration=1, done_callback=None, **to_values):
+        return self.on_canvas.transition(self.name, to_values, seconds_duration, done_callback=done_callback)
 
     def get_background_rect(self):
         """
