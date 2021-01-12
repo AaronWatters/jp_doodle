@@ -1402,7 +1402,12 @@ XXXXX clean up events for forgotten objects
                 transition.interpolate();
                 if (transition.finished()) {
                     // xxxx any termination actions?
-                    ////c.l("done transitioning " + name);
+                    ////c.l("done transitioning " + name)
+                    // call the callback if specified with no arguments
+                    var done_callback = transition.done_callback;
+                    if (done_callback) {
+                        done_callback();
+                    }
                     redraw = true;  // redraw for final interpolation
                 } else {
                     ////c.l("continuing transitions for " + name);
@@ -1417,10 +1422,10 @@ XXXXX clean up events for forgotten objects
             target.active_transitions = remaining;
         };
 
-        target.transition = function(object_name_or_info, to_values, seconds_duration, mode) {
+        target.transition = function(object_name_or_info, to_values, seconds_duration, done_callback) {
             var object_info = target.get_object_info(object_name_or_info);
             var object_name = object_info.name;
-            mode = mode || "linear";
+            //mode = mode || "linear";  -- mode is not used
             seconds_duration = seconds_duration || 1;
             var start = (new Date()).getTime();
             var end = start + 1000 * seconds_duration;
@@ -1431,6 +1436,7 @@ XXXXX clean up events for forgotten objects
                 object_name: object_name,
                 from_values: from_values,
                 to_values: to_values,
+                done_callback: done_callback,
                 lmd: function () {
                     //return 0.5; // DEBUG
                     var time = (new Date()).getTime();
