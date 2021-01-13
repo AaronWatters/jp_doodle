@@ -310,6 +310,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             if ((s.valign) && (s.valign == "center")) {
                 dy = -0.3 * height + dy;
             }
+            if ((s.valign) && (s.valign == "top")) {
+                dy = -height + dy;
+            }
             var rdy = dy - height * 0.2;
             // use a rectangle for masking operations
             s.background_rect = {w: rwidth, h: height, dx: dx, dy: rdy};
