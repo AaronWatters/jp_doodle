@@ -355,6 +355,9 @@ by mousing down on the object and dragging it to a new location and then mousing
         <p>
 Objects can be created in reference frames in 
 order to share the same drawing order priority and the same coordinate system.
+All objects contained in a reference frame share the same translation and vector scaling
+with respect to the underlying canvas coordinate system.  Changes or transitions to a reference frame
+geometry effect all objects contained in the frame.
 </p>
 <p>
 In this demonstration drag the
