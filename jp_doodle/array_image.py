@@ -24,7 +24,8 @@ def show_array(
     font="normal 15px Courier",
     hover_text_callback=default_hover_callback,
     hover_color="rgba(200,100,50,0.5)",
-    epsilon=1e-10):
+    epsilon=1e-10,
+    widget=None):
     """
     Display the array as an image with the specified width and height.
     """
@@ -45,7 +46,9 @@ def show_array(
         width = iwidth
     if height is None:
         height = iheight
-    widget = dual_canvas.DualCanvasWidget(width=width + 2 * margin, height=height + 2 * margin)
+    if widget is None:
+        widget = dual_canvas.DualCanvasWidget(width=width + 2 * margin, height=height + 2 * margin)
+    widget.reset_canvas()
     if background:
         widget.rect(0, 0, w=width + 2 * margin, h=height + 2 * margin, color=background)
     name = "array image"
@@ -59,6 +62,7 @@ def show_array(
     if hover_text_callback:
         hover_info = widget.text(margin, height+margin+5, str(array.shape),
             color=textcolor, font=font, background=textbackground, name=True)
+        widget.hover_info = hover_info
         upline = frame.frame_rect(x=0, y=0, w=1, h=0, color=hover_color, name=True, events=False)
         downline = frame.frame_rect(x=0, y=0, w=1, h=0, color=hover_color, name=True, events=False)
         leftline = frame.frame_rect(x=0, y=0, w=0, h=1, color=hover_color, name=True, events=False)
@@ -86,5 +90,6 @@ def show_array(
             leftline.change(w=0)
             rightline.change(w=0)
         full.on("mouseout", on_out)
+    widget.image_display = full
     return widget
 
