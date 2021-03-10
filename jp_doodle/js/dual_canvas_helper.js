@@ -102,6 +102,9 @@ XXXXX clean up events for forgotten objects
             target.invisible_canvas.draw_list = null;
             target.test_canvas.draw_list = null;
 
+            // whether to defer event handlers until redraw, false until deferred redraw
+            target.defer_events = false;
+
             target.clear_canvas(keep_stats);
         }
 
@@ -284,6 +287,9 @@ XXXXX clean up events for forgotten objects
             // don't cause an infinite loop in case redraw is called again...
             target.deferred_type_to_event = null;
             if (t2e) {
+                // execute events immediately until next redraw request
+                target.defer_events = false;
+                // execute deferred events now.
                 for (var event_type in t2e) {
                     var e = t2e[event_type];
                     target.deferred_event_handler(e);
@@ -459,6 +465,8 @@ XXXXX clean up events for forgotten objects
 
         // Call this after modifying the object collection to request an eventual redraw.
         target.request_redraw = function() {
+            // defer events until the redraw completes
+            target.defer_events = true;
             if (!target.redraw_pending) {
                 if (!target.disable_auto_redraw) {
                     requestAnimationFrame(target.redraw);
@@ -807,7 +815,7 @@ XXXXX clean up events for forgotten objects
             var data = imgdata.data;
             if (grey_scale) {
                 low_color = low_color || [0, 0, 0, 255];
-                high_color = high_color || [255, 255, 255, 0];
+                high_color = high_color || [255, 255, 255, 255];
                 for (var i=0; i<wh; i++) {
                     // interpolate grey image
                     var lambda = data_array[i]/255;
@@ -858,7 +866,11 @@ XXXXX clean up events for forgotten objects
         };
 
         target.generic_event_handler = function (e) {
-            // defer the event and request a redraw -- events are handled only after redraw
+            // execute event immediately if there has been no change to the canvas since last event redraw.
+            if (!target.defer_events) {
+                return target.deferred_event_handler(e);
+            }
+            // Otherwise defer the event and request a redraw -- events are handled only after redraw
             // one event per type for each event type.
             var event_type = e.type;
             if (target.event_info.event_types[event_type]) {
