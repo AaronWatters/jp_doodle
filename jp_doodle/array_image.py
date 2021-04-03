@@ -29,6 +29,7 @@ def show_array(
     """
     Display the array as an image with the specified width and height.
     """
+    # xxxx refactor this eventually to a more conventional structure.
     array = np.array(array)
     source_array = array
     if scale:
@@ -52,7 +53,25 @@ def show_array(
     if background:
         widget.rect(0, 0, w=width + 2 * margin, h=height + 2 * margin, color=background)
     name = "array image"
-    widget.name_image_array(name, array)
+    widget.current_array = None
+    def set_image(array):
+        if widget.current_array is not None:
+            assert widget.current_array.shape == array.shape, "Shape change not supported"
+        widget.current_array = array
+        if scale:
+            M = array.max()
+            m = array.min()
+            if m > 0 and not shift_min:
+                m = 0.0
+            diff = M - m
+            grey_max = 255
+            if diff < epsilon:
+                diff = 1.0
+            array = (array - m) * (grey_max / diff)
+        widget.name_image_array(name, array)
+        widget.request_redraw()
+    widget.set_image = set_image
+    widget.set_image(array)
     frame = widget.frame_region(
         minx=margin, miny=margin, maxx=width + margin, maxy=height + margin, 
         frame_minx=0, frame_miny=iheight, frame_maxx=iwidth, frame_maxy=0)
@@ -76,7 +95,7 @@ def show_array(
             leftline.change(y=y, w=x)
             rightline.change(y=y, x=x+1, w=iwidth-x-1)
             try:
-                cb_text = hover_text_callback(x, y, source_array)
+                cb_text = hover_text_callback(x, y, widget.current_array)
             except Exception as e:
                 e_text = repr(e)
                 hover_info.change(text=e_text)
