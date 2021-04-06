@@ -13,20 +13,6 @@ class ColorChooser(dual_canvas.DualCanvasWidget):
         self.html_color = None
         self.color_array = None
         # create the colorizer
-        '''
-        self.js_init("""
-            element.color_chooser({
-                side: side,
-                font: font,
-                callback: change_color,
-                background: background,
-            })
-        """,
-        change_color=self.change_color,
-        side=side,
-        font=font,
-        background=background,
-        )'''
         self.element.color_chooser(dict(
             side=side,
             font=font,
