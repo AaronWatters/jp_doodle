@@ -20,6 +20,11 @@ class ColorChooser(dual_canvas.DualCanvasWidget):
             callback=self.change_color,
         ))
 
+    def reset_color_choice(self):
+        self.element.reset_color_choice()
+        self.html_color = None
+        self.color_array = None
+
     def change_color(self, color_array, html_color):
         self.html_color = html_color
         self.color_array = color_array
