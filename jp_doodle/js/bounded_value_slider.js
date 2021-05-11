@@ -34,8 +34,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 low_color: "royalblue",
                 high_color: "orange",
                 current_color: "cyan",
-                //text_background: "yellow",
-                //text_moving:"cyan",
                 forbidden:"black",
                 verbose: false,
             }, options);
@@ -113,8 +111,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.fit();
             this.moving_name = null;
             this.circle_order = {LOW: 0, CURRENT: 1, HIGH: 3};
-            if (s.on_change) {
-                s.on_change(this.values_mapping())
+            if (s.on_stop) {
+                s.on_stop(this.values_mapping())
             }
         };
         info(message) {

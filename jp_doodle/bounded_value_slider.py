@@ -17,6 +17,14 @@ class BoundedValueSlider(jp_proxy_widget.JSProxyWidget):
         on_change=None,
         integral=False,
         aspect_ratio=0.2,
+        radius=10,
+        selected_radius=15,
+        base_color="silver",
+        low_color="royalblue",
+        high_color="orange",
+        current_color="cyan",
+        forbidden="black",
+        verbose=False,
         # ... add more eventually
         *pargs,
         **kwargs,
@@ -29,10 +37,24 @@ class BoundedValueSlider(jp_proxy_widget.JSProxyWidget):
                 horizontal= horizontal,
                 minimum= minimum,
                 maximum= maximum,
-                verbose= True,
-                on_stop=on_stop,
+                verbose= verbose,
+                on_stop=self.on_stop,
                 on_change=on_change,
                 integral=integral,
                 aspect_ratio=aspect_ratio,
+                base_color=base_color,
+                low_color=low_color,
+                high_color=high_color,
+                current_color=current_color,
+                forbidden=forbidden,
             )
         )
+        self.on_stop_callback = on_stop
+        self.current_values = None
+
+    def on_stop(self, values):
+        "record current values."
+        self.current_values = values
+        if self.on_stop_callback:
+            self.on_stop_callback(values)
+
