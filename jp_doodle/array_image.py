@@ -56,7 +56,7 @@ def show_array(
     widget.current_array = None
     def set_image(array):
         if widget.current_array is not None:
-            assert widget.current_array.shape == array.shape, "Shape change not supported"
+            assert widget.current_array.shape[:2] == array.shape[:2], "Shape change not supported"
         widget.current_array = array
         if scale:
             M = array.max()
