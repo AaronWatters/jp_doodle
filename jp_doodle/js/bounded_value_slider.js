@@ -195,7 +195,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             return result;
         }
-        update_positions(moving_name, value) {
+        update_positions(moving_name, value, no_callback) {
             var index = this.name_to_index[moving_name];
             var positions = this.canvas_positions;
             positions[index] = value;
@@ -226,7 +226,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var high_limit = positions[1];
             this.forbidden_low.change({w: low_limit})
             this.forbidden_high.change({w: -s.length+high_limit});
-            if (s.on_change) {
+            if ((!no_callback) && (s.on_change)) {
                 s.on_change(this.values_mapping())
             }
         };
