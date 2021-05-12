@@ -4,6 +4,9 @@ import jp_proxy_widget
 from jp_doodle import dual_canvas, doodle_files
 bfs_js = doodle_files.vendor_path("js/bounded_value_slider.js")
 
+def load_requirements(widget, additional=()):
+    additional = [bfs_js] + list(additional)
+    dual_canvas.load_requirements(widget, additional=[bfs_js])
 
 class BoundedValueSlider(jp_proxy_widget.JSProxyWidget):
 
@@ -30,7 +33,7 @@ class BoundedValueSlider(jp_proxy_widget.JSProxyWidget):
         **kwargs,
     ):
         super(BoundedValueSlider, self).__init__(*pargs, **kwargs)
-        dual_canvas.load_requirements(self, additional=[bfs_js])
+        load_requirements(self)
         self.element.bounded_value_slider(
             dict(
                 length= length,
@@ -47,6 +50,8 @@ class BoundedValueSlider(jp_proxy_widget.JSProxyWidget):
                 high_color=high_color,
                 current_color=current_color,
                 forbidden=forbidden,
+                radius=radius,
+                selected_radius=selected_radius,
             )
         )
         self.on_stop_callback = on_stop
