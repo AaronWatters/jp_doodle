@@ -36,6 +36,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 current_color: "cyan",
                 forbidden:"black",
                 verbose: false,
+                call_on_init: true,
             }, options);
             debugger;
             var s = this.settings;
@@ -111,7 +112,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.fit();
             this.moving_name = null;
             this.circle_order = {LOW: 0, CURRENT: 1, HIGH: 3};
-            if (s.on_stop) {
+            this.last_changed = "HIGH";
+            if ((s.call_on_init) && (s.on_stop)) {
                 s.on_stop(this.values_mapping())
             }
         };
@@ -142,6 +144,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     var click_x = location.x;
                     var object_x = that.canvas_positions[index];
                     that.moving_name = name;
+                    that.last_changed = name;
                     that.moving_offset = object_x - click_x;
                 }
             }
@@ -188,13 +191,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         };
         values_mapping () {
             var result = {};
+            result.last_changed = this.last_changed;
             var n2i = this.name_to_index;
             var positions = this.canvas_positions;
             for (var circle in n2i) {
                 result[circle] = this.canvas_to_model(positions[n2i[circle]])
             }
             return result;
-        }
+        };
+        update_model(moving_name, model_value) {
+            var canvas_value = this.model_to_canvas(model_value);
+            return this.update_positions(moving_name, canvas_value, true);
+        };
         update_positions(moving_name, value, no_callback) {
             var index = this.name_to_index[moving_name];
             var positions = this.canvas_positions;
