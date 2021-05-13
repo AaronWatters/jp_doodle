@@ -38,7 +38,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 verbose: false,
                 call_on_init: true,
             }, options);
-            debugger;
             var s = this.settings;
             // create canvas and reference frame
             var breadth = s.length * s.aspect_ratio;
@@ -251,7 +250,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return result;
         };
     };
-    debugger;
 
     $.fn.bounded_value_slider = function (options) {
         var target = this;
