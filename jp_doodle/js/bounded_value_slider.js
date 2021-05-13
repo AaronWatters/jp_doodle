@@ -145,6 +145,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     that.moving_name = name;
                     that.last_changed = name;
                     that.moving_offset = object_x - click_x;
+                    var circle = that.circles[index];
+                    circle.change({r: that.settings.selected_radius});
                 }
             }
         };
