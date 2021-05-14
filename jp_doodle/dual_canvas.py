@@ -515,6 +515,8 @@ class SaveImageMixin:
         The canvas_element if provided should be a string which evaluates in javascript
         to the target canvas (in the js_init context).
         """
+        # XXXX this leaks memory internally by storing callback references without disposing them.
+        # Need to call js_init only once.
         from jp_proxy_widget.hex_codec import hex_to_bytearray
         #import numpy as np
         def converter_callback(imgData):
