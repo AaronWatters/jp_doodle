@@ -239,3 +239,7 @@ class SaveAndEmbed:
 def embed_hidden(canvas_widget, image_filename, prefix=None):
     return SaveAndEmbed(canvas_widget, image_filename, prefix, hide_after=True)
 
+def save_and_show_as_image(canvas_widget, image_filename, prefix=None, hide_after=False):
+    with SaveAndEmbed(canvas_widget, image_filename, prefix, hide_after=hide_after):
+        print ("saved canvas as image: " + repr(image_filename))
+
