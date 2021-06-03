@@ -16,6 +16,7 @@ class BoundedValueSlider(jp_proxy_widget.JSProxyWidget):
         horizontal=True,
         minimum=0,
         maximum=100,
+        initial=25,
         on_stop=None,
         on_change=None,
         integral=False,
@@ -38,6 +39,7 @@ class BoundedValueSlider(jp_proxy_widget.JSProxyWidget):
             dict(
                 length= length,
                 horizontal= horizontal,
+                initial=initial,
                 minimum= minimum,
                 maximum= maximum,
                 verbose= verbose,
@@ -63,3 +65,17 @@ class BoundedValueSlider(jp_proxy_widget.JSProxyWidget):
         if self.on_stop_callback:
             self.on_stop_callback(values)
 
+    def set_values(self, current=None, high=None, low=None):
+        if current is not None:
+            self.element.bounded_slider.update_model(CURRENT, current)
+        if high is not None:
+            self.element.bounded_slider.update_model(HIGH, high)
+        if low is not None:
+            self.element.bounded_slider.update_model(LOW, low)
+
+    def get_values(self):
+        return self.element.bounded_slider.values_mapping(None).sync_value()
+
+HIGH = "HIGH";
+LOW = "LOW";
+CURRENT = "CURRENT";
