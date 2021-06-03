@@ -18,6 +18,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         constructor(options, target) {
             this.target = target;
+            target.bounded_slider = this;
             this.settings = $.extend({
                 horizontal: true,
                 length: 500,
