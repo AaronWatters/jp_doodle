@@ -35,6 +35,7 @@ class BoundedValueSlider(jp_proxy_widget.JSProxyWidget):
     ):
         super(BoundedValueSlider, self).__init__(*pargs, **kwargs)
         load_requirements(self)
+        self.element.empty()
         self.element.bounded_value_slider(
             dict(
                 length= length,
