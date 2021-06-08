@@ -29,6 +29,7 @@ class BoundedValueSlider(jp_proxy_widget.JSProxyWidget):
         current_color="cyan",
         forbidden="black",
         verbose=False,
+        border=5,
         # ... add more eventually
         *pargs,
         **kwargs,
@@ -55,6 +56,7 @@ class BoundedValueSlider(jp_proxy_widget.JSProxyWidget):
                 forbidden=forbidden,
                 radius=radius,
                 selected_radius=selected_radius,
+                border=border,
             )
         )
         self.on_stop_callback = on_stop

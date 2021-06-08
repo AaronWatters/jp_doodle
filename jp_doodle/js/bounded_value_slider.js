@@ -38,6 +38,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 forbidden:"black",
                 verbose: false,
                 call_on_init: true,
+                border: 5,
             }, options);
             var s = this.settings;
             // create canvas and reference frame
@@ -51,8 +52,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 height = s.length;
             }
             target.dual_canvas_helper({
-                width: width,
-                height: height
+                width: width + s.border,
+                height: height + s.border,
             });
             if (s.verbose) {
                 this.info_area = $("<div>info area</div>").appendTo(target);
