@@ -87,6 +87,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             this.background_click = this.background_click_handler();
             // Draw canvas objects.
             var b2 = breadth / 2.0;
+            //this.breadth2 = b2;
             var b3 = breadth / 3.0;
             // Objects that should not recieve events go undernieth the event_rectangle.
             // fixed reference rectangle
@@ -107,7 +108,37 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var name = this.circle_names[i];
                 var position = this.canvas_positions[i];
                 var color = circle_colors[i];
-                var circle = frame.circle({x: position, y: b2, r:s.radius, color: color, name: name})
+                if (name == CURRENT) {
+                    var circle = frame.circle({x: position, y: b2, r:s.radius, color: color, name: name})
+                }
+                else if (name == LOW) {
+                    //var circle = frame.circle({x: position, y: b2, r:s.radius, color: color, name: name});
+                    var circle = frame.frame_rect({
+                        x: position, 
+                        y: b2, 
+                        w: 2 * s.radius, 
+                        h:4 * s.radius, 
+                        dx:- 2 * s.radius,
+                        dy:- 2 * s.radius,
+                        color: color,
+                        name:name,
+                    });
+                }
+                else if (name == HIGH) {
+                    //var circle = frame.circle({x: position, y: b2, r:s.radius, color: color, name: name})
+                    var circle = frame.frame_rect({
+                        x: position, 
+                        y: b2, 
+                        w: 2 * s.radius, 
+                        h:4 * s.radius, 
+                        dx:0,
+                        dy:- 2 * s.radius,
+                        color: color,
+                        name:name,
+                    });
+                } else {
+                    throw new Error("unknown name: " + name);
+                }
                 this.circles.push(circle);
                 this.name_to_index[name] = i;
                 this.assign_event_handlers(circle);
@@ -163,7 +194,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     that.last_changed = name;
                     that.moving_offset = object_x - click_x;
                     var circle = that.circles[index];
-                    circle.change({r: that.settings.selected_radius});
+                    var sr = that.settings.selected_radius;
+                    circle.change({
+                        r: sr,
+                        h: 6 * sr, 
+                        dy:- 3 * sr,
+                    });
                 }
             }
         };
@@ -199,7 +235,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var r = that.settings.radius;
                 that.moving_offset = null;
                 for (var i=0; i<3; i++) {
-                    that.circles[i].change({r: r})
+                    that.circles[i].change({
+                        r: r,
+                        h: 4 * r, 
+                        dy:- 2 * r,
+                    })
                 }
                 var on_stop = that.settings.on_stop
                 if (on_stop) {
