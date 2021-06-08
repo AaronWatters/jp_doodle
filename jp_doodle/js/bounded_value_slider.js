@@ -84,6 +84,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             this.mouse_down = this.mouse_down_handler();
             this.mouse_move = this.mouse_move_handler();
             this.mouse_up = this.mouse_up_handler();
+            this.background_click = this.background_click_handler();
             // Draw canvas objects.
             var b2 = breadth / 2.0;
             var b3 = breadth / 3.0;
@@ -97,6 +98,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             this.event_rectangle = frame.frame_rect({x:0, y:0, w:s.length, h:breadth, name:true, color:"rgba(0,0,0,0)"});
             this.assign_event_handlers(this.event_rectangle);
             this.event_rectangle.on("mouse_out", this.mouse_up)
+            this.event_rectangle.on("click", this.background_click)
+
             // Marker circles
             this.circles = [];
             this.name_to_index = {}
@@ -127,6 +130,19 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             ob.on("mousemove", this.mouse_move);
             ob.on("mouseup", this.mouse_up);
         }
+        background_click_handler() {
+            var that = this;
+            // pretend the current circle was moved
+            return function(event) {
+                that.moving_name = CURRENT;
+                event.canvas_name = CURRENT;
+                that.last_changed = CURRENT;
+                that.moving_offset = 0;
+                that.mouse_move(event);
+                that.mouse_up(event);
+            };
+        };
+
         mouse_down_handler() {
             var that = this;
             return function(event) {
