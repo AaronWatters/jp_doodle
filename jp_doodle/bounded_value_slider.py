@@ -30,6 +30,7 @@ class BoundedValueSlider(jp_proxy_widget.JSProxyWidget):
         forbidden="black",
         verbose=False,
         border=5,
+        call_on_init=False,
         # ... add more eventually
         *pargs,
         **kwargs,
@@ -37,8 +38,7 @@ class BoundedValueSlider(jp_proxy_widget.JSProxyWidget):
         super(BoundedValueSlider, self).__init__(*pargs, **kwargs)
         load_requirements(self)
         self.element.empty()
-        self.element.bounded_value_slider(
-            dict(
+        self.parameters = dict(
                 length= length,
                 horizontal= horizontal,
                 initial=initial,
@@ -57,8 +57,9 @@ class BoundedValueSlider(jp_proxy_widget.JSProxyWidget):
                 radius=radius,
                 selected_radius=selected_radius,
                 border=border,
+                call_on_init=call_on_init,
             )
-        )
+        self.element.bounded_value_slider(self.parameters)
         self.on_stop_callback = on_stop
         self.current_values = None
 

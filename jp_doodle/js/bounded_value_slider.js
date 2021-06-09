@@ -37,7 +37,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 current_color: "cyan",
                 forbidden:"black",
                 verbose: false,
-                call_on_init: true,
+                call_on_init: false,
                 border: 5,
             }, options);
             var s = this.settings;
