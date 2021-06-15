@@ -286,8 +286,11 @@ XXXXX clean up events for forgotten objects
             var t2e = target.deferred_type_to_event;
             // don't cause an infinite loop in case redraw is called again...
             target.deferred_type_to_event = null;
+            // if there are no outstanding events then the event masks have not been drawn.
+            target.defer_events = true;
             if (t2e) {
-                // execute events immediately until next redraw request
+                // execute outstanding events.
+                // later execute events immediately until next redraw request.
                 target.defer_events = false;
                 // execute deferred events now.
                 for (var event_type in t2e) {
@@ -490,6 +493,8 @@ XXXXX clean up events for forgotten objects
         };
 
         target.store_object_info = function(info, draw_on_canvas, in_place) {
+            // defer events after any object store change
+            target.defer_events = true;
             // xxxx don't need to assign psuedocolors to frames???
             var name = info.name;
             // automatically assign name if needed
@@ -563,6 +568,8 @@ XXXXX clean up events for forgotten objects
         };
 
         target.change = function (name_or_info, opt, no_redraw) {
+            // defer events after any object change
+            target.defer_events = true;
             var object_info = target.get_object_info(name_or_info);
             if (object_info) {
                 // call the on_change callback if defined
@@ -1435,6 +1442,8 @@ XXXXX clean up events for forgotten objects
         };
 
         target.transition = function(object_name_or_info, to_values, seconds_duration, done_callback) {
+            // defer events after any transition
+            target.defer_events = true;
             var object_info = target.get_object_info(object_name_or_info);
             var object_name = object_info.name;
             //mode = mode || "linear";  -- mode is not used
