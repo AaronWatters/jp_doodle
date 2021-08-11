@@ -275,7 +275,11 @@ XXXXX clean up events for forgotten objects
             target.test_canvas.reset_canvas();
         }
 
-        target.redraw = function () {
+        target.redraw = function (default_events) {
+            // optionally set deferred events so masks will draw
+            if ((!target.deferred_type_to_event) && (default_events)) {
+                target.deferred_type_to_event = default_events;
+            }
             // cancel redraw_pending if set
             target.redraw_pending = false;
             target.visible_canvas.clear_canvas();
@@ -1277,16 +1281,14 @@ XXXXX clean up events for forgotten objects
             var shader_hidden_before = object_info.hide
             // get a hidden canvas pixel snapshot with the object hidden
             object_info.hide = true;
-            target.redraw();
+            // redraw with empty default events
+            target.redraw({});
             var shaded_info = target.invisible_canvas.pixels();
             var shaded_pixels = shaded_info.data;
             // get a hidden canvas pixel snapshot with the object visible
             object_info.hide = false;
-            // set an empty deferred events so masks will draw
-            if (!target.deferred_type_to_event) {
-                target.deferred_type_to_event = {};
-            }
-            target.redraw();
+            // redraw with empty default events
+            target.redraw({});
             var shading_pixels = target.invisible_canvas.pixels().data;
             // scan pixels to find named objects
             var name_to_shaded_objects = {};
@@ -1316,7 +1318,8 @@ XXXXX clean up events for forgotten objects
             }
             // Validate objects
             object_info.hide = true;
-            target.redraw();
+            // redraw with empty default events
+            target.redraw({});
             for (var name in shaded_object_evidence) {
                 var evidence = shaded_object_evidence[name];
                 if (target.object_name_at_position(null, evidence.x, evidence.y) == name) {
