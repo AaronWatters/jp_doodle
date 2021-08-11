@@ -1282,6 +1282,10 @@ XXXXX clean up events for forgotten objects
             var shaded_pixels = shaded_info.data;
             // get a hidden canvas pixel snapshot with the object visible
             object_info.hide = false;
+            // set an empty deferred events so masks will draw
+            if (!target.deferred_type_to_event) {
+                target.deferred_type_to_event = {};
+            }
             target.redraw();
             var shading_pixels = target.invisible_canvas.pixels().data;
             // scan pixels to find named objects
