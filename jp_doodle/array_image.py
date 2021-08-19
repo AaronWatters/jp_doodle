@@ -1,6 +1,7 @@
 
 import numpy as np
 from jp_doodle import dual_canvas
+import ipywidgets as widgets
 
 def default_hover_callback(x, y, array):
     [Y, X] = array.shape[:2]
@@ -112,3 +113,90 @@ def show_array(
     widget.image_display = full
     return widget
 
+class ArraySequenceDisplay:
+
+    """Switch between arrays in array sequence using slider.  Arrays must have same shape."""
+
+    def __init__(
+            self,
+            array_sequence, 
+            width=None, 
+            height=None, 
+            background=None,
+            scale=True, 
+            shift_min=True, 
+            margin=50,
+            textcolor="red",
+            textbackground="yellow",
+            font="normal 15px Courier",
+            hover_text_callback=default_hover_callback,
+            hover_color="rgba(200,100,50,0.5)",
+            epsilon=1e-10,
+        ):
+        ar0 = array_sequence[0]
+        shape0 = ar0.shape
+        for (index, ary) in enumerate(array_sequence):
+            assert ary.shape == shape0, "Arrays must have same shape: " + repr((index, ary.shape, shape0))
+        self.array_sequence = array_sequence
+        self.array_display = show_array(
+            ar0, 
+            width=width, 
+            height=height, 
+            background=background,
+            scale=scale, 
+            shift_min=shift_min, 
+            margin=margin,
+            textcolor=textcolor,
+            textbackground=textbackground,
+            font=font,
+            hover_text_callback=hover_text_callback,
+            hover_color=hover_color,
+            epsilon=epsilon,)
+        self.index_slider = widgets.IntSlider(
+            value=0,
+            min=0,
+            max=len(array_sequence) - 1,
+            step=1,
+            description="index",
+        )
+        self.index_slider.observe(self.change_index, names="value")
+        self.widget = widgets.VBox([
+            self.index_slider,
+            self.array_display,
+        ])
+    
+    def change_index(self, change):
+        index = change["new"]
+        ary = self.array_sequence[index]
+        self.array_display.set_image(ary)
+
+def show_arrays(
+        array_sequence, 
+        width=None, 
+        height=None, 
+        background=None,
+        scale=True, 
+        shift_min=True, 
+        margin=50,
+        textcolor="red",
+        textbackground="yellow",
+        font="normal 15px Courier",
+        hover_text_callback=default_hover_callback,
+        hover_color="rgba(200,100,50,0.5)",
+        epsilon=1e-10,
+    ):
+        display = ArraySequenceDisplay(
+            array_sequence, 
+            width=width, 
+            height=height, 
+            background=background,
+            scale=scale, 
+            shift_min=shift_min, 
+            margin=margin,
+            textcolor=textcolor,
+            textbackground=textbackground,
+            font=font,
+            hover_text_callback=hover_text_callback,
+            hover_color=hover_color,
+            epsilon=epsilon,)
+        return display.widget
