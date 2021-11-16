@@ -399,7 +399,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
         };
 
-        target.frame_rect = function(opt) {
+        target.frame_rect_buggy = function(opt) {
             // rectangle distorted by reference frame transform
             //var x = opt.x || 0;
             //var y = opt.y || 0;

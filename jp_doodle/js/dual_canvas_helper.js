@@ -407,7 +407,7 @@ XXXXX clean up events for forgotten objects
         };
         
         $.fn.dual_canvas_helper.draw_op_names = (
-            "circle line text rect frame_rect frame_circle polygon " +
+            "circle line text rect frame_circle polygon " +
             "named_image assembly").split(" ");
 
         for (var i=0; i<$.fn.dual_canvas_helper.draw_op_names.length; i++) {
@@ -573,6 +573,7 @@ XXXXX clean up events for forgotten objects
 
         target.change = function (name_or_info, opt, no_redraw) {
             // defer events after any object change
+            debugger;
             target.defer_events = true;
             var object_info = target.get_object_info(name_or_info);
             if (object_info) {
@@ -1682,6 +1683,38 @@ XXXXX clean up events for forgotten objects
             }
         };
 
+        var xy_position = function (s) {
+            var x = s.x;
+            var y = s.y;
+            if (s.position) {
+                x = s.position.x;
+                y = s.position.y;
+            }
+            return [x, y];
+        };
+
+        var draw_frame_rect = function(assembler, options) {
+            //debugger;
+            var s = $.extend({
+                w: 0,
+                h: 0,
+                dx: 0,
+                dy: 0,
+                x: 0,
+                y: 0,
+                position: null,
+            }, options);
+            var [x, y] = xy_position(s);
+            var xL = x + s.dx;
+            var yL = y + s.dy;
+            var xR = xL + s.w;
+            var yU = yL + s.h;
+            var points = [[xL,yL],[xR,yL],[xR,yU],[xL,yU]];
+            var polygon_config = $.extend({}, s);
+            polygon_config.points = points;
+            assembler.polygon(polygon_config);
+        };
+
         var draw_star = function(assembler, options) {
             var settings = $.extend({
                 points: 5,
@@ -1858,6 +1891,7 @@ XXXXX clean up events for forgotten objects
         target.install_standard_assemblies = function(frame) {
             frame = frame || target;
             frame.install_assembly("star", draw_star);
+            frame.install_assembly("frame_rect", draw_frame_rect);
             frame.install_assembly("arrow", draw_arrow);
             frame.install_assembly("double_arrow", draw_double_arrow);
             frame.install_assembly("circle_arrow", draw_circle_arrow);
