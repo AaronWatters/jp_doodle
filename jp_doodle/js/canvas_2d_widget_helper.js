@@ -209,7 +209,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             return s;
         }
 
-        target.frame_circle = function(opt) {
+        target.buggy_frame_circle = function(opt) {
             // circle with radius adjusted w.r.t frame transform.
             // xxxx somewhat heuristic -- not a distorted circle.
             var s = $.extend({}, opt);

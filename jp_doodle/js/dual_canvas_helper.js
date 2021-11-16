@@ -407,7 +407,7 @@ XXXXX clean up events for forgotten objects
         };
         
         $.fn.dual_canvas_helper.draw_op_names = (
-            "circle line text rect frame_circle polygon " +
+            "circle line text rect polygon " +
             "named_image assembly").split(" ");
 
         for (var i=0; i<$.fn.dual_canvas_helper.draw_op_names.length; i++) {
@@ -775,8 +775,8 @@ XXXXX clean up events for forgotten objects
         assign_shape_factory("line");
         assign_shape_factory("text");
         assign_shape_factory("rect");
-        assign_shape_factory("frame_rect");
-        assign_shape_factory("frame_circle");
+        //assign_shape_factory("frame_rect");
+        //assign_shape_factory("frame_circle");
         assign_shape_factory("polygon");
         assign_shape_factory("named_image");
 
@@ -1694,7 +1694,6 @@ XXXXX clean up events for forgotten objects
         };
 
         var draw_frame_rect = function(assembler, options) {
-            //debugger;
             var s = $.extend({
                 w: 0,
                 h: 0,
@@ -1710,6 +1709,30 @@ XXXXX clean up events for forgotten objects
             var xR = xL + s.w;
             var yU = yL + s.h;
             var points = [[xL,yL],[xR,yL],[xR,yU],[xL,yU]];
+            var polygon_config = $.extend({}, s);
+            polygon_config.points = points;
+            assembler.polygon(polygon_config);
+        };
+
+        var draw_frame_circle = function(assembler, options) {
+            var s = $.extend({
+                x: 0,
+                y: 0,
+                position: null,
+                r: 0,
+                npoints: 20, // default number of points in polygon.
+            }, options);
+            var [cx, cy] = xy_position(s);
+            var np = s.npoints;
+            var r = s.r;
+            var points = [];
+            var dtheta = 2.0 * Math.PI / np;
+            for (var i=0; i<np; i++) {
+                var theta = i * dtheta;
+                var x = cx + r * Math.cos(theta);
+                var y = cy + r * Math.sin(theta);
+                points.push([x, y])
+            }
             var polygon_config = $.extend({}, s);
             polygon_config.points = points;
             assembler.polygon(polygon_config);
@@ -1892,6 +1915,7 @@ XXXXX clean up events for forgotten objects
             frame = frame || target;
             frame.install_assembly("star", draw_star);
             frame.install_assembly("frame_rect", draw_frame_rect);
+            frame.install_assembly("frame_circle", draw_frame_circle);
             frame.install_assembly("arrow", draw_arrow);
             frame.install_assembly("double_arrow", draw_double_arrow);
             frame.install_assembly("circle_arrow", draw_circle_arrow);
