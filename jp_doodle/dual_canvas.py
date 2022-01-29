@@ -184,27 +184,27 @@ class CanvasOperationsMixin(object):
 
     def reset_canvas(self):
         "Re-initialize the canvas drawing area."
-        self.element.reset_canvas()
+        self.doodle.reset_canvas()
 
     def call_method(self, method_name, *arguments):
-        """call method for target frame (for subclassing)"""
-        self.element[method_name](*arguments)
+        """call method for doodle frame (for subclassing)"""
+        self.doodle[method_name](*arguments)
 
     def fit(self, stats=None, margin=0):
         "Adjust the translate and scale so that the visible objects are centered and visible."
-        self.element.fit(stats, margin)
+        self.doodle.fit(stats, margin)
 
     def change(self, name, **changed_options):
         "Change the configuration of a named object and request redraw."
-        self.element.change(name, changed_options)
+        self.doodle.change(name, changed_options)
 
     def forget_objects(self, names):
         "Remove named objects from the canvas object list and request redraw."
-        self.element.forget_objects(names)
+        self.doodle.forget_objects(names)
 
     def set_visibilities(self, names, visibility):
         "Make named objects visible or invisible."
-        self.element.set_visibilities(names, visibility)
+        self.doodle.set_visibilities(names, visibility)
 
     def on_canvas_event(self, event_type, callback, for_name=None, abbreviated=True, delay=True):
         "Register an event handler for the canvas or for a named element."
@@ -219,14 +219,14 @@ class CanvasOperationsMixin(object):
 
     def off_canvas_event(self, event_type, for_name=None):
         "Unregister the event handler for the canvas or for a named element."
-        self.element.off_canvas_event(event_type, for_name)
+        self.doodle.off_canvas_event(event_type, for_name)
 
     def name_image_url(self, image_name, url, no_redraw=False):
         "Load an image by URL and give it a name for reference.  Redraw canvas when load completes, unless disabled."
-        self.element.name_image_url(image_name, url, no_redraw)
+        self.doodle.name_image_url(image_name, url, no_redraw)
 
     def request_redraw(self):
-        self.element.request_redraw()
+        self.doodle.request_redraw()
 
     def name_image_array(self, image_name, np_array,
             low_color=None, high_color=None):
@@ -263,12 +263,12 @@ class CanvasOperationsMixin(object):
         image_bytes = bytearray(np_array.tobytes())
         # (nrows, ncols, ncolors) = np_array.shape
         # assert ncolors == 4
-        self.element.name_image_data(image_name, image_bytes, ncols, nrows, 
+        self.doodle.name_image_data(image_name, image_bytes, ncols, nrows, 
             low_color, high_color)
 
     def callback_with_pixel_color(self, pixel_x, pixel_y, callback, ms_delay=500):
         "For testing.  Deliver the color at pixel as a list of four integers to the callback(list_of_integers)."
-        #self.element.callback_with_pixel_color(pixel_x, pixel_y, callback)
+        #self.doodle.callback_with_pixel_color(pixel_x, pixel_y, callback)
         # delay to be able to test animations and transitions.
         self.js_init("""
             setTimeout(
@@ -282,11 +282,11 @@ class CanvasOperationsMixin(object):
         mycanvas = self.get_canvas()
         # Translate 3 levels
         callback2 = mycanvas.callable(lasso_callback, level=3)
-        self.element.do_lasso(callback2, config, delete_after)
+        self.doodle.do_lasso(callback2, config, delete_after)
 
     def transition(self, object_name, to_values, seconds_duration=1, done_callback=None):
         "transition configuration values of object with name smoothly over duration."
-        self.element.transition(object_name, to_values, seconds_duration, done_callback)
+        self.doodle.transition(object_name, to_values, seconds_duration, done_callback)
 
     def vector_frame(self, x_vector, y_vector, xy_offset, name=None):
         """
@@ -346,7 +346,7 @@ class CanvasOperationsMixin(object):
         s.update(other_args)
         self.add_axis_color_configs(s, color)
         #self.call_method("lower_left_axes", s)
-        self.element.lower_left_axes(s)
+        self.doodle.lower_left_axes(s)
 
     def left_axis(self, min_value=None, max_value=None, anchor=None, method_name="left_axis", **other_args):
         s = clean_dict(min_value=min_value, max_value=max_value, anchor=anchor)
@@ -380,7 +380,7 @@ class CanvasOperationsMixin(object):
         """
         Get a description of drawn objects and canvas parameters.
         """
-        return self.element.get_raw_draw_information().sync_value(level=5)
+        return self.doodle.get_raw_draw_information().sync_value(level=5)
 
     def show(self):
         "Display the canvas"
@@ -390,7 +390,7 @@ class CanvasOperationsMixin(object):
         """
         Install serialized json objects into the canvas or frame.
         """
-        return self.element.deserialize_json_objects(object_list)
+        return self.doodle.deserialize_json_objects(object_list)
 
     def enable_tooltip(
         self,
@@ -513,7 +513,7 @@ class SaveImageMixin:
         Deliver the result to the callback(a) as a numpy array.
         All parameters are in pixel offsets, not canvas transformed coordinates.
         The canvas_element if provided should be a string which evaluates in javascript
-        to the target canvas (in the js_init context).
+        to the doodle canvas (in the js_init context).
         """
         # XXXX this leaks memory internally by storing callback references without disposing them.
         # Need to call js_init only once.
@@ -529,11 +529,11 @@ class SaveImageMixin:
             image_array = array1d.reshape((height, width, bytes_per_pixel))
             callback(image_array)
         self.js_init("""
-            var target = element;
+            var doodle = element;
             if (canvas_element) {
-                target = eval(canvas_element);
+                doodle = eval(canvas_element);
             }
-            var pixels = target.pixels(x, y, w, h);
+            var pixels = doodle.pixels(x, y, w, h);
             callback(pixels);
         """, callback=converter_callback, x=x, y=y, w=w, h=h, canvas_element=canvas_element)
 
@@ -619,7 +619,7 @@ class TopLevelCanvasMixin(CanvasOperationsMixin, SaveImageMixin):
         self.js_init("call_it();", call_it=call_it)
 
     def in_dialog(self):
-        self.element.dialog()
+        self.doodle.dialog()
 
     def json_serialization_async(self, callback):
         """
@@ -642,6 +642,7 @@ class DualCanvasWidget(jp_proxy_widget.JSProxyWidget, TopLevelCanvasMixin):
     def __init__(self, width=None, height=None, font=None, config=None, *pargs, **kwargs):
         "Create a canvas drawing area widget."
         super(DualCanvasWidget, self).__init__(*pargs, **kwargs)
+        self.doodle = self.element
         load_requirements(self)
         if config is None:
             config = self.default_config.copy()
@@ -664,7 +665,7 @@ class DualCanvasWidget(jp_proxy_widget.JSProxyWidget, TopLevelCanvasMixin):
             """, config=config)
 
     def requestAnimationFrame(self, callback):
-        return self.element.requestAnimationFrame(callback)
+        return self.doodle.requestAnimationFrame(callback)
 
 
 class JSONDualCanvasWidget(jp_proxy_widget.JSProxyWidget, TopLevelCanvasMixin):
@@ -676,6 +677,7 @@ class JSONDualCanvasWidget(jp_proxy_widget.JSProxyWidget, TopLevelCanvasMixin):
         super(JSONDualCanvasWidget, self).__init__(*pargs, **kwargs)
         load_requirements(self)
         self.initial_json = json_serialization
+        self.doodle = self.element
         # Standard initialization
         self.js_init("""
             element.empty();
@@ -690,19 +692,19 @@ class FrameInterface(CanvasOperationsMixin):
     def __init__(self, from_widget, attribute_name):
         self.from_widget = from_widget
         self.attribute_name = attribute_name
-        self.element = self.from_widget.element[self.attribute_name]
+        self.doodle = self.from_widget.element[self.attribute_name]
 
     def hide(self, hidden=True):
-        self.element.change({"hide": True})
+        self.doodle.change({"hide": True})
 
     def get_canvas(self):
         return self.from_widget
 
     def reset_frame(self):
-        self.element.reset_frame()
+        self.doodle.reset_frame()
 
     def set_region(self, minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy):
-        self.element.set_region(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy)
+        self.doodle.set_region(minx, miny, maxx, maxy, frame_minx, frame_miny, frame_maxx, frame_maxy)
 
     def in_dialog(self):
         self.from_widget.in_dialog()
@@ -745,7 +747,7 @@ class SnapshotCanvas(DualCanvasWidget):
     def display_all(self, widget_title="Canvas", button_text="Take Snapshot", snapshotTitle="Snapshot"):
         tabs = self.snapshot_tabs(widget_title, button_text, snapshotTitle)
         display(tabs)
-        self.element[0].scrollIntoView()
+        self.doodle[0].scrollIntoView()
 
     def check_file(self):
         "If snapshot doesn't exist save a placeholder image initially."
@@ -795,12 +797,12 @@ class SnapshotCanvas(DualCanvasWidget):
         try:
             self.save_pixels_to_png_async(filename, after=self.after_save, error=self.save_error)
         except Exception as e:
-            self.element["print"]("Snapshot exception: " + repr(e))
+            self.doodle["print"]("Snapshot exception: " + repr(e))
         else:
-            self.element["print"]("New snapshot: " + repr(filename))
+            self.doodle["print"]("New snapshot: " + repr(filename))
 
     def save_error(self, e):
-        self.element["print"]("Snapshot save exception: " + repr(e))
+        self.doodle["print"]("Snapshot save exception: " + repr(e))
 
     def after_save(self, *ignored_arguments):
         filename = self.snapshot_filename
