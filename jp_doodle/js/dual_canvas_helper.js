@@ -63,6 +63,7 @@ XXXXX clean up events for forgotten objects
             strokeStyle: "black",
             translate_scale: {x: 0.0, y:0.0, w:1.0, h:1.0},
             font: "normal 10px Arial",
+            image_smoothing: false,
         }, options);
 
         for (var key in settings) {
