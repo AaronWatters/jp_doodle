@@ -63,6 +63,7 @@ XXXXX clean up events for forgotten objects
             strokeStyle: "black",
             translate_scale: {x: 0.0, y:0.0, w:1.0, h:1.0},
             font: "normal 10px Arial",
+            image_smoothing: false,
         }, options);
 
         for (var key in settings) {
@@ -97,6 +98,14 @@ XXXXX clean up events for forgotten objects
             target.invisible_canvas.canvas_2d_widget_helper(settings_overrides);
             target.test_canvas.canvas_2d_widget_helper(settings_overrides);
 
+            // set draw list to [] to collect raw draw operations (for export to svg), default: disabled
+            target.visible_canvas.draw_list = null;
+            target.invisible_canvas.draw_list = null;
+            target.test_canvas.draw_list = null;
+
+            // whether to defer event handlers until redraw, false until deferred redraw
+            target.defer_events = false;
+
             target.clear_canvas(keep_stats);
         }
 
@@ -127,6 +136,30 @@ XXXXX clean up events for forgotten objects
             target.invisible_canvas.canvas.off();   // not needed.
 
             // no need to clear the test_canvas now
+        };
+
+        target.get_raw_draw_information = function () {
+            // get low level draw operation information for export to SVG (for example).
+            var params = {};
+            // for symmetry
+            params.shape_name = "canvas";
+            var vc = target.visible_canvas;
+            params.width = vc.canvas_width;
+            params.height = vc.canvas_height;
+            params.lineWidth = vc.canvas_lineWidth;
+            params.fillColor = vc.canvas_fillColor;
+            params.strokeStyle = vc.canvas_strokeStyle;
+            params.translate_scale = vc.canvas_translate_scale;
+            params.font = vc.canvas_font;
+            params.y_up = vc.canvas_y_up;
+            params.style = vc.canvas_style;
+            // do a draw pass and collect the draw list.
+            vc.draw_list = [params];
+            target.redraw();
+            var draw_list = vc.draw_list;
+            // disable draw collection
+            vc.draw_list = null;
+            return draw_list;
         };
 
         target.local_json_data = function () {
@@ -243,13 +276,33 @@ XXXXX clean up events for forgotten objects
             target.test_canvas.reset_canvas();
         }
 
-        target.redraw = function () {
+        target.redraw = function (default_events) {
+            // optionally set deferred events so masks will draw
+            if ((!target.deferred_type_to_event) && (default_events)) {
+                target.deferred_type_to_event = default_events;
+            }
             // cancel redraw_pending if set
             target.redraw_pending = false;
             target.visible_canvas.clear_canvas();
             target.invisible_canvas.clear_canvas();
             target.prepare_for_redraw();
             target.object_list = target.objects_drawn(target.object_list);
+            // handle deferred events
+            var t2e = target.deferred_type_to_event;
+            // don't cause an infinite loop in case redraw is called again...
+            target.deferred_type_to_event = null;
+            // if there are no outstanding events then the event masks have not been drawn.
+            target.defer_events = true;
+            if (t2e) {
+                // execute outstanding events.
+                // later execute events immediately until next redraw request.
+                target.defer_events = false;
+                // execute deferred events now.
+                for (var event_type in t2e) {
+                    var e = t2e[event_type];
+                    target.deferred_event_handler(e);
+                }
+            }
             // perform any transitions last to allow for temporary objects
             target.do_transitions();
         };
@@ -355,7 +408,7 @@ XXXXX clean up events for forgotten objects
         };
         
         $.fn.dual_canvas_helper.draw_op_names = (
-            "circle line text rect frame_rect frame_circle polygon " +
+            "circle line text rect polygon " +
             "named_image assembly").split(" ");
 
         for (var i=0; i<$.fn.dual_canvas_helper.draw_op_names.length; i++) {
@@ -420,6 +473,8 @@ XXXXX clean up events for forgotten objects
 
         // Call this after modifying the object collection to request an eventual redraw.
         target.request_redraw = function() {
+            // defer events until the redraw completes
+            target.defer_events = true;
             if (!target.redraw_pending) {
                 if (!target.disable_auto_redraw) {
                     requestAnimationFrame(target.redraw);
@@ -443,6 +498,8 @@ XXXXX clean up events for forgotten objects
         };
 
         target.store_object_info = function(info, draw_on_canvas, in_place) {
+            // defer events after any object store change
+            target.defer_events = true;
             // xxxx don't need to assign psuedocolors to frames???
             var name = info.name;
             // automatically assign name if needed
@@ -516,6 +573,9 @@ XXXXX clean up events for forgotten objects
         };
 
         target.change = function (name_or_info, opt, no_redraw) {
+            // defer events after any object change
+            debugger;
+            target.defer_events = true;
             var object_info = target.get_object_info(name_or_info);
             if (object_info) {
                 // call the on_change callback if defined
@@ -607,8 +667,9 @@ XXXXX clean up events for forgotten objects
             var draw_info = draw_fn(target.visible_canvas, object_info);
             // store additional information attached during the draw operation
             $.extend(object_info, draw_info);
-            if ((object_info.name) && (object_info.events !== false)) {
+            if ((object_info.name) && (object_info.events !== false) && (target.deferred_type_to_event)) {
                 // also draw invisible object using psuedocolor for event lookups
+                // only if a deferred event is outstanding
                 target.draw_mask(object_info, target.invisible_canvas);
                 // Don't draw on the test canvas now.
             }
@@ -693,6 +754,14 @@ XXXXX clean up events for forgotten objects
                     var info = method(s);
                     // store additional information added during draw operation
                     $.extend(s, info);
+                    // record raw drawing info if draw list is defined (moved to canvas_2d_widget_helper)
+                    //if (canvas.draw_list) {
+                    //    var draw_descriptor = $.extend({}, s);
+                    //    // don't return frame information
+                    //    draw_descriptor.frame = null;
+                    //    //canvas.draw_list.push($.extend({}, s));
+                    //    canvas.draw_list.push(draw_descriptor);
+                    //}
                 };
                 var object_info = target.store_object_info(opt, draw);
                 object_info.shape_name = shape_name;
@@ -707,8 +776,8 @@ XXXXX clean up events for forgotten objects
         assign_shape_factory("line");
         assign_shape_factory("text");
         assign_shape_factory("rect");
-        assign_shape_factory("frame_rect");
-        assign_shape_factory("frame_circle");
+        //assign_shape_factory("frame_rect");
+        //assign_shape_factory("frame_circle");
         assign_shape_factory("polygon");
         assign_shape_factory("named_image");
 
@@ -759,7 +828,7 @@ XXXXX clean up events for forgotten objects
             var data = imgdata.data;
             if (grey_scale) {
                 low_color = low_color || [0, 0, 0, 255];
-                high_color = high_color || [255, 255, 255, 0];
+                high_color = high_color || [255, 255, 255, 255];
                 for (var i=0; i<wh; i++) {
                     // interpolate grey image
                     var lambda = data_array[i]/255;
@@ -807,6 +876,23 @@ XXXXX clean up events for forgotten objects
                 target.watch_event("mousemove");
             }
             // ??? no provision for cancelling events on the visible canvas?
+        };
+
+        target.generic_event_handler = function (e) {
+            // execute event immediately if there has been no change to the canvas since last event redraw.
+            if (!target.defer_events) {
+                return target.deferred_event_handler(e);
+            }
+            // Otherwise defer the event and request a redraw -- events are handled only after redraw
+            // one event per type for each event type.
+            var event_type = e.type;
+            if (target.event_info.event_types[event_type]) {
+                if (!target.deferred_type_to_event) {
+                    target.deferred_type_to_event = {};
+                }
+                target.deferred_type_to_event[event_type] = e;
+                target.request_redraw();
+            }
         };
 
         target.get_object_info = function(for_name_or_info) {
@@ -966,7 +1052,7 @@ XXXXX clean up events for forgotten objects
             return canvas_name;
         };
 
-        target.generic_event_handler = function(e) {
+        target.deferred_event_handler = function(e) {
             var visible = target.visible_canvas;
             // for testing allow test case to override pixel location.
             if (!e.pixel_location) {
@@ -1197,12 +1283,14 @@ XXXXX clean up events for forgotten objects
             var shader_hidden_before = object_info.hide
             // get a hidden canvas pixel snapshot with the object hidden
             object_info.hide = true;
-            target.redraw();
+            // redraw with empty default events
+            target.redraw({});
             var shaded_info = target.invisible_canvas.pixels();
             var shaded_pixels = shaded_info.data;
             // get a hidden canvas pixel snapshot with the object visible
             object_info.hide = false;
-            target.redraw();
+            // redraw with empty default events
+            target.redraw({});
             var shading_pixels = target.invisible_canvas.pixels().data;
             // scan pixels to find named objects
             var name_to_shaded_objects = {};
@@ -1232,7 +1320,8 @@ XXXXX clean up events for forgotten objects
             }
             // Validate objects
             object_info.hide = true;
-            target.redraw();
+            // redraw with empty default events
+            target.redraw({});
             for (var name in shaded_object_evidence) {
                 var evidence = shaded_object_evidence[name];
                 if (target.object_name_at_position(null, evidence.x, evidence.y) == name) {
@@ -1341,7 +1430,12 @@ XXXXX clean up events for forgotten objects
                 transition.interpolate();
                 if (transition.finished()) {
                     // xxxx any termination actions?
-                    ////c.l("done transitioning " + name);
+                    ////c.l("done transitioning " + name)
+                    // call the callback if specified with no arguments
+                    var done_callback = transition.done_callback;
+                    if (done_callback) {
+                        done_callback();
+                    }
                     redraw = true;  // redraw for final interpolation
                 } else {
                     ////c.l("continuing transitions for " + name);
@@ -1356,10 +1450,12 @@ XXXXX clean up events for forgotten objects
             target.active_transitions = remaining;
         };
 
-        target.transition = function(object_name_or_info, to_values, seconds_duration, mode) {
+        target.transition = function(object_name_or_info, to_values, seconds_duration, done_callback) {
+            // defer events after any transition
+            target.defer_events = true;
             var object_info = target.get_object_info(object_name_or_info);
             var object_name = object_info.name;
-            mode = mode || "linear";
+            //mode = mode || "linear";  -- mode is not used
             seconds_duration = seconds_duration || 1;
             var start = (new Date()).getTime();
             var end = start + 1000 * seconds_duration;
@@ -1370,6 +1466,7 @@ XXXXX clean up events for forgotten objects
                 object_name: object_name,
                 from_values: from_values,
                 to_values: to_values,
+                done_callback: done_callback,
                 lmd: function () {
                     //return 0.5; // DEBUG
                     var time = (new Date()).getTime();
@@ -1587,6 +1684,61 @@ XXXXX clean up events for forgotten objects
             }
         };
 
+        var xy_position = function (s) {
+            var x = s.x;
+            var y = s.y;
+            if (s.position) {
+                x = s.position.x;
+                y = s.position.y;
+            }
+            return [x, y];
+        };
+
+        var draw_frame_rect = function(assembler, options) {
+            var s = $.extend({
+                w: 0,
+                h: 0,
+                dx: 0,
+                dy: 0,
+                x: 0,
+                y: 0,
+                position: null,
+            }, options);
+            var [x, y] = xy_position(s);
+            var xL = x + s.dx;
+            var yL = y + s.dy;
+            var xR = xL + s.w;
+            var yU = yL + s.h;
+            var points = [[xL,yL],[xR,yL],[xR,yU],[xL,yU]];
+            var polygon_config = $.extend({}, s);
+            polygon_config.points = points;
+            assembler.polygon(polygon_config);
+        };
+
+        var draw_frame_circle = function(assembler, options) {
+            var s = $.extend({
+                x: 0,
+                y: 0,
+                position: null,
+                r: 0,
+                npoints: 20, // default number of points in polygon.
+            }, options);
+            var [cx, cy] = xy_position(s);
+            var np = s.npoints;
+            var r = s.r;
+            var points = [];
+            var dtheta = 2.0 * Math.PI / np;
+            for (var i=0; i<np; i++) {
+                var theta = i * dtheta;
+                var x = cx + r * Math.cos(theta);
+                var y = cy + r * Math.sin(theta);
+                points.push([x, y])
+            }
+            var polygon_config = $.extend({}, s);
+            polygon_config.points = points;
+            assembler.polygon(polygon_config);
+        };
+
         var draw_star = function(assembler, options) {
             var settings = $.extend({
                 points: 5,
@@ -1763,6 +1915,8 @@ XXXXX clean up events for forgotten objects
         target.install_standard_assemblies = function(frame) {
             frame = frame || target;
             frame.install_assembly("star", draw_star);
+            frame.install_assembly("frame_rect", draw_frame_rect);
+            frame.install_assembly("frame_circle", draw_frame_circle);
             frame.install_assembly("arrow", draw_arrow);
             frame.install_assembly("double_arrow", draw_double_arrow);
             frame.install_assembly("circle_arrow", draw_circle_arrow);

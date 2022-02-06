@@ -22,6 +22,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             font: "normal 10px Arial",
             y_up: true,  // does y go up starting at the lower left corner? (default, yes.)
             style: "border:1px solid #d3d3d3;",
+            image_smoothing: true,
         }, options);
 
         for (var key in settings) {
@@ -38,7 +39,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.canvas.appendTo(target);
             target.canvas_context = target.canvas[0].getContext("2d");
             var ctx = target.canvas_context;
-            ctx.imageSmoothingEnabled = false;
+            ctx.imageSmoothingEnabled = target.canvas_image_smoothing;
             var ts = target.canvas_translate_scale;
             //ctx.translate(ts.x, ts.y);
             //ctx.scale(ts.w, ts.h);
@@ -192,10 +193,24 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             // sample pixel for lasso testing
             s.sample_pixel = target.canvas_to_pixel(fcenter.x, fcenter.y, true);
-            return s;
+            return save_check(s, "circle");
         };
 
-        target.frame_circle = function(opt) {
+        var save_check = function(s, shape_name) {
+            // record to object settings to draw list if set
+            var draw_list = target.draw_list;
+            if (draw_list) {
+                var sc = $.extend({}, s);
+                if (sc.frame) {
+                    sc.frame = null;
+                }
+                sc.shape_name = shape_name;
+                draw_list.push(sc);
+            }
+            return s;
+        }
+
+        target.buggy_frame_circle = function(opt) {
             // circle with radius adjusted w.r.t frame transform.
             // xxxx somewhat heuristic -- not a distorted circle.
             var s = $.extend({}, opt);
@@ -240,6 +255,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             //var fp2 = s.coordinate_conversion(s.x2, s.y2);
             var fp1 = s.coordinate_conversion(s, "position1", ["x1", "y1"]);
             var fp2 = s.coordinate_conversion(s, "position2", ["x2", "y2"]);
+            // keep the converted coordinates for SVG conversion
+            s.fp1 = fp1;
+            s.fp2 = fp2;
             var p1 = target.converted_location(fp1.x, fp1.y);
             var p2 = target.converted_location(fp2.x, fp2.y);
             context.moveTo(p1.x, p1.y);
@@ -253,7 +271,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             }
             // sample pixel for lasso testing
             s.sample_pixel = target.canvas_to_pixel(fp1.x, fp1.y, true);
-            return s;
+            return save_check(s, "line");
         };
 
         target.text = function(opt) {
@@ -293,8 +311,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             if ((s.valign) && (s.valign == "center")) {
                 dy = -0.3 * height + dy;
             }
+            if ((s.valign) && (s.valign == "top")) {
+                dy = -height + dy;
+            }
             var rdy = dy - height * 0.2;
             // use a rectangle for masking operations
+            s.background_rect = {w: rwidth, h: height, dx: dx, dy: rdy};
             s.draw_mask = function (to_canvas, info) {
                 //to_canvas.rect({x: info.x, y: info.y, w:rwidth, h:height, degrees:info.degrees, color:info.color, dx:dx, dy:rdy});
                 var config = $.extend({}, info);
@@ -302,6 +324,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 config.h = height;
                 config.dx = dx;
                 config.dy = rdy;
+                // record the background rect geometry for use in (eg) SVG conversion.
+                s.background_rect = {w: rwidth, h: height, dx: dx, dy: rdy};
                 to_canvas.rect(config);
             };
             // If background is provided, draw a background rectangle
@@ -323,7 +347,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 target.rectangle_stats(s, rwidth, height, s.degrees, s.coordinate_conversion, dx, rdy);
             }
             context.restore();  // matches translate_and_rotate
-            return s;
+            return save_check(s, "text");
         };
 
         target.rectangle_stats = function(s, w, h, degrees, coordinate_conversion, dx, dy) {
@@ -360,17 +384,23 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var context = target.canvas_context;
             context.save();   // should be matched by restore elsewhere
             var coords = s.coordinate_conversion(s);
+            // keep the coords for SVG conversion
+            s.coords = coords;
             var cvt = target.converted_location(coords.x, coords.y);
             if ((degrees) && (target.canvas_y_up)) {
                 degrees = -degrees;  // standard counter clockwise rotation convention.
             }
             context.translate(cvt.x, cvt.y);
+            s.translate = cvt;
             if (degrees) {
-                context.rotate(degrees * Math.PI / 180.0);
+                var radians = degrees * Math.PI / 180.0;
+                //context.rotate(degrees * Math.PI / 180.0);
+                context.rotate(radians);
+                s.rotate_radians = radians;
             }
         };
 
-        target.frame_rect = function(opt) {
+        target.frame_rect_buggy = function(opt) {
             // rectangle distorted by reference frame transform
             //var x = opt.x || 0;
             //var y = opt.y || 0;
@@ -423,7 +453,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 //target.rectangle_stats(s.x, s.y, s.w, s.h, s.degrees, s.coordinate_conversion, dx, dy0);
                 target.rectangle_stats(s, s.w, s.h, s.degrees, s.coordinate_conversion, dx, dy0);
             }
-            return s;
+            return save_check(s, "rect");
         };
 
         // attached image sources by name
@@ -487,7 +517,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var config = $.extend({}, info);
                 to_canvas.rect(config);
             };
-            return s;
+            return save_check(s, "named_image");
         };
 
         var fill_or_stroke = function(context, s) {
@@ -509,6 +539,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
         target.polygon = function(opt) {
             // eg: element.polygon({points: [[210, 10], [210, 110], [290, 60]], color: "brown"});
+            //  A "point" array of length 3 consisting of 3 inner points represents a bezier curve:
+            // eg: element.polygon({points: [[20, 20], [[20,100], [200,100], [200,20]]]})
             var s = $.extend({
                 color: target.canvas_fillColor,
                 fill: true,  // if false then do a outline
@@ -530,51 +562,99 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var degrees = s.degrees;
             var points = input_points;
             if (degrees) {
-                points = [];
-                // xxxx duplicate code here
-                var radians = degrees * Math.PI / 180.0;
-                var cs = Math.cos(radians);
-                var sn = Math.sin(radians);
-                for (var i=0; i<input_points.length; i++) {
-                    var point = input_points[i];
-                    var vx = point[0] - cx;                         
-                    var vy = point[1] - cy;
-                    var rx = (vx * cs - vy * sn);
-                    var ry = (vx * sn + vy * cs);
-                    points.push([rx + cx, ry + cy]);
+                var map_degrees = function(input_points) {
+                    var points = [];
+                    // xxxx duplicate code here
+                    var radians = degrees * Math.PI / 180.0;
+                    var cs = Math.cos(radians);
+                    var sn = Math.sin(radians);
+                    for (var i=0; i<input_points.length; i++) {
+                        var point = input_points[i];
+                        if (point.length == 2) {
+                            var vx = point[0] - cx;
+                            var vy = point[1] - cy;
+                            var rx = (vx * cs - vy * sn);
+                            var ry = (vx * sn + vy * cs);
+                            points.push([rx + cx, ry + cy]);
+                        } else {
+                            // inner array of points (maybe always should have length 3?)
+                            points.push(map_degrees(point));
+                        }
+                    }
+                    return points;
                 }
+                points = map_degrees(input_points);
             }
+            var fpoints = [];
+            // record fpoints for SVG conversion (could make conditionsal)
+            s.fpoints = fpoints;
             // If no points do nothing.
             if ((!points) || (points.length < 1)) {
                 return s;
             }
             context.beginPath();
             var point0 = points[0];
-            //var p0f = s.coordinate_conversion(point0[0], point0[1]);
-            var p0f = s.coordinate_conversion(point0);
-            var p0c = target.converted_location(p0f.x, p0f.y);
-            if (target.canvas_stats) {
-                target.add_point_stats(p0f.x, p0f.y);
+            if (point0.length != 2) {
+                throw new Error("First point of polygon must have length 2: " + point0);
             }
+            //var p0f = s.coordinate_conversion(point0[0], point0[1]);
+            var point_conversion = function (point, is_sample, recursed) {
+                var ln = point.length;
+                if (ln == 2) {
+                    var pf = s.coordinate_conversion(point);
+                    // xxxx note: svg conversion does not support bezier correctly!! xxxx
+                    // xxxx automatically convert bezier control points to regular polygon vertices in fpoints.
+                    fpoints.push(pf);  
+                    if (target.canvas_stats) {
+                        target.add_point_stats(pf.x, pf.y);
+                    }
+                    if (is_sample) {
+                        s.sample_pixel = target.canvas_to_pixel(pf.x, pf.y, true);
+                    }
+                    var pc = target.converted_location(pf.x, pf.y);
+                    return pc;
+                } else if ((!recursed) && (ln == 3)) {
+                    // bezier control points point = [A, B, C]
+                    var A = point_conversion(point[0], false, true);
+                    var B = point_conversion(point[1], false, true);
+                    var C = point_conversion(point[2], false, true);
+                    return {A:A, B:B, C:C, bezier: true};
+                } else {
+                    throw new Error("unsupported point length: " + [ln, point]);
+                }
+            };
+            //var p0f = s.coordinate_conversion(point0);
+            //var p0c = target.converted_location(p0f.x, p0f.y);
+            //if (target.canvas_stats) {
+            //    target.add_point_stats(p0f.x, p0f.y);
+            //}
             // sample pixel for lasso testing
-            s.sample_pixel = target.canvas_to_pixel(p0f.x, p0f.y, true);
+            var p0c = point_conversion(point0, true, false);
+            //s.sample_pixel = target.canvas_to_pixel(p0f.x, p0f.y, true);
             context.moveTo(p0c.x, p0c.y);
+            //fpoints.push(p0f);
             for (var i=1; i<points.length; i++) {
                 var point = points[i];
                 //var pf = s.coordinate_conversion(point[0], point[1]);
-                var pf = s.coordinate_conversion(point);
-                var pc = target.converted_location(pf.x, pf.y);
-                context.lineTo(pc.x, pc.y);
-                if (target.canvas_stats) {
-                    target.add_point_stats(pf.x, pf.y);
+                //var pf = s.coordinate_conversion(point);
+                //fpoints.push(pf);
+                //var pc = target.converted_location(pf.x, pf.y);
+                var pc = point_conversion(point, false, false);
+                if (pc.bezier) {
+                    context.bezierCurveTo(pc.A.x, pc.A.y, pc.B.x, pc.B.y, pc.C.x, pc.C.y);
+                } else {
+                    context.lineTo(pc.x, pc.y);
                 }
+                //if (target.canvas_stats) {
+                //    target.add_point_stats(pf.x, pf.y);
+                //}
             }
             if (s.close) {
                 context.closePath();
             }
             fill_or_stroke(context, s);
             context.restore();
-            return s;
+            return save_check(s, "polygon");
         };
 
         target.color_at = function(pixel_x, pixel_y) {
