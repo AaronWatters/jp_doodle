@@ -22,6 +22,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             font: "normal 10px Arial",
             y_up: true,  // does y go up starting at the lower left corner? (default, yes.)
             style: "border:1px solid #d3d3d3;",
+            image_smoothing: true,
         }, options);
 
         for (var key in settings) {
@@ -38,7 +39,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.canvas.appendTo(target);
             target.canvas_context = target.canvas[0].getContext("2d");
             var ctx = target.canvas_context;
-            ctx.imageSmoothingEnabled = false;
+            ctx.imageSmoothingEnabled = target.canvas_image_smoothing;
             var ts = target.canvas_translate_scale;
             //ctx.translate(ts.x, ts.y);
             //ctx.scale(ts.w, ts.h);
