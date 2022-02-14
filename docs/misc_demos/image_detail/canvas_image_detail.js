@@ -27,6 +27,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.mouse_is_pressed = false;
                 this.sync_list = [];
                 this.loaded = false;
+                this.setting_position = false;
             };
             sync_with(other_image_detail) {
                 this.sync_list.push(other_image_detail)
@@ -193,35 +194,44 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.set_position(null);  // use last position with new zoom
             };
             set_position(position, zoom) {
-                position = position || this.last_position;
-                this.last_position = position;
-                zoom = zoom || this.zoom;
-                this.zoom = zoom;
-                var canvas_height = this.canvas_height;
-                var canvas_width = this.canvas_width;
-                var whole_height = this.whole_height;
-                var whole_width = this.whole_width;
-                var zw = canvas_width / zoom;
-                var zh = canvas_height / zoom;
-                var x = position.x - zw/2;
-                var y = position.y + zh/2;
-                x = Math.min(x, whole_width - zw);
-                y = Math.max(y, zh);
-                x = Math.max(x, 0)
-                y = Math.min(y,  whole_height)
-                x = Math.round(x);
-                y = Math.round(y);
-                //info.html("position: " + [x, y])
-                var offset_x = x;
-                var offset_y = whole_height - y;
-                this.detail_rectangle.change({x: x, y: y-zh, w:zw, h:zh});
-                this.detail_image.change({x: -offset_x * zoom, y: -offset_y * zoom, w:whole_width * zoom, h:whole_height*zoom});
-                // sync with others
-                for (var i=0; i<this.sync_list.length; i++) {
-                    var other = this.sync_list[i];
-                    if ((other != this) && (other.loaded)) {
-                        other.set_position(position, zoom);
+                // prevent infinite recursion
+                if (this.setting_position) {
+                    return;
+                }
+                try {
+                    this.setting_position = true;
+                    position = position || this.last_position;
+                    this.last_position = position;
+                    zoom = zoom || this.zoom;
+                    this.zoom = zoom;
+                    var canvas_height = this.canvas_height;
+                    var canvas_width = this.canvas_width;
+                    var whole_height = this.whole_height;
+                    var whole_width = this.whole_width;
+                    var zw = canvas_width / zoom;
+                    var zh = canvas_height / zoom;
+                    var x = position.x - zw/2;
+                    var y = position.y + zh/2;
+                    x = Math.min(x, whole_width - zw);
+                    y = Math.max(y, zh);
+                    x = Math.max(x, 0)
+                    y = Math.min(y,  whole_height)
+                    x = Math.round(x);
+                    y = Math.round(y);
+                    //info.html("position: " + [x, y])
+                    var offset_x = x;
+                    var offset_y = whole_height - y;
+                    this.detail_rectangle.change({x: x, y: y-zh, w:zw, h:zh});
+                    this.detail_image.change({x: -offset_x * zoom, y: -offset_y * zoom, w:whole_width * zoom, h:whole_height*zoom});
+                    // sync with others
+                    for (var i=0; i<this.sync_list.length; i++) {
+                        var other = this.sync_list[i];
+                        if ((other != this) && (other.loaded)) {
+                            other.set_position(position, zoom);
+                        }
                     }
+                } finally { 
+                    this.setting_position = false
                 }
             };
             update_images() {
