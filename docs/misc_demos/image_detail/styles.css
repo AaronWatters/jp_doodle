@@ -1,0 +1,58 @@
+.halo_grid {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto;
+  grid-column-gap: 5px;
+  grid-row-gap: 5px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-left: 5px;
+  margin-right: 5px;
+  width: 1000px;
+}
+
+.dot_cloud {
+  background-color: #999;
+  height: 700px;
+  width: 700px;
+}
+
+.controls {
+  background-color: #ddd;
+  width: 400px;
+  display: grid;
+  grid-template-columns: auto auto;
+}
+
+.piano__wrapper,
+.control__wrapper {
+  margin-bottom: 2rem;
+}
+.midi-button__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  column-gap: 1rem;
+  margin: 2rem 0;
+}
+button {
+  margin-bottom: 15px;
+  margin-top: 15px;
+}
+label > .label-body {
+  color: #555;
+  font-size: 1.3rem;
+}
+
+.test {
+  color: #9e0142;
+  color: #d53e4f;
+  color: #f46d43;
+  color: #fdae61;
+  color: #fee08b;
+  color: #ffffbf;
+  color: #e6f598;
+  color: #abdda4;
+  color: #66c2a5;
+  color: #3288bd;
+  color: #5e4fa2;
+}

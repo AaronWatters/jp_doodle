@@ -1,0 +1,89 @@
+<html>
+<head>
+    <title>Image detail viewer</title>
+    <meta charset="utf-8" />
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./normalize.css" />
+    <link rel="stylesheet" href="./base.css" />
+    <link rel="stylesheet" href="./jquery-ui.css">
+    <script src="./jquery.js"></script>
+    <script src="./jquery-ui.js"></script>
+    <script src="./canvas_2d_widget_helper.js"></script>
+    <script src="./dual_canvas_helper.js"></script>
+    <script src="./canvas_image_detail.js"></script>
+</head>
+<body>
+    <div class="layout"> <div class="section"> <div class="image-detail">
+    
+        <h4 class="title">Image detail viewer.</h4>
+        <p>
+            This demo shows a large image in four panels.  
+            The left images show the whole image at low resolution and the right panel shows part of the image in full resolution.
+        </p>
+
+        <p>
+            Drag the mouse over the left panel to change the region of interest viewed in the right panel.
+            Use the dropdowns to adjust the zoom level.
+            The detail-drag/zoom events are synchronized between the top and bottom panels.
+        </p>
+
+        <p>
+            Adjust the sliders to change the "gamma" contrast for the images.  The contrast for the top panels the
+            bottom panels are independent.
+        </p>
+
+        <p>
+            Please consult the 
+            repository source code 
+            for canvas_image_detail usage.
+        </p>
+
+        <h3 id="Header1">Header 1</h3>
+
+        <button onClick="load_url('./example.png')">Load example.png</button>
+        <button onClick="load_url('./screen.png')">Load screen.png</button>
+
+        <div id="TopDisplay">Top</div>
+        <div id="BottomDisplay">Bottom</div>
+
+        <button onClick="window.location.reload();">Refit to viewport</button>
+    </div> </div> </div>
+
+    <script>
+        var url = "screen.png";
+
+        function load_url(url) {
+            var header = $("#Header1");
+            header.html("Loading: " + url);
+
+            // Image detail target containers as jQuery elements:
+            var top_display = $("#TopDisplay");
+            var bottom_display = $("#BottomDisplay");
+
+            // Options for canvas_image_detail objects.
+            var options = {
+                panel_width_factor: 0.4,
+                screen_min: 400,
+            };
+
+            // Create the detail image views using the canvas_image_detail jQueryUI plugin.
+            var top_detail = top_display.canvas_image_detail(options);
+            var bottom_detail = bottom_display.canvas_image_detail(options);
+
+            // Load the image URL into the image detail views.
+            top_detail.load_image_url(url);
+            bottom_detail.load_image_url(url);
+
+            // Synchronize zoom and pan.
+            top_detail.sync_with(bottom_detail);
+            bottom_detail.sync_with(top_detail);
+
+            header.html("Loaded: " + url);
+        };
+
+        load_url("./example.png")
+        console.log("script loaded.")
+    </script>
+</body>
+</html>
