@@ -168,6 +168,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 event_rectangle.on("mouseup", track_detail);
                 event_rectangle.on("mousedown", track_detail);
                 zoom_select.on("change", function(event) { that.zoom_change(event); })
+                this.gamma_value.html("" + this.gamma);
+                
                 this.loaded = true;
             };
             track_detail(event) {
