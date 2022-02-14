@@ -1265,7 +1265,8 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
                 var diff = ops.vsub(M, m);
                 var mid = ops.vadd(ops.vscale(0.5, diff), m);
-                var maxdiff2 = Math.max(diff.x, diff.y) * 0.5;
+                // make the max diff have extra space
+                var maxdiff2 = Math.max(diff.x, diff.y) * 0.6;
                 this.radius = maxdiff2;   // used for drawing calibration.
                 result.frame_minx = mid.x - maxdiff2;
                 result.frame_miny = mid.y - maxdiff2;

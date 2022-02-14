@@ -921,7 +921,17 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.points = this.locations.map(positional_xy);
             };
             position2d() {
-                return this.points[0];  // xxxx arbitrary choice; could use centroid.
+                //return this.points[0];  // xxxx arbitrary choice; could use centroid.
+                var frame = this.nd_frame;
+                var locations = this.locations;
+                var ln = locations.length;
+                var accum = this.frame_conversion(locations[0], frame);
+                var ops = $.fn.nd_frame.matrix_op
+                for (var i=1; i<ln; i++) {
+                    accum = ops.vadd(accum, this.frame_conversion(locations[i], frame));
+                }
+                var centroid = ops.vscale(1.0/ln, accum);
+                return centroid;
             };
         };
 
