@@ -206,6 +206,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     this.last_position = position;
                     zoom = zoom || this.zoom;
                     this.zoom = zoom;
+                    this.zoom_select.val(zoom).change();
                     var canvas_height = this.canvas_height;
                     var canvas_width = this.canvas_width;
                     var whole_height = this.whole_height;
