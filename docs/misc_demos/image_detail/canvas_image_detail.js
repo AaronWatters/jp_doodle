@@ -152,11 +152,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.set_position(init_position);
 
                 // set up controls
+                var slide_change = function (event) { that.gamma_slide(event); };
                 slider.empty();
                 slider.width(500);
                 slider.slider({
                     value: this.gamma,
-                    slide: (function (event) { that.gamma_slide(event); }),
+                    slide: slide_change,
+                    change: slide_change,
                     min: 0.1,
                     max: 4.0,
                     step: 0.1,
