@@ -911,6 +911,27 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         class ND_Polygon extends ND_Shape {
             _shape_name() { return "polygon"; }  // xxxx should be a class member?
             project(nd_frame) {
+                var ops = $.fn.nd_frame.matrix_op
+                var points = [];
+                var accum = null;
+                var locations = this.locations;
+                var ln = locations.length;
+                for (var i=0; i<ln; i++) {
+                    var point = locations[i];
+                    var cvt = this.frame_conversion(point, nd_frame);
+                    var position = [cvt.x, cvt.y];
+                    points.push(position);
+                    if (accum) {
+                        accum = ops.vadd(accum, cvt);
+                    } else {
+                        accum = cvt;
+                    }
+                }
+                this.points = points;
+                this.position = ops.vscale(1.0/ln, accum);
+            };
+            /*
+            project(nd_frame) {
                 // xxx should convert cx, cy too...
                 var that = this;
                 var positional_xy = function(point) {
@@ -933,6 +954,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var centroid = ops.vscale(1.0/ln, accum);
                 return centroid;
             };
+            */
         };
 
         var result = new ND_Frame(options, element);
