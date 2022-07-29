@@ -1898,7 +1898,9 @@ XXXXX clean up events for forgotten objects
             var circle_settings = $.extend({}, settings);
             circle_settings.x = x;
             circle_settings.y = y + r;
-            assembler.frame_circle(circle_settings);
+            //assembler.frame_circle(circle_settings);
+            circle_settings.assembly = "frame_circle";
+            assembler.assembly(circle_settings);
             var theta = settings.offset_angle * Math.PI / 180.0;
             var phi = (90 - settings.head_angle) * Math.PI / 180.0;
             var x1 = circle_settings.x + r * Math.sin(theta);
