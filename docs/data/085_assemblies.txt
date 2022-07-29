@@ -54,7 +54,8 @@ var draw_bear = function(assembler, settings) {
         return y * sc + cy;
     };
     var circle = function(x, y, r, color) {
-        return assembler.frame_circle({x: xx(x), y:yy(y), r:r*sc, color:color});
+        //return assembler.frame_circle({x: xx(x), y:yy(y), r:r*sc, color:color});
+        assembler.assembly({ assembly: "frame_circle", x: xx(x), y:yy(y), r:r*sc, color:color});
     };
     circle(0, -2, 8, fur);  // torso
     circle(0, 10, 5, fur);  // head
