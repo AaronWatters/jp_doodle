@@ -574,7 +574,6 @@ XXXXX clean up events for forgotten objects
 
         target.change = function (name_or_info, opt, no_redraw) {
             // defer events after any object change
-            debugger;
             target.defer_events = true;
             var object_info = target.get_object_info(name_or_info);
             if (object_info) {
@@ -1899,7 +1898,9 @@ XXXXX clean up events for forgotten objects
             var circle_settings = $.extend({}, settings);
             circle_settings.x = x;
             circle_settings.y = y + r;
-            assembler.frame_circle(circle_settings);
+            //assembler.frame_circle(circle_settings);
+            circle_settings.assembly = "frame_circle";
+            assembler.assembly(circle_settings);
             var theta = settings.offset_angle * Math.PI / 180.0;
             var phi = (90 - settings.head_angle) * Math.PI / 180.0;
             var x1 = circle_settings.x + r * Math.sin(theta);

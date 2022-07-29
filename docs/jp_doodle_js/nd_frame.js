@@ -228,19 +228,26 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.reset_stats();
                 this.prepare_transform();
                 var object_list = this.object_list.slice();
+                var len = object_list.length;
                 // project the objects into canvas frame coordinates
-                for (var i=0; i<object_list.length; i++) {
+                for (var i=0; i<len; i++) {
                     var nd_object_info = object_list[i];
                     nd_object_info.project(this);
+                    var pos = nd_object_info.position2d();
+                    nd_object_info.z_comparator = numeric_default(pos.z, -pos.y);
                 }
                 // sort the object order by z or -y.
+                /*
                 var comparison = function(a, b) {
                     var a_position = a.position2d();
                     var b_position = b.position2d();
                     var a_value = numeric_default(a_position.z, -a_position.y);
                     var b_value = numeric_default(b_position.z, -b_position.y);
                     return (a_value - b_value);
-                }
+                }*/
+                var comparison = function(a, b) {
+                    return a.z_comparator - b.z_comparator;
+                };
                 object_list.sort(comparison);
                 // the event rectangle should match the dedicated extrema
                 var er = this.event_rectangle;
