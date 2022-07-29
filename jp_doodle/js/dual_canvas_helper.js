@@ -574,7 +574,6 @@ XXXXX clean up events for forgotten objects
 
         target.change = function (name_or_info, opt, no_redraw) {
             // defer events after any object change
-            debugger;
             target.defer_events = true;
             var object_info = target.get_object_info(name_or_info);
             if (object_info) {
