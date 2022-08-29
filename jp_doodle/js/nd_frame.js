@@ -147,6 +147,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.feature_axes = fa;
                 this.translation = tr;
                 this.model_axes = ma;
+
+                this.perspective = false;
+                this.feature_focal_length = null;
+                this.vector_focal_length = null;
+                this.feature_focus = null;
+                this.vector_focus = null;
                 
                 this.reset();
             };
@@ -278,7 +284,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // Do nothing.
                 // the dedicated frame should also be on the object list and it redraws the objects.
             };
-            coordinate_conversion(fv, invisible) {
+            coordinate_conversion(fv, invisible, no_perspective) {
                 if (!fv) {
                     throw new Error("falsy vector entry not allowed");
                 }
@@ -286,6 +292,21 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var feature_vector = this.as_vector(fv);
                 var matrix = this.feature_to_frame;
                 var result = matrix.affine(feature_vector);
+                if ((!no_perspective) && (this.perspective)) {
+                    var vector_focus = this.vector_focus;
+                    var vector_focal_length = this.vector_focal_length;
+                    var focus_distance = vector_focal_length - result.z + vector_focus.z; // xxx could compute subexpression optimize...
+                    //c.log("focus_distance", focus_distance);
+                    if (focus_distance > this.epsilon) {
+                        var focus_ratio = vector_focal_length / focus_distance;
+                        var diff = matrix.vdiff(result, vector_focus);
+                        var scaled = matrix.vscale(focus_ratio, diff);
+                        var shifted = matrix.vadd(scaled, vector_focus);
+                        result.x = shifted.x;
+                        result.y = shifted.y;
+                        // leave z alone for z-sorting.
+                    }
+                }
                 if (!invisible) {
                     // record statistics.
                     this.min_feature = matrix.vmin(this.min_feature, feature_vector, this.feature_axes);
@@ -423,6 +444,23 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 // model inverse is computed as needed.
                 this._model_inverse = null;
                 // feature inverse is not well defined in general...
+                if (this.perspective) {
+                    this.set_perspective(this.feature_focus, this.feature_focal_length);
+                }
+            };
+            set_perspective(feature_focus, feature_focal_length) {
+                var matrix = this.feature_to_frame;
+                this.feature_focus = feature_focus;
+                this.feature_focal_length = feature_focal_length;
+                //this.vector_focal_length = vector_focal_length;
+                this.vector_focus = this.coordinate_conversion(feature_focus, true, true);
+                // determine vector space focal length
+                var origin = this.coordinate_conversion({x:0, y:0, z:0}, true, true);
+                var shift = this.coordinate_conversion({x:0, y:0, z:feature_focal_length}, true, true);
+                var diff = matrix.vdiff(origin, shift);
+                this.vector_focal_length = matrix.vlength(diff);
+                //.log("v focal length", this.vector_focal_length);
+                this.perspective = true;
             };
             model_inverse_transform() {
                 var result = this._model_inverse;
@@ -693,7 +731,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 var nd_frame = this.nd_frame;
                 var scale = elapsed / 1000.0;
                 var shift = nd_frame.model_transform.vscale(scale, this.shift2dPerSecond);
-                console.log("shift="+shift.x+","+shift.y);
+                //c.log("shift="+shift.x+","+shift.y);
                 this.nd_frame.orbit(this.center3d, this.radius, shift);
             };
             go() {
