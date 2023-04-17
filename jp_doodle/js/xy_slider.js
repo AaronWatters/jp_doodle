@@ -76,6 +76,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 s.on_change(this.current_x, this.current_y);
             }
         };
+        current_xy () {
+            return {
+                x: this.current_x,
+                y: this.current_y,
+            }
+        }
         info(message) {
             if (this.settings.verbose) {
                 this.info_area.html(message);
