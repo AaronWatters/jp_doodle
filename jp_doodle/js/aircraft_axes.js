@@ -13,6 +13,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
     const PI = Math.PI;  // for convenience
     const RAD2DEG = 180.0 / PI;
     const PI2 = 2 * PI;
+    
+    const up_arrow_key = 38;
+    const down_arrow_key = 40;
+    const left_arrow_key = 37;
+    const right_arrow_key = 39;
+    const arrow_delta = 0.2;
+    const arrow_boundary = PI - arrow_delta;
 
     const clampPI = (num) => Math.min(Math.max(num, -PI), PI)
 
@@ -79,10 +86,15 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             this.mouse_down = this.mouse_down_handler();
             this.mouse_move = this.mouse_move_handler();
             this.mouse_up = this.mouse_up_handler();
+            this.keypress = this.keypress_handler();
             //this.background_click = this.background_click_handler();
             target.on_canvas_event("mousedown", this.mouse_down);
             target.on_canvas_event("mousemove", this.mouse_move);
             target.on_canvas_event("mouseup", this.mouse_up);
+            this.keypress_target = target.parent();
+            this.keypress_target.keydown(this.keypress);
+            this.keypress_target.attr('tabindex', 0);
+            this.keypress_target.focus();
             //target.fit();
             if ((s.call_on_init) && (s.on_change)) {
                 s.on_change(this.current_coords());
@@ -129,6 +141,46 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
             };
         };
+        keypress_handler() {
+            var that = this;
+            var s = this.settings;
+            var on_change = s.on_change;
+            return function(event) {
+                var num = event.which;
+                console.log("keypress: ", num)
+                var y = that.current_yaw;
+                var x = that.current_pitch;
+                var handled = false;
+                if ((num == up_arrow_key) && (y < arrow_boundary)) {
+                    handled = true;
+                    y = y + arrow_delta;
+                }
+                if ((num == down_arrow_key) && (y > - arrow_boundary)) {
+                    handled = true;
+                    y = y - arrow_delta;
+                }
+                if ((num == right_arrow_key) && (x < arrow_boundary)) {
+                    handled = true;
+                    x = x + arrow_delta;
+                }
+                if ((num == left_arrow_key) && (x > - arrow_boundary)) {
+                    handled = true;
+                    x = x - arrow_delta;
+                }
+                if (handled) {
+                    event.preventDefault(); // don't propagate
+                    that.current_yaw = y;
+                    that.current_pitch = x;
+                    that.pitch_yaw_marker.change({x:x, y:y});
+                    if (s.verbose) {
+                        that.report();
+                    }
+                    if (on_change) {
+                        on_change(that.current_coords())
+                    }
+                }
+            };
+        };
         mouse_move_handler() {
             var that = this;
             var s = this.settings;
@@ -166,20 +218,6 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 if (on_change) {
                     on_change(that.current_coords())
                 }
-                /*
-                if (that.tracking_mouse) {
-                    var frame_location = that.frame.event_model_location(event);
-                    var x = frame_location.x;
-                    var y = frame_location.y;
-                    that.tracking_circle.change({x:x, y:y, r:s.selected_radius});
-                    that.tracking_line_x.change({x1:x, x2:x});
-                    that.tracking_line_y.change({y1:y, y2:y})
-                    that.current_x = x;
-                    that.current_y = y;
-                    if (on_change) {
-                        on_change(x, y)
-                    }
-                }*/
             };
         };
         mouse_up_handler() {
