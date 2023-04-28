@@ -26,8 +26,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
     const int_degrees = (num) => Math.floor(num * RAD2DEG)
 
     class AircraftAxes {
-        constructor(options, target) {
+        constructor(options, container) {
+            //this.target = target;
+            this.container = container;
+            var target = $("<div/>").appendTo(container);
             this.target = target;
+
             target.bounded_slider = this;
             this.settings = $.extend({
                 width: 500,
@@ -91,10 +95,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             target.on_canvas_event("mousedown", this.mouse_down);
             target.on_canvas_event("mousemove", this.mouse_move);
             target.on_canvas_event("mouseup", this.mouse_up);
-            this.keypress_target = target.parent();
-            this.keypress_target.keydown(this.keypress);
-            this.keypress_target.attr('tabindex', 0);
-            this.keypress_target.focus();
+            var keypress_target = container;
+            console.log("adding keypress to", keypress_target)
+            keypress_target.keydown(this.keypress);
+            keypress_target.attr('tabindex', 0);
+            keypress_target.focus();
             //target.fit();
             if ((s.call_on_init) && (s.on_change)) {
                 s.on_change(this.current_coords());
