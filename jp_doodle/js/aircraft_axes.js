@@ -43,6 +43,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 circle_color: "silver",
                 square_color: "cyan",
                 marker_color: "orange",
+                reference_color: "white",
                 verbose: true,
                 call_on_init: true,
             }, options);
@@ -72,6 +73,13 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             frame.circle({x: 0, y: 0, r:circle_radius, color:s.circle_color});
             // pitch/yaw square
             frame.frame_rect({x:-PI, y:-PI, w:PI2, h:PI2, color:s.square_color});
+            // reference lines
+            for (var i=-1; i<2; i++) {
+                var offset = i * 0.5 * PI;
+                //("offset", offset)
+                frame.line({x1:-PI, y1:offset, x2:PI, y2:offset, color:s.reference_color});
+                frame.line({y1:-PI, x1:offset, y2:PI, x2:offset, color:s.reference_color});
+            }
             // roll marker
             this.roll_marker = frame.circle({x: this.frame_circle_radius, y:0, r:s.marker_radius, color:s.marker_color, name:"roll-marker"});
             // pitch/yaw marker
