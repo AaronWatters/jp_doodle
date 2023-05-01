@@ -27,6 +27,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
     class AircraftAxes {
         constructor(options, container) {
+            var that = this;
             //this.target = target;
             this.container = container;
             var target = $("<div/>").appendTo(container);
@@ -89,6 +90,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var transparent = "rgba(0,0,0,0)";
             this.roll_event = frame.circle({x: 0, y: 0, r:circle_radius, color:transparent, name:ROLL});
             this.pitch_yaw_event = frame.frame_rect({x:-PI, y:-PI, w:PI2, h:PI2, color:transparent, name:PITCH_YAW});
+
+            // Add "reset link"
+            this.reset_text = target.text({x:5, y:5, text:"reset", color:"blue", name:"reset"});
+            this.reset_text.on("click", function () { that.reset_coords(); });
 
             this.tracking_state = null;  // not tracking anything yet.
             this.current_pitch = 0;
@@ -193,6 +198,18 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     }
                 }
             };
+        };
+        reset_coords() {
+            this.current_yaw = 0;
+            this.current_pitch = 0;
+            this.current_roll = 0;
+            this.pitch_yaw_marker.change({x:0, y:0});
+            this.roll_marker.change({x: this.frame_circle_radius, y:0});
+            this.report();
+            var on_change = this.settings.on_change;
+            if (on_change) {
+                on_change(this.current_coords());
+            }
         };
         mouse_move_handler() {
             var that = this;
