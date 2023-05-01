@@ -37,7 +37,8 @@ class AircraftAxes(gz_jQuery.jQueryComponent):
         if options.get("on_change") is None:
             options["on_change"] = self.on_change_record_coords
         #gizmo = self.gizmo
-        do(element.aircraft_axes(options))
+        self.axes = self.cache("axes", element.aircraft_axes(options))
+        do(self.axes.report())
 
     def on_change_record_coords(self, coords):
         self.pitch = coords["pitch"]
@@ -45,6 +46,9 @@ class AircraftAxes(gz_jQuery.jQueryComponent):
         self.roll = coords["roll"]
         if self.on_change:
             self.on_change(self.roll, self.pitch, self.yaw)
+
+    def report(self):
+        do(self.axes.report())
 
 def add_js_files(to_gizmo_component):
     for path in dual_canvas.required_javascript_modules:
