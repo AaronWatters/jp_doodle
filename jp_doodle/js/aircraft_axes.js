@@ -6,6 +6,131 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 
 (function($) {
 
+    // model coordinates
+    const A = [0, 0, 2];
+    const B = [1, 0, 0];
+    const C = [-1, 0, 0];
+    const D = [0, 1, 0];
+    const E = [-2, -1, -1];
+    const F = [-1, 0, -1];
+    const G = [1, 0, -1];
+    const H = [2, -1, -1];
+    const I = [0, 0, -1];
+    const J = [1, 0, -2];
+    const K = [-1, 0, -2];
+
+    const airplane_triangle_coords = [
+        [A,B,C],
+        [D,B,A],
+        [D,A,C],
+        [E,F,C],
+        [G,B,H],
+        [I,G,J],
+        [I,F,K],
+    ];
+
+    const eye3x3 = [
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1],
+    ];
+
+    function xy_project(triple, z_offset) {
+        const [x, y, z] = triple;
+        const scale = 1.0 / (z_offset - z);
+        return [scale * x, scale * y];
+    };
+
+    function Mv_product(matrix, triple) {
+        var result = [];
+        for (var i=0; i<3; i++) {
+            var value = 0;
+            for (var j=0; j<3; j++) {
+                value += matrix[i][j] * triple[j];
+            }
+            result.push(value);
+        }
+        return result;
+    };
+
+    function MM_product(Mleft, Mright) {
+        var result = [];
+        for (var i=0; i<3; i++) {
+            var row = [];
+            for (var j=0; j<3; j++) {
+                var resultij = 0;
+                for (var k=0; k<3; k++) {
+                    resultij += Mleft[i][k] * Mright[k][j];
+                }
+                row.push(resultij);
+            }
+            result.push(row);
+        }
+        return result;
+    };
+
+    function centroid(triples) {
+        var ln = triples.length;
+        var result = [];
+        for (var i=0; i<3; i++) {
+            var total = 0
+            for (var j=0; j<ln; j++) {
+                total += triples[j][i];
+            }
+            result.push( total * (1.0 / ln));
+        }
+        return result;
+    };
+
+    class Triangle {
+        constructor(triples) {
+            if (triples.length != 3) {
+                console.log("bad triangle triples", triples)
+                throw new Error("bad triples")
+            }
+            this.triples = triples;
+            this.projection = null;
+            this.z_order = null;
+        };
+        project(matrix3x3) {
+            debugger;
+            matrix3x3 = matrix3x3 || eye3x3;
+            var projection = []
+            for (var i=0; i<3; i++) {
+                projection.push(Mv_product(matrix3x3, this.triples[i]))
+            }
+            this.projection = projection;
+            var center = centroid(this.projection);
+            this.z_order = center[2];
+            return this;
+        }
+    };
+
+    class Model {
+        constructor(triangles_coords) {
+            this.triangles = triangles_coords.map(x => new Triangle(x));
+        };
+        draw(on_frame, face_color, border_color, z_offset, matrix3x3) {
+            //debugger;
+            matrix3x3 = matrix3x3 || eye3x3;
+            var projected = this.triangles.map(x => x.project(matrix3x3));
+            projected.sort(function(ta, tb) { return ta.z_order - tb.z_order })
+            for (var triangle of projected) {
+                var xyprojections = triangle.projection.map(triple => xy_project(triple, z_offset));
+                on_frame.polygon({
+                    points: xyprojections,
+                    color: face_color,
+                    fill: true,
+                });
+                on_frame.polygon({
+                    points: xyprojections,
+                    color: border_color,
+                    fill: false,
+                });
+            }
+        };
+    }
+
     // tracking state constants (also null)
     const PITCH_YAW = "pitch_yaw";
     const ROLL = "roll"
@@ -49,7 +174,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 call_on_init: true,
             }, options);
             var s = this.settings;
-            // create canvas and reference frame
+
+            // create paper airplane graphic model
+            this.airplane = new Model(airplane_triangle_coords);
+
+            // create canvas and reference frames
             target.dual_canvas_helper({
                 width: s.width,
                 height: s.width,
@@ -63,23 +192,32 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var square_margin = 0.5 * (s.width - square_side);
             //var circle_margin = 0.5 * s.width - circle_radius;
             // frame in radians
+            var static_frame = target.frame_region(
+                square_margin, square_margin, square_margin + square_side, square_margin + square_side,
+                -PI, -PI, PI, PI
+            );
+            var model_frame = target.frame_region(
+                square_margin, square_margin, square_margin + square_side, square_margin + square_side,
+                -0.5, -0.5, 0.5, 0.5,
+            );
+            this.model_frame = model_frame;
             var frame = target.frame_region(
                 square_margin, square_margin, square_margin + square_side, square_margin + square_side,
                 -PI, -PI, PI, PI
-            )
+            );
             this.frame = frame;
 
-            // Draw visible elements
+            // Draw static visible elements
             // roll circle
-            frame.circle({x: 0, y: 0, r:circle_radius, color:s.circle_color});
+            static_frame.circle({x: 0, y: 0, r:circle_radius, color:s.circle_color});
             // pitch/yaw square
-            frame.frame_rect({x:-PI, y:-PI, w:PI2, h:PI2, color:s.square_color});
+            static_frame.frame_rect({x:-PI, y:-PI, w:PI2, h:PI2, color:s.square_color});
             // reference lines
             for (var i=-1; i<2; i++) {
                 var offset = i * 0.5 * PI;
                 //("offset", offset)
-                frame.line({x1:-PI, y1:offset, x2:PI, y2:offset, color:s.reference_color});
-                frame.line({y1:-PI, x1:offset, y2:PI, x2:offset, color:s.reference_color});
+                static_frame.line({x1:-PI, y1:offset, x2:PI, y2:offset, color:s.reference_color});
+                static_frame.line({y1:-PI, x1:offset, y2:PI, x2:offset, color:s.reference_color});
             }
             // roll marker
             this.roll_marker = frame.circle({x: this.frame_circle_radius, y:0, r:s.marker_radius, color:s.marker_color, name:"roll-marker"});
@@ -138,10 +276,48 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 this.info_area.html(message);
             };
         };
+        matrix3x3() {
+            var roll = this.current_roll;
+            var cr = Math.cos(roll);
+            var sr = Math.sin(roll);
+            var rollM = [
+                [cr, -sr, 0],
+                [sr, cr, 0],
+                [0, 0, 1],
+            ];
+            var pitch = this.current_pitch;
+            var cp = Math.cos(pitch);
+            var sp = Math.sin(pitch);
+            var pitchM = [
+                [cp, 0, sp],
+                [0, 1, 0],
+                [-sp, 0, cp],
+            ]
+            var rpM = MM_product(pitchM, rollM)
+            var yaw = this.current_yaw;
+            var cy = Math.cos(yaw);
+            var sy = Math.sin(yaw)
+            var yawM = [
+                [1, 0, 0],
+                [0, cy, sy],
+                [0, -sy, cy],
+            ]
+            var rpyM = MM_product(yawM, rpM);
+            return rpyM;
+        }
         report() {
-            var deg = this.current_degrees();
-            var msg = "pitch=" + deg.pitch + "; yaw=" + deg.yaw + "; roll=" + deg.roll;
-            this.info(msg);
+            // draw the airplane
+            this.model_frame.reset_frame();
+            var face_color = "blue";
+            var border_color = "yellow";
+            var z_offset = 5;
+            var matrix3x3 = this.matrix3x3();
+            this.airplane.draw(this.model_frame, face_color, border_color, z_offset, matrix3x3);
+            if (this.settings.verbose) {
+                var deg = this.current_degrees();
+                var msg = "roll=" + deg.roll + "; pitch=" + deg.pitch + "; yaw=" + deg.yaw;
+                this.info(msg);
+            }
         }
         mouse_down_handler() {
             var that = this;
@@ -190,9 +366,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     that.current_yaw = y;
                     that.current_pitch = x;
                     that.pitch_yaw_marker.change({x:x, y:y});
-                    if (s.verbose) {
-                        that.report();
-                    }
+                    that.report();
                     if (on_change) {
                         on_change(that.current_coords())
                     }
@@ -242,9 +416,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 } else {
                     return; // ignore
                 }
-                if (s.verbose) {
-                    that.report();
-                }
+                that.report();
                 if (on_change) {
                     on_change(that.current_coords())
                 }
