@@ -126,6 +126,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     points: xyprojections,
                     color: border_color,
                     fill: false,
+                    lineWidth: 2,
                 });
             }
         };
@@ -170,6 +171,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 square_color: "cyan",
                 marker_color: "orange",
                 reference_color: "white",
+                plane_face_color: "bisque",
+                plane_line_color: "maroon",
+                plane_offset: 5,
                 verbose: true,
                 call_on_init: true,
             }, options);
@@ -212,12 +216,12 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             static_frame.circle({x: 0, y: 0, r:circle_radius, color:s.circle_color});
             // pitch/yaw square
             static_frame.frame_rect({x:-PI, y:-PI, w:PI2, h:PI2, color:s.square_color});
-            // reference lines
+            // reference lines above paper airplane model
             for (var i=-1; i<2; i++) {
                 var offset = i * 0.5 * PI;
                 //("offset", offset)
-                static_frame.line({x1:-PI, y1:offset, x2:PI, y2:offset, color:s.reference_color});
-                static_frame.line({y1:-PI, x1:offset, y2:PI, x2:offset, color:s.reference_color});
+                frame.line({x1:-PI, y1:offset, x2:PI, y2:offset, color:s.reference_color});
+                frame.line({y1:-PI, x1:offset, y2:PI, x2:offset, color:s.reference_color});
             }
             // roll marker
             this.roll_marker = frame.circle({x: this.frame_circle_radius, y:0, r:s.marker_radius, color:s.marker_color, name:"roll-marker"});
@@ -307,10 +311,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
         }
         report() {
             // draw the airplane
+            var s = this.settings;
             this.model_frame.reset_frame();
-            var face_color = "blue";
-            var border_color = "yellow";
-            var z_offset = 5;
+            var face_color = s.plane_face_color;
+            var border_color = s.plane_line_color;
+            var z_offset = s.plane_offset;
             var matrix3x3 = this.matrix3x3();
             this.airplane.draw(this.model_frame, face_color, border_color, z_offset, matrix3x3);
             if (this.settings.verbose) {
