@@ -93,7 +93,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             this.z_order = null;
         };
         project(matrix3x3) {
-            debugger;
+            //debugger;
             matrix3x3 = matrix3x3 || eye3x3;
             var projection = []
             for (var i=0; i<3; i++) {
@@ -144,7 +144,9 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
     const down_arrow_key = 40;
     const left_arrow_key = 37;
     const right_arrow_key = 39;
-    const arrow_delta = 0.2;
+    const u_key = 85;
+    const d_key = 68;
+    const arrow_delta = PI / 180.0;
     const arrow_boundary = PI - arrow_delta;
 
     const clampPI = (num) => Math.min(Math.max(num, -PI), PI)
@@ -320,7 +322,7 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             this.airplane.draw(this.model_frame, face_color, border_color, z_offset, matrix3x3);
             if (this.settings.verbose) {
                 var deg = this.current_degrees();
-                var msg = "roll=" + deg.roll + "; pitch=" + deg.pitch + "; yaw=" + deg.yaw;
+                var msg = "r(u/d)=" + deg.roll + "; p\u21c4=" + deg.pitch + "; y\u21c5=" + deg.yaw;
                 this.info(msg);
             }
         }
@@ -345,11 +347,26 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
             var s = this.settings;
             var on_change = s.on_change;
             return function(event) {
-                var num = event.which;
-                console.log("keypress: ", num)
+                var num = event.keyCode;
+                console.log(event, "keypress: ", num)
                 var y = that.current_yaw;
                 var x = that.current_pitch;
+                var roll = that.current_roll;
                 var handled = false;
+                if (num == u_key) {
+                    handled = true;
+                    roll += arrow_delta;
+                    if (roll > PI) {
+                        roll -= PI2;
+                    }
+                }
+                if (num == d_key) {
+                    handled = true;
+                    roll -= arrow_delta;
+                    if (roll < -PI) {
+                        roll += PI2;
+                    }
+                }
                 if ((num == up_arrow_key) && (y < arrow_boundary)) {
                     handled = true;
                     y = y + arrow_delta;
@@ -370,7 +387,11 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                     event.preventDefault(); // don't propagate
                     that.current_yaw = y;
                     that.current_pitch = x;
+                    that.current_roll = roll;
                     that.pitch_yaw_marker.change({x:x, y:y});
+                    var cy = Math.sin(roll) * that.frame_circle_radius;
+                    var cx = Math.cos(roll) * that.frame_circle_radius;
+                    that.roll_marker.change({x:cx, y:cy});
                     that.report();
                     if (on_change) {
                         on_change(that.current_coords())
