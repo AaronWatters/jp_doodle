@@ -4,6 +4,8 @@ Uses canvas_2d_widget_helper, dual_canvas_helper
 Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
 */
 
+// xxx should add arrow key controls ala AircraftAxes
+
 (function($) {
 
     class XYSlider {
