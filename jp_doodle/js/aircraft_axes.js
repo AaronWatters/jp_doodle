@@ -367,23 +367,34 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                         roll += PI2;
                     }
                 }
-                if ((num == up_arrow_key) && (y < arrow_boundary)) {
+                if (num == up_arrow_key) { //} && (y < arrow_boundary)) {
                     handled = true;
                     y = y + arrow_delta;
                 }
-                if ((num == down_arrow_key) && (y > - arrow_boundary)) {
+                if (num == down_arrow_key) { //} && (y > - arrow_boundary)) {
                     handled = true;
                     y = y - arrow_delta;
                 }
-                if ((num == right_arrow_key) && (x < arrow_boundary)) {
+                if (num == right_arrow_key) { //} && (x < arrow_boundary)) {
                     handled = true;
                     x = x + arrow_delta;
                 }
-                if ((num == left_arrow_key) && (x > - arrow_boundary)) {
+                if (num == left_arrow_key) { //&& (x > - arrow_boundary)) {
                     handled = true;
                     x = x - arrow_delta;
                 }
                 if (handled) {
+                    const fix = function(v) {
+                        if (v < - PI) {
+                            v = v + PI2;
+                        }
+                        if (v > PI) {
+                            v = v - PI2
+                        }
+                        return v;
+                    }
+                    x = fix(x);
+                    y = fix(y);
                     event.preventDefault(); // don't propagate
                     that.current_yaw = y;
                     that.current_pitch = x;
