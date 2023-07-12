@@ -50,6 +50,10 @@ class AircraftAxes(gz_jQuery.jQueryComponent):
     def report(self):
         do(self.axes.report())
 
+    def reset_coords(self, yaw=0, pitch=0, roll=0):
+        "set coords and call on_change if defined."
+        do(self.axes.reset_coords(yaw, pitch, roll))
+
 def add_js_files(to_gizmo_component):
     for path in dual_canvas.required_javascript_modules:
         to_gizmo_component.js_file(path)

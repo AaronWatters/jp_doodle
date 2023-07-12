@@ -410,10 +410,10 @@ Structure follows: https://learn.jquery.com/plugins/basic-plugin-creation/
                 }
             };
         };
-        reset_coords() {
-            this.current_yaw = 0;
-            this.current_pitch = 0;
-            this.current_roll = 0;
+        reset_coords(yaw, pitch, roll) {
+            this.current_yaw = yaw || 0;
+            this.current_pitch = pitch || 0;
+            this.current_roll = roll || 0;
             this.pitch_yaw_marker.change({x:0, y:0});
             this.roll_marker.change({x: this.frame_circle_radius, y:0});
             this.report();
